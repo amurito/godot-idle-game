@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://dov4eh5krwoak"]
+[gd_scene load_steps=5 format=3 uid="uid://dov4eh5krwoak"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://xt8o6hca6a4q" path="res://main.tres" id="2_0xm2m"]
@@ -10,6 +10,8 @@ corner_radius_top_left = 80
 corner_radius_top_right = 80
 corner_radius_bottom_right = 80
 corner_radius_bottom_left = 80
+
+[sub_resource type="LabelSettings" id="LabelSettings_0xm2m"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -33,6 +35,7 @@ text = "Rendimiento diario: $0
 
 [node name="FormulaLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
+horizontal_alignment = 1
 
 [node name="TopSpacer" type="Control" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 50)
@@ -43,7 +46,6 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(160, 160)
 layout_direction = 2
 layout_mode = 2
-size_flags_vertical = 3
 theme = ExtResource("2_0xm2m")
 theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_h2yge")
@@ -56,16 +58,32 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="UpgradeClickButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_vertical = 0
 text = "Mejorar click (+$5)
 "
 
 [node name="UpgradeAutoButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="UpgradeClickMultiplierButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 
 [node name="StatsLabel" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 130)
+layout_direction = 3
 layout_mode = 2
+size_flags_vertical = 3
+text = "StatsLabel"
+label_settings = SubResource("LabelSettings_0xm2m")
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [connection signal="pressed" from="VBoxContainer/BigClickButton" to="." method="_on_BigClickButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/UpgradeClickMultiplierButton" to="." method="_on_upgrade_click_multiplier_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
