@@ -150,3 +150,13 @@ Data binding
 UI reactiva
 
 Separación lógica / visual
+
+## 0.1.5 ##
+
+Scope cerrado de v0.1.5
+
+✔ Mostrar valor del click en el botón
+✔ Actualización automática del texto
+✔ Sin nuevas mecánicas
+✔ Sin rebalance
+✔ Sin late game todavía
