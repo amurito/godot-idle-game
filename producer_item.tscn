@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://db7tlg1eg3v7m"]
+
+[ext_resource type="Script" uid="uid://djiqh7ws2adm8" path="res://producer_item.gd" id="1_wbtft"]
+
+[node name="ProducerItem" type="HBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+script = ExtResource("1_wbtft")
+
+[node name="NameLabel" type="Label" parent="."]
+layout_mode = 2
+
+[node name="ProductionBar" type="ProgressBar" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+show_percentage = false
+
+[node name="CountLabel" type="Label" parent="."]
+layout_mode = 2
+
+[node name="BuyButton" type="Button" parent="."]
+layout_mode = 2

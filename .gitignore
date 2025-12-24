@@ -1,0 +1,21 @@
+# Godot 4
+.import/
+.export/
+godot/
+.android/
+.ios/
+
+# Build outputs
+bin/
+build/
+
+# Editor & OS
+.vscode/
+.idea/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Godot generated files
+*.translation
