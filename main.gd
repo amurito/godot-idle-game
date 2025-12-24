@@ -7,6 +7,10 @@ var click_value: float = 1.0
 var click_upgrade_cost: float = 5.0
 # AUTOMÁTICO
 var auto_upgrade_cost: float = 10.0
+var big_click_value: float = 10.0
+var big_click_multiplier: float = 3.0
+
+
 
 
 # === REFERENCIAS UI (SOLO LAS QUE USAMOS) ===
@@ -17,6 +21,7 @@ var auto_upgrade_cost: float = 10.0
 @onready var upgrade_auto_button = $VBoxContainer/UpgradeAutoButton
 @onready var stats_label = $VBoxContainer/StatsLabel
 @onready var formula_label = $VBoxContainer/FormulaLabel
+@onready var big_click_button = $VBoxContainer/BigClickButton
 
 
 func _ready():
@@ -62,9 +67,12 @@ func update_ui():
 	stats_label.text = \
 		"Click: +" + str(click_value) + \
 		"\nAuto: +" + str(income_per_second) + "/s"
+# === CLICK GRANDE ===
+	big_click_button.text = \
+	"$\n+" + str(click_value * big_click_multiplier)
+
+
 		
-
-
 func _on_BigClickButton_pressed():
-	money += 10
+	money += click_value * big_click_multiplier
 	update_ui()
