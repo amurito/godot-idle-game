@@ -160,3 +160,17 @@ Scope cerrado de v0.1.5
 ✔ Sin nuevas mecánicas
 ✔ Sin rebalance
 ✔ Sin late game todavía
+
+“El sistema es coherente consigo mismo”
+
+Cambios clave que justifican versión nueva:
+
+✔ El BigClick ahora responde a la fórmula
+
+✔ Las mejoras de click tienen impacto real
+
+✔ El auto no queda invalidado
+
+✔ La UI deja de mentir
+
+✔ El jugador aprende el sistema jugando
