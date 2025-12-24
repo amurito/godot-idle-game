@@ -150,4 +150,3 @@ Data binding
 UI reactiva
 
 Separación lógica / visual
-
