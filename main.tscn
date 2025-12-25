@@ -82,8 +82,15 @@ label_settings = SubResource("LabelSettings_0xm2m")
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="UpgradeTruequeButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Trueque (+1)
+Costo: $9000
+"
+
 [connection signal="pressed" from="VBoxContainer/BigClickButton" to="." method="_on_BigClickButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeClickMultiplierButton" to="." method="_on_upgrade_click_multiplier_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
