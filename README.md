@@ -174,3 +174,10 @@ Cambios clave que justifican versión nueva:
 ✔ La UI deja de mentir
 
 ✔ El jugador aprende el sistema jugando
+
+Si en menos de 3 minutos el jugador desbloquea
+todo lo visible en pantalla,
+el balance está mal.
+
+No importa si “se siente bien”:
+se quema el diseño.

@@ -1,3 +1,14 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1766454635
+::res://::1766615105
 icon.svg::CompressedTexture2D::9216670998058240731::1766454533::1766454545::1::::<><><>0<>0<>bd555fb2458856aea8c8c8acf97ad736<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+main.gd::GDScript::6318254411727827567::1766619914::0::1::::<>Control<><>0<>0<><>::
+main.tscn::PackedScene::8187026145298395202::1766611999::0::1::::<><><>0<>0<><>::uid://cwauyyqcu0klj::::res://main.gd<>uid://xt8o6hca6a4q::::res://main.tres
+producer_item.tscn::PackedScene::7296684604938666336::1766534770::0::1::::<><><>0<>0<><>::uid://djiqh7ws2adm8::::res://producer_item.gd
+producer_item.gd::GDScript::7808462353882494901::1766534915::0::1::::<>HBoxContainer<><>0<>0<><>::
+ProducerItem.tscn::PackedScene::4870387446695148080::1766534713::0::1::::<><><>0<>0<><>::
+README.md::TextFile::-1::1766614340::0::1::::<><><>0<>0<><>::
+main.tres::Theme::1655596882007418082::1766547266::0::1::::<><><>0<>0<><>::
+READMEV0.2.ini::TextFile::-1::1766614445::0::1::::<><><>0<>0<><>::
+::res://screens/::1766621137
+v0.2.1.png::CompressedTexture2D::4190600635964208180::1766615088::1766617132::1::::<><><>0<>0<>11a13d850da6f05a33e0467fa024569a<>res://.godot/imported/v0.2.1.png-89a6179c33da8c99d8ef42ffc7aca077.ctex::
+v0.2.2.png::CompressedTexture2D::9055056716685860181::1766621137::1766621149::1::::<><><>0<>0<>9da660d9a7d958416ddc0494961567ea<>res://.godot/imported/v0.2.2.png-f9d74542af0626b6ad91aae43b60202d.ctex::

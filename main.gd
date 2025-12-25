@@ -9,7 +9,7 @@ var click_upgrade_cost: float = 5.0
 var auto_upgrade_cost: float = 10.0
 # === CLICK ESTRUCTURAL (v0.2) ===
 var click_multiplier: float = 1.0
-var click_multiplier_upgrade_cost: float = 100.0
+var click_multiplier_upgrade_cost: float = 200.0
 
 
 # === REFERENCIAS UI (SOLO LAS QUE USAMOS) ===
@@ -28,7 +28,7 @@ func _ready():
 	update_ui()
 
 func _process(delta):
-	money += income_per_second * delta
+	money += get_auto_income_effective() * delta
 	update_ui()
 
 # === CLICK MANUAL ===
@@ -56,6 +56,18 @@ func _on_UpgradeAutoButton_pressed():
 func update_ui():
 	money_label.text = "Dinero: $" + str(round(money))
 	income_label.text = "Ingreso / s: $" + str(round(income_per_second))
+	var auto_mult := get_auto_multiplier()
+	var auto_eff := get_auto_income_effective()
+
+	income_label.text = "Ingreso / s: $" + str(snapped(auto_eff, 0.01))
+
+	formula_label.text = \
+	"Δ$ = clicks × (" + \
+	str(snapped(click_value, 0.01)) + " × " + \
+	str(snapped(click_multiplier, 0.01)) + \
+	") + " + str(snapped(income_per_second, 0.01)) + "/s × " + \
+	str(snapped(auto_mult, 0.01))
+
 	formula_label.text = \
 	"Δ$ = clicks × (" + \
 	str(snapped(click_value, 0.01)) + " × " + \
@@ -63,20 +75,21 @@ func update_ui():
 	") + " + str(snapped(income_per_second, 0.01)) + " / s"
 
 	upgrade_click_button.text = \
-		"Mejorar Click (+1)\nCosto: $" + str(round(click_upgrade_cost))
+		"Conteo\nCosto: $" + str(round(click_upgrade_cost))
 
 	upgrade_auto_button.text = \
-		"Mejorar Auto (+1/s)\nCosto: $" + str(round(auto_upgrade_cost))
+		"Trabajo Manual (+1/s)\nCosto: $" + str(round(auto_upgrade_cost))
 
 	stats_label.text = \
 	"Click base: +" + str(click_value) + \
 	"\nMultiplicador: ×" + str(snapped(click_multiplier, 0.01)) + \
-	"\nΔ$ por PUSH: +" + str(snapped(get_click_power(), 0.01))
+	"\nΔ$ por PUSH: +" + str(snapped(get_click_power(), 0.01)) + "\nAuto efectivo: +" + str(snapped(auto_eff, 0.01)) + "/s"
+
 
 	click_button.text = \
-	"PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
+	"(+" + str(snapped(get_click_power(), 0.01)) + ")"
 	upgrade_click_multiplier_button.text = \
-	"Mejorar Nivel Click (×1.08)\nCosto: $" + \
+	"Memoria Numérica (×1.06)\nCosto: $" + \
 	str(round(click_multiplier_upgrade_cost))
 
 	
@@ -91,11 +104,20 @@ func _on_BigClickButton_pressed():
 
 func get_click_power() -> float:
 	return click_value * click_multiplier
+# === AUTO ESCALADO POR ESTRUCTURA DEL SISTEMA ===
+const AUTO_SCALE_COEFF := 0.48  # ajustar 0.25–0.40 según feeling
+
+func get_auto_multiplier() -> float:
+	return 1.0 + max(0.0, (click_multiplier - 1.0)) * AUTO_SCALE_COEFF
+
+func get_auto_income_effective() -> float:
+	return income_per_second * get_auto_multiplier()
+
 
 func _on_UpgradeClickMultiplierButton_pressed():
 	if money >= click_multiplier_upgrade_cost:
 		money -= click_multiplier_upgrade_cost
-		click_multiplier *= 1.08
+		click_multiplier *= 1.06
 		click_multiplier_upgrade_cost *= 1.4
 		update_ui()
 		
