@@ -1,7 +1,8 @@
+VBoxContainer
+Label
+PanelContainer
+HBoxContainer
 Button
 Control
-Label
-HBoxContainer
 ProgressBar
-VBoxContainer
 Node
