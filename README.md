@@ -1,183 +1,127 @@
-# Idle Growth — Minimal System Game
+IDLE — The Lab (v0.5.1)
+The Lab es una versión experimental del proyecto IDLE cuyo objetivo no es aumentar el rendimiento del jugador, sino hacer visible la estructura matemática del sistema económico interno.
 
-## 🎯 Idea General
+En lugar de ocultar fórmulas detrás de progreso incremental, esta versión expone:
 
-Idle Growth es un juego idle minimalista cuyo objetivo no es acumular números grandes,
-sino **entender y modificar la fórmula que gobierna el crecimiento**.
+los términos productivos del sistema
+sus modificadores
+la contribución marginal de cada componente
+las unidades de medida
+la dominancia del sistema en tiempo real
+The Lab funciona como un laboratorio de incentivos: no busca balancear la experiencia de juego, sino permitir observar y estudiar el comportamiento del modelo.
 
-El jugador no solo gana dinero:  
-**ve, aprende y altera el sistema matemático que lo genera**.
+🎯 Objetivo de la versión
+Separar economía, análisis y UI — y convertir el juego en un entorno de experimentación matemática.
 
----
+Esta versión introduce:
 
-## 🧠 Principio de Diseño
+✔ modelo económico desacoplado de la interfaz
+✔ análisis de términos dominantes
+✔ representación simbólica de la fórmula
+✔ descomposición del aporte de cada componente
+✔ unidades explícitas por segundo
+✔ comunicación transparente del sistema
 
-> El juego no oculta sus reglas.
-> La progresión es transparente y explicable.
+El jugador no “progresa”. El jugador observa la evolución del sistema.
 
-Cada incremento de dinero responde a una fórmula visible en pantalla.
+🧠 Estructura del modelo
+El crecimiento del sistema se expresa como:
 
----
+Δ$ = clicks × (a × b × c) + d × md + e × me
 
-## 🧮 Modelo Matemático Base (v0.1)
-
-El sistema actual se rige por la siguiente relación:
-
-Dinero(t) = Clicks × ClickValue + ∫ IngresoAutomático dt
-
+yaml Copiar código
 
 Donde:
-- `Clicks` es la acción manual del jugador
-- `ClickValue` mejora mediante upgrades
-- `IngresoAutomático` genera dinero en el tiempo
 
-La fórmula se muestra en tiempo real dentro del juego.
+Símbolo	Componente
+a	click base
+b	multiplicador
+c	persistencia
+d	trabajo manual
+md	ritmo de trabajo
+e	trueque corregido
+me	red de intercambio
+📈 Unidades del sistema
+Las magnitudes se expresan en:
 
----
+Δ$ / s → tasa de crecimiento del sistema
+d / s → trabajo manual efectivo
+e / s → trueque corregido
+Esto permite evaluar el rendimiento en términos energéticos del modelo
+y no como números absolutos sin contexto.
 
-## 🎮 Mecánicas Actuales (v0.1)
+📊 Lecturas mostradas en pantalla
+La interfaz expone:
 
-✔ Botón central de acción (“Ganar $10”)  
-✔ Mejora del valor del click  
-✔ Ingreso automático escalable  
-✔ Costos crecientes  
-✔ Fórmula visible y honesta  
+✔ Fórmula simbólica
+(términos visibles según estén desbloqueados)
 
----
+✔ Valores numéricos de cada parámetro
+✔ Aporte marginal
+• Click PUSH • Trabajo Manual / s • Trueque / s
 
-## 🧩 Qué NO es este juego (todavía)
+shell Copiar código
 
-❌ No es un idle de números gigantes  
-❌ No tiene animaciones complejas  
-❌ No tiene progresión artificial  
-❌ No tiene sistemas ocultos  
+✔ Término que domina el sistema
+CLICK domina el sistema Trabajo Manual domina el sistema Trueque domina el sistema
 
-Todo sistema nuevo debe poder explicarse con una frase.
+yaml Copiar código
 
----
+✔ Distribución porcentual de aporte
+Incluyendo:
 
-## 🧠 Filosofía del Late Game
+click
+trabajo manual
+trueque
+Δ$ estimado / s
+🔎 Filosofía de diseño
+The Lab sigue 3 principios:
 
-En el late game, el jugador deja de hacer clicks
-y pasa a **diseñar, modificar y limitar el sistema de crecimiento**.
+Transparencia > progresión oculta
+Comprensión sistémica > optimización ciega
+El jugador interpreta — no grindea
+Este proyecto explora:
 
-El foco no estará en “ganar más” sino en:
-- cambiar tasas
-- introducir multiplicadores
-- aceptar trade-offs
-- desbloquear leyes matemáticas
+cómo emergen relaciones de poder entre términos productivos
+cómo cambia el régimen del sistema con cada mejora
+cuándo un término pasa a dominar al resto
+qué significa “eficiencia” en una economía simulada
+🧪 Qué observar mientras se juega
+Al avanzar es esperable detectar:
 
----
+✔ transición desde dominio de CLICK
+✔ aparición progresiva de d × md
+✔ cruce de fase cuando e × me comienza a escalar
+✔ cambio real del comportamiento del sistema
 
-## 🔮 Roadmap Conceptual
+The Lab no recompensa spam de upgrades.
 
-### v0.1 – Core Loop & Formula 
+El objetivo es:
 
-Click + ingreso automático funcional
-Costos crecientes
-Fórmula visible en tiempo real
-Base para escalado y late game
+leer, interpretar, comparar, entender.
 
-### v0.2 — Productores
-- El ingreso automático se vuelve estructural
-- Visualización clara de producción
+🧭 Próximos pasos (Roadmap conceptual)
+Las versiones futuras explorarán:
 
-### v0.3 — Multiplicadores
-- Modifican la fórmula
-- No generan dinero por sí mismos
+fⁿ como estructura autosimilar acotada
+convergencia a atractores del sistema
+elasticidad entre términos productivos
+shock de incentivos
+acoplamiento social entre agentes
+The Lab no es el fin del juego
+es la base teórica del juego futuro.
 
-### v0.4 — Late Game
-- Soft caps
-- Leyes del crecimiento
-- Decisiones irreversibles
+🏷 Versión
+IDLE — The Lab v0.5.1 (stable)
 
----
+yaml Copiar código
 
-## 🧪 Regla de Desarrollo
+Esta build funciona como baseline oficial del modelo
+para futuras iteraciones experimentales.
 
-> Si una feature no puede explicarse con una frase simple,
-> no se implementa.
+📜 Licencia & propósito
+Este proyecto no está pensado como producto comercial, sino como experimento de diseño matemático y cognitivo.
 
----
+Si algo en el sistema te dispara una idea, cuestionamiento o intuición nueva…
 
-## 🛠️ Tecnologías
-
-- Godot Engine 4.x
-- GDScript
-- Enfoque MVP y versionado incremental
-
----
-
-## 📌 Estado del Proyecto
-
-Versión actual: **v0.1**  
-Estado: **COMPLETA**
-
-Antes de avanzar:
-- el core loop debe sentirse claro
-- la fórmula debe ser comprensible
-
-## UPGRADES 
-1. Diferenciar “jugador” de “diseñador”
-
-Podrías agregar UNA frase tipo:
-
-El jugador comienza como operador (clicks) y progresa hacia diseñador del sistema.
-
-No más que eso.
-
-🔹 2. Aclarar que la fórmula es “viva”
-
-Ejemplo:
-
-La fórmula no es estática: cambia con upgrades y decisiones.
-
-Refuerza el concepto.
-v0.1.5 — Claridad del Sistema
-
-Contenido:
-
-El botón “Ganar $X” refleja el valor real del click
-
-Se actualiza al comprar upgrades
-
-La UI refuerza la fórmula
-
-Aprendizaje:
-
-Data binding
-
-UI reactiva
-
-Separación lógica / visual
-
-## 0.1.5 ##
-
-Scope cerrado de v0.1.5
-
-✔ Mostrar valor del click en el botón
-✔ Actualización automática del texto
-✔ Sin nuevas mecánicas
-✔ Sin rebalance
-✔ Sin late game todavía
-
-“El sistema es coherente consigo mismo”
-
-Cambios clave que justifican versión nueva:
-
-✔ El BigClick ahora responde a la fórmula
-
-✔ Las mejoras de click tienen impacto real
-
-✔ El auto no queda invalidado
-
-✔ La UI deja de mentir
-
-✔ El jugador aprende el sistema jugando
-
-Si en menos de 3 minutos el jugador desbloquea
-todo lo visible en pantalla,
-el balance está mal.
-
-No importa si “se siente bien”:
-se quema el diseño.
+entonces cumplió su objetivo.
