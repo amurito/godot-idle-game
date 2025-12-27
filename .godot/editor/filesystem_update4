@@ -1,5 +1,2 @@
-res://main.gd
 res://main.tscn
-res://producer_item.gd
-res://producer_item.tscn
-res://ProducerItem.tscn
+res://main.gd

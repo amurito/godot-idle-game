@@ -1,8 +1,9 @@
-VBoxContainer
-Label
-PanelContainer
+BoxContainer
 HBoxContainer
-Button
 Control
-ProgressBar
 Node
+Label
+VBoxContainer
+PanelContainer
+Button
+ProgressBar

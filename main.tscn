@@ -12,112 +12,164 @@ corner_radius_bottom_right = 80
 corner_radius_bottom_left = 80
 
 [node name="Main" type="Control"]
+layout_direction = 2
 layout_mode = 3
-anchors_preset = 0
-size_flags_vertical = 4
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_ig7tw")
 
-[node name="LeftPanel" type="VBoxContainer" parent="."]
-custom_minimum_size = Vector2(0, 300)
+[node name="UIRootContainer" type="HBoxContainer" parent="."]
+layout_direction = 2
 layout_mode = 0
-offset_left = 465.0
-offset_top = 118.0
-offset_right = 636.0
-offset_bottom = 418.0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 32
+alignment = 1
 
-[node name="BigClickButton" type="Button" parent="LeftPanel"]
-custom_minimum_size = Vector2(160, 160)
+[node name="LeftPanel" type="HBoxContainer" parent="UIRootContainer"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SpacerLeft" type="Control" parent="UIRootContainer/LeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CenterPanel" type="VBoxContainer" parent="UIRootContainer/LeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 6
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BigClickButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(320, 140)
 layout_direction = 2
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
 theme = ExtResource("2_0xm2m")
 theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_h2yge")
 text = "PUSH"
 icon_alignment = 1
 
-[node name="FormulaLabel" type="Label" parent="LeftPanel"]
+[node name="FormulaLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(480, 160)
 layout_mode = 2
+size_flags_vertical = 6
 horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
 
-[node name="ClickStatsLabel" type="Label" parent="LeftPanel"]
+[node name="ClickStatsLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_vertical = 6
+autowrap_mode = 2
+clip_text = true
+
+[node name="MarginalLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
 layout_mode = 2
 
-[node name="ProductionPanel" type="VBoxContainer" parent="."]
+[node name="SpacerRight" type="Control" parent="UIRootContainer/LeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProductionPanel" type="VBoxContainer" parent="UIRootContainer"]
 custom_minimum_size = Vector2(0, 300)
-layout_direction = 2
-layout_mode = 0
-offset_left = 2.0
-offset_top = 4.0
-offset_right = 162.0
-offset_bottom = 304.0
-pivot_offset = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 8
 alignment = 1
 
-[node name="ClickPanel" type="VBoxContainer" parent="ProductionPanel"]
+[node name="ClickPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
+size_flags_vertical = 6
 theme_override_constants/separation = 8
 
-[node name="UpgradeClickButton" type="Button" parent="ProductionPanel/ClickPanel"]
-custom_minimum_size = Vector2(0, 50)
+[node name="UpgradeClickButton" type="Button" parent="UIRootContainer/ProductionPanel/ClickPanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_vertical = 0
-text = "Mejorar click (+$5)
-"
+text = "Mejorar Click ( +$a )
+Costo: $X"
 
-[node name="UpgradeClickMultiplierButton" type="Button" parent="ProductionPanel/ClickPanel"]
-custom_minimum_size = Vector2(0, 50)
+[node name="UpgradeClickMultiplierButton" type="Button" parent="UIRootContainer/ProductionPanel/ClickPanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+text = "Memoria Numérica ( ×b )
+Costo: $X"
 
-[node name="AutoPanel" type="VBoxContainer" parent="ProductionPanel"]
+[node name="AutoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
+size_flags_vertical = 6
 theme_override_constants/separation = 8
 
-[node name="UpgradeAutoButton" type="Button" parent="ProductionPanel/AutoPanel"]
-custom_minimum_size = Vector2(0, 50)
+[node name="UpgradeAutoButton" type="Button" parent="UIRootContainer/ProductionPanel/AutoPanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+text = "Trabajo Manual ( +d /s )
+Costo: $X"
 
-[node name="UpgradeAutoMultiplierButton" type="Button" parent="ProductionPanel/AutoPanel"]
+[node name="UpgradeAutoMultiplierButton" type="Button" parent="UIRootContainer/ProductionPanel/AutoPanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+text = "Ritmo de Trabajo ( ×md )
+Costo: $X"
 
-[node name="TruequePanel" type="VBoxContainer" parent="ProductionPanel"]
+[node name="TruequePanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
+size_flags_vertical = 6
 theme_override_constants/separation = 8
 
-[node name="UpgradeTruequeButton" type="Button" parent="ProductionPanel/TruequePanel"]
+[node name="UpgradeTruequeButton" type="Button" parent="UIRootContainer/ProductionPanel/TruequePanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Trueque (+1)
-Costo: $9000
+text = "Trueque ( +e /s )
+Costo: $X
 "
 
-[node name="UpgradeTruequeNetworkButton" type="Button" parent="ProductionPanel/TruequePanel"]
+[node name="UpgradeTruequeNetworkButton" type="Button" parent="UIRootContainer/ProductionPanel/TruequePanel"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+text = "Red de Intercambio ( ×me )
+Costo: $X
+"
 
-[node name="RightPanel" type="VBoxContainer" parent="."]
+[node name="RightPanel" type="VBoxContainer" parent="UIRootContainer"]
 custom_minimum_size = Vector2(0, 300)
-layout_mode = 0
-offset_left = 969.0
-offset_top = 8.0
-offset_right = 1145.0
-offset_bottom = 308.0
+layout_mode = 2
 alignment = 2
 
-[node name="MoneyLabel" type="Label" parent="RightPanel"]
+[node name="MoneyLabel" type="Label" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
 text = "Capital: $0
 "
 
-[node name="IncomeLabel" type="Label" parent="RightPanel"]
+[node name="IncomeLabel" type="Label" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
 text = "Rendimiento diario: $0
 "
 
-[node name="StatsLabel" type="Label" parent="RightPanel"]
+[node name="StatsLabel" type="Label" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
 
-[connection signal="pressed" from="LeftPanel/BigClickButton" to="." method="_on_ClickButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/ClickPanel/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/AutoPanel/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton" to="." method="_on_UpgradeAutoMultiplierButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/TruequePanel/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
-[connection signal="pressed" from="ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton" to="." method="_on_UpgradeTruequeNetworkButton_pressed"]
+[node name="BoxContainer" type="BoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="." method="_on_BigClickButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton" to="." method="_on_UpgradeAutoMultiplierButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton" to="." method="_on_UpgradeTruequeNetworkButton_pressed"]

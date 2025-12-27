@@ -14,3 +14,11 @@ config/name="IDLE"
 run/main_scene="uid://dov4eh5krwoak"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Version="*res://version.gd"
+
+[editor]
+
+version_control/autoload_on_startup=true
