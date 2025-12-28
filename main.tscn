@@ -105,6 +105,12 @@ layout_mode = 2
 text = "Memoria Numérica ( ×b )
 Costo: $X"
 
+[node name="PersistenceUpgradeButton" type="Button" parent="UIRootContainer/ProductionPanel/ClickPanel"]
+layout_mode = 2
+text = "Memoria Operativa del Sistema (única)
+Persistencia → 1.6
+Costo: $X"
+
 [node name="AutoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
@@ -161,6 +167,10 @@ text = "Rendimiento diario: $0
 [node name="StatsLabel" type="Label" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
 
+[node name="ExportRunButton" type="Button" parent="UIRootContainer/RightPanel"]
+layout_mode = 2
+text = "Export run"
+
 [node name="BoxContainer" type="BoxContainer" parent="."]
 layout_mode = 0
 offset_right = 40.0
@@ -169,7 +179,9 @@ offset_bottom = 40.0
 [connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="." method="_on_BigClickButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/PersistenceUpgradeButton" to="." method="_on_PersistenceUpgradeButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton" to="." method="_on_UpgradeAutoMultiplierButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton" to="." method="_on_UpgradeTruequeNetworkButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]

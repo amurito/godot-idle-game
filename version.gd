@@ -1,16 +1,30 @@
 extends Node
 
-const VERSION := "v0.5.1"
-const CODENAME := "TheLab"
-const CYCLE := "Persistence"
-const BUILD_ID := "001"
-const COMMIT_TAG := "pre-fn"
+const TITLE := "IDLE — The Lab"
 
-func get_full_title() -> String:
-	return "IDLE — %s %s (%s #%s, %s)" % [
-		CODENAME,
-		VERSION,
-		CYCLE,
-		BUILD_ID,
-		COMMIT_TAG
+const MAJOR := 0
+const MINOR := 5
+const PATCH := 1
+const NAME := "TheLab"
+
+func _get_env(name: String, fallback: String) -> String:
+	if OS.has_feature("pc"):
+		if OS.has_environment(name):
+			return OS.get_environment(name)
+
+	return fallback
+	
+const BUILD := "dev"
+const COMMIT := "local"
+
+
+func get_version_string() -> String:
+	return "%s.%s.%s-%s" % [MAJOR, MINOR, PATCH, NAME]
+
+
+func get_build_label() -> String:
+	return "%s | build %s | %s" % [
+		get_version_string(),
+		BUILD,
+		COMMIT
 	]

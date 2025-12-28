@@ -1,11 +1,13 @@
 extends Control
 
 # =====================================================
-#  IDLE — v0.5.1 "The Lab"
-#  Propósito de esta versión:
-#  • Separar economía / análisis / UI
-#  • Evitar cálculos redundantes por frame
-#  • Convertir el juego en laboratorio matemático
+#  IDLE — v0.6 "The Lab"
+#  Cambios clave:
+#  • Integración cronómetro + lap markers
+#  • Activo vs Pasivo (CLICK vs d+e)
+#  • Métrica estructural fⁿ (observacional)
+#  • Persistencia dinámica (no aplicada aún)
+#  • Refactor UI + capas consolidadas
 # =====================================================
 
 
@@ -21,7 +23,7 @@ var click_upgrade_cost: float = 5.0
 var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
-var click_persistence: float = 1.4
+var click_persistence: float = 1.4   # c (base estable)
 
 
 # --- PRODUCTOR d ---
@@ -51,6 +53,22 @@ const TRUEQUE_NETWORK_GAIN := 1.12
 const TRUEQUE_NETWORK_SCALE := 1.35
 
 
+# --- PERSISTENCIA estructural — fⁿ (observacional) ---
+var structural_upgrades: int = 1
+const K_PERSISTENCE := 1.25
+
+
+# =============== SESIÓN / LAB MODE ===================
+
+var run_time: float = 0.0
+var lab_mode := true
+
+var lap_events: Array = []
+var last_dominance := ""
+
+const RUN_EXPORT_PATH := "C:/Users/nicol/Desktop/idle/runs"
+
+
 
 # ========== DESBLOQUEO PROGRESIVO DE FÓRMULA =========
 
@@ -65,63 +83,46 @@ const CLICK_RATE := 1.0   # clicks / s estimado humano
 
 # ================= REFERENCIAS UI ===================
 
-# =============== RIGHT PANEL =======================
-
 @onready var money_label = $UIRootContainer/RightPanel/MoneyLabel
 @onready var income_label = $UIRootContainer/RightPanel/IncomeLabel
 @onready var stats_label = $UIRootContainer/RightPanel/StatsLabel
-
-
-# =============== LEFT PANEL ========================
+@onready var export_run_button = $UIRootContainer/RightPanel/ExportRunButton
 
 @onready var big_click_button = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton
 @onready var formula_label   = $UIRootContainer/LeftPanel/CenterPanel/FormulaLabel
 @onready var click_stats_label = $UIRootContainer/LeftPanel/CenterPanel/ClickStatsLabel
 @onready var marginal_label = $UIRootContainer/LeftPanel/CenterPanel/MarginalLabel
 
-
-# =============== PRODUCTION PANEL ==================
-
 @onready var upgrade_click_button = $UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton
-
 @onready var upgrade_click_multiplier_button = $UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickMultiplierButton
-
+@onready var persistence_upgrade_button = $UIRootContainer/ProductionPanel/ClickPanel/PersistenceUpgradeButton
 
 @onready var upgrade_auto_button = $UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoButton
-
 @onready var upgrade_auto_multiplier_button = $UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton
 
-
 @onready var upgrade_trueque_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton
-
 @onready var upgrade_trueque_network_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton
 
 
 
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
-#  (no sabe nada de UI ni texto)
 # =====================================================
 
 func get_click_power() -> float:
 	return click_value * click_multiplier * click_persistence
 
-
 func get_auto_income_effective() -> float:
 	return income_per_second * auto_multiplier
-
 
 func get_trueque_raw() -> float:
 	return trueque_level * trueque_base_income * trueque_efficiency
 
-
 func get_trueque_income_effective() -> float:
 	return get_trueque_raw() * trueque_network_multiplier
 
-
 func get_passive_total() -> float:
 	return get_auto_income_effective() + get_trueque_income_effective()
-
 
 func get_delta_total() -> float:
 	return get_click_power() + get_passive_total()
@@ -129,121 +130,273 @@ func get_delta_total() -> float:
 
 
 # =====================================================
-#  CAPA 2 — ANÁLISIS MATEMÁTICO DEL SISTEMA
+#  CAPA 2 — ANÁLISIS MATEMÁTICO
 # =====================================================
 
 func get_dominant_term() -> String:
-	var push := get_click_power()
-	var d_eff := get_auto_income_effective()
-	var e_eff := get_trueque_income_effective()
-	var max_val: float = max(max(push, d_eff), e_eff)
+	var p := get_click_power()
+	var d := get_auto_income_effective()
+	var e := get_trueque_income_effective()
+	var m: float = float(max(max(p, d), e))
 
-
-	if max_val == push:
-		return "CLICK domina el sistema"
-	elif max_val == d_eff:
-		return "Trabajo Manual domina el sistema"
+	if m == p: return "CLICK domina el sistema"
+	if m == d: return "Trabajo Manual domina el sistema"
 	return "Trueque domina el sistema"
 
 
 func get_contribution_breakdown() -> Dictionary:
+	var push := get_click_power() * CLICK_RATE
+	var d := get_auto_income_effective()
+	var e := get_trueque_income_effective()
 
-	var push_ps := get_click_power() * CLICK_RATE
-	var d_eff := get_auto_income_effective()
-	var e_eff := get_trueque_income_effective()
-
-	var total := push_ps + d_eff + e_eff
+	var total := push + d + e
 	if total == 0: total = 0.00001
 
 	return {
-		"click": push_ps / total * 100.0,
-		"d": d_eff / total * 100.0,
-		"e": e_eff / total * 100.0,
+		"click": push / total * 100.0,
+		"d": d / total * 100.0,
+		"e": e / total * 100.0,
+		"total": total
+	}
+
+
+func get_active_passive_breakdown() -> Dictionary:
+	var push := get_click_power() * CLICK_RATE
+	var passive := get_auto_income_effective() + get_trueque_income_effective()
+
+	var total := push + passive
+	if total == 0: total = 0.00001
+
+	return {
+		"activo": push / total * 100.0,
+		"pasivo": passive / total * 100.0,
+		"push_abs": push,
+		"passive_abs": passive,
 		"total": total
 	}
 
 
 
 # =====================================================
-#  CAPA 3 — REPRESENTACIÓN SIMBÓLICA DE LA FÓRMULA
+#  CAPA 3 — fⁿ (OBSERVACIONAL)
+# =====================================================
+
+func get_persistence_dynamic() -> float:
+	if structural_upgrades <= 1:
+		return click_persistence
+
+	var n := float(structural_upgrades)
+	return click_persistence * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
+
+func get_n_log() -> float:
+	return 1.0 + log(1.0 + structural_upgrades)
+
+func get_n_power() -> float:
+	return pow(structural_upgrades + 1.0, 0.35)
+
+
+
+# =====================================================
+#  LAP MARKERS
+# =====================================================
+
+func add_lap(event: String) -> void:
+	lap_events.append({
+		"time": format_time(run_time),
+		"event": event,
+		"click": snapped(get_click_power(), 0.01),
+		"activo_ps": snapped(get_click_power() * CLICK_RATE, 0.01),
+		"pasivo_ps": snapped(get_passive_total(), 0.01),
+		"dominante": get_dominant_term()
+	})
+
+
+func check_dominance_transition():
+	var d := get_dominant_term()
+	if d != last_dominance:
+		add_lap("Transición de dominio → " + d)
+		last_dominance = d
+
+func get_run_filename() -> String:
+	var t = Time.get_datetime_dict_from_system()
+
+	return "run_%02d-%02d-%02d_%02d-%02d" % [
+		t.day,
+		t.month,
+		t.year % 100,
+		t.hour,
+		t.minute
+	]
+
+func build_run_snapshot() -> Dictionary:
+
+	var ap := get_active_passive_breakdown()
+	var c := get_contribution_breakdown()
+
+	return {
+		"version": Version.get_version_string(),
+		"session_time": format_time(run_time),
+
+		"economy": {
+			"a": click_value,
+		"b": click_multiplier,
+		"c_base": click_persistence,
+
+		"n_structural": structural_upgrades,
+		"f_n": get_persistence_dynamic(),
+
+		"n_log": get_n_log(),
+		"n_power": get_n_power(),
+
+		"auto_income": get_auto_income_effective(),
+		"trueque_income": get_trueque_income_effective()
+		},
+
+		"distribution": {
+			"click_%": c.click,
+			"manual_%": c.d,
+			"trueque_%": c.e,
+			"activo_%": ap.activo,
+			"pasivo_%": ap.pasivo
+		},
+
+		"deltas": {
+			"activo_ps": ap.push_abs,
+			"pasivo_ps": ap.passive_abs,
+			"total_ps": c.total
+		},
+
+		"formula_text": build_formula_text(),
+		"formula_eval": build_formula_values(),
+
+		"laps": lap_events
+	}
+
+func ensure_export_dir() -> void:
+	DirAccess.make_dir_recursive_absolute(RUN_EXPORT_PATH)
+
+
+func export_run_json(snapshot: Dictionary, filename: String) -> void:
+	ensure_export_dir()
+
+	var path := "%s/%s.json" % [RUN_EXPORT_PATH, filename]
+	var f = FileAccess.open(path, FileAccess.WRITE)
+
+	f.store_string(JSON.stringify(snapshot, "\t"))
+	f.close()
+
+	print("Run exportada → ", path)
+
+
+func export_run_csv(snapshot: Dictionary, filename: String) -> void:
+	ensure_export_dir()
+
+	var path := "%s/%s.csv" % [RUN_EXPORT_PATH, filename]
+	var f = FileAccess.open(path, FileAccess.WRITE)
+
+	f.store_line("time,event,activo_ps,pasivo_ps,total_ps,dominante")
+
+	for lap in snapshot.laps:
+		f.store_line(
+			"%s,%s,%s,%s,%s,%s" % [
+				lap.time,
+				lap.event,
+				lap.activo_ps,
+				lap.pasivo_ps,
+				lap.activo_ps + lap.pasivo_ps,
+				lap.dominante
+			]
+		)
+
+	f.close()
+
+	print("CSV generado → ", path)
+
+
+func _on_ExportRunButton_pressed():
+
+	var filename := get_run_filename()
+	var snapshot := build_run_snapshot()
+
+	export_run_json(snapshot, filename)
+	export_run_csv(snapshot, filename)
+
+	add_lap("RUN EXPORTADA")
+
+	stats_label.text += "\n\n✔ Run exportada → runs/%s" % filename
+
+
+# =====================================================
+#  FORMATO TEXTO FÓRMULA
 # =====================================================
 
 func build_formula_text() -> String:
 	var t := "Δ$ = clicks × (a × b × c)"
-
-	# --- término d ---
 	if unlocked_d:
 		t += "  +  d"
-		if unlocked_md:
-			t += " × md"
+		if unlocked_md: t += " × md"
 	else:
 		t += "  +  d"
 
-	# --- término e ---
 	if unlocked_e:
 		t += "  +  e"
-		if unlocked_me:
-			t += " × me"
+		if unlocked_me: t += " × me"
 	else:
 		t += "  +  e"
-
 	return t
-
 
 
 func build_formula_values() -> String:
-	var t := "= clicks × (" + str(snapped(click_value, 0.01)) + " × " + str(snapped(click_multiplier, 0.01)) + " × " + str(snapped(click_persistence, 0.01)) + ")"
-	if unlocked_d: t += "  +  " + str(snapped(income_per_second, 0.01)) + "/s"
-	if unlocked_md: t += " × " + str(snapped(auto_multiplier, 0.01))
-	if unlocked_e: t += "  +  " + str(snapped(get_trueque_raw(), 0.01)) + "/s"
-	if unlocked_me: t += " × " + str(snapped(trueque_network_multiplier, 0.01))
+	var t := "= clicks × (%s × %s × %s)" % [
+		str(snapped(click_value, 0.01)),
+		str(snapped(click_multiplier, 0.01)),
+		str(snapped(click_persistence, 0.01))
+	]
+
+	if unlocked_d:  t += "  +  %s/s" % str(snapped(income_per_second, 0.01))
+	if unlocked_md: t += " × %s" % str(snapped(auto_multiplier, 0.01))
+	if unlocked_e:  t += "  +  %s/s" % str(snapped(get_trueque_raw(), 0.01))
+	if unlocked_me: t += " × %s" % str(snapped(trueque_network_multiplier, 0.01))
+
 	return t
 
+
 func build_marginal_contribution() -> String:
-
 	var t := "Aporte actual:\n"
-
 	t += "• Click PUSH = +" + str(snapped(get_click_power(), 0.01)) + "\n"
-
-	if unlocked_d:
-		t += "• Trabajo Manual = +" +str(snapped(get_auto_income_effective(), 0.01)) + " /s\n"
-
-	if unlocked_e:
-		t += "• Trueque = +" + str(snapped(get_trueque_income_effective(), 0.01)) + " /s\n"
+	if unlocked_d: t += "• Trabajo Manual = +" + str(snapped(get_auto_income_effective(), 0.01)) + " /s\n"
+	if unlocked_e: t += "• Trueque = +" + str(snapped(get_trueque_income_effective(), 0.01)) + " /s\n"
 
 	t += "\nΔ$ total = +" + str(snapped(get_delta_total(), 0.01))
 	t += "\n" + get_dominant_term()
-
-	t += "\n\nUnidades:\n• Δ$ / s   tasa de crecimiento del sistema\n• d / s    trabajo manual\n• e / s    trueque corregido"
-
-
 	return t
 
 
 
 # =====================================================
-#  CAPA 4 — CICLO DE VIDA
+#  CICLO DE VIDA
 # =====================================================
 
 func _ready():
-	DisplayServer.window_set_title("IDLE — The Lab v0.5.1")
 	update_ui()
-
-
 
 func _process(delta):
+	run_time += delta
 	money += get_passive_total() * delta
 	update_ui()
+
+
+
+func format_time(t: float) -> String:
+	var m = int(t) / 60
+	var s = int(t) % 60
+	return "%02d:%02d" % [m, s]
 
 
 
 # =====================================================
 #  INPUT & UPGRADES
 # =====================================================
-
-func _on_ClickButton_pressed():
-	money += get_click_power()
-	update_ui()
 
 func _on_BigClickButton_pressed():
 	money += get_click_power()
@@ -253,7 +406,8 @@ func _on_BigClickButton_pressed():
 	update_ui()
 
 
-# --- CLICK ---
+
+# CLICK
 func _on_UpgradeClickButton_pressed():
 	if money < click_upgrade_cost: return
 	money -= click_upgrade_cost
@@ -270,13 +424,34 @@ func _on_UpgradeClickMultiplierButton_pressed():
 	update_ui()
 
 
-# --- AUTO (d + md) ---
+# PERSISTENCIA ÚNICA
+var persistence_upgrade_unlocked := false
+var persistence_upgrade_cost := 10000.0
+const PERSISTENCE_NEW_VALUE := 1.6
+
+func _on_PersistenceUpgradeButton_pressed():
+	if persistence_upgrade_unlocked: return
+	if money < persistence_upgrade_cost: return
+
+	money -= persistence_upgrade_cost
+	click_persistence = PERSISTENCE_NEW_VALUE
+	persistence_upgrade_unlocked = true
+	structural_upgrades += 1
+
+	add_lap("Upgrade estructural → Persistencia")
+	update_ui()
+
+
+
+# AUTO (d + md)
 func _on_UpgradeAutoButton_pressed():
 	if money < auto_upgrade_cost: return
 	money -= auto_upgrade_cost
 	income_per_second += 1
 	auto_upgrade_cost *= 1.6
 	unlocked_d = true
+	structural_upgrades += 1
+	add_lap("Desbloqueado d (Trabajo Manual)")
 	update_ui()
 
 
@@ -286,16 +461,20 @@ func _on_UpgradeAutoMultiplierButton_pressed():
 	auto_multiplier *= AUTO_MULTIPLIER_GAIN
 	auto_multiplier_upgrade_cost *= AUTO_MULTIPLIER_SCALE
 	unlocked_md = true
+	structural_upgrades += 1
+	add_lap("Desbloqueado md (Ritmo de Trabajo)")
 	update_ui()
 
 
-# --- TRUEQUE (e + me) ---
+
+# TRUEQUE (e + me)
 func _on_UpgradeTruequeButton_pressed():
 	if money < trueque_cost: return
 	money -= trueque_cost
 	trueque_level += 1
 	trueque_cost *= TRUEQUE_COST_SCALE
 	unlocked_e = true
+	add_lap("Desbloqueado e (Trueque)")
 	update_ui()
 
 
@@ -305,61 +484,86 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 	trueque_network_multiplier *= TRUEQUE_NETWORK_GAIN
 	trueque_network_upgrade_cost *= TRUEQUE_NETWORK_SCALE
 	unlocked_me = true
+	add_lap("Desbloqueado me (Red de Intercambio)")
 	update_ui()
 
 
 
 # =====================================================
-#  UI — SOLO LEE RESULTADOS (NO CALCULA)
+#  UI — SOLO LEE RESULTADOS
 # =====================================================
 
 func update_ui():
+	check_dominance_transition()
 
 	var auto_eff := get_auto_income_effective()
 	var trueque_eff := get_trueque_income_effective()
 	var passive_total := auto_eff + trueque_eff
+	var c_dyn := get_persistence_dynamic()
 
-	# HEADER
 	money_label.text = "Dinero: $" + str(round(money))
 	income_label.text = "Ingreso pasivo / s: $" + str(snapped(passive_total, 0.01))
 
-	# BOTÓN TheLab
-	#big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
-	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ") "
-	big_click_button.add_theme_color_override("font_color", Color.WHITE)
+	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
 
-	# FÓRMULA
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
 
-
 	# CLICK PANEL
-	click_stats_label.text = "a = " + str(snapped(click_value, 0.01)) + "    Click base\n" + "b = " + str(snapped(click_multiplier, 0.01)) + "    Multiplicador\n" + "c = " + str(snapped(click_persistence, 0.01)) + "    Persistencia\n\n" + "d = " + str(snapped(income_per_second, 0.01)) + "/s    Trabajo Manual\n" + "md = " + str(snapped(auto_multiplier, 0.01)) + "    Ritmo de trabajo\n\n" + "e = " + str(snapped(get_trueque_raw(), 0.01)) + "/s    Trueque corregido\n" + "me = " + str(snapped(trueque_network_multiplier, 0.01)) + "    Red de intercambio"
+	click_stats_label.text = "a = %s    Click base\nb = %s    Multiplicador\nc = %s    Persistencia\n\n%s\n\n" % [
+			str(snapped(click_value, 0.01)), str(snapped(click_multiplier, 0.01)), str(snapped(click_persistence, 0.01)), ("Persistencia estructural: ACTIVA" if persistence_upgrade_unlocked else "Persistencia estructural: —")
+			]
 
-	stats_label.text = "IDLE — The Lab (v0.5.1)\n\n" + "--- Distribución de aporte ---\n"
+	click_stats_label.text += "d = %s/s    Trabajo Manual\nmd = %s    Ritmo de trabajo\n\ne = %s/s    Trueque corregido\nme = %s    Red de intercambio\n\n" % [
+			str(snapped(income_per_second, 0.01)), str(snapped(auto_multiplier, 0.01)), str(snapped(get_trueque_raw(), 0.01)), str(snapped(trueque_network_multiplier, 0.01))
+		]
+
+	click_stats_label.text += "Persistencia dinámica fⁿ = %s\nn(log)=%s   n(power)=%s\n" % [
+		str(snapped(c_dyn, 0.01)), str(snapped(get_n_log(), 0.01)), str(snapped(get_n_power(), 0.01))
+	]
 
 
-	# BREAKDOWN
+	# MÉTRICAS LABORATORIO
 	var c := get_contribution_breakdown()
+	var ap := get_active_passive_breakdown()
 
-	stats_label.text = "--- Distribución de aporte ---\n" + "Click: " + str(snapped(c.click, 0.1)) + "%\n" + "Trabajo Manual: " + str(snapped(c.d, 0.1)) + "%\n" + "Trueque: " + str(snapped(c.e, 0.1)) + "%\n\n" +"Δ$ estimado / s = +" + str(snapped(c.total, 0.01))
-# =====================================================
+	stats_label.text = "--- Distribución de aporte ---\n"
+	stats_label.text += "Click: %s%%\n" % str(snapped(c.click, 0.1))
+	stats_label.text += "Trabajo Manual: %s%%\n" % str(snapped(c.d, 0.1))
+	stats_label.text += "Trueque: %s%%\n\n" % str(snapped(c.e, 0.1))
+	stats_label.text += "Δ$ estimado / s = +%s\n" % str(snapped(c.total, 0.01))
 
-#  CORRECCIONES DE CÓDIGO AUTOMÁTICO
-# =====================================================
-# === CLICK PANEL ===
-	upgrade_click_button.text = "Mejorar click (+" + str(snapped(click_value + 1, 0.01)) + ")\nCosto: $" + str(round(click_upgrade_cost))
+	stats_label.text += "\n--- Activo vs Pasivo ---\n"
+	stats_label.text += "Activo (CLICK): %s%%\n" % str(snapped(ap.activo, 0.1))
+	stats_label.text += "Pasivo (d+e): %s%%\n" % str(snapped(ap.pasivo, 0.1))
+	stats_label.text += "Δ$ activo / s = +%s\n" % str(snapped(ap.push_abs, 0.01))
+	stats_label.text += "Δ$ pasivo / s = +%s\n" % str(snapped(ap.passive_abs, 0.01))
 
-	upgrade_click_multiplier_button.text = "Memoria Numérica (×1.06)\nCosto: $" + str(round(click_multiplier_upgrade_cost))
+	stats_label.text += "\nTiempo de sesión: " + format_time(run_time)
 
+	if lab_mode:
+		stats_label.text += "\n\n--- Lap markers (últimos 12) ---\n"
 
-# === AUTO PANEL ===
-	upgrade_auto_button.text = "Trabajo Manual (+1/s)\nCosto: $" + str(round(auto_upgrade_cost))
+		var start: int = max(0, lap_events.size() - 12)
+		for i in range(start, lap_events.size()):
+			var lap: Dictionary = lap_events[i]
+			stats_label.text += "%s → %s\n" % [lap.time, lap.event]
 
-	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×" + str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)) + ")\nCosto: $" + str(round(auto_multiplier_upgrade_cost))
+	# BOTONES
+	# === BOTONES CLICK ===
 
+	upgrade_click_button.text =  "Mejorar click (+%s)\nCosto: $%s" % [str(snapped(click_value + 1, 0.01)),str(round(click_upgrade_cost))]
 
-# === TRUEQUE PANEL ===
-	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $" + str(round(trueque_cost))
+	upgrade_click_multiplier_button.text =  "Memoria Numérica (×1.06)\nCosto: $%s" % [str(round(click_multiplier_upgrade_cost))]
 
-	upgrade_trueque_network_button.text = "Red de Intercambio (×" + str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)) + ")\nCosto: $" + str(round(trueque_network_upgrade_cost))
+	persistence_upgrade_button.text = "Memoria Operativa del Sistema (única)\nPersistencia → %s\nCosto: %s" % [ str(PERSISTENCE_NEW_VALUE),("—" if persistence_upgrade_unlocked else "$" + str(round(persistence_upgrade_cost)))
+	]
+
+	# === BOTONES AUTO (d + md) ===
+	upgrade_auto_button.text = "Trabajo Manual (+1/s)\nCosto: $%s" % [str(round(auto_upgrade_cost))]
+
+	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×%s)\nCosto: $%s" %[str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)),str(round(auto_multiplier_upgrade_cost))]
+
+	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
+
+	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)),str(round(trueque_network_upgrade_cost))]

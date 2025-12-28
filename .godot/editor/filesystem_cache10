@@ -1,17 +1,58 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1766803695
+::res://::1766911486
+changelog 0.5.1TheLab.md::TextFile::-1::1766810188::0::1::::<><><>0<>0<><>::
 CHANGELOG.md::TextFile::-1::1766652139::0::1::::<><><>0<>0<><>::
+Changelog_v0.6.md::TextFile::-1::1766911240::0::1::::<><><>0<>0<><>::
+export_presets.cfg::TextFile::-1::1766826770::0::1::::<><><>0<>0<><>::
+GUIDELINES— Filosofía de diseño del sistema.md::TextFile::-1::1766811305::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::9216670998058240731::1766454533::1766454545::1::::<><><>0<>0<>bd555fb2458856aea8c8c8acf97ad736<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-main.gd::GDScript::6318254411727827567::1766804191::0::1::::<>Control<><>0<>0<><>::
+main.gd::GDScript::6318254411727827567::1766906824::0::1::::<>Control<><>0<>0<><>::
 main.tres::Theme::1655596882007418082::1766547266::0::1::::<><><>0<>0<><>::
-main.tscn::PackedScene::8187026145298395202::1766803695::0::1::::<><><>0<>0<><>::uid://cwauyyqcu0klj::::res://main.gd<>uid://xt8o6hca6a4q::::res://main.tres
+main.tscn::PackedScene::8187026145298395202::1766869768::0::1::::<><><>0<>0<><>::uid://cwauyyqcu0klj::::res://main.gd<>uid://xt8o6hca6a4q::::res://main.tres
+papa.md::TextFile::-1::1766911486::0::1::::<><><>0<>0<><>::
 ProducerItem.tscn::PackedScene::4870387446695148080::1766534713::0::1::::<><><>0<>0<><>::
 producer_item.gd::GDScript::7808462353882494901::1766534915::0::1::::<>HBoxContainer<><>0<>0<><>::
 producer_item.tscn::PackedScene::7296684604938666336::1766534770::0::1::::<><><>0<>0<><>::uid://djiqh7ws2adm8::::res://producer_item.gd
 README.md::TextFile::-1::1766614340::0::1::::<><><>0<>0<><>::
 READMEV0.2.ini::TextFile::-1::1766650622::0::1::::<><><>0<>0<><>::
+READMEV0.5.1 The Lab (stable).md::TextFile::-1::1766809545::0::1::::<><><>0<>0<><>::
+readmev0.6.md::TextFile::-1::1766911168::0::1::::<><><>0<>0<><>::
 README_v0.4.md::TextFile::-1::1766653097::0::1::::<><><>0<>0<><>::
-::res://screens/::1766805234
+Release Notes — v0.6.md::TextFile::-1::1766911353::0::1::::<><><>0<>0<><>::
+releaseNotesv0.5.1_TheLab(Stable).md::TextFile::-1::1766810444::0::1::::<><><>0<>0<><>::
+ROADMAP.md — Línea evolutiva del proyecto.md::TextFile::-1::1766811206::0::1::::<><><>0<>0<><>::
+version.gd::GDScript::5760246935057539874::1766819076::0::1::::<>Node<><>0<>0<><>::
+::res://runs/::1766909289
+run_28-12-25_04-53.dominante.translation::OptimizedTranslation::8734132304362663162::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.dominante.translation::OptimizedTranslation::5440700426053677123::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-53.total.translation::OptimizedTranslation::6104112128459712082::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.total.translation::OptimizedTranslation::3675383910493865298::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-53.pasivo.translation::OptimizedTranslation::3124894669086020473::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.pasivo.translation::OptimizedTranslation::2347354892194881033::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-53.activo.translation::OptimizedTranslation::4220431737893065702::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.activo.translation::OptimizedTranslation::6207307456562680582::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-53.event.translation::OptimizedTranslation::8904504170698549268::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.event.translation::OptimizedTranslation::6691282588501147947::1766911633::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.activo.translation::OptimizedTranslation::8220551828063643286::1766902431::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.csv::Translation::5836064322128543460::1766902079::1766902431::1::::<><><>0<>0<>3886116f3aedb56384505e3c14911b30<>res://runs/run_28-12-25_03-07.event.translation<*>res://runs/run_28-12-25_03-07.activo.translation<*>res://runs/run_28-12-25_03-07.pasivo.translation<*>res://runs/run_28-12-25_03-07.total.translation<*>res://runs/run_28-12-25_03-07.dominante.translation::
+run_28-12-25_03-07.dominante.translation::OptimizedTranslation::2565715286858552525::1766902431::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.event.translation::OptimizedTranslation::6883469482646903402::1766902431::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.json::JSON::-1::1766902079::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.pasivo.translation::OptimizedTranslation::8621746972166671276::1766902431::0::1::::<><><>0<>0<><>::
+run_28-12-25_03-07.total.translation::OptimizedTranslation::7283714000062823483::1766902431::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.activo.translation::OptimizedTranslation::1156152215250871922::1766907124::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.csv::Translation::2136381545372629805::1766907120::1766907124::1::::<><><>0<>0<>f12446a2f823e05ef3cc75a0a1ed32c2<>res://runs/run_28-12-25_04-32.event.translation<*>res://runs/run_28-12-25_04-32.activo.translation<*>res://runs/run_28-12-25_04-32.pasivo.translation<*>res://runs/run_28-12-25_04-32.total.translation<*>res://runs/run_28-12-25_04-32.dominante.translation::
+run_28-12-25_04-32.dominante.translation::OptimizedTranslation::153230561201038380::1766907124::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.event.translation::OptimizedTranslation::486859961176645080::1766907124::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.json::JSON::-1::1766907120::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.pasivo.translation::OptimizedTranslation::4889243659101908609::1766907124::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-32.total.translation::OptimizedTranslation::6068772303831571476::1766907124::0::1::::<><><>0<>0<><>::
+run_28-12-25_04-53.csv::Translation::9162763460628274933::1766908386::1766911633::1::::<><><>0<>0<>cde8e243505f87cdd562453b109717b2<>res://runs/run_28-12-25_04-53.event.translation<*>res://runs/run_28-12-25_04-53.activo.translation<*>res://runs/run_28-12-25_04-53.pasivo.translation<*>res://runs/run_28-12-25_04-53.total.translation<*>res://runs/run_28-12-25_04-53.dominante.translation::
+run_28-12-25_04-53.json::JSON::-1::1766908386::0::1::::<><><>0<>0<><>::
+run_28-12-25_05-08.csv::Translation::2306358516665976695::1766909289::1766911633::1::::<><><>0<>0<>f8ad3851f1556d1179f22084e5d43259<>res://runs/run_28-12-25_05-08.event.translation<*>res://runs/run_28-12-25_05-08.activo.translation<*>res://runs/run_28-12-25_05-08.pasivo.translation<*>res://runs/run_28-12-25_05-08.total.translation<*>res://runs/run_28-12-25_05-08.dominante.translation::
+run_28-12-25_05-08.json::JSON::-1::1766909289::0::1::::<><><>0<>0<><>::
+::res://screens/::1766822126
 v0.2.1.png::CompressedTexture2D::4190600635964208180::1766615088::1766617132::1::::<><><>0<>0<>11a13d850da6f05a33e0467fa024569a<>res://.godot/imported/v0.2.1.png-89a6179c33da8c99d8ef42ffc7aca077.ctex::
 v0.2.2.png::CompressedTexture2D::9055056716685860181::1766621137::1766621149::1::::<><><>0<>0<>9da660d9a7d958416ddc0494961567ea<>res://.godot/imported/v0.2.2.png-f9d74542af0626b6ad91aae43b60202d.ctex::
 v0.5.1TheLab.png::CompressedTexture2D::6817490758953657653::1766805235::1766805252::1::::<><><>0<>0<>88b6cc1216f53fd7ab75f3bda7f28937<>res://.godot/imported/v0.5.1TheLab.png-51c54c3a32333169fafd2fcb81a3bec3.ctex::
+v0.6 simbologia.png::CompressedTexture2D::2344069700869151062::1766821894::1766822126::1::::<><><>0<>0<>71feacc2bfc132e50cbbcf8c68ffac27<>res://.godot/imported/v0.6 simbologia.png-0abc217a5209a58bb83aaa22389e2666.ctex::
