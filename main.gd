@@ -1,7 +1,7 @@
 extends Control
 
 # =====================================================
-#  IDLE — v0.6 "The Lab"
+#  IDLE — v0.6.1 “Observatorio fⁿ — Tagging Layer”
 #  Cambios clave:
 #  • Integración cronómetro + lap markers
 #  • Activo vs Pasivo (CLICK vs d+e)
@@ -34,8 +34,16 @@ var auto_upgrade_cost: float = 10.0
 # --- MODIFICADOR md ---
 var auto_multiplier: float = 1.0
 var auto_multiplier_upgrade_cost: float = 1200.0
-const AUTO_MULTIPLIER_SCALE := 1.22
-const AUTO_MULTIPLIER_GAIN := 1.05
+const AUTO_MULTIPLIER_SCALE := 1.20
+const AUTO_MULTIPLIER_GAIN := 1.06
+
+
+# --- ESPECIALIZACIÓN DE OFICIO (buff estructural d) v0.6.1---
+var manual_specialization: float = 1.0
+var specialization_cost := 9000.0
+const SPECIALIZATION_GAIN := 1.10
+const SPECIALIZATION_SCALE := 1.35
+var specialization_level: int = 0
 
 
 # --- PRODUCTOR e ---
@@ -79,6 +87,10 @@ var unlocked_me := false
 
 const CLICK_RATE := 1.0   # clicks / s estimado humano
 
+# === VERSION INFO ===
+const VERSION := "0.6"
+const CODENAME := "Observatorio fⁿ"
+const BUILD_CHANNEL := "stable"
 
 
 # ================= REFERENCIAS UI ===================
@@ -99,6 +111,7 @@ const CLICK_RATE := 1.0   # clicks / s estimado humano
 
 @onready var upgrade_auto_button = $UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoButton
 @onready var upgrade_auto_multiplier_button = $UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton
+@onready var specialization_button = $UIRootContainer/ProductionPanel/AutoPanel/UpgradeSpecializationButton
 
 @onready var upgrade_trueque_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton
 @onready var upgrade_trueque_network_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton
@@ -113,7 +126,7 @@ func get_click_power() -> float:
 	return click_value * click_multiplier * click_persistence
 
 func get_auto_income_effective() -> float:
-	return income_per_second * auto_multiplier
+	return income_per_second * auto_multiplier * manual_specialization
 
 func get_trueque_raw() -> float:
 	return trueque_level * trueque_base_income * trueque_efficiency
@@ -269,8 +282,12 @@ func build_run_snapshot() -> Dictionary:
 		"formula_text": build_formula_text(),
 		"formula_eval": build_formula_values(),
 
-		"laps": lap_events
+		"laps": lap_events,
+		"build": { "version": VERSION,  "codename": CODENAME,  "channel": BUILD_CHANNEL},
 	}
+func get_build_string() -> String:
+	return "v%s — %s (%s)" % [VERSION, CODENAME, BUILD_CHANNEL]
+
 
 func ensure_export_dir() -> void:
 	DirAccess.make_dir_recursive_absolute(RUN_EXPORT_PATH)
@@ -332,17 +349,27 @@ func _on_ExportRunButton_pressed():
 
 func build_formula_text() -> String:
 	var t := "Δ$ = clicks × (a × b × c)"
+
+	# --- d ---
 	if unlocked_d:
-		t += "  +  d"
-		if unlocked_md: t += " × md"
+		if specialization_level > 0:
+			t += "+  d × md × so" 
+		elif unlocked_md:
+			t += "  +  d × md"
+		else:
+			t += "  +  d"
 	else:
 		t += "  +  d"
 
+	# --- e ---
 	if unlocked_e:
-		t += "  +  e"
-		if unlocked_me: t += " × me"
+		if unlocked_me:
+			t += "  +  e × me"
+		else:
+			t += "  +  e"
 	else:
 		t += "  +  e"
+
 	return t
 
 
@@ -353,10 +380,31 @@ func build_formula_values() -> String:
 		str(snapped(click_persistence, 0.01))
 	]
 
-	if unlocked_d:  t += "  +  %s/s" % str(snapped(income_per_second, 0.01))
-	if unlocked_md: t += " × %s" % str(snapped(auto_multiplier, 0.01))
-	if unlocked_e:  t += "  +  %s/s" % str(snapped(get_trueque_raw(), 0.01))
-	if unlocked_me: t += " × %s" % str(snapped(trueque_network_multiplier, 0.01))
+	# d
+	if unlocked_d:
+		if specialization_level > 0:
+			t += "  +  %s/s × %s × %s" % [
+				str(snapped(income_per_second, 0.01)),
+				str(snapped(auto_multiplier, 0.01)),
+				str(snapped(manual_specialization, 0.01))
+			]
+		elif unlocked_md:
+			t += "  +  %s/s × %s" % [
+				str(snapped(income_per_second, 0.01)),
+				str(snapped(auto_multiplier, 0.01))
+			]
+		else:
+			t += "  +  %s/s" % str(snapped(income_per_second, 0.01))
+
+	# e
+	if unlocked_e:
+		if unlocked_me:
+			t += "  +  %s/s × %s" % [
+				str(snapped(get_trueque_raw(), 0.01)),
+				str(snapped(trueque_network_multiplier, 0.01))
+			]
+		else:
+			t += "  +  %s/s" % str(snapped(get_trueque_raw(), 0.01))
 
 	return t
 
@@ -378,6 +426,8 @@ func build_marginal_contribution() -> String:
 # =====================================================
 
 func _ready():
+	stats_label.text = get_build_string() + "\n" + stats_label.text
+
 	update_ui()
 
 func _process(delta):
@@ -388,7 +438,7 @@ func _process(delta):
 
 
 func format_time(t: float) -> String:
-	var m = int(t) / 60
+	var m = float(int(t)) / 60
 	var s = int(t) % 60
 	return "%02d:%02d" % [m, s]
 
@@ -464,8 +514,21 @@ func _on_UpgradeAutoMultiplierButton_pressed():
 	structural_upgrades += 1
 	add_lap("Desbloqueado md (Ritmo de Trabajo)")
 	update_ui()
+# NUEVO BOTÓN — ESPECIALIZACIÓN DE OFICIO
+func _on_UpgradeSpecializationButton_pressed():
+	if money < specialization_cost:
+		return
 
+	money -= specialization_cost
+	specialization_level += 1
+	manual_specialization *= SPECIALIZATION_GAIN
+	specialization_cost *= SPECIALIZATION_SCALE
+	structural_upgrades += 1
 
+	add_lap("Especialización de Oficio → x%s" %
+		str(snapped(manual_specialization, 0.01)))
+
+	update_ui()
 
 # TRUEQUE (e + me)
 func _on_UpgradeTruequeButton_pressed():
@@ -521,6 +584,15 @@ func update_ui():
 	click_stats_label.text += "Persistencia dinámica fⁿ = %s\nn(log)=%s   n(power)=%s\n" % [
 		str(snapped(c_dyn, 0.01)), str(snapped(get_n_log(), 0.01)), str(snapped(get_n_power(), 0.01))
 	]
+	click_stats_label.text += "so = %s    Especialización de Oficio\n" % str(snapped(manual_specialization, 0.01))
+
+	if specialization_level > 0:
+		formula_label.text += "\n\n✔ Buff estructural activo — transmisión eficiente"
+	
+	specialization_button.text = "Especialización de Oficio\nBuff → ×%s\nCosto: $%s" % [ str(snapped(manual_specialization, 0.01)), str(round(specialization_cost))]
+
+
+
 
 
 	# MÉTRICAS LABORATORIO
@@ -549,6 +621,8 @@ func update_ui():
 			var lap: Dictionary = lap_events[i]
 			stats_label.text += "%s → %s\n" % [lap.time, lap.event]
 
+	
+
 	# BOTONES
 	# === BOTONES CLICK ===
 
@@ -563,6 +637,12 @@ func update_ui():
 	upgrade_auto_button.text = "Trabajo Manual (+1/s)\nCosto: $%s" % [str(round(auto_upgrade_cost))]
 
 	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×%s)\nCosto: $%s" %[str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)),str(round(auto_multiplier_upgrade_cost))]
+
+
+# NUEVO BOTÓN — ESPECIALIZACIÓN DE OFICIO
+
+	
+	# === BOTONES TRUEQUE (e + me) ===
 
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 

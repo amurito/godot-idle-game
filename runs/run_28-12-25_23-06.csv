@@ -1,0 +1,18 @@
+time,event,activo_ps,pasivo_ps,total_ps,dominante
+00:00,Transición de dominio → CLICK domina el sistema,1.4,0.0,1.4,CLICK domina el sistema
+00:41,Desbloqueado d (Trabajo Manual),16.32,1.0,17.32,CLICK domina el sistema
+00:42,Desbloqueado d (Trabajo Manual),16.32,2.0,18.32,CLICK domina el sistema
+00:42,Desbloqueado d (Trabajo Manual),16.32,3.0,19.32,CLICK domina el sistema
+00:42,Desbloqueado d (Trabajo Manual),16.32,4.0,20.32,CLICK domina el sistema
+00:42,Desbloqueado d (Trabajo Manual),16.32,5.0,21.32,CLICK domina el sistema
+00:42,Desbloqueado d (Trabajo Manual),16.32,6.0,22.32,CLICK domina el sistema
+00:56,Desbloqueado d (Trabajo Manual),16.32,7.0,23.32,CLICK domina el sistema
+00:56,Desbloqueado d (Trabajo Manual),16.32,8.0,24.32,CLICK domina el sistema
+00:56,Desbloqueado d (Trabajo Manual),16.32,9.0,25.32,CLICK domina el sistema
+00:56,Desbloqueado d (Trabajo Manual),16.32,10.0,26.32,CLICK domina el sistema
+01:58,Desbloqueado e (Trueque),28.1,16.0,44.1,CLICK domina el sistema
+02:08,Desbloqueado md (Ritmo de Trabajo),28.1,16.6,44.7,CLICK domina el sistema
+02:48,Desbloqueado me (Red de Intercambio),28.1,17.32,45.42,CLICK domina el sistema
+03:17,Desbloqueado e (Trueque),28.1,24.04,52.14,CLICK domina el sistema
+04:15,Especialización de Oficio → x1.1,28.1,25.1,53.2,CLICK domina el sistema
+05:14,Upgrade estructural → Persistencia,32.12,25.1,57.22,CLICK domina el sistema

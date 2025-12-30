@@ -1,19 +1,23 @@
 extends Node
 
-const TITLE := "IDLE — The Lab"
+const TITLE := "IDLE — Observatorio fⁿ"
+const VERSION := "0.6"
+const NAME := "Observatorio fⁿ"
+
+
+
 
 const MAJOR := 0
 const MINOR := 5
 const PATCH := 1
-const NAME := "TheLab"
 
-func _get_env(name: String, fallback: String) -> String:
+
+func get_env(var_name: String) -> String:
 	if OS.has_feature("pc"):
-		if OS.has_environment(name):
-			return OS.get_environment(name)
+		if OS.has_environment(var_name):
+			return OS.get_environment(var_name)
 
-	return fallback
-	
+	return ""
 const BUILD := "dev"
 const COMMIT := "local"
 

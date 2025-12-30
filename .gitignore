@@ -2,6 +2,8 @@
 .import/
 .export/
 godot/
+.godot/
+
 .android/
 .ios/
 
@@ -19,3 +21,8 @@ Thumbs.db
 
 # Godot generated files
 *.translation
+
+# Builds
+*.exe
+*.pck
+*.zip
