@@ -1,15 +1,13 @@
 extends Control
 
 # =====================================================
-#  IDLE — v0.6.1 “Observatorio fⁿ — Tagging Layer”
-#  Cambios clave:
-#  • Integración cronómetro + lap markers
-#  • Activo vs Pasivo (CLICK vs d+e)
-#  • Métrica estructural fⁿ (observacional)
-#  • Persistencia dinámica (no aplicada aún)
-#  • Refactor UI + capas consolidadas
+#  IDLE — v0.6.2 — “Observatorio fⁿ — Dynamic Layer α”
+#  Esta versión introduce:
+# persistencia dinámica observacional
+# lectura estructural fⁿ
+# convergencia suave vía sigmoide α
+# preliminar de ε (aún no formalizada)
 # =====================================================
-
 
 # =============== ECONOMÍA BASE =======================
 
@@ -23,7 +21,10 @@ var click_upgrade_cost: float = 5.0
 var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
-var click_persistence: float = 1.4   # c (base estable)
+# Persistencia base estructural (c₀)
+var persistence_base: float = 1.4
+# Estado dinámico observado (cₙ)
+var persistence_dynamic: float = 1.4
 
 
 # --- PRODUCTOR d ---
@@ -123,7 +124,7 @@ const BUILD_CHANNEL := "stable"
 # =====================================================
 
 func get_click_power() -> float:
-	return click_value * click_multiplier * click_persistence
+	return click_value * click_multiplier * persistence_dynamic
 
 func get_auto_income_effective() -> float:
 	return income_per_second * auto_multiplier * manual_specialization
@@ -191,15 +192,11 @@ func get_active_passive_breakdown() -> Dictionary:
 
 
 # =====================================================
-#  CAPA 3 — fⁿ (OBSERVACIONAL)
+#  CAPA 3 — fⁿ (OBSERVACIONAL) v0.6.2
 # =====================================================
 
-func get_persistence_dynamic() -> float:
-	if structural_upgrades <= 1:
-		return click_persistence
 
-	var n := float(structural_upgrades)
-	return click_persistence * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
+
 
 func get_n_log() -> float:
 	return 1.0 + log(1.0 + structural_upgrades)
@@ -208,6 +205,55 @@ func get_n_power() -> float:
 	return pow(structural_upgrades + 1.0, 0.35)
 
 
+# =====================================================
+#  FUNCIÓN SIGMOIDE fⁿ α V0.6.2
+# =====================================================
+func f_n_alpha(n: float) -> float:
+	return 1.0 / (1.0 + exp(-0.35 * (n - 6.0)))
+
+func apply_dynamic_persistence(delta: float) -> void:
+	var n := float(structural_upgrades)
+
+	# valor teórico esperado
+	var target := get_persistence_target()
+
+	# peso sigmoide — transición suave
+	var a := f_n_alpha(n)
+
+	# converge sin overshoot
+	persistence_dynamic = lerp(
+		persistence_dynamic,
+		target,
+		clamp(a * delta * 0.4, 0.0, 0.25)
+	)
+
+
+# === Persistencia estructural ===
+# c₀  → baseline fijo
+# fⁿ  → objetivo teórico según n
+# cₙ  → estado dinámico observado
+
+func get_persistence_target() -> float:
+	if structural_upgrades <= 1:
+		return persistence_base
+
+	var n := float(structural_upgrades)
+	return persistence_base * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
+
+
+# ε = | fⁿ − cₙ |
+func get_structural_epsilon() -> float:
+	return abs(get_persistence_target() - persistence_dynamic)
+
+func get_structural_state() -> String:
+	var e := get_structural_epsilon()
+
+	if e < 0.02:
+		return "🟢 Sistema estable — transmisión eficiente"
+	elif e < 0.08:
+		return "🟡 Zona de transición — reconfiguración estructural"
+	else:
+		return "🔴 Zona crítica — fricción sistémica"
 
 # =====================================================
 #  LAP MARKERS
@@ -253,10 +299,10 @@ func build_run_snapshot() -> Dictionary:
 		"economy": {
 			"a": click_value,
 		"b": click_multiplier,
-		"c_base": click_persistence,
+		"c_n": persistence_dynamic,
 
 		"n_structural": structural_upgrades,
-		"f_n": get_persistence_dynamic(),
+		"f_n": get_persistence_target(),
 
 		"n_log": get_n_log(),
 		"n_power": get_n_power(),
@@ -348,65 +394,49 @@ func _on_ExportRunButton_pressed():
 # =====================================================
 
 func build_formula_text() -> String:
-	var t := "Δ$ = clicks × (a × b × c)"
+	var t := "∫$ = clicks · (a · b · cₙ)"
 
-	# --- d ---
 	if unlocked_d:
+		t += "  +  d · md"
 		if specialization_level > 0:
-			t += "+  d × md × so" 
-		elif unlocked_md:
-			t += "  +  d × md"
-		else:
-			t += "  +  d"
-	else:
-		t += "  +  d"
+			t += " · so"
 
-	# --- e ---
 	if unlocked_e:
-		if unlocked_me:
-			t += "  +  e × me"
-		else:
-			t += "  +  e"
-	else:
-		t += "  +  e"
+		t += "  +  e · me"
+
+	t += "\n  cₙ = c₀ · k^(1 − 1/n)"
 
 	return t
 
 
 func build_formula_values() -> String:
+	var cn: float = snapped(persistence_dynamic, 0.01)
+	var c0: float = snapped(persistence_base, 0.01)
+	var fn: float = snapped(get_persistence_target(), 0.01)
+
 	var t := "= clicks × (%s × %s × %s)" % [
-		str(snapped(click_value, 0.01)),
-		str(snapped(click_multiplier, 0.01)),
-		str(snapped(click_persistence, 0.01))
+		snapped(click_value, 0.01),
+		snapped(click_multiplier, 0.01),
+		cn
 	]
 
-	# d
-	if unlocked_d:
-		if specialization_level > 0:
-			t += "  +  %s/s × %s × %s" % [
-				str(snapped(income_per_second, 0.01)),
-				str(snapped(auto_multiplier, 0.01)),
-				str(snapped(manual_specialization, 0.01))
-			]
-		elif unlocked_md:
-			t += "  +  %s/s × %s" % [
-				str(snapped(income_per_second, 0.01)),
-				str(snapped(auto_multiplier, 0.01))
-			]
-		else:
-			t += "  +  %s/s" % str(snapped(income_per_second, 0.01))
+	t += "\n  c₀ = %s   fⁿ(teórico) = %s   cₙ(actual) = %s" % [c0, fn, cn]	
 
-	# e
+	if unlocked_d:
+		t += "\n  +  %s/s × %s × %s" % [
+			snapped(income_per_second, 0.01),
+			snapped(auto_multiplier, 0.01),
+			snapped(manual_specialization, 0.01)
+		]
+
 	if unlocked_e:
-		if unlocked_me:
-			t += "  +  %s/s × %s" % [
-				str(snapped(get_trueque_raw(), 0.01)),
-				str(snapped(trueque_network_multiplier, 0.01))
-			]
-		else:
-			t += "  +  %s/s" % str(snapped(get_trueque_raw(), 0.01))
+		t += "\n  +  %s/s × %s" % [
+			snapped(get_trueque_raw(), 0.01),
+			snapped(trueque_network_multiplier, 0.01)
+		]
 
 	return t
+
 
 
 func build_marginal_contribution() -> String:
@@ -421,6 +451,7 @@ func build_marginal_contribution() -> String:
 
 
 
+
 # =====================================================
 #  CICLO DE VIDA
 # =====================================================
@@ -431,6 +462,7 @@ func _ready():
 	update_ui()
 
 func _process(delta):
+	apply_dynamic_persistence(delta)
 	run_time += delta
 	money += get_passive_total() * delta
 	update_ui()
@@ -484,11 +516,15 @@ func _on_PersistenceUpgradeButton_pressed():
 	if money < persistence_upgrade_cost: return
 
 	money -= persistence_upgrade_cost
-	click_persistence = PERSISTENCE_NEW_VALUE
+	persistence_base = PERSISTENCE_NEW_VALUE
 	persistence_upgrade_unlocked = true
 	structural_upgrades += 1
 
 	add_lap("Upgrade estructural → Persistencia")
+
+	# sincroniza estado dinámico al nuevo baseline
+	persistence_dynamic = persistence_base
+
 	update_ui()
 
 
@@ -562,7 +598,7 @@ func update_ui():
 	var auto_eff := get_auto_income_effective()
 	var trueque_eff := get_trueque_income_effective()
 	var passive_total := auto_eff + trueque_eff
-	var c_dyn := get_persistence_dynamic()
+	var c_dyn := get_persistence_target()
 
 	money_label.text = "Dinero: $" + str(round(money))
 	income_label.text = "Ingreso pasivo / s: $" + str(snapped(passive_total, 0.01))
@@ -574,7 +610,7 @@ func update_ui():
 
 	# CLICK PANEL
 	click_stats_label.text = "a = %s    Click base\nb = %s    Multiplicador\nc = %s    Persistencia\n\n%s\n\n" % [
-			str(snapped(click_value, 0.01)), str(snapped(click_multiplier, 0.01)), str(snapped(click_persistence, 0.01)), ("Persistencia estructural: ACTIVA" if persistence_upgrade_unlocked else "Persistencia estructural: —")
+			str(snapped(click_value, 0.01)), str(snapped(click_multiplier, 0.01)), str(snapped(persistence_dynamic, 0.01)), ("Persistencia estructural: ACTIVA" if persistence_upgrade_unlocked else "Persistencia estructural: —")
 			]
 
 	click_stats_label.text += "d = %s/s    Trabajo Manual\nmd = %s    Ritmo de trabajo\n\ne = %s/s    Trueque corregido\nme = %s    Red de intercambio\n\n" % [
@@ -590,9 +626,17 @@ func update_ui():
 		formula_label.text += "\n\n✔ Buff estructural activo — transmisión eficiente"
 	
 	specialization_button.text = "Especialización de Oficio\nBuff → ×%s\nCosto: $%s" % [ str(snapped(manual_specialization, 0.01)), str(round(specialization_cost))]
+#
+	# PERSISTENCIA ESTRUCTURAL HUD
+	click_stats_label.text += "Persistencia teórica fⁿ = %s\n" % snapped(get_persistence_target(), 0.01) 
+	click_stats_label.text += "c(actual) = cₙ = %s\n" % [snapped(persistence_dynamic, 0.01)]
+	var eps: float = snapped(get_structural_epsilon(), 0.001)
 
+	click_stats_label.text += "\n--- Estabilidad estructural ---\n"
+	click_stats_label.text += "ε = | fⁿ − cn | = %s\n" % eps
+	click_stats_label.text += get_structural_state() + "\n"
 
-
+	click_stats_label.text += "\nk = %s    n = %s\n" % [str(K_PERSISTENCE),str(structural_upgrades)]
 
 
 	# MÉTRICAS LABORATORIO

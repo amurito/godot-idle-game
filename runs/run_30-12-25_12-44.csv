@@ -1,0 +1,32 @@
+time,event,activo_ps,pasivo_ps,total_ps,dominante
+00:00,Transición de dominio → CLICK domina el sistema,1.4,0.0,1.4,CLICK domina el sistema
+00:20,Desbloqueado d (Trabajo Manual),11.2,1.0,12.2,CLICK domina el sistema
+00:20,Desbloqueado d (Trabajo Manual),11.22,2.0,13.22,CLICK domina el sistema
+00:24,Desbloqueado d (Trabajo Manual),11.93,3.0,14.93,CLICK domina el sistema
+00:24,Desbloqueado d (Trabajo Manual),11.98,4.0,15.98,CLICK domina el sistema
+00:25,Desbloqueado d (Trabajo Manual),12.05,5.0,17.05,CLICK domina el sistema
+00:25,Desbloqueado d (Trabajo Manual),12.14,6.0,18.14,CLICK domina el sistema
+00:33,Desbloqueado d (Trabajo Manual),24.75,7.0,31.75,CLICK domina el sistema
+01:08,Desbloqueado d (Trabajo Manual),324.54,8.0,332.54,CLICK domina el sistema
+01:08,Desbloqueado d (Trabajo Manual),328.43,9.0,337.43,CLICK domina el sistema
+01:09,Desbloqueado d (Trabajo Manual),343.2,10.0,353.2,CLICK domina el sistema
+01:09,Desbloqueado d (Trabajo Manual),347.61,11.0,358.61,CLICK domina el sistema
+01:11,Desbloqueado d (Trabajo Manual),407.5,12.0,419.5,CLICK domina el sistema
+01:11,Desbloqueado d (Trabajo Manual),414.42,13.0,427.42,CLICK domina el sistema
+01:14,Desbloqueado e (Trueque),521.53,19.0,540.53,CLICK domina el sistema
+01:20,Desbloqueado e (Trueque),885.32,25.0,910.32,CLICK domina el sistema
+01:20,Desbloqueado e (Trueque),904.73,31.0,935.73,CLICK domina el sistema
+01:20,Desbloqueado e (Trueque),923.23,37.0,960.23,CLICK domina el sistema
+01:25,Desbloqueado me (Red de Intercambio),1392.01,39.88,1431.89,CLICK domina el sistema
+01:26,Desbloqueado me (Red de Intercambio),1580.89,43.11,1624.0,CLICK domina el sistema
+01:45,Desbloqueado e (Trueque),7880.11,50.63,7930.74,CLICK domina el sistema
+01:45,Desbloqueado e (Trueque),8018.02,58.16,8076.18,CLICK domina el sistema
+01:45,Desbloqueado e (Trueque),8146.57,65.68,8212.25,CLICK domina el sistema
+01:46,Desbloqueado me (Red de Intercambio),8470.88,72.01,8542.89,CLICK domina el sistema
+01:46,Especialización de Oficio → x1.1,8808.11,73.31,8881.42,CLICK domina el sistema
+01:46,Especialización de Oficio → x1.21,8952.59,74.74,9027.33,CLICK domina el sistema
+01:47,Especialización de Oficio → x1.33,9115.71,76.31,9192.02,CLICK domina el sistema
+01:49,Upgrade estructural → Persistencia,30.6,76.31,106.91,Trueque domina el sistema
+01:49,Transición de dominio → Trueque domina el sistema,30.6,76.31,106.91,Trueque domina el sistema
+01:56,Transición de dominio → CLICK domina el sistema,59.06,76.31,135.37,CLICK domina el sistema
+02:08,Especialización de Oficio → x1.46,184.54,78.04,262.58,CLICK domina el sistema
