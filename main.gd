@@ -1,7 +1,7 @@
 extends Control
 
 # =====================================================
-#  IDLE — v0.6.2 — “Observatorio fⁿ — Dynamic Layer α”
+#  IDLE — v0.6.3 — “ε : Structural Stability Model”
 #  Esta versión introduce:
 # persistencia dinámica observacional
 # lectura estructural fⁿ
@@ -89,8 +89,8 @@ var unlocked_me := false
 const CLICK_RATE := 1.0   # clicks / s estimado humano
 
 # === VERSION INFO ===
-const VERSION := "0.6"
-const CODENAME := "Observatorio fⁿ"
+const VERSION := "0.6.3"
+const CODENAME := "v0.6.3 — “ε : Structural Stability Model”"
 const BUILD_CHANNEL := "stable"
 
 
@@ -516,14 +516,17 @@ func _on_PersistenceUpgradeButton_pressed():
 	if money < persistence_upgrade_cost: return
 
 	money -= persistence_upgrade_cost
-	persistence_base = PERSISTENCE_NEW_VALUE
 	persistence_upgrade_unlocked = true
 	structural_upgrades += 1
 
-	add_lap("Upgrade estructural → Persistencia")
+	# nuevo baseline
+	persistence_base = PERSISTENCE_NEW_VALUE
 
-	# sincroniza estado dinámico al nuevo baseline
-	persistence_dynamic = persistence_base
+	add_lap("Upgrade estructural → Persistencia (baseline elevado)")
+
+	# 🔹 regla v0.6.3: nunca reducir cn
+	if persistence_dynamic < persistence_base:
+		persistence_dynamic = persistence_base
 
 	update_ui()
 
@@ -589,16 +592,16 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 
 
 # =====================================================
-#  UI — SOLO LEE RESULTADOS
+#  UI — SOLO LEE RESULTADOS (v0.6.3 — HUD científico)
 # =====================================================
 
 func update_ui():
 	check_dominance_transition()
 
+	# ================= PRODUCCIÓN =====================
 	var auto_eff := get_auto_income_effective()
 	var trueque_eff := get_trueque_income_effective()
 	var passive_total := auto_eff + trueque_eff
-	var c_dyn := get_persistence_target()
 
 	money_label.text = "Dinero: $" + str(round(money))
 	income_label.text = "Ingreso pasivo / s: $" + str(snapped(passive_total, 0.01))
@@ -608,58 +611,94 @@ func update_ui():
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
 
-	# CLICK PANEL
-	click_stats_label.text = "a = %s    Click base\nb = %s    Multiplicador\nc = %s    Persistencia\n\n%s\n\n" % [
-			str(snapped(click_value, 0.01)), str(snapped(click_multiplier, 0.01)), str(snapped(persistence_dynamic, 0.01)), ("Persistencia estructural: ACTIVA" if persistence_upgrade_unlocked else "Persistencia estructural: —")
-			]
 
-	click_stats_label.text += "d = %s/s    Trabajo Manual\nmd = %s    Ritmo de trabajo\n\ne = %s/s    Trueque corregido\nme = %s    Red de intercambio\n\n" % [
-			str(snapped(income_per_second, 0.01)), str(snapped(auto_multiplier, 0.01)), str(snapped(get_trueque_raw(), 0.01)), str(snapped(trueque_network_multiplier, 0.01))
-		]
+	# ===============================
+#   PANEL — HUD CIENTÍFICO v0.6.3
+# ===============================
 
-	click_stats_label.text += "Persistencia dinámica fⁿ = %s\nn(log)=%s   n(power)=%s\n" % [
-		str(snapped(c_dyn, 0.01)), str(snapped(get_n_log(), 0.01)), str(snapped(get_n_power(), 0.01))
-	]
-	click_stats_label.text += "so = %s    Especialización de Oficio\n" % str(snapped(manual_specialization, 0.01))
+# Producción activa (siempre visible)
+	click_stats_label.text = "=== Producción activa ===\n"
+	click_stats_label.text += "a = %s    Click base\n" % snapped(click_value, 0.01)
+	click_stats_label.text += "b = %s    Multiplicador\n" % snapped(click_multiplier, 0.01)
+	click_stats_label.text += "cₙ = %s    Persistencia\n" % snapped(persistence_dynamic, 0.01)
+	click_stats_label.text += "\n"
 
+# ---------- PRODUCTOR d ----------
+
+	if unlocked_d:
+		click_stats_label.text += "d = %s/s    Trabajo Manual\n" % snapped(income_per_second, 0.01)
+	else:
+		click_stats_label.text += "d = — (no descubierto)\n"
+
+# md
+	if unlocked_md:
+		click_stats_label.text += "md = %s    Ritmo de Trabajo\n" % snapped(auto_multiplier, 0.01)
+	elif unlocked_d:
+		click_stats_label.text += "md = — (estructura latente)\n"
+
+# so (buff estructural)
 	if specialization_level > 0:
-		formula_label.text += "\n\n✔ Buff estructural activo — transmisión eficiente"
-	
-	specialization_button.text = "Especialización de Oficio\nBuff → ×%s\nCosto: $%s" % [ str(snapped(manual_specialization, 0.01)), str(round(specialization_cost))]
-#
-	# PERSISTENCIA ESTRUCTURAL HUD
-	click_stats_label.text += "Persistencia teórica fⁿ = %s\n" % snapped(get_persistence_target(), 0.01) 
-	click_stats_label.text += "c(actual) = cₙ = %s\n" % [snapped(persistence_dynamic, 0.01)]
-	var eps: float = snapped(get_structural_epsilon(), 0.001)
+		click_stats_label.text += "so = %s    Especialización de Oficio\n" % snapped(manual_specialization, 0.01)
 
-	click_stats_label.text += "\n--- Estabilidad estructural ---\n"
-	click_stats_label.text += "ε = | fⁿ − cn | = %s\n" % eps
-	click_stats_label.text += get_structural_state() + "\n"
+	click_stats_label.text += "\n"
 
-	click_stats_label.text += "\nk = %s    n = %s\n" % [str(K_PERSISTENCE),str(structural_upgrades)]
+# e / me
+	if unlocked_e:
+		click_stats_label.text += "e = %s/s    Trueque corregido\n" % snapped(get_trueque_raw(), 0.01)
+	else:
+		click_stats_label.text += "e = — (no descubierto)\n"
+
+	if unlocked_me:
+		click_stats_label.text += "me = %s    Red de intercambio\n" % snapped(trueque_network_multiplier, 0.01)
+	elif unlocked_e:
+		click_stats_label.text += "me = — (estructura latente)\n"
+
+	click_stats_label.text += "\n"
 
 
-	# MÉTRICAS LABORATORIO
+# ===============================
+#   ESPACIO ESTRUCTURAL fⁿ
+# ===============================
+	var fn:float  = snapped(get_persistence_target(), 0.01)
+	var cn: float = snapped(persistence_dynamic, 0.01)
+	var eps: float = snapped(abs(fn - cn), 0.001)
+	click_stats_label.text += "=== Lectura estructural ===\n"
+	click_stats_label.text += "fⁿ(teórico) = %s\n" % fn
+	click_stats_label.text += "cₙ(actual) = %s\n" % cn
+	click_stats_label.text += "ε = | fⁿ − cₙ | = %s\n" % eps
+	click_stats_label.text += get_structural_state() + "\n\n"
+	# ---------- PARÁMETROS DEL MODELO ----------
+	click_stats_label.text += "c₀ = %s\n" % snapped(persistence_base, 0.01)
+	click_stats_label.text += "k = %s\n" % K_PERSISTENCE
+	click_stats_label.text += "n = %s\n" % structural_upgrades
+	#---------- ESPACIO N OBSERVACIONAL ----------
+	click_stats_label.text += "\nn(log) = %s\n" % snapped(get_n_log(), 0.01)
+	click_stats_label.text += "n(power) = %s\n" % snapped(get_n_power(), 0.01)
+
+
+	# =====================================================
+	#  MÉTRICAS LABORATORIO
+	# =====================================================
+
 	var c := get_contribution_breakdown()
 	var ap := get_active_passive_breakdown()
 
 	stats_label.text = "--- Distribución de aporte ---\n"
-	stats_label.text += "Click: %s%%\n" % str(snapped(c.click, 0.1))
-	stats_label.text += "Trabajo Manual: %s%%\n" % str(snapped(c.d, 0.1))
-	stats_label.text += "Trueque: %s%%\n\n" % str(snapped(c.e, 0.1))
-	stats_label.text += "Δ$ estimado / s = +%s\n" % str(snapped(c.total, 0.01))
+	stats_label.text += "Click: %s%%\n" % snapped(c.click, 0.1)
+	stats_label.text += "Trabajo Manual: %s%%\n" % snapped(c.d, 0.1)
+	stats_label.text += "Trueque: %s%%\n\n" % snapped(c.e, 0.1)
+	stats_label.text += "Δ$ estimado / s = +%s\n" % snapped(c.total, 0.01)
 
 	stats_label.text += "\n--- Activo vs Pasivo ---\n"
-	stats_label.text += "Activo (CLICK): %s%%\n" % str(snapped(ap.activo, 0.1))
-	stats_label.text += "Pasivo (d+e): %s%%\n" % str(snapped(ap.pasivo, 0.1))
-	stats_label.text += "Δ$ activo / s = +%s\n" % str(snapped(ap.push_abs, 0.01))
-	stats_label.text += "Δ$ pasivo / s = +%s\n" % str(snapped(ap.passive_abs, 0.01))
+	stats_label.text += "Activo (CLICK): %s%%\n" % snapped(ap.activo, 0.1)
+	stats_label.text += "Pasivo (d+e): %s%%\n" % snapped(ap.pasivo, 0.1)
+	stats_label.text += "Δ$ activo / s = +%s\n" % snapped(ap.push_abs, 0.01)
+	stats_label.text += "Δ$ pasivo / s = +%s\n" % snapped(ap.passive_abs, 0.01)
 
 	stats_label.text += "\nTiempo de sesión: " + format_time(run_time)
 
 	if lab_mode:
 		stats_label.text += "\n\n--- Lap markers (últimos 12) ---\n"
-
 		var start: int = max(0, lap_events.size() - 12)
 		for i in range(start, lap_events.size()):
 			var lap: Dictionary = lap_events[i]
@@ -667,7 +706,7 @@ func update_ui():
 
 	
 
-	# BOTONES
+	
 	# === BOTONES CLICK ===
 
 	upgrade_click_button.text =  "Mejorar click (+%s)\nCosto: $%s" % [str(snapped(click_value + 1, 0.01)),str(round(click_upgrade_cost))]
@@ -682,9 +721,8 @@ func update_ui():
 
 	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×%s)\nCosto: $%s" %[str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)),str(round(auto_multiplier_upgrade_cost))]
 
-
-# NUEVO BOTÓN — ESPECIALIZACIÓN DE OFICIO
-
+	# === BOTONES ESPECIALIZACIÓN ===
+	specialization_button.text = "Especialización de Oficio (×%s)\nCosto: $%s" % [str(snapped(SPECIALIZATION_GAIN, 0.01)),str(round(specialization_cost))]
 	
 	# === BOTONES TRUEQUE (e + me) ===
 

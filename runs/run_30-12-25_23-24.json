@@ -1,0 +1,468 @@
+{
+	"build": {
+		"channel": "stable",
+		"codename": "v0.6.3 — “ε : Structural Stability Model”",
+		"version": "0.6.3"
+	},
+	"deltas": {
+		"activo_ps": 75.4352292894617,
+		"pasivo_ps": 138.514589472238,
+		"total_ps": 213.949818761699
+	},
+	"distribution": {
+		"activo_%": 35.2583749432771,
+		"click_%": 35.2583749432771,
+		"manual_%": 20.458582688569,
+		"pasivo_%": 64.741625056723,
+		"trueque_%": 44.283042368154
+	},
+	"economy": {
+		"a": 20.0,
+		"auto_income": 43.7711005834057,
+		"b": 1.89829855833543,
+		"c_n": 1.98691688823725,
+		"f_n": 1.98691688823727,
+		"n_log": 4.55534806148941,
+		"n_power": 3.47075386151875,
+		"n_structural": 34,
+		"trueque_income": 94.743488888832
+	},
+	"formula_eval": "= clicks × (20.0 × 1.9 × 1.99)\n  c₀ = 1.6   fⁿ(teórico) = 1.99   cₙ(actual) = 1.99\n  +  16.0/s × 2.26 × 1.21\n  +  48.0/s × 1.97",
+	"formula_text": "∫$ = clicks · (a · b · cₙ)  +  d · md · so  +  e · me\n  cₙ = c₀ · k^(1 − 1/n)",
+	"laps": [
+		{
+			"activo_ps": 1.4,
+			"click": 1.4,
+			"dominante": "CLICK domina el sistema",
+			"event": "Transición de dominio → CLICK domina el sistema",
+			"pasivo_ps": 0.0,
+			"time": "00:00"
+		},
+		{
+			"activo_ps": 17.3,
+			"click": 17.3,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 1.0,
+			"time": "00:36"
+		},
+		{
+			"activo_ps": 17.33,
+			"click": 17.33,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 2.0,
+			"time": "00:36"
+		},
+		{
+			"activo_ps": 17.39,
+			"click": 17.39,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 3.0,
+			"time": "00:36"
+		},
+		{
+			"activo_ps": 17.47,
+			"click": 17.47,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 4.0,
+			"time": "00:36"
+		},
+		{
+			"activo_ps": 17.57,
+			"click": 17.57,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 5.0,
+			"time": "00:37"
+		},
+		{
+			"activo_ps": 17.68,
+			"click": 17.68,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 6.0,
+			"time": "00:37"
+		},
+		{
+			"activo_ps": 24.03,
+			"click": 24.03,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 7.0,
+			"time": "00:49"
+		},
+		{
+			"activo_ps": 24.04,
+			"click": 24.04,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 8.0,
+			"time": "00:50"
+		},
+		{
+			"activo_ps": 24.39,
+			"click": 24.39,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 8.48,
+			"time": "01:02"
+		},
+		{
+			"activo_ps": 24.46,
+			"click": 24.46,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 14.48,
+			"time": "01:26"
+		},
+		{
+			"activo_ps": 24.46,
+			"click": 24.46,
+			"dominante": "CLICK domina el sistema",
+			"event": "Upgrade estructural → Persistencia (baseline elevado)",
+			"pasivo_ps": 14.48,
+			"time": "02:45"
+		},
+		{
+			"activo_ps": 32.14,
+			"click": 32.14,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 15.54,
+			"time": "03:01"
+		},
+		{
+			"activo_ps": 32.2,
+			"click": 32.2,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 16.6,
+			"time": "03:05"
+		},
+		{
+			"activo_ps": 32.25,
+			"click": 32.25,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 17.66,
+			"time": "03:08"
+		},
+		{
+			"activo_ps": 39.51,
+			"click": 39.51,
+			"dominante": "CLICK domina el sistema",
+			"event": "Especialización de Oficio → x1.1",
+			"pasivo_ps": 18.83,
+			"time": "04:06"
+		},
+		{
+			"activo_ps": 39.55,
+			"click": 39.55,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 19.55,
+			"time": "04:34"
+		},
+		{
+			"activo_ps": 39.55,
+			"click": 39.55,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 26.27,
+			"time": "04:56"
+		},
+		{
+			"activo_ps": 39.55,
+			"click": 39.55,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 27.04,
+			"time": "05:17"
+		},
+		{
+			"activo_ps": 39.56,
+			"click": 39.56,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 27.85,
+			"time": "05:17"
+		},
+		{
+			"activo_ps": 39.62,
+			"click": 39.62,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 29.16,
+			"time": "05:25"
+		},
+		{
+			"activo_ps": 50.49,
+			"click": 50.49,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 30.77,
+			"time": "06:16"
+		},
+		{
+			"activo_ps": 50.49,
+			"click": 50.49,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 38.3,
+			"time": "06:40"
+		},
+		{
+			"activo_ps": 50.49,
+			"click": 50.49,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 39.61,
+			"time": "07:03"
+		},
+		{
+			"activo_ps": 50.5,
+			"click": 50.5,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 40.63,
+			"time": "07:03"
+		},
+		{
+			"activo_ps": 50.54,
+			"click": 50.54,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 41.72,
+			"time": "07:07"
+		},
+		{
+			"activo_ps": 50.58,
+			"click": 50.58,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 49.24,
+			"time": "07:40"
+		},
+		{
+			"activo_ps": 50.58,
+			"click": 50.58,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 50.39,
+			"time": "07:50"
+		},
+		{
+			"activo_ps": 50.61,
+			"click": 50.61,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 51.95,
+			"time": "08:08"
+		},
+		{
+			"activo_ps": 50.62,
+			"click": 50.62,
+			"dominante": "CLICK domina el sistema",
+			"event": "RUN EXPORTADA",
+			"pasivo_ps": 51.95,
+			"time": "08:09"
+		},
+		{
+			"activo_ps": 50.63,
+			"click": 50.63,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 59.48,
+			"time": "10:51"
+		},
+		{
+			"activo_ps": 50.63,
+			"click": 50.63,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 60.79,
+			"time": "11:03"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 68.31,
+			"time": "20:44"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 73.73,
+			"time": "20:51"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 79.8,
+			"time": "21:06"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "Trueque domina el sistema",
+			"event": "Transición de dominio → Trueque domina el sistema",
+			"pasivo_ps": 79.8,
+			"time": "21:06"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "Trueque domina el sistema",
+			"event": "RUN EXPORTADA",
+			"pasivo_ps": 79.8,
+			"time": "21:08"
+		},
+		{
+			"activo_ps": 50.65,
+			"click": 50.65,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 81.19,
+			"time": "22:30"
+		},
+		{
+			"activo_ps": 50.67,
+			"click": 50.67,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 82.95,
+			"time": "22:35"
+		},
+		{
+			"activo_ps": 50.69,
+			"click": 50.69,
+			"dominante": "Trueque domina el sistema",
+			"event": "Especialización de Oficio → x1.21",
+			"pasivo_ps": 85.58,
+			"time": "24:33"
+		},
+		{
+			"activo_ps": 50.7,
+			"click": 50.7,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 87.31,
+			"time": "24:59"
+		},
+		{
+			"activo_ps": 50.71,
+			"click": 50.71,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 89.15,
+			"time": "25:00"
+		},
+		{
+			"activo_ps": 50.73,
+			"click": 50.73,
+			"dominante": "Trueque domina el sistema",
+			"event": "RUN EXPORTADA",
+			"pasivo_ps": 89.15,
+			"time": "25:11"
+		},
+		{
+			"activo_ps": 50.73,
+			"click": 50.73,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 98.59,
+			"time": "28:54"
+		},
+		{
+			"activo_ps": 53.78,
+			"click": 53.78,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 106.52,
+			"time": "30:22"
+		},
+		{
+			"activo_ps": 63.71,
+			"click": 63.71,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 108.47,
+			"time": "30:57"
+		},
+		{
+			"activo_ps": 75.37,
+			"click": 75.37,
+			"dominante": "CLICK domina el sistema",
+			"event": "Transición de dominio → CLICK domina el sistema",
+			"pasivo_ps": 108.47,
+			"time": "31:35"
+		},
+		{
+			"activo_ps": 75.37,
+			"click": 75.37,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 110.54,
+			"time": "31:54"
+		},
+		{
+			"activo_ps": 75.39,
+			"click": 75.39,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 112.97,
+			"time": "32:27"
+		},
+		{
+			"activo_ps": 75.4,
+			"click": 75.4,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 115.31,
+			"time": "32:43"
+		},
+		{
+			"activo_ps": 75.42,
+			"click": 75.42,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado md (Ritmo de Trabajo)",
+			"pasivo_ps": 117.79,
+			"time": "33:12"
+		},
+		{
+			"activo_ps": 75.44,
+			"click": 75.44,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 128.36,
+			"time": "41:35"
+		},
+		{
+			"activo_ps": 75.44,
+			"click": 75.44,
+			"dominante": "Trueque domina el sistema",
+			"event": "Transición de dominio → Trueque domina el sistema",
+			"pasivo_ps": 128.36,
+			"time": "41:35"
+		},
+		{
+			"activo_ps": 75.44,
+			"click": 75.44,
+			"dominante": "Trueque domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 138.51,
+			"time": "41:36"
+		}
+	],
+	"session_time": "41:48",
+	"version": "0.5.1-Observatorio fⁿ"
+}
