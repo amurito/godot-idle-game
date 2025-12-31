@@ -1,0 +1,55 @@
+time,event,activo_ps,pasivo_ps,total_ps,dominante
+00:00,Transición de dominio → CLICK domina el sistema,1.4,0.0,1.4,CLICK domina el sistema
+00:36,Desbloqueado d (Trabajo Manual),17.3,1.0,18.3,CLICK domina el sistema
+00:36,Desbloqueado d (Trabajo Manual),17.33,2.0,19.33,CLICK domina el sistema
+00:36,Desbloqueado d (Trabajo Manual),17.39,3.0,20.39,CLICK domina el sistema
+00:36,Desbloqueado d (Trabajo Manual),17.47,4.0,21.47,CLICK domina el sistema
+00:37,Desbloqueado d (Trabajo Manual),17.57,5.0,22.57,CLICK domina el sistema
+00:37,Desbloqueado d (Trabajo Manual),17.68,6.0,23.68,CLICK domina el sistema
+00:49,Desbloqueado d (Trabajo Manual),24.03,7.0,31.03,CLICK domina el sistema
+00:50,Desbloqueado d (Trabajo Manual),24.04,8.0,32.04,CLICK domina el sistema
+01:02,Desbloqueado md (Ritmo de Trabajo),24.39,8.48,32.87,CLICK domina el sistema
+01:26,Desbloqueado e (Trueque),24.46,14.48,38.94,CLICK domina el sistema
+02:45,Upgrade estructural → Persistencia (baseline elevado),24.46,14.48,38.94,CLICK domina el sistema
+03:01,Desbloqueado d (Trabajo Manual),32.14,15.54,47.68,CLICK domina el sistema
+03:05,Desbloqueado d (Trabajo Manual),32.2,16.6,48.8,CLICK domina el sistema
+03:08,Desbloqueado d (Trabajo Manual),32.25,17.66,49.91,CLICK domina el sistema
+04:06,Especialización de Oficio → x1.1,39.51,18.83,58.34,CLICK domina el sistema
+04:34,Desbloqueado me (Red de Intercambio),39.55,19.55,59.1,CLICK domina el sistema
+04:56,Desbloqueado e (Trueque),39.55,26.27,65.82,CLICK domina el sistema
+05:17,Desbloqueado md (Ritmo de Trabajo),39.55,27.04,66.59,CLICK domina el sistema
+05:17,Desbloqueado md (Ritmo de Trabajo),39.56,27.85,67.41,CLICK domina el sistema
+05:25,Desbloqueado d (Trabajo Manual),39.62,29.16,68.78,CLICK domina el sistema
+06:16,Desbloqueado me (Red de Intercambio),50.49,30.77,81.26,CLICK domina el sistema
+06:40,Desbloqueado e (Trueque),50.49,38.3,88.79,CLICK domina el sistema
+07:03,Desbloqueado d (Trabajo Manual),50.49,39.61,90.1,CLICK domina el sistema
+07:03,Desbloqueado md (Ritmo de Trabajo),50.5,40.63,91.13,CLICK domina el sistema
+07:07,Desbloqueado md (Ritmo de Trabajo),50.54,41.72,92.26,CLICK domina el sistema
+07:40,Desbloqueado e (Trueque),50.58,49.24,99.82,CLICK domina el sistema
+07:50,Desbloqueado md (Ritmo de Trabajo),50.58,50.39,100.97,CLICK domina el sistema
+08:08,Desbloqueado d (Trabajo Manual),50.61,51.95,102.56,CLICK domina el sistema
+08:09,RUN EXPORTADA,50.62,51.95,102.57,CLICK domina el sistema
+10:51,Desbloqueado e (Trueque),50.63,59.48,110.11,CLICK domina el sistema
+11:03,Desbloqueado md (Ritmo de Trabajo),50.63,60.79,111.42,CLICK domina el sistema
+20:44,Desbloqueado e (Trueque),50.65,68.31,118.96,CLICK domina el sistema
+20:51,Desbloqueado me (Red de Intercambio),50.65,73.73,124.38,CLICK domina el sistema
+21:06,Desbloqueado me (Red de Intercambio),50.65,79.8,130.45,Trueque domina el sistema
+21:06,Transición de dominio → Trueque domina el sistema,50.65,79.8,130.45,Trueque domina el sistema
+21:08,RUN EXPORTADA,50.65,79.8,130.45,Trueque domina el sistema
+22:30,Desbloqueado md (Ritmo de Trabajo),50.65,81.19,131.84,Trueque domina el sistema
+22:35,Desbloqueado d (Trabajo Manual),50.67,82.95,133.62,Trueque domina el sistema
+24:33,Especialización de Oficio → x1.21,50.69,85.58,136.27,Trueque domina el sistema
+24:59,Desbloqueado md (Ritmo de Trabajo),50.7,87.31,138.01,Trueque domina el sistema
+25:00,Desbloqueado md (Ritmo de Trabajo),50.71,89.15,139.86,Trueque domina el sistema
+25:11,RUN EXPORTADA,50.73,89.15,139.88,Trueque domina el sistema
+28:54,Desbloqueado e (Trueque),50.73,98.59,149.32,Trueque domina el sistema
+30:22,Desbloqueado me (Red de Intercambio),53.78,106.52,160.3,Trueque domina el sistema
+30:57,Desbloqueado md (Ritmo de Trabajo),63.71,108.47,172.18,Trueque domina el sistema
+31:35,Transición de dominio → CLICK domina el sistema,75.37,108.47,183.84,CLICK domina el sistema
+31:54,Desbloqueado md (Ritmo de Trabajo),75.37,110.54,185.91,CLICK domina el sistema
+32:27,Desbloqueado d (Trabajo Manual),75.39,112.97,188.36,CLICK domina el sistema
+32:43,Desbloqueado md (Ritmo de Trabajo),75.4,115.31,190.71,CLICK domina el sistema
+33:12,Desbloqueado md (Ritmo de Trabajo),75.42,117.79,193.21,CLICK domina el sistema
+41:35,Desbloqueado e (Trueque),75.44,128.36,203.8,Trueque domina el sistema
+41:35,Transición de dominio → Trueque domina el sistema,75.44,128.36,203.8,Trueque domina el sistema
+41:36,Desbloqueado me (Red de Intercambio),75.44,138.51,213.95,Trueque domina el sistema
