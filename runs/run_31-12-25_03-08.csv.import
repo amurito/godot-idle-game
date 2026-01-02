@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://72us05ui6xkp"
+
+[deps]
+
+files=["res://runs/run_31-12-25_03-08.event.translation", "res://runs/run_31-12-25_03-08.activo.translation", "res://runs/run_31-12-25_03-08.pasivo.translation", "res://runs/run_31-12-25_03-08.total.translation", "res://runs/run_31-12-25_03-08.dominante.translation"]
+
+source_file="res://runs/run_31-12-25_03-08.csv"
+dest_files=["res://runs/run_31-12-25_03-08.event.translation", "res://runs/run_31-12-25_03-08.activo.translation", "res://runs/run_31-12-25_03-08.pasivo.translation", "res://runs/run_31-12-25_03-08.total.translation", "res://runs/run_31-12-25_03-08.dominante.translation"]
+
+[params]
+
+compress=true
+delimiter=0

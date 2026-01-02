@@ -1,0 +1,172 @@
+{
+	"build": {
+		"channel": "stable",
+		"codename": "v0.6.3 — “ε : Structural Stability Model”",
+		"version": "0.6.3"
+	},
+	"deltas": {
+		"activo_ps": 34.7301068439021,
+		"pasivo_ps": 31.16,
+		"total_ps": 65.8901068439021
+	},
+	"distribution": {
+		"activo_%": 52.7091372399501,
+		"click_%": 52.7091372399501,
+		"manual_%": 16.6944637471293,
+		"pasivo_%": 47.2908627600499,
+		"trueque_%": 30.5963990129206
+	},
+	"economy": {
+		"a": 14.0,
+		"auto_income": 11.0,
+		"b": 1.26247696,
+		"c_n": 1.96496411104531,
+		"f_n": 1.96596317770026,
+		"n_log": 3.63905732961526,
+		"n_power": 2.51851656967343,
+		"n_structural": 13,
+		"trueque_income": 20.16
+	},
+	"formula_eval": "= clicks × (14.0 × 1.26 × 1.96)\n  c₀ = 1.6   fⁿ(teórico) = 1.97   cₙ(actual) = 1.96\n  +  10.0/s × 1.0 × 1.1\n  +  18.0/s × 1.12",
+	"formula_text": "∫$ = clicks · (a · b · cₙ)  +  d · md · so  +  e · me\n  cₙ = c₀ · k^(1 − 1/n)",
+	"laps": [
+		{
+			"activo_ps": 1.4,
+			"click": 1.4,
+			"dominante": "CLICK domina el sistema",
+			"event": "Transición de dominio → CLICK domina el sistema",
+			"pasivo_ps": 0.0,
+			"time": "00:00"
+		},
+		{
+			"activo_ps": 12.6,
+			"click": 12.6,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 1.0,
+			"time": "00:23"
+		},
+		{
+			"activo_ps": 12.62,
+			"click": 12.62,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 2.0,
+			"time": "00:23"
+		},
+		{
+			"activo_ps": 12.66,
+			"click": 12.66,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 3.0,
+			"time": "00:23"
+		},
+		{
+			"activo_ps": 12.72,
+			"click": 12.72,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 4.0,
+			"time": "00:23"
+		},
+		{
+			"activo_ps": 12.8,
+			"click": 12.8,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 5.0,
+			"time": "00:24"
+		},
+		{
+			"activo_ps": 12.9,
+			"click": 12.9,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 6.0,
+			"time": "00:24"
+		},
+		{
+			"activo_ps": 20.9,
+			"click": 20.9,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 7.0,
+			"time": "00:41"
+		},
+		{
+			"activo_ps": 20.98,
+			"click": 20.98,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 8.0,
+			"time": "00:44"
+		},
+		{
+			"activo_ps": 30.17,
+			"click": 30.17,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 9.0,
+			"time": "01:08"
+		},
+		{
+			"activo_ps": 30.25,
+			"click": 30.25,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 15.0,
+			"time": "01:40"
+		},
+		{
+			"activo_ps": 30.25,
+			"click": 30.25,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado d (Trabajo Manual)",
+			"pasivo_ps": 16.0,
+			"time": "01:51"
+		},
+		{
+			"activo_ps": 30.31,
+			"click": 30.31,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado me (Red de Intercambio)",
+			"pasivo_ps": 16.72,
+			"time": "02:14"
+		},
+		{
+			"activo_ps": 30.31,
+			"click": 30.31,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 23.44,
+			"time": "02:43"
+		},
+		{
+			"activo_ps": 30.31,
+			"click": 30.31,
+			"dominante": "CLICK domina el sistema",
+			"event": "Desbloqueado e (Trueque)",
+			"pasivo_ps": 30.16,
+			"time": "04:11"
+		},
+		{
+			"activo_ps": 30.31,
+			"click": 30.31,
+			"dominante": "CLICK domina el sistema",
+			"event": "Upgrade estructural → Persistencia (baseline elevado)",
+			"pasivo_ps": 30.16,
+			"time": "04:21"
+		},
+		{
+			"activo_ps": 34.7,
+			"click": 34.7,
+			"dominante": "CLICK domina el sistema",
+			"event": "Especialización de Oficio → x1.1",
+			"pasivo_ps": 31.16,
+			"time": "05:09"
+		}
+	],
+	"session_time": "05:11",
+	"version": "0.5.1-Observatorio fⁿ"
+}

@@ -22,7 +22,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 1.4
+var persistence_base: float = 10.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -95,16 +95,21 @@ const BUILD_CHANNEL := "stable"
 
 
 # ================= REFERENCIAS UI ===================
-
+# PANEL — SISTEMA / DIAGNÓSTICO
 @onready var money_label = $UIRootContainer/RightPanel/MoneyLabel
 @onready var income_label = $UIRootContainer/RightPanel/IncomeLabel
-@onready var stats_label = $UIRootContainer/RightPanel/StatsLabel
-@onready var export_run_button = $UIRootContainer/RightPanel/ExportRunButton
+# nuevo bloque consolidado
+@onready var system_state_label = $UIRootContainer/RightPanel/SystemStateLabel
+# logs / laps
+@onready var lap_log_label = $UIRootContainer/RightPanel/LapLogLabel
 
+@onready var export_run_button = $UIRootContainer/RightPanel/ExportRunButton
+#PANEL — PRODUCCIÓN / MODELO
 @onready var big_click_button = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton
 @onready var formula_label   = $UIRootContainer/LeftPanel/CenterPanel/FormulaLabel
-@onready var click_stats_label = $UIRootContainer/LeftPanel/CenterPanel/ClickStatsLabel
 @onready var marginal_label = $UIRootContainer/LeftPanel/CenterPanel/MarginalLabel
+# HUD científico (scroll)
+@onready var click_stats_label = $UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll/ClickStatsLabel
 
 @onready var upgrade_click_button = $UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton
 @onready var upgrade_click_multiplier_button = $UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickMultiplierButton
@@ -117,7 +122,15 @@ const BUILD_CHANNEL := "stable"
 @onready var upgrade_trueque_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton
 @onready var upgrade_trueque_network_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton
 
+@onready var sys_delta_label = 	$UIRootContainer/RightPanel/SystemDeltaLabel
 
+@onready var sys_breakdown_label = $UIRootContainer/RightPanel/SystemBreakdownLabel
+
+@onready var sys_active_passive_label =	$UIRootContainer/RightPanel/SystemActivePassiveLabel
+
+@onready var session_time_label =	$UIRootContainer/RightPanel/SessionTimeLabel
+
+@onready var lap_markers_label = $UIRootContainer/RightPanel/LapMarkersLabel
 
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
@@ -240,10 +253,46 @@ func get_persistence_target() -> float:
 	var n := float(structural_upgrades)
 	return persistence_base * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
 
+# =====================================================
+#  MODELO ESTRUCTURAL — v0.6.4
+#  fⁿ(teórico), cₙ(teórico), ε(modelo)
+# =====================================================
 
-# ε = | fⁿ − cₙ |
+func compute_structural_model() -> Dictionary:
+	var n := float(structural_upgrades)
+
+	# fⁿ — función teórica del modelo
+	# (por ahora alineada al objetivo de persistencia)
+	var f_n_model := get_persistence_target()
+
+	# cₙ(teórico) — expresado explícitamente
+	var c_n_model := persistence_base * pow(
+		K_PERSISTENCE,
+		(1.0 - 1.0 / max(n, 1.0))
+	)
+
+	# ε(modelo) = | fⁿ − cₙ |
+	var eps_model: float = abs(f_n_model - c_n_model)
+
+	return {
+		"f_n": f_n_model,
+		"c_n_model": c_n_model,
+		"eps_model": eps_model,
+		"k": K_PERSISTENCE,
+		"n": n,
+		"n_log": get_n_log(),
+		"n_power": get_n_power()
+	}
+# ε(modelo) — distancia estructural del modelo (no runtime)
 func get_structural_epsilon() -> float:
-	return abs(get_persistence_target() - persistence_dynamic)
+	var m := compute_structural_model()
+	return m.eps_model
+
+# -----------------------------------------------------
+#  RUNTIME — contraste observacional (secundario)
+# -----------------------------------------------------
+func compute_structural_runtime() -> float:
+	return persistence_dynamic
 
 func get_structural_state() -> String:
 	var e := get_structural_epsilon()
@@ -254,6 +303,10 @@ func get_structural_state() -> String:
 		return "🟡 Zona de transición — reconfiguración estructural"
 	else:
 		return "🔴 Zona crítica — fricción sistémica"
+
+# Alias estable — ahora SOLO devuelve el modelo
+func update_structural_hud_model_block() -> Dictionary:
+	return compute_structural_model()
 
 # =====================================================
 #  LAP MARKERS
@@ -377,16 +430,21 @@ func export_run_csv(snapshot: Dictionary, filename: String) -> void:
 
 
 func _on_ExportRunButton_pressed():
+	var export_text := ""
 
-	var filename := get_run_filename()
-	var snapshot := build_run_snapshot()
+	export_text += "--- Producción activa (jugador) ---\n"
+	export_text += click_stats_label.text + "\n\n"
 
-	export_run_json(snapshot, filename)
-	export_run_csv(snapshot, filename)
+	export_text += "--- Sistema — Δ$ y dinámica ---\n"
+	export_text += sys_delta_label.text + "\n\n"
+	export_text += sys_breakdown_label.text + "\n\n"
+	export_text += sys_active_passive_label.text + "\n\n"
+	export_text += session_time_label.text + "\n\n"
 
-	add_lap("RUN EXPORTADA")
+	if lab_mode:
+		export_text += lap_markers_label.text
 
-	stats_label.text += "\n\n✔ Run exportada → runs/%s" % filename
+	DisplayServer.clipboard_set(export_text)
 
 
 # =====================================================
@@ -410,17 +468,16 @@ func build_formula_text() -> String:
 
 
 func build_formula_values() -> String:
-	var cn: float = snapped(persistence_dynamic, 0.01)
 	var c0: float = snapped(persistence_base, 0.01)
 	var fn: float = snapped(get_persistence_target(), 0.01)
+	var cn: float = snapped(persistence_dynamic, 0.01)
 
-	var t := "= clicks × (%s × %s × %s)" % [
+	var t := "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
+	t += "= clicks × (%s × %s × %s)" % [
 		snapped(click_value, 0.01),
 		snapped(click_multiplier, 0.01),
 		cn
 	]
-
-	t += "\n  c₀ = %s   fⁿ(teórico) = %s   cₙ(actual) = %s" % [c0, fn, cn]	
 
 	if unlocked_d:
 		t += "\n  +  %s/s × %s × %s" % [
@@ -457,8 +514,6 @@ func build_marginal_contribution() -> String:
 # =====================================================
 
 func _ready():
-	stats_label.text = get_build_string() + "\n" + stats_label.text
-
 	update_ui()
 
 func _process(delta):
@@ -598,83 +653,69 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 func update_ui():
 	check_dominance_transition()
 
-	# ================= PRODUCCIÓN =====================
-	var auto_eff := get_auto_income_effective()
-	var trueque_eff := get_trueque_income_effective()
-	var passive_total := auto_eff + trueque_eff
-
 	money_label.text = "Dinero: $" + str(round(money))
-	income_label.text = "Ingreso pasivo / s: $" + str(snapped(passive_total, 0.01))
-
 	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
+	
+	update_click_stats_panel()
 
 
 	# ===============================
 #   PANEL — HUD CIENTÍFICO v0.6.3
 # ===============================
+func update_click_stats_panel() -> void:
+	var hud := ""
 
-# Producción activa (siempre visible)
-	click_stats_label.text = "=== Producción activa ===\n"
-	click_stats_label.text += "a = %s    Click base\n" % snapped(click_value, 0.01)
-	click_stats_label.text += "b = %s    Multiplicador\n" % snapped(click_multiplier, 0.01)
-	click_stats_label.text += "cₙ = %s    Persistencia\n" % snapped(persistence_dynamic, 0.01)
-	click_stats_label.text += "\n"
+	# ===== PRODUCCIÓN ACTIVA =====
+	hud += "=== Producción activa ===\n"
+	hud += "a = %s    Click base\n" % snapped(click_value, 0.01)
+	hud += "b = %s    Multiplicador\n" % snapped(click_multiplier, 0.01)
 
-# ---------- PRODUCTOR d ----------
+	var cn_runtime: float = snapped(persistence_dynamic, 0.01)
+	hud += "cₙ(actual) = %s\n" % cn_runtime
+	hud += "\n"
 
+	# ===== PRODUCTORES =====
 	if unlocked_d:
-		click_stats_label.text += "d = %s/s    Trabajo Manual\n" % snapped(income_per_second, 0.01)
+		hud += "d = %s/s    Trabajo Manual\n" % snapped(income_per_second, 0.01)
 	else:
-		click_stats_label.text += "d = — (no descubierto)\n"
+		hud += "d = — (no descubierto)\n"
 
-# md
 	if unlocked_md:
-		click_stats_label.text += "md = %s    Ritmo de Trabajo\n" % snapped(auto_multiplier, 0.01)
+		hud += "md = %s    Ritmo de Trabajo\n" % snapped(auto_multiplier, 0.01)
 	elif unlocked_d:
-		click_stats_label.text += "md = — (estructura latente)\n"
+		hud += "md = — (estructura latente)\n"
 
-# so (buff estructural)
 	if specialization_level > 0:
-		click_stats_label.text += "so = %s    Especialización de Oficio\n" % snapped(manual_specialization, 0.01)
+		hud += "so = %s    Especialización de Oficio\n" % snapped(manual_specialization, 0.01)
 
-	click_stats_label.text += "\n"
+	hud += "\n"
 
-# e / me
 	if unlocked_e:
-		click_stats_label.text += "e = %s/s    Trueque corregido\n" % snapped(get_trueque_raw(), 0.01)
+		hud += "e = %s/s    Trueque corregido\n" % snapped(get_trueque_raw(), 0.01)
 	else:
-		click_stats_label.text += "e = — (no descubierto)\n"
-
+			hud += "e = — (no descubierto)\n"
+			
 	if unlocked_me:
-		click_stats_label.text += "me = %s    Red de intercambio\n" % snapped(trueque_network_multiplier, 0.01)
+				hud += "me = %s    Red de intercambio\n" % snapped(trueque_network_multiplier, 0.01)
 	elif unlocked_e:
-		click_stats_label.text += "me = — (estructura latente)\n"
+		hud += "me = — (estructura latente)\n"
+	# ===== MODELO ESTRUCTURAL (alineado a capa productiva) =====
 
-	click_stats_label.text += "\n"
+	var m = update_structural_hud_model_block()
 
+	hud += "\n--- MODELO ESTRUCTURAL (teórico) ---\n"
+	hud += "fⁿ = %s\n" % snapped(m.f_n, 0.01)
+	hud += "cₙ(modelo) = %s\n" % snapped(m.c_n_model, 0.01)
+	hud += "ε(modelo) = %s\n" % snapped(m.eps_model, 0.001)
+	hud += "\n"
+	hud += "k = %s\n" % snapped(m.k, 0.01)
+	hud += "n = %d\n" % int(m.n)
 
-# ===============================
-#   ESPACIO ESTRUCTURAL fⁿ
-# ===============================
-	var fn:float  = snapped(get_persistence_target(), 0.01)
-	var cn: float = snapped(persistence_dynamic, 0.01)
-	var eps: float = snapped(abs(fn - cn), 0.001)
-	click_stats_label.text += "=== Lectura estructural ===\n"
-	click_stats_label.text += "fⁿ(teórico) = %s\n" % fn
-	click_stats_label.text += "cₙ(actual) = %s\n" % cn
-	click_stats_label.text += "ε = | fⁿ − cₙ | = %s\n" % eps
-	click_stats_label.text += get_structural_state() + "\n\n"
-	# ---------- PARÁMETROS DEL MODELO ----------
-	click_stats_label.text += "c₀ = %s\n" % snapped(persistence_base, 0.01)
-	click_stats_label.text += "k = %s\n" % K_PERSISTENCE
-	click_stats_label.text += "n = %s\n" % structural_upgrades
-	#---------- ESPACIO N OBSERVACIONAL ----------
-	click_stats_label.text += "\nn(log) = %s\n" % snapped(get_n_log(), 0.01)
-	click_stats_label.text += "n(power) = %s\n" % snapped(get_n_power(), 0.01)
-
+	# 🚨 SIN ESTO EL PANEL NO MUESTRA NADA
+	click_stats_label.text = hud
 
 	# =====================================================
 	#  MÉTRICAS LABORATORIO
@@ -682,30 +723,30 @@ func update_ui():
 
 	var c := get_contribution_breakdown()
 	var ap := get_active_passive_breakdown()
+	# Dinámica del sistema
 
-	stats_label.text = "--- Distribución de aporte ---\n"
-	stats_label.text += "Click: %s%%\n" % snapped(c.click, 0.1)
-	stats_label.text += "Trabajo Manual: %s%%\n" % snapped(c.d, 0.1)
-	stats_label.text += "Trueque: %s%%\n\n" % snapped(c.e, 0.1)
-	stats_label.text += "Δ$ estimado / s = +%s\n" % snapped(c.total, 0.01)
-
-	stats_label.text += "\n--- Activo vs Pasivo ---\n"
-	stats_label.text += "Activo (CLICK): %s%%\n" % snapped(ap.activo, 0.1)
-	stats_label.text += "Pasivo (d+e): %s%%\n" % snapped(ap.pasivo, 0.1)
-	stats_label.text += "Δ$ activo / s = +%s\n" % snapped(ap.push_abs, 0.01)
-	stats_label.text += "Δ$ pasivo / s = +%s\n" % snapped(ap.passive_abs, 0.01)
-
-	stats_label.text += "\nTiempo de sesión: " + format_time(run_time)
+	sys_delta_label.text = "Δ$ estimado / s = +%s" % snapped(c.total, 0.01)
+	session_time_label.text = "Tiempo de sesión: " + format_time(run_time)
+	# Distribución activo / pasivo
+	sys_active_passive_label.text = "--- Activo vs Pasivo ---\n"
+	sys_active_passive_label.text += "Activo (CLICK): %s%%\n" % snapped(ap.activo, 0.1)
+	sys_active_passive_label.text += "Pasivo (d+e): %s%%\n" % snapped(ap.pasivo, 0.1)
+	sys_active_passive_label.text += "Δ$ activo / s = +%s\n" % snapped(ap.push_abs, 0.01)
+	sys_active_passive_label.text += "Δ$ pasivo / s = +%s" % snapped(ap.passive_abs, 0.01)
+	# Distribución de aporte
+	sys_breakdown_label.text = "--- Distribución de aporte (productores) ---\n"
+	sys_breakdown_label.text += "Click: %s%%\n" % snapped(c.click, 0.1)
+	sys_breakdown_label.text += "Trabajo Manual: %s%%\n" % snapped(c.d, 0.1)
+	sys_breakdown_label.text += "Trueque: %s%%" % snapped(c.e, 0.1)
 
 	if lab_mode:
-		stats_label.text += "\n\n--- Lap markers (últimos 12) ---\n"
+		lap_markers_label.text = "--- Lap markers (historial) ---\n"
 		var start: int = max(0, lap_events.size() - 12)
 		for i in range(start, lap_events.size()):
 			var lap: Dictionary = lap_events[i]
-			stats_label.text += "%s → %s\n" % [lap.time, lap.event]
-
-	
-
+			lap_markers_label.text += "%s → %s\n" % [lap.time, lap.event]
+	else:
+		lap_markers_label.text = ""
 	
 	# === BOTONES CLICK ===
 
@@ -729,3 +770,4 @@ func update_ui():
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 
 	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)),str(round(trueque_network_upgrade_cost))]
+	
