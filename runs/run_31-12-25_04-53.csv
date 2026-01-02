@@ -1,0 +1,11 @@
+time,event,activo_ps,pasivo_ps,total_ps,dominante
+00:00,Transición de dominio → CLICK domina el sistema,1.4,0.0,1.4,CLICK domina el sistema
+00:14,Desbloqueado d (Trabajo Manual),11.2,1.0,12.2,CLICK domina el sistema
+00:15,Desbloqueado d (Trabajo Manual),11.22,2.0,13.22,CLICK domina el sistema
+00:15,Desbloqueado d (Trabajo Manual),11.25,3.0,14.25,CLICK domina el sistema
+00:19,Desbloqueado d (Trabajo Manual),12.11,4.0,16.11,CLICK domina el sistema
+00:19,Desbloqueado d (Trabajo Manual),12.15,5.0,17.15,CLICK domina el sistema
+00:19,Desbloqueado d (Trabajo Manual),12.2,6.0,18.2,CLICK domina el sistema
+00:32,Desbloqueado d (Trabajo Manual),17.87,7.0,24.87,CLICK domina el sistema
+00:41,Desbloqueado d (Trabajo Manual),19.83,8.0,27.83,CLICK domina el sistema
+00:41,Desbloqueado d (Trabajo Manual),19.83,9.0,28.83,CLICK domina el sistema
