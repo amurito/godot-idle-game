@@ -1,0 +1,12 @@
+{
+	"activo_vs_pasivo": "--- Activo vs Pasivo ---\nActivo (CLICK): 81.6%\nPasivo (d+e): 18.4%\nΔ$ activo / s = +8.84\nΔ$ pasivo / s = +2.0",
+	"delta_total_s": "Δ$ estimado / s = +10.84",
+	"distribucion_aporte": "--- Distribución de aporte (productores) ---\nClick: 81.6%\nTrabajo Manual: 18.4%\nTrueque: 0.0%",
+	"dominio": "CLICK domina el sistema",
+	"fecha": "02/01/2026",
+	"hora": "20:58",
+	"lap_markers": "--- Lap markers (historial) ---\n00:00 → Transición de dominio → CLICK domina el sistema\n00:05 → Desbloqueado d (Trabajo Manual)\n00:05 → Desbloqueado d (Trabajo Manual)\n",
+	"produccion_jugador": "=== Producción activa ===\na = 6.0    Click base\nb = 1.0    Multiplicador\ncₙ(actual) = 1.47\n\nd = 2.0/s    Trabajo Manual\nmd = — (estructura latente)\n\ne = — (no descubierto)\n\n--- MODELO ESTRUCTURAL (teórico) ---\nfⁿ = 1.62\ncₙ(modelo) = 1.62\nε(modelo) = 0.0\n\nk = 1.25\nn = 3\n",
+	"tiempo_sesion": "Tiempo de sesión: 00:09",
+	"version": "0.6.3"
+}

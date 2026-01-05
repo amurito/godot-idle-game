@@ -22,7 +22,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 10.4
+var persistence_base: float = 1.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -93,6 +93,12 @@ const VERSION := "0.6.3"
 const CODENAME := "v0.6.3 — “ε : Structural Stability Model”"
 const BUILD_CHANNEL := "stable"
 
+# =====================================================
+#  ACHIEVEMENTS / LOGROS WIP
+
+var unlocked_tree := false
+var unlocked_click_dominance := false
+var unlocked_delta_100 := false
 
 # ================= REFERENCIAS UI ===================
 # PANEL — SISTEMA / DIAGNÓSTICO
@@ -131,6 +137,12 @@ const BUILD_CHANNEL := "stable"
 @onready var session_time_label =	$UIRootContainer/RightPanel/SessionTimeLabel
 
 @onready var lap_markers_label = $UIRootContainer/RightPanel/LapMarkersLabel
+
+@onready var system_message_label = $UIRootContainer/RightPanel/SystemMessageLabel
+
+@onready var system_achievements_label = $UIRootContainer/RightPanel/SystemAchievementsLabel
+
+
 
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
@@ -339,7 +351,7 @@ func get_run_filename() -> String:
 		t.hour,
 		t.minute
 	]
-
+# LEGACY — snapshot analítico (no usado en v0.6 export)
 func build_run_snapshot() -> Dictionary:
 
 	var ap := get_active_passive_breakdown()
@@ -392,60 +404,110 @@ func ensure_export_dir() -> void:
 	DirAccess.make_dir_recursive_absolute(RUN_EXPORT_PATH)
 
 
-func export_run_json(snapshot: Dictionary, filename: String) -> void:
-	ensure_export_dir()
-
-	var path := "%s/%s.json" % [RUN_EXPORT_PATH, filename]
-	var f = FileAccess.open(path, FileAccess.WRITE)
-
-	f.store_string(JSON.stringify(snapshot, "\t"))
-	f.close()
-
-	print("Run exportada → ", path)
 
 
-func export_run_csv(snapshot: Dictionary, filename: String) -> void:
-	ensure_export_dir()
-
-	var path := "%s/%s.csv" % [RUN_EXPORT_PATH, filename]
-	var f = FileAccess.open(path, FileAccess.WRITE)
-
-	f.store_line("time,event,activo_ps,pasivo_ps,total_ps,dominante")
-
-	for lap in snapshot.laps:
-		f.store_line(
-			"%s,%s,%s,%s,%s,%s" % [
-				lap.time,
-				lap.event,
-				lap.activo_ps,
-				lap.pasivo_ps,
-				lap.activo_ps + lap.pasivo_ps,
-				lap.dominante
-			]
-		)
-
-	f.close()
-
-	print("CSV generado → ", path)
 
 
+func _get_timestamp_meta() -> Dictionary:
+	var now := Time.get_datetime_dict_from_system()
+
+	var dd := str(now.day).pad_zeros(2)
+	var mm := str(now.month).pad_zeros(2)
+	var yyyy := str(now.year)
+
+	var hh := str(now.hour).pad_zeros(2)
+	var min := str(now.minute).pad_zeros(2)
+
+	return {
+		"fecha_humana": "%s/%s/%s" % [dd, mm, yyyy],
+		"hora_humana": "%s:%s" % [hh, min],
+		"filename_stamp": "%s-%s-%s_%s-%s" % [dd, mm, yyyy, hh, min]
+	}
+func _ensure_runs_dir():
+	if not DirAccess.dir_exists_absolute("res://runs"):
+		DirAccess.make_dir_absolute("res://runs")
+
+
+func _build_run_json(meta: Dictionary) -> Dictionary:
+	return {
+		"version": VERSION,
+		"fecha": meta.fecha_humana,
+		"hora": meta.hora_humana,
+		"tiempo_sesion": session_time_label.text,
+		"delta_total_s": sys_delta_label.text,
+		"activo_vs_pasivo": sys_active_passive_label.text,
+		"distribucion_aporte": sys_breakdown_label.text,
+		"produccion_jugador": click_stats_label.text,
+		"lap_markers": lap_markers_label.text,
+		"dominio": get_dominant_term()
+	}
+func _build_run_csv(meta: Dictionary) -> String:
+	var csv := ""
+	csv += "fecha;hora;tiempo_sesion;delta_total;dominio\n"
+	csv += "%s;%s;%s;%s;%s\n" % [
+		meta.fecha_humana,
+		meta.hora_humana,
+		session_time_label.text,
+		sys_delta_label.text,
+		get_dominant_term()
+	]
+	return csv
+func _build_clipboard_text(meta: Dictionary) -> String:
+	var t := ""
+	t += "IDLE — Modelo Económico Evolutivo\n"
+	t += "Run exportada — %s %s\n" % [meta.fecha_humana, meta.hora_humana]
+	t += "Versión: %s\n" % VERSION
+	t += "--------------------------------\n\n"
+
+	t += "--- Producción activa (jugador) ---\n"
+	t += click_stats_label.text + "\n\n"
+
+	t += "--- Sistema — Δ$ y dinámica ---\n"
+	t += sys_delta_label.text + "\n\n"
+	t += sys_active_passive_label.text + "\n\n"
+	t += sys_breakdown_label.text + "\n\n"
+	t += session_time_label.text + "\n\n"
+
+	t += lap_markers_label.text
+
+	return t
 func _on_ExportRunButton_pressed():
-	var export_text := ""
+	_ensure_runs_dir()
 
-	export_text += "--- Producción activa (jugador) ---\n"
-	export_text += click_stats_label.text + "\n\n"
+	var meta := _get_timestamp_meta()
 
-	export_text += "--- Sistema — Δ$ y dinámica ---\n"
-	export_text += sys_delta_label.text + "\n\n"
-	export_text += sys_breakdown_label.text + "\n\n"
-	export_text += sys_active_passive_label.text + "\n\n"
-	export_text += session_time_label.text + "\n\n"
+	print("EXPORT RUN —", meta.filename_stamp)
+	
 
-	if lab_mode:
-		export_text += lap_markers_label.text
+	# === JSON ===
+	var json_data := _build_run_json(meta)
+	var json_path := "res://runs/run_%s.json" % meta.filename_stamp
+	var json_file := FileAccess.open(json_path, FileAccess.WRITE)
+	json_file.store_string(JSON.stringify(json_data, "\t"))
+	json_file.close()
 
-	DisplayServer.clipboard_set(export_text)
+	# === CSV ===
+	var csv_path := "res://runs/run_%s.csv" % meta.filename_stamp
+	var csv_file := FileAccess.open(csv_path, FileAccess.WRITE)
+	csv_file.store_string(_build_run_csv(meta))
+	csv_file.close()
 
+	# === Clipboard ===
+	DisplayServer.clipboard_set(_build_clipboard_text(meta))
+
+	print("EXPORT OK →", json_path)
+	print("✔ RUN EXPORTADA —", meta.fecha_humana, meta.hora_humana)
+	print("   JSON:", json_path)
+	print("   CSV :", csv_path)
+	print("   📋 Copiada al portapapeles")
+
+# === Clipboard ===
+	DisplayServer.clipboard_set(_build_clipboard_text(meta))
+
+	# === Feedback in-game ===
+	system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana,meta.hora_humana]
+
+	print("EXPORT OK →", json_path)
 
 # =====================================================
 #  FORMATO TEXTO FÓRMULA
@@ -505,7 +567,38 @@ func build_marginal_contribution() -> String:
 	t += "\nΔ$ total = +" + str(snapped(get_delta_total(), 0.01))
 	t += "\n" + get_dominant_term()
 	return t
+	
+func check_achievements():
+	# Árbol completo
+	if not unlocked_tree \
+	and unlocked_d and unlocked_md and specialization_level > 0 \
+	and unlocked_e and unlocked_me:
+		unlocked_tree = true
+		add_lap("🏁 Logro — Árbol productivo completo")
+		show_system_toast("LOGRO ESTRUCTURAL — Sistema productivo completo")
+	# Dominancia click
+	if not unlocked_click_dominance:
+		var d := get_dominant_term()
+		if d == "CLICK domina el sistema":
+			unlocked_click_dominance = true
+			add_lap("🏁 Logro — Dominancia CLICK alcanzada"	)
+			show_system_toast("LOGRO — Dominancia CLICK alcanzada")
+	# Δ$ 100 / s
+	if not unlocked_delta_100:
+		var delta := get_delta_total()
+		if delta >= 100.0:
+			unlocked_delta_100 = true
+			add_lap("🏁 Logro — Δ$ 100 / s alcanzado")
+			show_system_toast("LOGRO — Δ$ 100 / s alcanzado")
+func show_system_toast(message: String) -> void:
+	system_message_label.text = message
 
+func update_achievements_label():
+	var t := "--- Logros estructurales ---\n"
+	if unlocked_tree: t += "✓ Árbol productivo completo\n"
+	if unlocked_click_dominance: t += "✓ CLICK domina el sistema\n"
+	if unlocked_delta_100: t += "✓ Δ$ ≥ 100 alcanzado\n"
+	system_achievements_label.text = t
 
 
 
@@ -652,13 +745,17 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 
 func update_ui():
 	check_dominance_transition()
+	check_achievements()
+	update_achievements_label()
+	# Valores principales
+
 
 	money_label.text = "Dinero: $" + str(round(money))
 	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
-	
+
 	update_click_stats_panel()
 
 

@@ -1,0 +1,15 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cbfuv7niem0n3"
+valid=false
+
+[deps]
+
+source_file="res://runs/rankings_structurales.csv"
+
+[params]
+
+compress=true
+delimiter=0

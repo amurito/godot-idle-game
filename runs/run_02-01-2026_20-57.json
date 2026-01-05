@@ -1,0 +1,12 @@
+{
+	"activo_vs_pasivo": "--- Activo vs Pasivo ---\nActivo (CLICK): 51.9%\nPasivo (d+e): 48.1%\nΔ$ activo / s = +63.89\nΔ$ pasivo / s = +59.19",
+	"delta_total_s": "Δ$ estimado / s = +123.08",
+	"distribucion_aporte": "--- Distribución de aporte (productores) ---\nClick: 51.9%\nTrabajo Manual: 20.7%\nTrueque: 27.4%",
+	"dominio": "CLICK domina el sistema",
+	"fecha": "02/01/2026",
+	"hora": "20:57",
+	"lap_markers": "--- Lap markers (historial) ---\n05:25 → Desbloqueado me (Red de Intercambio)\n05:39 → Desbloqueado d (Trabajo Manual)\n05:41 → Desbloqueado md (Ritmo de Trabajo)\n05:57 → Desbloqueado md (Ritmo de Trabajo)\n06:03 → Desbloqueado md (Ritmo de Trabajo)\n18:18 → Desbloqueado me (Red de Intercambio)\n18:21 → Desbloqueado e (Trueque)\n18:23 → Desbloqueado me (Red de Intercambio)\n18:27 → Desbloqueado md (Ritmo de Trabajo)\n24:53 → Desbloqueado d (Trabajo Manual)\n24:54 → Desbloqueado md (Ritmo de Trabajo)\n24:57 → Especialización de Oficio → x1.21\n",
+	"produccion_jugador": "=== Producción activa ===\na = 18.0    Click base\nb = 1.79    Multiplicador\ncₙ(actual) = 1.98\n\nd = 14.0/s    Trabajo Manual\nmd = 1.5    Ritmo de Trabajo\nso = 1.21    Especialización de Oficio\n\ne = 24.0/s    Trueque corregido\nme = 1.4    Red de intercambio\n\n--- MODELO ESTRUCTURAL (teórico) ---\nfⁿ = 1.98\ncₙ(modelo) = 1.98\nε(modelo) = 0.0\n\nk = 1.25\nn = 25\n",
+	"tiempo_sesion": "Tiempo de sesión: 25:03",
+	"version": "0.6.3"
+}

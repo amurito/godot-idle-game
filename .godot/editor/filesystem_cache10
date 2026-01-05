@@ -1,30 +1,37 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1767169752
+::res://::1767515606
 changelog 0.5.1TheLab.md::TextFile::-1::1766810188::0::1::::<><><>0<>0<><>::
 CHANGELOG — v0.6.1 “Observatorio fⁿ — Tagging Layer”.md::TextFile::-1::1766977639::0::1::::<><><>0<>0<><>::
 CHANGELOG.md::TextFile::-1::1766652139::0::1::::<><><>0<>0<><>::
+CHANGELOGv0.6.9.md::TextFile::-1::1767320951::0::1::::<><><>0<>0<><>::
 Changelog_v0.6.md::TextFile::-1::1766911240::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1766976141::0::1::::<><><>0<>0<><>::
 GUIDELINES— Filosofía de diseño del sistema.md::TextFile::-1::1766811305::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::9216670998058240731::1766454533::1766454545::1::::<><><>0<>0<>bd555fb2458856aea8c8c8acf97ad736<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-main.gd::GDScript::6318254411727827567::1767294418::0::1::::<>Control<><>0<>0<><>::
+main.gd::GDScript::6318254411727827567::1767515602::0::1::::<>Control<><>0<>0<><>::
 main.tres::Theme::1655596882007418082::1766547266::0::1::::<><><>0<>0<><>::
-main.tscn::PackedScene::8187026145298395202::1767169752::0::1::::<><><>0<>0<><>::uid://cwauyyqcu0klj::::res://main.gd<>uid://xt8o6hca6a4q::::res://main.tres
+main.tscn::PackedScene::8187026145298395202::1767515606::0::1::::<><><>0<>0<><>::uid://cwauyyqcu0klj::::res://main.gd<>uid://xt8o6hca6a4q::::res://main.tres
 papa.md::TextFile::-1::1766911486::0::1::::<><><>0<>0<><>::
 ProducerItem.tscn::PackedScene::4870387446695148080::1766534713::0::1::::<><><>0<>0<><>::
 producer_item.gd::GDScript::7808462353882494901::1766534915::0::1::::<>HBoxContainer<><>0<>0<><>::
 producer_item.tscn::PackedScene::7296684604938666336::1766534770::0::1::::<><><>0<>0<><>::uid://djiqh7ws2adm8::::res://producer_item.gd
+prompt inicial.md::TextFile::-1::1767323258::0::1::::<><><>0<>0<><>::
 README.md::TextFile::-1::1766913566::0::1::::<><><>0<>0<><>::
 READMEV0.2.ini::TextFile::-1::1766650622::0::1::::<><><>0<>0<><>::
 READMEV0.5.1 The Lab (stable).md::TextFile::-1::1766809545::0::1::::<><><>0<>0<><>::
 Readmev0.6.1.md::TextFile::-1::1766977669::0::1::::<><><>0<>0<><>::
+READMEv0.6.9.md::TextFile::-1::1767320937::0::1::::<><><>0<>0<><>::
 readmev0.6.md::TextFile::-1::1766911168::0::1::::<><><>0<>0<><>::
 README_v0.4.md::TextFile::-1::1766653097::0::1::::<><><>0<>0<><>::
 Release Notes — v0.6.md::TextFile::-1::1766911353::0::1::::<><><>0<>0<><>::
 releaseNotesv0.5.1_TheLab(Stable).md::TextFile::-1::1766810444::0::1::::<><><>0<>0<><>::
+RELEASE_NOTES_v0.6.9.md::TextFile::-1::1767320959::0::1::::<><><>0<>0<><>::
 ROADMAP.md — Línea evolutiva del proyecto.md::TextFile::-1::1766811206::0::1::::<><><>0<>0<><>::
+ROADMAPv0.6.9.md::TextFile::-1::1767320954::0::1::::<><><>0<>0<><>::
 version.gd::GDScript::5760246935057539874::1766955471::0::1::::<>Node<><>0<>0<><>::
-::res://runs/::1767293982
+::res://runs/::1767577130
+rankings_structurales.csv::Translation::4854605642520857242::1767577123::1767578077::0::::<><><>0<>0<>27d0ff498de251b0982242c2bcf0ee6e<>::
+run100$.md::TextFile::-1::1767394145::0::1::::<><><>0<>0<><>::
 run_01-01-26_15-59.dominante.translation::OptimizedTranslation::3654343334748780426::1767294421::0::1::::<><><>0<>0<><>::
 run_01-01-26_15-59.total.translation::OptimizedTranslation::3879521438138322425::1767294421::0::1::::<><><>0<>0<><>::
 run_01-01-26_15-59.pasivo.translation::OptimizedTranslation::1367988248300080360::1767294421::0::1::::<><><>0<>0<><>::
@@ -32,6 +39,20 @@ run_01-01-26_15-59.activo.translation::OptimizedTranslation::382303001882559994:
 run_01-01-26_15-59.event.translation::OptimizedTranslation::7059929679838782041::1767294421::0::1::::<><><>0<>0<><>::
 run_01-01-26_15-59.csv::Translation::6825673155644819956::1767293982::1767294421::1::::<><><>0<>0<>ecc2bcf3d1493a5f34f61901f5700cd6<>res://runs/run_01-01-26_15-59.event.translation<*>res://runs/run_01-01-26_15-59.activo.translation<*>res://runs/run_01-01-26_15-59.pasivo.translation<*>res://runs/run_01-01-26_15-59.total.translation<*>res://runs/run_01-01-26_15-59.dominante.translation::
 run_01-01-26_15-59.json::JSON::-1::1767293982::0::1::::<><><>0<>0<><>::
+run_02-01-2026_20-32.csv::Translation::4043508092099423085::1767396726::1767396728::0::::<><><>0<>0<>5eddb8481e893d8df83df64cdfda4d3e<>::
+run_02-01-2026_20-32.json::JSON::-1::1767396726::0::1::::<><><>0<>0<><>::
+run_02-01-2026_20-38.csv::Translation::2429948380519666189::1767397130::1767397915::0::::<><><>0<>0<>2a90d5d70492e887a6f1636f785c7173<>::
+run_02-01-2026_20-38.json::JSON::-1::1767397130::0::1::::<><><>0<>0<><>::
+run_02-01-2026_20-51.csv::Translation::1342338585495178258::1767397873::1767397915::0::::<><><>0<>0<>e3d3853140432deef53fb69c9910258b<>::
+run_02-01-2026_20-51.json::JSON::-1::1767397873::0::1::::<><><>0<>0<><>::
+run_02-01-2026_20-57.csv::Translation::1748251016496977938::1767398267::1767398267::0::::<><><>0<>0<>b4e2f11358b0155c9eac3ed0a486de2e<>::
+run_02-01-2026_20-57.json::JSON::-1::1767398267::0::1::::<><><>0<>0<><>::
+run_02-01-2026_20-58.csv::Translation::6336963681900064122::1767398339::1767399815::0::::<><><>0<>0<>7fb84d1033d56890293c40611d2ae115<>::
+run_02-01-2026_20-58.json::JSON::-1::1767398339::0::1::::<><><>0<>0<><>::
+run_02-01-2026_21-05.csv::Translation::8852698275177181402::1767398724::1767399815::0::::<><><>0<>0<>16b65e888846f3a0347cf0259aab90f1<>::
+run_02-01-2026_21-05.json::JSON::-1::1767398724::0::1::::<><><>0<>0<><>::
+run_04-01-2026_22-37.csv::Translation::374158838391536472::1767577040::1767577044::0::::<><><>0<>0<>5042a2cb228f419875d4de7bc00ba807<>::
+run_04-01-2026_22-37.json::JSON::-1::1767577040::0::1::::<><><>0<>0<><>::
 run_31-12-25_05-13.dominante.translation::OptimizedTranslation::80369856958959227::1767168945::0::1::::<><><>0<>0<><>::
 run_31-12-25_05-13.total.translation::OptimizedTranslation::1443590861569009004::1767168945::0::1::::<><><>0<>0<><>::
 run_31-12-25_05-13.pasivo.translation::OptimizedTranslation::7314757975884053327::1767168945::0::1::::<><><>0<>0<><>::
