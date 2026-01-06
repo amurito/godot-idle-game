@@ -66,6 +66,14 @@ const TRUEQUE_NETWORK_SCALE := 1.35
 var structural_upgrades: int = 1
 const K_PERSISTENCE := 1.25
 
+# === CAPITAL COGNITIVO (μ) === v0.7
+var cognitive_level := 0
+var cognitive_mu := 1.0
+
+const COGNITIVE_STEP_COST := 12000.0
+const COGNITIVE_COST_SCALE := 1.6
+const COGNITIVE_MULTIPLIER := 0.05
+
 
 # =============== SESIÓN / LAB MODE ===================
 
@@ -78,7 +86,6 @@ var last_dominance := ""
 const RUN_EXPORT_PATH := "C:/Users/nicol/Desktop/idle/runs"
 
 
-
 # ========== DESBLOQUEO PROGRESIVO DE FÓRMULA =========
 
 var unlocked_d := false
@@ -86,7 +93,7 @@ var unlocked_md := false
 var unlocked_e := false
 var unlocked_me := false
 
-const CLICK_RATE := 1.0   # clicks / s estimado humano
+const CLICK_RATE := 1.0 # clicks / s estimado humano
 
 # === VERSION INFO ===
 const VERSION := "0.6.3"
@@ -112,7 +119,7 @@ var unlocked_delta_100 := false
 @onready var export_run_button = $UIRootContainer/RightPanel/ExportRunButton
 #PANEL — PRODUCCIÓN / MODELO
 @onready var big_click_button = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton
-@onready var formula_label   = $UIRootContainer/LeftPanel/CenterPanel/FormulaLabel
+@onready var formula_label = $UIRootContainer/LeftPanel/CenterPanel/FormulaLabel
 @onready var marginal_label = $UIRootContainer/LeftPanel/CenterPanel/MarginalLabel
 # HUD científico (scroll)
 @onready var click_stats_label = $UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll/ClickStatsLabel
@@ -128,13 +135,13 @@ var unlocked_delta_100 := false
 @onready var upgrade_trueque_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton
 @onready var upgrade_trueque_network_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton
 
-@onready var sys_delta_label = 	$UIRootContainer/RightPanel/SystemDeltaLabel
+@onready var sys_delta_label = $UIRootContainer/RightPanel/SystemDeltaLabel
 
 @onready var sys_breakdown_label = $UIRootContainer/RightPanel/SystemBreakdownLabel
 
-@onready var sys_active_passive_label =	$UIRootContainer/RightPanel/SystemActivePassiveLabel
+@onready var sys_active_passive_label = $UIRootContainer/RightPanel/SystemActivePassiveLabel
 
-@onready var session_time_label =	$UIRootContainer/RightPanel/SessionTimeLabel
+@onready var session_time_label = $UIRootContainer/RightPanel/SessionTimeLabel
 
 @onready var lap_markers_label = $UIRootContainer/RightPanel/LapMarkersLabel
 
@@ -142,14 +149,14 @@ var unlocked_delta_100 := false
 
 @onready var system_achievements_label = $UIRootContainer/RightPanel/SystemAchievementsLabel
 
-
+@onready var upgrade_cognitive_button = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/UpgradeCognitiveButton
 
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
 # =====================================================
 
 func get_click_power() -> float:
-	return click_value * click_multiplier * persistence_dynamic
+	return click_value * click_multiplier * persistence_dynamic * get_cognitive_mu()
 
 func get_auto_income_effective() -> float:
 	return income_per_second * auto_multiplier * manual_specialization
@@ -160,12 +167,12 @@ func get_trueque_raw() -> float:
 func get_trueque_income_effective() -> float:
 	return get_trueque_raw() * trueque_network_multiplier
 
+
 func get_passive_total() -> float:
 	return get_auto_income_effective() + get_trueque_income_effective()
 
 func get_delta_total() -> float:
 	return get_click_power() + get_passive_total()
-
 
 
 # =====================================================
@@ -215,12 +222,9 @@ func get_active_passive_breakdown() -> Dictionary:
 	}
 
 
-
 # =====================================================
 #  CAPA 3 — fⁿ (OBSERVACIONAL) v0.6.2
 # =====================================================
-
-
 
 
 func get_n_log() -> float:
@@ -264,6 +268,11 @@ func get_persistence_target() -> float:
 
 	var n := float(structural_upgrades)
 	return persistence_base * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
+
+func get_cognitive_mu() -> float:
+	cognitive_mu = 1.0 + log(1.0 + cognitive_level) * COGNITIVE_MULTIPLIER
+	return snapped(cognitive_mu, 0.01)
+
 
 # =====================================================
 #  MODELO ESTRUCTURAL — v0.6.4
@@ -320,6 +329,19 @@ func get_structural_state() -> String:
 func update_structural_hud_model_block() -> Dictionary:
 	return compute_structural_model()
 
+# CAPITAL COGNITIVO
+func _on_UpgradeCognitiveButton_pressed() -> void:
+	if money < COGNITIVE_STEP_COST:
+		return
+
+	money -= COGNITIVE_STEP_COST
+	cognitive_level += 1
+
+	add_lap("Upgrade estructural → Capital Cognitivo (μ ↑ nivel " + str(cognitive_level) + ")")
+	structural_upgrades += 1
+
+	update_ui()
+
 # =====================================================
 #  LAP MARKERS
 # =====================================================
@@ -331,7 +353,8 @@ func add_lap(event: String) -> void:
 		"click": snapped(get_click_power(), 0.01),
 		"activo_ps": snapped(get_click_power() * CLICK_RATE, 0.01),
 		"pasivo_ps": snapped(get_passive_total(), 0.01),
-		"dominante": get_dominant_term()
+		"dominante": get_dominant_term(),
+		"mu": get_cognitive_mu()
 	})
 
 
@@ -353,7 +376,6 @@ func get_run_filename() -> String:
 	]
 # LEGACY — snapshot analítico (no usado en v0.6 export)
 func build_run_snapshot() -> Dictionary:
-
 	var ap := get_active_passive_breakdown()
 	var c := get_contribution_breakdown()
 
@@ -394,7 +416,7 @@ func build_run_snapshot() -> Dictionary:
 		"formula_eval": build_formula_values(),
 
 		"laps": lap_events,
-		"build": { "version": VERSION,  "codename": CODENAME,  "channel": BUILD_CHANNEL},
+		"build": {"version": VERSION, "codename": CODENAME, "channel": BUILD_CHANNEL},
 	}
 func get_build_string() -> String:
 	return "v%s — %s (%s)" % [VERSION, CODENAME, BUILD_CHANNEL]
@@ -402,10 +424,6 @@ func get_build_string() -> String:
 
 func ensure_export_dir() -> void:
 	DirAccess.make_dir_recursive_absolute(RUN_EXPORT_PATH)
-
-
-
-
 
 
 func _get_timestamp_meta() -> Dictionary:
@@ -505,7 +523,7 @@ func _on_ExportRunButton_pressed():
 	DisplayServer.clipboard_set(_build_clipboard_text(meta))
 
 	# === Feedback in-game ===
-	system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana,meta.hora_humana]
+	system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana, meta.hora_humana]
 
 	print("EXPORT OK →", json_path)
 
@@ -514,7 +532,7 @@ func _on_ExportRunButton_pressed():
 # =====================================================
 
 func build_formula_text() -> String:
-	var t := "∫$ = clicks · (a · b · cₙ)"
+	var t := "∫$ = clicks · (a · b · cₙ · μ)"
 
 	if unlocked_d:
 		t += "  +  d · md"
@@ -525,6 +543,7 @@ func build_formula_text() -> String:
 		t += "  +  e · me"
 
 	t += "\n  cₙ = c₀ · k^(1 − 1/n)"
+	t += "\n  μ = 1 + log(1 + nivel cognitivo) · 0.05"
 
 	return t
 
@@ -532,13 +551,12 @@ func build_formula_text() -> String:
 func build_formula_values() -> String:
 	var c0: float = snapped(persistence_base, 0.01)
 	var fn: float = snapped(get_persistence_target(), 0.01)
-	var cn: float = snapped(persistence_dynamic, 0.01)
+	var cn: float = snapped(persistence_dynamic * get_cognitive_mu(), 0.01)
 
 	var t := "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
-	t += "= clicks × (%s × %s × %s)" % [
-		snapped(click_value, 0.01),
-		snapped(click_multiplier, 0.01),
-		cn
+	t += "μ = %s   nivel = %d\n" % [snapped(cognitive_mu, 0.01), cognitive_level]
+	t += "= clicks × (%s × %s × %s × μ=%s)" % [snapped(click_value, 0.01), snapped(click_multiplier, 0.01), cn,
+	snapped(cognitive_mu, 0.01)
 	]
 
 	if unlocked_d:
@@ -555,7 +573,6 @@ func build_formula_values() -> String:
 		]
 
 	return t
-
 
 
 func build_marginal_contribution() -> String:
@@ -581,7 +598,7 @@ func check_achievements():
 		var d := get_dominant_term()
 		if d == "CLICK domina el sistema":
 			unlocked_click_dominance = true
-			add_lap("🏁 Logro — Dominancia CLICK alcanzada"	)
+			add_lap("🏁 Logro — Dominancia CLICK alcanzada")
 			show_system_toast("LOGRO — Dominancia CLICK alcanzada")
 	# Δ$ 100 / s
 	if not unlocked_delta_100:
@@ -601,7 +618,6 @@ func update_achievements_label():
 	system_achievements_label.text = t
 
 
-
 # =====================================================
 #  CICLO DE VIDA
 # =====================================================
@@ -616,12 +632,10 @@ func _process(delta):
 	update_ui()
 
 
-
 func format_time(t: float) -> String:
 	var m = float(int(t)) / 60
 	var s = int(t) % 60
 	return "%02d:%02d" % [m, s]
-
 
 
 # =====================================================
@@ -634,7 +648,6 @@ func _on_BigClickButton_pressed():
 	await get_tree().create_timer(0.05).timeout
 	big_click_button.scale = Vector2(1, 1)
 	update_ui()
-
 
 
 # CLICK
@@ -677,7 +690,6 @@ func _on_PersistenceUpgradeButton_pressed():
 		persistence_dynamic = persistence_base
 
 	update_ui()
-
 
 
 # AUTO (d + md)
@@ -738,7 +750,6 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 	update_ui()
 
 
-
 # =====================================================
 #  UI — SOLO LEE RESULTADOS (v0.6.3 — HUD científico)
 # =====================================================
@@ -752,9 +763,12 @@ func update_ui():
 
 	money_label.text = "Dinero: $" + str(round(money))
 	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
+	system_achievements_label.text = "μ (Capital Cognitivo) = " + str(get_cognitive_mu()) + "\n" + "Nivel cognitivo = " + str(cognitive_level)
+	cognitive_mu_label.text = "μ (Capital Cognitivo) = " + str(snapped(cognitive_mu, 0.01)) + "\n" + "Nivel cognitivo = " + str(cognitive_level)
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
+
 
 	update_click_stats_panel()
 
@@ -847,24 +861,23 @@ func update_click_stats_panel() -> void:
 	
 	# === BOTONES CLICK ===
 
-	upgrade_click_button.text =  "Mejorar click (+%s)\nCosto: $%s" % [str(snapped(click_value + 1, 0.01)),str(round(click_upgrade_cost))]
+	upgrade_click_button.text = "Mejorar click (+%s)\nCosto: $%s" % [str(snapped(click_value + 1, 0.01)), str(round(click_upgrade_cost))]
 
-	upgrade_click_multiplier_button.text =  "Memoria Numérica (×1.06)\nCosto: $%s" % [str(round(click_multiplier_upgrade_cost))]
+	upgrade_click_multiplier_button.text = "Memoria Numérica (×1.06)\nCosto: $%s" % [str(round(click_multiplier_upgrade_cost))]
 
-	persistence_upgrade_button.text = "Memoria Operativa del Sistema (única)\nPersistencia → %s\nCosto: %s" % [ str(PERSISTENCE_NEW_VALUE),("—" if persistence_upgrade_unlocked else "$" + str(round(persistence_upgrade_cost)))
+	persistence_upgrade_button.text = "Memoria Operativa del Sistema (única)\nPersistencia → %s\nCosto: %s" % [str(PERSISTENCE_NEW_VALUE), ("—" if persistence_upgrade_unlocked else "$" + str(round(persistence_upgrade_cost)))
 	]
 
 	# === BOTONES AUTO (d + md) ===
 	upgrade_auto_button.text = "Trabajo Manual (+1/s)\nCosto: $%s" % [str(round(auto_upgrade_cost))]
 
-	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×%s)\nCosto: $%s" %[str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)),str(round(auto_multiplier_upgrade_cost))]
+	upgrade_auto_multiplier_button.text = "Ritmo de Trabajo (×%s)\nCosto: $%s" % [str(snapped(AUTO_MULTIPLIER_GAIN, 0.01)), str(round(auto_multiplier_upgrade_cost))]
 
 	# === BOTONES ESPECIALIZACIÓN ===
-	specialization_button.text = "Especialización de Oficio (×%s)\nCosto: $%s" % [str(snapped(SPECIALIZATION_GAIN, 0.01)),str(round(specialization_cost))]
+	specialization_button.text = "Especialización de Oficio (×%s)\nCosto: $%s" % [str(snapped(SPECIALIZATION_GAIN, 0.01)), str(round(specialization_cost))]
 	
 	# === BOTONES TRUEQUE (e + me) ===
 
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 
-	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)),str(round(trueque_network_upgrade_cost))]
-	
+	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)), str(round(trueque_network_upgrade_cost))]
