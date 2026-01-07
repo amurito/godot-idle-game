@@ -1,12 +1,17 @@
 extends Control
 
 # =====================================================
-# IDLE — v0.6.9 — “μ (Capital Cognitivo)”
-# Cambios en esta revisión (presentación, NO lógica):
-# • HUD estructural segmentado por capas
-# • Fórmula progresiva (solo aparecen términos desbloqueados)
-# • μ (Capital Cognitivo) movido a bloque único
-# • Eliminadas redundancias en HUD / export
+# IDLE — v0.7 — “k_eff · Cognitive Structural Growth”
+#HUD limpio y no redundante
+#μ movido a bloque único (Capital Cognitivo)
+#k_eff(μ) → μ impacta estructura (no solo output)
+#convergencia perceptible en pocas upgrades
+#export estructurado por capas
+#estabilidad del modelo ε
+#preserva curva base sin romper progresión
+# k_eff = k · (1 + α · (μ − 1))
+# fⁿ = c₀ · k_eff^(1 − 1/n)
+# ε(modelo) = | fⁿ − cₙ(modelo) |
 # =====================================================
 
 # =============== ECONOMÍA BASE =======================
