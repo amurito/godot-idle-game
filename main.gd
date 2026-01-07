@@ -1,12 +1,12 @@
 extends Control
 
 # =====================================================
-#  IDLE — v0.6.3 — “ε : Structural Stability Model”
-#  Esta versión introduce:
-# persistencia dinámica observacional
-# lectura estructural fⁿ
-# convergencia suave vía sigmoide α
-# preliminar de ε (aún no formalizada)
+# IDLE — v0.6.9 — “μ (Capital Cognitivo)”
+# Cambios en esta revisión (presentación, NO lógica):
+# • HUD estructural segmentado por capas
+# • Fórmula progresiva (solo aparecen términos desbloqueados)
+# • μ (Capital Cognitivo) movido a bloque único
+# • Eliminadas redundancias en HUD / export
 # =====================================================
 
 # =============== ECONOMÍA BASE =======================
@@ -75,7 +75,7 @@ var cognitive_cost_scale: float = 1.45
 const COGNITIVE_COST := 15000.0
 const COGNITIVE_COST_SCALE := 1.45
 const COGNITIVE_MULTIPLIER := 0.05
-# μ dinámico observado
+# μ dinámico observado (bloque unico en HUD)
 var mu_structural: float = 1.0
 
 
@@ -100,8 +100,8 @@ var unlocked_me := false
 const CLICK_RATE := 1.0 # clicks / s estimado humano
 
 # === VERSION INFO ===
-const VERSION := "0.6.3"
-const CODENAME := "v0.6.3 — “ε : Structural Stability Model”"
+const VERSION := "0.7"
+const CODENAME := "v0.7 — “μ (Capital Cognitivo)”"
 const BUILD_CHANNEL := "stable"
 
 # =====================================================
@@ -187,6 +187,116 @@ func get_mu_structural_factor(n: int = cognitive_level) -> float:
 		return 1.0
 
 	return 1.0 + log(1.0 + float(n)) * 0.08
+
+# =====================================================
+#  FORMATO TEXTO FÓRMULA
+# =====================================================
+
+func build_formula_text() -> String:
+	var t := "∫$ = clicks · (a · b · cₙ · μ)"
+
+	# --- d (Trabajo Manual)
+	if unlocked_d:
+		t += "  +  d"
+		
+		# md aparece solo cuando está desbloqueado
+		if unlocked_md:
+			t += " · md"
+		
+		# so aparece solo si hay especialización real
+		if specialization_level > 0:
+			t += " · so"
+
+	# --- e (Trueque)
+	if unlocked_e:
+		t += "  +  e"
+
+		# me aparece solo si existe red
+		if unlocked_me:
+			t += " · me"
+
+	# --- definiciones estructurales abajo ---
+	t += "\n\ncₙ = c₀ · k^(1 − 1/n)"
+	t += "\n"
+	t += "\nμ = 1 + log(1 + nivel cognitivo) · 0.08"
+
+	return t
+
+
+func build_formula_values() -> String:
+	var c0 = float(snapped(persistence_base, 0.01))
+	var fn = float(snapped(get_persistence_target(), 0.01))
+	var cn = float(snapped(persistence_dynamic, 0.01))
+
+	var t := "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
+	return t
+
+
+func build_marginal_contribution() -> String:
+	var t := "Aporte actual:\n"
+	t += "• Click PUSH = +" + str(snapped(get_click_power(), 0.01)) + "\n"
+	if unlocked_d: t += "• Trabajo Manual = +" + str(snapped(get_auto_income_effective(), 0.01)) + " /s\n"
+	if unlocked_e: t += "• Trueque = +" + str(snapped(get_trueque_income_effective(), 0.01)) + " /s\n"
+
+	t += "\nΔ$ total = +" + str(snapped(get_delta_total(), 0.01))
+	t += "\n" + get_dominant_term()
+	return t
+# ===============================
+#   HUD CIENTÍFICO — segmentado por capas
+# ===============================
+func update_click_stats_panel() -> void:
+	var hud := ""
+
+	# ===== CAPA 1 - PRODUCCIÓN ACTIVA =====
+	hud += "=== Producción activa ===\n"
+	hud += "a = %s    Click base\n" % snapped(click_value, 0.01)
+	hud += "b = %s    Multiplicador\n" % snapped(click_multiplier, 0.01)
+	hud += "cₙ(actual) = %s\n\n" % snapped(persistence_dynamic, 0.01)
+
+	# ===== CAPA 2 - PRODUCTORES =====
+	if unlocked_d:
+		hud += "d = %s/s    Trabajo Manual\n" % snapped(income_per_second, 0.01)
+	else:
+		hud += "d = — (no descubierto)\n"
+
+	if unlocked_md:
+		hud += "md = %s    Ritmo de Trabajo\n" % snapped(auto_multiplier, 0.01)
+	elif unlocked_d:
+		hud += "md = — (estructura latente)\n"
+
+	if specialization_level > 0:
+		hud += "so = %s    Especialización de Oficio\n" % snapped(manual_specialization, 0.01)
+
+	hud += "\n"
+
+	if unlocked_e:
+		hud += "e = %s/s    Trueque corregido\n" % snapped(get_trueque_raw(), 0.01)
+	else:
+			hud += "e = — (no descubierto)\n"
+			
+	if unlocked_me:
+				hud += "me = %s    Red de intercambio\n" % snapped(trueque_network_multiplier, 0.01)
+	elif unlocked_e:
+		hud += "me = — (estructura latente)\n"
+	
+
+	# ===== CAPA 3 - CAPITAL COGNITIVO =====
+	hud += "\n--- Capital Cognitivo ---\n"
+	hud += "μ = %s\n" % snapped(mu_structural, 0.01)
+	hud += "Nivel cognitivo = %d\n" % cognitive_level
+	# ===== CAPA 4 - MODELO ESTRUCTURAL  =====
+	var m = update_structural_hud_model_block()
+	hud += "\n--- MODELO ESTRUCTURAL (teórico) ---\n"
+	hud += "fⁿ = %s\n" % snapped(m.f_n, 0.01)
+	hud += "cₙ(modelo) = %s\n" % snapped(m.c_n_model, 0.01)
+	hud += "ε(modelo) = %s\n" % snapped(m.eps_model, 0.001)
+	hud += "\n"
+	hud += "k = %s\n" % snapped(m.k, 0.01)
+	hud += "k_eff(μ) = %s\n" % snapped(m.k_eff, 0.01)
+	hud += "n = %d\n" % int(m.n)
+
+	# 🚨 SIN ESTO EL PANEL NO MUESTRA NADA
+	click_stats_label.text = hud
 
 
 # =====================================================
@@ -281,7 +391,8 @@ func get_persistence_target() -> float:
 		return persistence_base
 
 	var n := float(structural_upgrades)
-	return persistence_base * pow(K_PERSISTENCE, (1.0 - 1.0 / n))
+	var k_eff := get_k_eff()
+	return persistence_base * pow(k_eff, (1.0 - 1.0 / n))
 
 func get_cognitive_mu() -> float:
 	cognitive_mu = 1.0 + log(1.0 + cognitive_level) * COGNITIVE_MULTIPLIER
@@ -296,24 +407,24 @@ func get_cognitive_mu() -> float:
 func compute_structural_model() -> Dictionary:
 	var n := float(structural_upgrades)
 
-	# fⁿ — función teórica del modelo
-	# (por ahora alineada al objetivo de persistencia)
-	var f_n_model := get_persistence_target()
+	# k ajustado por μ
+	var k_eff := get_k_eff()
 
-	# cₙ(teórico) — expresado explícitamente
-	var c_n_model := persistence_base * pow(
-		K_PERSISTENCE,
-		(1.0 - 1.0 / max(n, 1.0))
-	)
+	# fⁿ(teórico) — sigue alineado al target de persistencia
+	var f_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n, 1.0)))
+
+	# cₙ(modelo) — misma estructura formal
+	var c_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n, 1.0)))
 
 	# ε(modelo) = | fⁿ − cₙ |
-	var eps_model: float = abs(f_n_model - c_n_model)
+	var eps_model := float(abs(f_n_model - c_n_model))
 
 	return {
 		"f_n": f_n_model,
 		"c_n_model": c_n_model,
 		"eps_model": eps_model,
 		"k": K_PERSISTENCE,
+		"k_eff": k_eff,
 		"n": n,
 		"n_log": get_n_log(),
 		"n_power": get_n_power()
@@ -322,6 +433,12 @@ func compute_structural_model() -> Dictionary:
 func get_structural_epsilon() -> float:
 	var m := compute_structural_model()
 	return m.eps_model
+# k_eff v0.7
+func get_k_eff() -> float:
+	var mu := get_mu_structural_factor()
+	var alpha := 0.55 # impacto perceptible en pocas upgrades
+	return K_PERSISTENCE * (1.0 + alpha * (mu - 1.0))
+
 
 # -----------------------------------------------------
 #  RUNTIME — contraste observacional (secundario)
@@ -362,7 +479,7 @@ func _on_UpgradeCognitiveButton_pressed():
 	update_cognitive_button()
 	update_ui()
 func update_cognitive_button():
-	upgrade_cognitive_button.text = "Capital Cognitivo (μ) (+1 nivel)\n" +  "Costo: $" + str(snapped(cognitive_cost, 0.01)) + "\n" + "μ = " + str(snapped(mu_structural, 0.01))
+	upgrade_cognitive_button.text = "Capital Cognitivo (μ) (+1 nivel)\n" + "Costo: $" + str(snapped(cognitive_cost, 0.01)) + "\n" + "μ = " + str(snapped(mu_structural, 0.01))
 # =====================================================
 #  LAP MARKERS
 # =====================================================
@@ -547,49 +664,7 @@ func _on_ExportRunButton_pressed():
 
 	print("EXPORT OK →", json_path)
 
-# =====================================================
-#  FORMATO TEXTO FÓRMULA
-# =====================================================
 
-func build_formula_text() -> String:
-	var t := "∫$ = clicks · (a · b · cₙ · μ)"
-
-	if unlocked_d:
-		t += "  +  d · md"
-		if specialization_level > 0:
-			t += " · so"
-
-	if unlocked_e:
-		t += "  +  e · me"
-
-	t += "\n  cₙ = c₀ · k^(1 − 1/n)"
-	t += "\n  μ = 1 + log(1 + nivel cognitivo) · 0.08"
-
-	return t
-
-
-func build_formula_values() -> String:
-	var c0 float:= snapped(persistence_base, 0.01)
-	var fn float:= snapped(get_persistence_target(), 0.01)
-	var cn float:= snapped(persistence_dynamic, 0.01)
-	var mu float:= snapped(get_mu_structural_factor(), 0.01)
-
-	var t := "" t += "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
-	t += "μ = %s   nivel cognitivo = %d" % [mu, cognitive_level]
-
-	return t
-
-
-func build_marginal_contribution() -> String:
-	var t := "Aporte actual:\n"
-	t += "• Click PUSH = +" + str(snapped(get_click_power(), 0.01)) + "\n"
-	if unlocked_d: t += "• Trabajo Manual = +" + str(snapped(get_auto_income_effective(), 0.01)) + " /s\n"
-	if unlocked_e: t += "• Trueque = +" + str(snapped(get_trueque_income_effective(), 0.01)) + " /s\n"
-
-	t += "\nΔ$ total = +" + str(snapped(get_delta_total(), 0.01))
-	t += "\n" + get_dominant_term()
-	return t
-	
 func check_achievements():
 	# Árbol completo
 	if not unlocked_tree \
@@ -767,8 +842,6 @@ func update_ui():
 
 	money_label.text = "Dinero: $" + str(round(money))
 	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
-	system_achievements_label.text = "μ (Capital Cognitivo) = " + str(get_cognitive_mu()) + "\n" + "Nivel cognitivo = " + str(cognitive_level)
-	cognitive_mu_label.text = "μ (Capital Cognitivo) = " + str(snapped(mu_structural, 0.01)) + "\nNivel cognitivo = " + str(cognitive_level)
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
@@ -777,61 +850,6 @@ func update_ui():
 
 	update_click_stats_panel()
 
-
-	# ===============================
-#   PANEL — HUD CIENTÍFICO v0.6.3
-# ===============================
-func update_click_stats_panel() -> void:
-	var hud := ""
-
-	# ===== PRODUCCIÓN ACTIVA =====
-	hud += "=== Producción activa ===\n"
-	hud += "a = %s    Click base\n" % snapped(click_value, 0.01)
-	hud += "b = %s    Multiplicador\n" % snapped(click_multiplier, 0.01)
-
-	var cn_runtime: float = snapped(persistence_dynamic, 0.01)
-	hud += "cₙ(actual) = %s\n" % cn_runtime
-	hud += "\n"
-
-	# ===== PRODUCTORES =====
-	if unlocked_d:
-		hud += "d = %s/s    Trabajo Manual\n" % snapped(income_per_second, 0.01)
-	else:
-		hud += "d = — (no descubierto)\n"
-
-	if unlocked_md:
-		hud += "md = %s    Ritmo de Trabajo\n" % snapped(auto_multiplier, 0.01)
-	elif unlocked_d:
-		hud += "md = — (estructura latente)\n"
-
-	if specialization_level > 0:
-		hud += "so = %s    Especialización de Oficio\n" % snapped(manual_specialization, 0.01)
-
-	hud += "\n"
-
-	if unlocked_e:
-		hud += "e = %s/s    Trueque corregido\n" % snapped(get_trueque_raw(), 0.01)
-	else:
-			hud += "e = — (no descubierto)\n"
-			
-	if unlocked_me:
-				hud += "me = %s    Red de intercambio\n" % snapped(trueque_network_multiplier, 0.01)
-	elif unlocked_e:
-		hud += "me = — (estructura latente)\n"
-	# ===== MODELO ESTRUCTURAL (alineado a capa productiva) =====
-
-	var m = update_structural_hud_model_block()
-
-	hud += "\n--- MODELO ESTRUCTURAL (teórico) ---\n"
-	hud += "fⁿ = %s\n" % snapped(m.f_n, 0.01)
-	hud += "cₙ(modelo) = %s\n" % snapped(m.c_n_model, 0.01)
-	hud += "ε(modelo) = %s\n" % snapped(m.eps_model, 0.001)
-	hud += "\n"
-	hud += "k = %s\n" % snapped(m.k, 0.01)
-	hud += "n = %d\n" % int(m.n)
-
-	# 🚨 SIN ESTO EL PANEL NO MUESTRA NADA
-	click_stats_label.text = hud
 
 	# =====================================================
 	#  MÉTRICAS LABORATORIO
@@ -886,6 +904,3 @@ func update_click_stats_panel() -> void:
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 
 	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)), str(round(trueque_network_upgrade_cost))]
-
-	# === BOTÓN CAPITAL COGNITIVO (μ) ===
-	
