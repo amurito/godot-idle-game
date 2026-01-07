@@ -1,0 +1,15 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cc04tg7umyvkj"
+valid=false
+
+[deps]
+
+source_file="res://runs/run_07-01-2026_00-11.csv"
+
+[params]
+
+compress=true
+delimiter=0

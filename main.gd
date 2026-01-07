@@ -22,7 +22,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 1.4
+var persistence_base: float = 10.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -69,10 +69,14 @@ const K_PERSISTENCE := 1.25
 # === CAPITAL COGNITIVO (μ) === v0.7
 var cognitive_level := 0
 var cognitive_mu := 1.0
+var cognitive_cost: float = 15000.0
+var cognitive_cost_scale: float = 1.45
 
-const COGNITIVE_STEP_COST := 12000.0
-const COGNITIVE_COST_SCALE := 1.6
+const COGNITIVE_COST := 15000.0
+const COGNITIVE_COST_SCALE := 1.45
 const COGNITIVE_MULTIPLIER := 0.05
+# μ dinámico observado
+var mu_structural: float = 1.0
 
 
 # =============== SESIÓN / LAB MODE ===================
@@ -151,21 +155,23 @@ var unlocked_delta_100 := false
 
 @onready var upgrade_cognitive_button = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/UpgradeCognitiveButton
 
+@onready var cognitive_mu_label = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/CognitiveMuLabel
+
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
 # =====================================================
 
 func get_click_power() -> float:
-	return click_value * click_multiplier * persistence_dynamic * get_cognitive_mu()
+	return click_value * click_multiplier * persistence_dynamic * get_mu_structural_factor()
 
 func get_auto_income_effective() -> float:
-	return income_per_second * auto_multiplier * manual_specialization
+	return income_per_second * auto_multiplier * manual_specialization * get_mu_structural_factor()
 
 func get_trueque_raw() -> float:
 	return trueque_level * trueque_base_income * trueque_efficiency
 
 func get_trueque_income_effective() -> float:
-	return get_trueque_raw() * trueque_network_multiplier
+	return get_trueque_raw() * trueque_network_multiplier * get_mu_structural_factor()
 
 
 func get_passive_total() -> float:
@@ -173,6 +179,14 @@ func get_passive_total() -> float:
 
 func get_delta_total() -> float:
 	return get_click_power() + get_passive_total()
+
+func get_mu_structural_factor(n: int = cognitive_level) -> float:
+	# μ = 1 + log(1+n) * 0.08
+	# Crece lento pero nunca se aplana del todo
+	if n <= 0:
+		return 1.0
+
+	return 1.0 + log(1.0 + float(n)) * 0.08
 
 
 # =====================================================
@@ -329,19 +343,26 @@ func get_structural_state() -> String:
 func update_structural_hud_model_block() -> Dictionary:
 	return compute_structural_model()
 
-# CAPITAL COGNITIVO
-func _on_UpgradeCognitiveButton_pressed() -> void:
-	if money < COGNITIVE_STEP_COST:
+# =====================================================
+#  CAPITAL COGNITIVO (μ) — v0.7
+func _on_UpgradeCognitiveButton_pressed():
+	if money < cognitive_cost:
 		return
 
-	money -= COGNITIVE_STEP_COST
+	money -= cognitive_cost
 	cognitive_level += 1
+	cognitive_cost *= cognitive_cost_scale
 
-	add_lap("Upgrade estructural → Capital Cognitivo (μ ↑ nivel " + str(cognitive_level) + ")")
+	mu_structural = get_mu_structural_factor()
+
+	add_lap("Upgrade estructural → Capital Cognitivo (μ ↑ nivel %d)" % cognitive_level)
+
 	structural_upgrades += 1
 
+	update_cognitive_button()
 	update_ui()
-
+func update_cognitive_button():
+	upgrade_cognitive_button.text = "Capital Cognitivo (μ) (+1 nivel)\n" +  "Costo: $" + str(snapped(cognitive_cost, 0.01)) + "\n" + "μ = " + str(snapped(mu_structural, 0.01))
 # =====================================================
 #  LAP MARKERS
 # =====================================================
@@ -354,7 +375,9 @@ func add_lap(event: String) -> void:
 		"activo_ps": snapped(get_click_power() * CLICK_RATE, 0.01),
 		"pasivo_ps": snapped(get_passive_total(), 0.01),
 		"dominante": get_dominant_term(),
-		"mu": get_cognitive_mu()
+		"mu": snapped(get_mu_structural_factor(), 0.01),
+		"mu_level": cognitive_level,
+
 	})
 
 
@@ -519,9 +542,6 @@ func _on_ExportRunButton_pressed():
 	print("   CSV :", csv_path)
 	print("   📋 Copiada al portapapeles")
 
-# === Clipboard ===
-	DisplayServer.clipboard_set(_build_clipboard_text(meta))
-
 	# === Feedback in-game ===
 	system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana, meta.hora_humana]
 
@@ -543,34 +563,19 @@ func build_formula_text() -> String:
 		t += "  +  e · me"
 
 	t += "\n  cₙ = c₀ · k^(1 − 1/n)"
-	t += "\n  μ = 1 + log(1 + nivel cognitivo) · 0.05"
+	t += "\n  μ = 1 + log(1 + nivel cognitivo) · 0.08"
 
 	return t
 
 
 func build_formula_values() -> String:
-	var c0: float = snapped(persistence_base, 0.01)
-	var fn: float = snapped(get_persistence_target(), 0.01)
-	var cn: float = snapped(persistence_dynamic * get_cognitive_mu(), 0.01)
+	var c0 float:= snapped(persistence_base, 0.01)
+	var fn float:= snapped(get_persistence_target(), 0.01)
+	var cn float:= snapped(persistence_dynamic, 0.01)
+	var mu float:= snapped(get_mu_structural_factor(), 0.01)
 
-	var t := "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
-	t += "μ = %s   nivel = %d\n" % [snapped(cognitive_mu, 0.01), cognitive_level]
-	t += "= clicks × (%s × %s × %s × μ=%s)" % [snapped(click_value, 0.01), snapped(click_multiplier, 0.01), cn,
-	snapped(cognitive_mu, 0.01)
-	]
-
-	if unlocked_d:
-		t += "\n  +  %s/s × %s × %s" % [
-			snapped(income_per_second, 0.01),
-			snapped(auto_multiplier, 0.01),
-			snapped(manual_specialization, 0.01)
-		]
-
-	if unlocked_e:
-		t += "\n  +  %s/s × %s" % [
-			snapped(get_trueque_raw(), 0.01),
-			snapped(trueque_network_multiplier, 0.01)
-		]
+	var t := "" t += "c₀ = %s   fⁿ = %s   cₙ = %s\n" % [c0, fn, cn]
+	t += "μ = %s   nivel cognitivo = %d" % [mu, cognitive_level]
 
 	return t
 
@@ -749,7 +754,6 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 	add_lap("Desbloqueado me (Red de Intercambio)")
 	update_ui()
 
-
 # =====================================================
 #  UI — SOLO LEE RESULTADOS (v0.6.3 — HUD científico)
 # =====================================================
@@ -764,10 +768,11 @@ func update_ui():
 	money_label.text = "Dinero: $" + str(round(money))
 	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
 	system_achievements_label.text = "μ (Capital Cognitivo) = " + str(get_cognitive_mu()) + "\n" + "Nivel cognitivo = " + str(cognitive_level)
-	cognitive_mu_label.text = "μ (Capital Cognitivo) = " + str(snapped(cognitive_mu, 0.01)) + "\n" + "Nivel cognitivo = " + str(cognitive_level)
+	cognitive_mu_label.text = "μ (Capital Cognitivo) = " + str(snapped(mu_structural, 0.01)) + "\nNivel cognitivo = " + str(cognitive_level)
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
+	update_cognitive_button()
 
 
 	update_click_stats_panel()
@@ -881,3 +886,6 @@ func update_click_stats_panel() -> void:
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 
 	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)), str(round(trueque_network_upgrade_cost))]
+
+	# === BOTÓN CAPITAL COGNITIVO (μ) ===
+	

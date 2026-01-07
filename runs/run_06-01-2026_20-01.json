@@ -1,0 +1,12 @@
+{
+	"activo_vs_pasivo": "--- Activo vs Pasivo ---\nActivo (CLICK): 46.5%\nPasivo (d+e): 53.5%\nΔ$ activo / s = +100.72\nΔ$ pasivo / s = +115.7",
+	"delta_total_s": "Δ$ estimado / s = +216.43",
+	"distribucion_aporte": "--- Distribución de aporte (productores) ---\nClick: 46.5%\nTrabajo Manual: 18.6%\nTrueque: 34.9%",
+	"dominio": "CLICK domina el sistema",
+	"fecha": "06/01/2026",
+	"hora": "20:01",
+	"lap_markers": "--- Lap markers (historial) ---\n39:05 → Desbloqueado me (Red de Intercambio)\n55:50 → Desbloqueado e (Trueque)\n55:57 → Especialización de Oficio → x1.21\n56:02 → Especialización de Oficio → x1.33\n56:16 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 7)\n56:18 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 8)\n56:23 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 9)\n66:55 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 10)\n66:56 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 11)\n66:58 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 12)\n66:59 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 13)\n67:11 → Desbloqueado md (Ritmo de Trabajo)\n",
+	"produccion_jugador": "=== Producción activa ===\na = 21.0    Click base\nb = 2.13    Multiplicador\ncₙ(actual) = 1.99\n\nd = 15.0/s    Trabajo Manual\nmd = 2.01    Ritmo de Trabajo\nso = 1.33    Especialización de Oficio\n\ne = 48.0/s    Trueque corregido\nme = 1.57    Red de intercambio\n\n--- MODELO ESTRUCTURAL (teórico) ---\nfⁿ = 1.99\ncₙ(modelo) = 1.99\nε(modelo) = 0.0\n\nk = 1.25\nn = 45\n",
+	"tiempo_sesion": "Tiempo de sesión: 67:14",
+	"version": "0.6.3"
+}

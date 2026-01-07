@@ -176,6 +176,9 @@ text = "Trueque ( +e /s )
 Costo: $X
 "
 
+[node name="CognitiveMuLabel" type="Label" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
+layout_mode = 2
+
 [node name="RightPanel" type="VBoxContainer" parent="UIRootContainer"]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2

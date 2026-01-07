@@ -111,6 +111,7 @@ def analyze_structural_rankings(runs):
     print("\n📈 RANKING — Primer cruce Δ$ ≥ 100")
     for i, r in enumerate(sort_time(delta_100_times), 1):
         print(f"{i:02}) {r[0]}   {r[1]}   Δ$={r[2]}")
+    
 
 
 # ================= MAIN =================
