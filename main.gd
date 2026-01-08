@@ -199,7 +199,7 @@ func get_mu_structural_factor(n: int = cognitive_level) -> float:
 # =====================================================
 
 func build_formula_text() -> String:
-	var t := "∫$ = clicks · (a · b · cₙ · μ)"
+	var t := "∫$ = clicks · (a · b · cₙ )"
 
 	# --- d (Trabajo Manual)
 	if unlocked_d:
@@ -221,29 +221,19 @@ func build_formula_text() -> String:
 		if unlocked_me:
 			t += " · me"
 
-	t += "\n\nκμ = k · (1 + α · (μ − 1))"
 	t += "\nfⁿ = c₀ · κμ^(1 − 1/n)"
-
+	t += "\n\nκμ = k · (1 + α · (μ − 1))"
 
 	return t
 
-
+# formula con valores
 func build_formula_values() -> String:
-	var mu = float(snapped(cognitive_mu, 0.01))
-	var k = float(snapped(K_PERSISTENCE, 0.01))
-	var alpha := 0.55
-	var k_mu = float(snapped(get_k_eff(), 0.01))
-
-	var c0 = float(snapped(persistence_base, 0.01))
-	var fn = float(snapped(get_persistence_target(), 0.01))
+	var c0 := float(snapped(persistence_base, 0.01))
 	var cn = float(snapped(persistence_dynamic, 0.01))
+	var mu = float(snapped(get_mu_structural_factor(), 0.01))
+	var n := structural_upgrades
 
-	var t := ""
-	t += "μ = %s   nivel cognitivo = %d\n" % [mu, cognitive_level]
-	t += "k = %s   α = %s   κμ = %s\n" % [k, alpha, k_mu]
-	t += "c₀ = %s   fⁿ = 56t%s   cₙ = %s" % [c0, fn, cn]
-
-	return t
+	return "c₀ = %s   cₙ = %s   μ = %s   n = %d" % [c0, cn, mu, n]
 
 
 func build_marginal_contribution() -> String:
@@ -294,27 +284,22 @@ func update_click_stats_panel() -> void:
 		hud += "me = — (estructura latente)\n"
 	
 
-	# ===== CAPITAL COGNITIVO =====
-	hud += "\n--- Capital Cognitivo ---\n"
-	hud += "μ = %s\n" % snapped(get_mu_structural_factor(), 0.01)
-	hud += "Nivel cognitivo = %d\n" % cognitive_level
-
-	# ===== MODELO ESTRUCTURAL (teórico) =====
+	# ===== HUD ROSA(modelo) =====
 	var m = update_structural_hud_model_block()
 
 	var k_eff = m.k_eff
 
-	hud += "\nκμ = k · (1 + α · (μ − 1))\n"
-	hud += "fⁿ = c₀ · κμ^(1 − 1/n)\n"
-
+	hud += "\n--- MODELO ESTRUCTURAL ---\n"
 	hud += "\nμ = %s\n" % snapped(get_mu_structural_factor(), 0.01)
 	hud += "k = %s\n" % snapped(K_PERSISTENCE, 0.01)
 	hud += "α = %s\n" % ALPHA_KAPPA
 	hud += "κμ = %s\n" % snapped(k_eff, 0.01)
 	hud += "n = %d\n" % int(m.n)
 
-	hud += "\n--- MODELO ESTRUCTURAL (teórico) ---\n"
-	hud += "fⁿ = %s\n" % snapped(m.f_n, 0.01)
+	hud += "\n--- Capital Cognitivo ---\n"
+	hud += "μ = %s\n" % snapped(get_mu_structural_factor(), 0.01)
+	hud += "Nivel cognitivo = %d\n" % cognitive_level
+	hud += "\n--- Modelo estructural ---\n"
 	hud += "cₙ(modelo) = %s\n" % snapped(m.c_n_model, 0.01)
 	hud += "ε(modelo) = %s\n" % snapped(m.eps_model, 0.001)
 

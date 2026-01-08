@@ -1,0 +1,12 @@
+{
+	"activo_vs_pasivo": "--- Activo vs Pasivo ---\nActivo (CLICK): 60.1%\nPasivo (d+e): 39.9%\nΔ$ activo / s = +57.32\nΔ$ pasivo / s = +38.1",
+	"delta_total_s": "Δ$ estimado / s = +95.42",
+	"distribucion_aporte": "--- Distribución de aporte (productores) ---\nClick: 60.1%\nTrabajo Manual: 16.1%\nTrueque: 23.8%",
+	"dominio": "CLICK domina el sistema",
+	"fecha": "08/01/2026",
+	"hora": "10:27",
+	"lap_markers": "--- Lap markers (historial) ---\n00:38 → Desbloqueado md (Ritmo de Trabajo)\n00:51 → Especialización de Oficio → x1.1\n00:56 → Desbloqueado e (Trueque)\n00:56 → Desbloqueado e (Trueque)\n01:05 → Desbloqueado me (Red de Intercambio)\n01:05 → 🏁 Logro — Árbol productivo completo\n01:06 → Desbloqueado e (Trueque)\n01:43 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 1)\n01:59 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 2)\n02:21 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 3)\n06:12 → Upgrade estructural → Capital Cognitivo (μ ↑ nivel 4)\n06:19 → Upgrade estructural → Persistencia (baseline elevado)\n",
+	"produccion_jugador": "=== Producción activa ===\na = 16.0    Click base\nb = 1.5    Multiplicador\ncₙ(actual) = 2.11\n\nd = 11.0/s    Trabajo Manual\nmd = 1.12    Ritmo de Trabajo\nso = 1.1    Especialización de Oficio\n\ne = 18.0/s    Trueque corregido\nme = 1.12    Red de intercambio\n\n--- Capital Cognitivo ---\nμ = 1.13\nNivel cognitivo = 4\n\nκμ = k · (1 + α · (μ − 1))\nfⁿ = c₀ · κμ^(1 − 1/n)\n\nμ = 1.13\nk = 1.25\nα = 0.55\nκμ = 1.34\nn = 20\n\n--- MODELO ESTRUCTURAL (teórico) ---\nfⁿ = 2.11\ncₙ(modelo) = 2.11\nε(modelo) = 0.0\n",
+	"tiempo_sesion": "Tiempo de sesión: 06:54",
+	"version": "0.7"
+}
