@@ -26,8 +26,9 @@ script = ExtResource("1_ig7tw")
 [node name="UIRootContainer" type="HBoxContainer" parent="."]
 layout_direction = 2
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 876.0
+offset_bottom = 620.0
+scale = Vector2(1.0055599, 1)
 theme_override_constants/separation = 32
 alignment = 1
 
@@ -180,58 +181,79 @@ Costo: $X
 layout_mode = 2
 
 [node name="RightPanel" type="VBoxContainer" parent="UIRootContainer"]
-custom_minimum_size = Vector2(0, 300)
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
-alignment = 2
+size_flags_horizontal = 3
 
-[node name="MoneyLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UIRootContainer/RightPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="IncomeLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
 text = "
 "
 
-[node name="IncomeLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="MoneyLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 text = "
 "
 
-[node name="SystemDeltaLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemDeltaLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SystemStateLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemStateLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SystemActivePassiveLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemActivePassiveLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SystemBreakdownLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemBreakdownLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SessionTimeLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SessionTimeLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="LapMarkersLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="LapMarkersLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="ExportRunButton" type="Button" parent="UIRootContainer/RightPanel"]
+[node name="ExportRunButton" type="Button" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 text = "Export run"
 
-[node name="SystemMessageLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemMessageLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 theme_override_colors/font_color = Color(0.048865594, 0.70397073, 0.08954961, 1)
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="SystemAchievementsLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemAchievementsLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="BoxContainer" type="BoxContainer" parent="."]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="InstitutionPanelLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
 
 [connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="." method="_on_BigClickButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
@@ -243,4 +265,4 @@ offset_bottom = 40.0
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton" to="." method="_on_UpgradeTruequeNetworkButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/CapitalProductivoPanel/UpgradeCognitiveButton" to="." method="_on_UpgradeCognitiveButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/RightPanel/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]

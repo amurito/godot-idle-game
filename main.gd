@@ -140,14 +140,14 @@ var unlocked_delta_100 := false
 
 # ================= REFERENCIAS UI ===================
 # PANEL — SISTEMA / DIAGNÓSTICO
-@onready var money_label = $UIRootContainer/RightPanel/MoneyLabel
-@onready var income_label = $UIRootContainer/RightPanel/IncomeLabel
+@onready var money_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/MoneyLabel
+@onready var income_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/IncomeLabel
 # nuevo bloque consolidado
-@onready var system_state_label = $UIRootContainer/RightPanel/SystemStateLabel
+@onready var system_state_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemStateLabel
 # logs / laps
-@onready var lap_log_label = $UIRootContainer/RightPanel/LapLogLabel
+@onready var lap_log_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/LapLogLabel
 
-@onready var export_run_button = $UIRootContainer/RightPanel/ExportRunButton
+@onready var export_run_button = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ExportRunButton
 #PANEL — PRODUCCIÓN / MODELO
 @onready var big_click_button = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton
 @onready var formula_label = $UIRootContainer/LeftPanel/CenterPanel/FormulaLabel
@@ -166,23 +166,25 @@ var unlocked_delta_100 := false
 @onready var upgrade_trueque_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton
 @onready var upgrade_trueque_network_button = $UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton
 
-@onready var sys_delta_label = $UIRootContainer/RightPanel/SystemDeltaLabel
+@onready var sys_delta_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemDeltaLabel
 
-@onready var sys_breakdown_label = $UIRootContainer/RightPanel/SystemBreakdownLabel
+@onready var sys_breakdown_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemBreakdownLabel
 
-@onready var sys_active_passive_label = $UIRootContainer/RightPanel/SystemActivePassiveLabel
+@onready var sys_active_passive_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemActivePassiveLabel
 
-@onready var session_time_label = $UIRootContainer/RightPanel/SessionTimeLabel
+@onready var session_time_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SessionTimeLabel
 
-@onready var lap_markers_label = $UIRootContainer/RightPanel/LapMarkersLabel
+@onready var lap_markers_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/LapMarkersLabel
 
-@onready var system_message_label = $UIRootContainer/RightPanel/SystemMessageLabel
+@onready var system_message_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemMessageLabel
 
-@onready var system_achievements_label = $UIRootContainer/RightPanel/SystemAchievementsLabel
+@onready var system_achievements_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/SystemAchievementsLabel
 
 @onready var upgrade_cognitive_button = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/UpgradeCognitiveButton
 
 @onready var cognitive_mu_label = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/CognitiveMuLabel
+
+@onready var institution_panel_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/InstitutionPanelLabel
 
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
@@ -472,8 +474,6 @@ func register_structural_baseline():
 	last_stable_structural_upgrades = structural_upgrades
 
 
-
-
 # -----------------------------------------------------
 #  RUNTIME — contraste observacional (secundario)
 # -----------------------------------------------------
@@ -514,6 +514,11 @@ func _on_UpgradeCognitiveButton_pressed():
 
 func update_cognitive_button():
 	upgrade_cognitive_button.text = "Capital Cognitivo (μ) (+1 nivel)\n" + "Costo: $" + str(snapped(cognitive_cost, 0.01)) + "\n" + "μ = " + str(snapped(mu_structural, 0.01))
+
+#====================================
+# INSTITUCIONES V0.8
+func get_structural_pressure() -> float:
+	return epsilon_runtime * float(structural_upgrades)
 # =====================================================
 #  LAP MARKERS
 # =====================================================
@@ -758,23 +763,53 @@ func _process(delta):
 	update_ui()
 
 
-# ESTRUCTURALES v0.7.2
+# ESTRUCTURALES v0.7.3
 func update_epsilon_runtime():
-	if baseline_delta_structural <= 0.0:
+	if baseline_delta_structural <= 0.0 or delta_per_sec <= 0.0:
 		epsilon_runtime = 0.0
 		return
 
+	# -------------------------
+	# 1) ε_producción
+	# -------------------------
 	var n_struct := float(max(structural_upgrades, 1))
 	var expected_delta := baseline_delta_structural * pow(
 		get_k_eff(),
 		1.0 - (1.0 / n_struct)
 	)
 
-	epsilon_runtime = abs(delta_per_sec - expected_delta) / expected_delta
-	epsilon_runtime = clamp(epsilon_runtime, 0.0, 1.0)
+	var epsilon_prod := 0.0
+	if expected_delta > 0.0:
+		epsilon_prod = max(0.0, (delta_per_sec / expected_delta) - 1.0)
+
+	# -------------------------
+	# 2) ε_composición
+	# -------------------------
+	var active: float = get_click_power()
+	var total: float = delta_per_sec
+
+	var active_ratio := 0.0
+	if total > 0.0:
+		active_ratio = active / total
+
+	# target dinámico: sistema joven tolera click, sistema maduro no
+	var t: float = clamp(n_struct / 40.0, 0.0, 1.0)
+	var target_ratio: float = lerp(0.8, 0.4, t)
+
+	var epsilon_comp: float = abs(active_ratio - target_ratio)
+
+	# -------------------------
+	# 3) Mezcla y memoria
+	# -------------------------
+	var epsilon_raw := epsilon_prod + epsilon_comp
+
+	# transición suave (inercia macroeconómica)
+	epsilon_runtime = lerp(epsilon_runtime, epsilon_raw, 0.08)
+
+	# límites de estabilidad
+	epsilon_runtime = clamp(epsilon_runtime, 0.0, 2.0)
 
 	epsilon_peak = max(epsilon_peak, epsilon_runtime)
-
 #
 # =====================================================
 # 	Acumulación del histórico de dinero generado v0.7.2
@@ -843,7 +878,6 @@ func _on_PersistenceUpgradeButton_pressed():
 		persistence_dynamic = persistence_base
 
 	update_ui()
-
 
 
 # AUTO (d + md)
@@ -923,7 +957,6 @@ func on_institutions_unlocked():
 	show_institutions_panel = true
 
 
-
 # =====================================================
 #  UI — SOLO LEE RESULTADOS (v0.6.3 — HUD científico)
 # =====================================================
@@ -944,6 +977,15 @@ func update_ui():
 
 
 	update_click_stats_panel()
+	if institutions_unlocked:
+		institution_panel_label.visible = true
+
+		institution_panel_label.text = "--- Contabilidad Básica ---\n"
+		institution_panel_label.text += "ε_runtime = %s\n" % snapped(epsilon_runtime, 0.01)
+		institution_panel_label.text += "ε_peak = %s\n" % snapped(epsilon_peak, 0.01)
+		institution_panel_label.text += "Presión estructural = %s\n" % snapped(get_structural_pressure(), 0.01)
+	else:
+		institution_panel_label.visible = false
 
 
 	# =====================================================
