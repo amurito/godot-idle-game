@@ -85,6 +85,27 @@ var mu_structural: float = 1.0
 # α constante para k_eff(μ)
 const ALPHA_KAPPA := 0.55
 
+## =====================================================
+# =====================================================
+#  MÉTRICAS ESTRUCTURALES v0.7.2
+# =====================================================
+
+var epsilon_runtime: float = 0.0
+var epsilon_peak: float = 0.0
+
+var delta_per_sec: float = 0.0
+var total_money_generated: float = 0.0
+
+var baseline_delta_structural: float = 0.0
+var last_stable_structural_upgrades: int = 0
+
+var institutions_unlocked: bool = false
+var show_institutions_panel: bool = false
+
+# Cooldown estructural (clave para ε_runtime)
+var structural_cooldown := 0.0
+const STRUCTURAL_COOLDOWN_TIME := 8.0
+
 # =============== SESIÓN / LAB MODE ===================
 
 var run_time: float = 0.0
@@ -231,9 +252,9 @@ func build_formula_values() -> String:
 	var c0 := float(snapped(persistence_base, 0.01))
 	var cn = float(snapped(persistence_dynamic, 0.01))
 	var mu = float(snapped(get_mu_structural_factor(), 0.01))
-	var n := structural_upgrades
+	var n_struct = float(structural_upgrades)
 
-	return "c₀ = %s   cₙ = %s   μ = %s   n = %d" % [c0, cn, mu, n]
+	return "c₀ = %s   cₙ = %s   μ = %s   n = %d" % [c0, cn, mu, n_struct]
 
 
 func build_marginal_contribution() -> String:
@@ -373,13 +394,13 @@ func f_n_alpha(n: float) -> float:
 	return 1.0 / (1.0 + exp(-0.35 * (n - 6.0)))
 
 func apply_dynamic_persistence(delta: float) -> void:
-	var n := float(structural_upgrades)
+	var n_struct := float(structural_upgrades)
 
 	# valor teórico esperado
 	var target := get_persistence_target()
 
 	# peso sigmoide — transición suave
-	var a := f_n_alpha(n)
+	var a := f_n_alpha(n_struct)
 
 	# converge sin overshoot
 	persistence_dynamic = lerp(
@@ -398,9 +419,9 @@ func get_persistence_target() -> float:
 	if structural_upgrades <= 1:
 		return persistence_base
 
-	var n := float(structural_upgrades)
+	var n_struct = float(structural_upgrades)
 	var k_eff := get_k_eff()
-	return persistence_base * pow(k_eff, (1.0 - 1.0 / n))
+	return persistence_base * pow(k_eff, (1.0 - 1.0 / n_struct))
 
 func get_cognitive_mu() -> float:
 	cognitive_mu = 1.0 + log(1.0 + cognitive_level) * COGNITIVE_MULTIPLIER
@@ -413,16 +434,16 @@ func get_cognitive_mu() -> float:
 # =====================================================
 
 func compute_structural_model() -> Dictionary:
-	var n := float(structural_upgrades)
+	var n_struct := float(structural_upgrades)
 
 	# k ajustado por μ
 	var k_eff := get_k_eff()
 
 	# fⁿ(teórico) — sigue alineado al target de persistencia
-	var f_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n, 1.0)))
+	var f_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n_struct, 1.0)))
 
 	# cₙ(modelo) — misma estructura formal
-	var c_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n, 1.0)))
+	var c_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n_struct, 1.0)))
 
 	# ε(modelo) = | fⁿ − cₙ |
 	var eps_model := float(abs(f_n_model - c_n_model))
@@ -433,7 +454,7 @@ func compute_structural_model() -> Dictionary:
 		"eps_model": eps_model,
 		"k": K_PERSISTENCE,
 		"k_eff": k_eff,
-		"n": n,
+		"n": n_struct,
 		"n_log": get_n_log(),
 		"n_power": get_n_power()
 	}
@@ -444,8 +465,13 @@ func get_structural_epsilon() -> float:
 # k_eff v0.7
 func get_k_eff() -> float:
 	var mu := get_mu_structural_factor()
-	var alpha := 0.55 # impacto perceptible en pocas upgrades
 	return K_PERSISTENCE * (1.0 + ALPHA_KAPPA * (mu - 1.0))
+
+func register_structural_baseline():
+	baseline_delta_structural = delta_per_sec
+	last_stable_structural_upgrades = structural_upgrades
+
+
 
 
 # -----------------------------------------------------
@@ -478,14 +504,14 @@ func _on_UpgradeCognitiveButton_pressed():
 	cognitive_level += 1
 	cognitive_cost *= cognitive_cost_scale
 
-	mu_structural = get_mu_structural_factor()
+	structural_upgrades += 1
+	structural_cooldown = STRUCTURAL_COOLDOWN_TIME
 
 	add_lap("Upgrade estructural → Capital Cognitivo (μ ↑ nivel %d)" % cognitive_level)
 
-	structural_upgrades += 1
-
 	update_cognitive_button()
 	update_ui()
+
 func update_cognitive_button():
 	upgrade_cognitive_button.text = "Capital Cognitivo (μ) (+1 nivel)\n" + "Costo: $" + str(snapped(cognitive_cost, 0.01)) + "\n" + "μ = " + str(snapped(mu_structural, 0.01))
 # =====================================================
@@ -582,12 +608,12 @@ func _get_timestamp_meta() -> Dictionary:
 	var yyyy := str(now.year)
 
 	var hh := str(now.hour).pad_zeros(2)
-	var min := str(now.minute).pad_zeros(2)
+	var mi := str(now.minute).pad_zeros(2)
 
 	return {
 		"fecha_humana": "%s/%s/%s" % [dd, mm, yyyy],
-		"hora_humana": "%s:%s" % [hh, min],
-		"filename_stamp": "%s-%s-%s_%s-%s" % [dd, mm, yyyy, hh, min]
+		"hora_humana": "%s:%s" % [hh, mi],
+		"filename_stamp": "%s-%s-%s_%s-%s" % [dd, mm, yyyy, hh, mi]
 	}
 func _ensure_runs_dir():
 	if not DirAccess.dir_exists_absolute("res://runs"):
@@ -715,9 +741,47 @@ func _ready():
 
 func _process(delta):
 	apply_dynamic_persistence(delta)
+
+	delta_per_sec = get_delta_total()
+
 	run_time += delta
-	money += get_passive_total() * delta
+	update_economy(delta)
+
+	# Cooldown estructural
+	if structural_cooldown > 0.0:
+		structural_cooldown -= delta
+		if structural_cooldown <= 0.0:
+			register_structural_baseline()
+
+	update_epsilon_runtime()
+	check_institutions_unlock()
 	update_ui()
+
+
+# ESTRUCTURALES v0.7.2
+func update_epsilon_runtime():
+	if baseline_delta_structural <= 0.0:
+		epsilon_runtime = 0.0
+		return
+
+	var n_struct := float(max(structural_upgrades, 1))
+	var expected_delta := baseline_delta_structural * pow(
+		get_k_eff(),
+		1.0 - (1.0 / n_struct)
+	)
+
+	epsilon_runtime = abs(delta_per_sec - expected_delta) / expected_delta
+	epsilon_runtime = clamp(epsilon_runtime, 0.0, 1.0)
+
+	epsilon_peak = max(epsilon_peak, epsilon_runtime)
+
+#
+# =====================================================
+# 	Acumulación del histórico de dinero generado v0.7.2
+func update_economy(delta):
+	var delta_money = delta_per_sec * delta
+	money += delta_money
+	total_money_generated += delta_money
 
 
 func format_time(t: float) -> String:
@@ -761,23 +825,25 @@ var persistence_upgrade_cost := 10000.0
 const PERSISTENCE_NEW_VALUE := 1.6
 
 func _on_PersistenceUpgradeButton_pressed():
-	if persistence_upgrade_unlocked: return
-	if money < persistence_upgrade_cost: return
+	if persistence_upgrade_unlocked:
+		return
+	if money < persistence_upgrade_cost:
+		return
 
 	money -= persistence_upgrade_cost
 	persistence_upgrade_unlocked = true
-	structural_upgrades += 1
 
-	# nuevo baseline
 	persistence_base = PERSISTENCE_NEW_VALUE
+	structural_upgrades += 1
+	structural_cooldown = STRUCTURAL_COOLDOWN_TIME
 
 	add_lap("Upgrade estructural → Persistencia (baseline elevado)")
 
-	# 🔹 regla v0.6.3: nunca reducir cn
 	if persistence_dynamic < persistence_base:
 		persistence_dynamic = persistence_base
 
 	update_ui()
+
 
 
 # AUTO (d + md)
@@ -836,6 +902,27 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 	unlocked_me = true
 	add_lap("Desbloqueado me (Red de Intercambio)")
 	update_ui()
+# =====================================================
+#  DESBLOQUEO INSTITUCIONES v0.7.2
+# =====================================================
+func check_institutions_unlock():
+	if institutions_unlocked:
+		return
+
+	if (
+		structural_upgrades >= 20
+		and epsilon_peak >= 0.12
+		and delta_per_sec >= 80.0
+		and total_money_generated >= 50000.0
+	):
+		institutions_unlocked = true
+		on_institutions_unlocked()
+
+func on_institutions_unlocked():
+	print("Nueva capa estructural detectada: Instituciones")
+	show_institutions_panel = true
+
+
 
 # =====================================================
 #  UI — SOLO LEE RESULTADOS (v0.6.3 — HUD científico)
@@ -883,6 +970,8 @@ func update_ui():
 
 	if lab_mode:
 		lap_markers_label.text = "--- Lap markers (historial) ---\n"
+		system_state_label.text = "ε_runtime = %s" % snapped(epsilon_runtime, 0.01)
+
 		var start: int = max(0, lap_events.size() - 12)
 		for i in range(start, lap_events.size()):
 			var lap: Dictionary = lap_events[i]

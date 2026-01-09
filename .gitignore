@@ -26,3 +26,7 @@ Thumbs.db
 *.exe
 *.pck
 *.zip
+
+
+# Runs / laboratorio
+runs/

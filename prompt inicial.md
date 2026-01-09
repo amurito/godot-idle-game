@@ -445,3 +445,164 @@ modelo teórico vs runtime observado
 Y lo primero que quiero que hagas es:
 
 pedirme los archivos necesarios para continuar.
+
+
+######################################################
+🧭 PROMPT MAESTRO — IDLE · Modelo Económico Evolutivo (v0.7.1+)
+
+🔹 Contexto del proyecto
+
+Estoy desarrollando un incremental / idle game conceptual llamado:
+
+IDLE — Modelo Económico Evolutivo
+
+El proyecto combina:
+
+• economía productiva abstracta  
+• capas de progresión desbloqueable  
+• análisis matemático explícito  
+• lectura estructural del sistema  
+• enfoque de laboratorio experimental  
+
+NO es un idle arcade.
+NO es un clicker tradicional.
+El progreso es comprensión del sistema.
+
+---
+
+🔸 Estado actual del proyecto
+
+Versión base estable:
+
+v0.7.x — “ε : Structural Stability”
+
+Sistema implementado:
+
+• Producción activa:
+  Δ$ = clicks · (a · b · cₙ)
+
+• Producción pasiva:
+  d · md · so
+  e · me
+
+• Persistencia estructural:
+  cₙ → estado dinámico observado
+  c₀ → baseline estructural
+
+• Función teórica:
+  fⁿ = c₀ · κμ^(1 − 1/n)
+
+• Capital cognitivo:
+  μ(n) = 1 + log(1 + n) · β
+
+• Deformación estructural:
+  κμ = k · (1 + α · (μ − 1))
+
+• Métrica estructural:
+  ε_model = | fⁿ − cₙ |
+
+⚠️ μ NO multiplica directamente cₙ.
+μ modula la estructura a través de κμ.
+
+---
+
+🧪 Filosofía del sistema
+
+• Cada upgrade revela estructura
+• Nada aparece antes de tiempo
+• Las fórmulas se descubren por capas
+• El HUD no explica, muestra
+• La matemática vive en documentación
+
+ε no es un “error”:
+es fricción, deuda, complejidad, tensión del sistema.
+
+---
+
+🖥️ UI / HUD — reglas estrictas
+
+• HUD liviano
+• Sin redundancias
+• Separar:
+  - fórmula
+  - valores actuales
+  - runtime observado
+
+• No mostrar variables sin impacto perceptible
+  (ej: ocultar μ si μ ≈ 1.0)
+
+• El HUD es instrumental, no pedagógico
+
+---
+
+🛠️ Motor
+
+Godot Engine
+
+⚠️ IMPORTANTE:
+Antes de asumir errores conceptuales, revisar siempre:
+
+• rutas @onready
+• nodos duplicados
+• ScrollContainer
+• layout (no shrink)
+• labels invisibles
+• HUDs superpuestos
+
+La mayoría de bugs previos fueron visuales, no matemáticos.
+
+---
+
+📦 Qué te voy a pasar al iniciar el chat
+
+Cuando empecemos, pedime SIEMPRE:
+
+1) 📂 main.gd (estado actual)
+2) 🖼️ screenshot del HUD
+3) 📄 última run exportada:
+   • JSON
+   • CSV
+4) 🎯 objetivo concreto de la iteración
+
+---
+
+🎯 Tu tarea en cada iteración
+
+• Reconstruir el estado del sistema
+• Validar coherencia entre:
+  HUD ↔ fórmula ↔ runtime ↔ export
+• Detectar redundancias o incoherencias
+• Proponer:
+  - ajuste conceptual
+  - ajuste matemático
+  - ajuste de UI (si aplica)
+• Devolver:
+  - código limpio
+  - comentado
+  - consistente con el modelo
+
+---
+
+🧭 Líneas de evolución abiertas
+
+Vamos a explorar:
+
+• ε_runtime
+• regulación
+• instituciones
+• meta-productores
+• entropía / deuda / complejidad
+• colapso y estabilización
+
+Cada nuevo tier debe:
+• introducir una nueva lectura del sistema
+• no ser solo “más producción”
+
+---
+
+👉 Asumí continuidad con este documento.
+👉 Trabajá en modo laboratorio del sistema.
+👉 No como idle arcade.
+
+Y lo primero que quiero que hagas es:
+pedirme los archivos necesarios para continuar.
