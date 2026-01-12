@@ -27,7 +27,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 10.4
+var persistence_base: float = 1.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -99,12 +99,27 @@ var total_money_generated: float = 0.0
 var baseline_delta_structural: float = 0.0
 var last_stable_structural_upgrades: int = 0
 
+var pressure := 0.0
+var pressure_structural := 0.0
+
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
 
 # Cooldown estructural (clave para ε_runtime)
 var structural_cooldown := 0.0
 const STRUCTURAL_COOLDOWN_TIME := 8.0
+var omega := 1.0
+var omega_min := 1.0
+var institution_accounting_unlocked := false
+
+#	=============================================
+#  CAPA 4 — INSTITUCIONES (v0.8)
+var accounting_level := 0
+var accounting_effect := 0.0
+var accounting_base_cost := 50000.0
+var accounting_cost_scale := 2.0
+
+
 
 # =============== SESIÓN / LAB MODE ===================
 
@@ -137,6 +152,8 @@ const BUILD_CHANNEL := "stable"
 var unlocked_tree := false
 var unlocked_click_dominance := false
 var unlocked_delta_100 := false
+
+
 
 # ================= REFERENCIAS UI ===================
 # PANEL — SISTEMA / DIAGNÓSTICO
@@ -186,6 +203,12 @@ var unlocked_delta_100 := false
 
 @onready var institution_panel_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/InstitutionPanelLabel
 
+@onready var upgrade_accounting_button = $UIRootContainer/ProductionPanel/InstitutionsPanel/UpgradeAccountingButton
+@onready var accounting_effect_label = $UIRootContainer/ProductionPanel/InstitutionsPanel/AccountingEffectLabel
+@onready var fungi_ui_scene = preload("res://fungi.tscn")
+@onready var ui_root = $UIRootContainer
+
+var fungi_ui
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
 # =====================================================
@@ -421,7 +444,7 @@ func get_persistence_target() -> float:
 	if structural_upgrades <= 1:
 		return persistence_base
 
-	var n_struct = float(structural_upgrades)
+	var n_struct := get_effective_structural_n()
 	var k_eff := get_k_eff()
 	return persistence_base * pow(k_eff, (1.0 - 1.0 / n_struct))
 
@@ -436,7 +459,8 @@ func get_cognitive_mu() -> float:
 # =====================================================
 
 func compute_structural_model() -> Dictionary:
-	var n_struct := float(structural_upgrades)
+	var n_struct := get_effective_structural_n()
+
 
 	# k ajustado por μ
 	var k_eff := get_k_eff()
@@ -473,6 +497,9 @@ func register_structural_baseline():
 	baseline_delta_structural = delta_per_sec
 	last_stable_structural_upgrades = structural_upgrades
 
+func get_omega(epsilon: float, k_mu: float, n: float) -> float:
+	var denom := 1.0 + epsilon * k_mu * n
+	return 1.0 / max(denom, 0.0001)
 
 # -----------------------------------------------------
 #  RUNTIME — contraste observacional (secundario)
@@ -518,7 +545,13 @@ func update_cognitive_button():
 #====================================
 # INSTITUCIONES V0.8
 func get_structural_pressure() -> float:
-	return epsilon_runtime * float(structural_upgrades)
+	var base := epsilon_runtime * (1.0 + epsilon_peak) * float(structural_upgrades)
+	var mitigated := base * (1.0 - accounting_effect)
+	return mitigated
+#====================================
+# CAPITAL COGNITIVO EFECTIVO (n ajustado por contabilidad) v0.8
+func get_effective_structural_n() -> float:
+	return structural_upgrades * (1.0 + accounting_level * 0.1)
 # =====================================================
 #  LAP MARKERS
 # =====================================================
@@ -743,11 +776,17 @@ func update_achievements_label():
 
 func _ready():
 	update_ui()
+	fungi_ui = fungi_ui_scene.instantiate()
+	ui_root.add_child(fungi_ui)
+	fungi_ui.hide()
+
+	print("Fungi UI:", fungi_ui)
+
 
 func _process(delta):
 	apply_dynamic_persistence(delta)
 
-	delta_per_sec = get_delta_total()
+	delta_per_sec = get_passive_total()
 
 	run_time += delta
 	update_economy(delta)
@@ -759,7 +798,7 @@ func _process(delta):
 			register_structural_baseline()
 
 	update_epsilon_runtime()
-	check_institutions_unlock()
+	check_institution_unlock()
 	update_ui()
 
 
@@ -772,7 +811,7 @@ func update_epsilon_runtime():
 	# -------------------------
 	# 1) ε_producción
 	# -------------------------
-	var n_struct := float(max(structural_upgrades, 1))
+	var n_struct := get_effective_structural_n()
 	var expected_delta := baseline_delta_structural * pow(
 		get_k_eff(),
 		1.0 - (1.0 / n_struct)
@@ -810,6 +849,31 @@ func update_epsilon_runtime():
 	epsilon_runtime = clamp(epsilon_runtime, 0.0, 2.0)
 
 	epsilon_peak = max(epsilon_peak, epsilon_runtime)
+	# -------------------------
+	# 4) Cálculo ω_runtime
+	omega = get_omega(epsilon_runtime, get_k_eff(), n_struct)
+	omega_min = min(omega_min, omega)
+	# ===========================
+	# EFECTO INSTITUCIONAL (ω)
+	# ===========================
+	accounting_effect = 1.0 - exp(-0.3 * accounting_level)
+	accounting_effect = clamp(accounting_effect, 0.0, 0.5)
+
+func check_institution_unlock():
+	if institution_accounting_unlocked:
+		return
+
+	
+	var p := get_structural_pressure()
+	if p > 15.0 and omega < 0.25 and epsilon_runtime > 0.3:
+		institution_accounting_unlocked = true
+		institutions_unlocked = true
+		omega = 0.1
+		add_lap("🏛️ Institución desbloqueada — Contabilidad Básica")
+		system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
+func get_accounting_cost() -> float:
+	return accounting_base_cost * pow(accounting_cost_scale, accounting_level)
+
 #
 # =====================================================
 # 	Acumulación del histórico de dinero generado v0.7.2
@@ -824,7 +888,25 @@ func format_time(t: float) -> String:
 	var s = int(t) % 60
 	return "%02d:%02d" % [m, s]
 
+# =====================================================
+#
 
+func get_system_phase() -> String:
+	if omega < 0.25:
+		return "CRISTALIZANDO"
+	elif omega < 0.4:
+		return "RÍGIDO"
+	elif omega < 0.7:
+		return "TENSO"
+	else:
+		return "FLEXIBLE"
+
+# =====================================================
+# DLC — INTERFAZ FUNGÍCA v0.8
+func _on_Biosfera_pressed() -> void:
+	print("🍄 Biosfera toggle")
+	if fungi_ui:
+		fungi_ui.visible = !fungi_ui.visible
 # =====================================================
 #  INPUT & UPGRADES
 # =====================================================
@@ -936,25 +1018,35 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 	unlocked_me = true
 	add_lap("Desbloqueado me (Red de Intercambio)")
 	update_ui()
+
 # =====================================================
 #  DESBLOQUEO INSTITUCIONES v0.7.2
 # =====================================================
-func check_institutions_unlock():
-	if institutions_unlocked:
-		return
 
-	if (
-		structural_upgrades >= 20
-		and epsilon_peak >= 0.12
-		and delta_per_sec >= 80.0
-		and total_money_generated >= 50000.0
-	):
-		institutions_unlocked = true
-		on_institutions_unlocked()
+
 
 func on_institutions_unlocked():
 	print("Nueva capa estructural detectada: Instituciones")
 	show_institutions_panel = true
+func buy_accounting():
+	var cost := get_accounting_cost()
+	if money < cost:
+		return
+	
+	money -= cost
+	accounting_level += 1
+
+	# Amortiguación estructural real
+	epsilon_runtime *= 0.85      # baja 15% el estrés
+	epsilon_peak = max(epsilon_peak * 0.9, epsilon_runtime)
+
+	add_lap("🏛️ Contabilidad — Nivel %d (ε amortiguado)" % accounting_level)
+func _on_UpgradeAccountingButton_pressed():
+	if not institution_accounting_unlocked:
+		return
+	
+	buy_accounting()
+	update_ui()
 
 
 # =====================================================
@@ -984,9 +1076,21 @@ func update_ui():
 		institution_panel_label.text += "ε_runtime = %s\n" % snapped(epsilon_runtime, 0.01)
 		institution_panel_label.text += "ε_peak = %s\n" % snapped(epsilon_peak, 0.01)
 		institution_panel_label.text += "Presión estructural = %s\n" % snapped(get_structural_pressure(), 0.01)
-	else:
-		institution_panel_label.visible = false
+		institution_panel_label.text += "Ω (flexibilidad) = %s\n" % snapped(omega, 0.01)
+		institution_panel_label.text += "Ω_min = %s\n" % snapped(omega_min, 0.01)
+		institution_panel_label.text += "\nEstado del sistema = " + get_system_phase()
+		institution_panel_label.text += "\nContabilidad = nivel " + str(accounting_level)
+		institution_panel_label.text += "\nAmortiguación = " + str(round(accounting_effect * 100.0)) + "%"
 
+	# μ sigue existiendo
+		upgrade_cognitive_button.visible = true
+
+	# botón de contabilidad
+		upgrade_trueque_network_button.visible = true
+		upgrade_trueque_network_button.text = "Contabilidad (+1)\nCosto: $%s" % str(round(get_accounting_cost()))
+	else:
+			institution_panel_label.visible = false
+			upgrade_cognitive_button.visible = true
 
 	# =====================================================
 	#  MÉTRICAS LABORATORIO
@@ -1043,3 +1147,6 @@ func update_ui():
 	upgrade_trueque_button.text = "Trueque (+1)\nCosto: $%s" % [str(round(trueque_cost))]
 
 	upgrade_trueque_network_button.text = "Red de Intercambio (×%s)\nCosto: $%s" % [str(snapped(TRUEQUE_NETWORK_GAIN, 0.01)), str(round(trueque_network_upgrade_cost))]
+
+	# μ siempre existe, incluso con instituciones
+	upgrade_cognitive_button.visible = true
