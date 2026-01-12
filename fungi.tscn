@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cbyh1vt0443ys"]
+[gd_scene load_steps=3 format=3 uid="uid://cbyh1vt0443ys"]
 
-[ext_resource type="Script" uid="uid://chwpt8ctyh6x4" path="res://fungi_ui.gd" id="1_v67og"]
+[ext_resource type="Script" uid="uid://b5kpivooakglf" path="res://fungi_ui.gd" id="1_v67og"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_v67og"]
 
 [node name="FungiUI" type="Control"]
 layout_mode = 3
@@ -12,32 +14,44 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_v67og")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="Panel" type="Panel" parent="."]
+modulate = Color(0, 0, 0, 0.6666667)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_v67og")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer"]
-custom_minimum_size = Vector2(300, 200)
-offset_left = 18.0
-offset_top = 43.0
-offset_right = 1134.0
-offset_bottom = 243.0
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -558.0
+offset_right = 558.0
+offset_bottom = 200.0
+grow_horizontal = 2
 mouse_filter = 2
 
-[node name="HifasStatus" type="Label" parent="CanvasLayer/VBoxContainer"]
+[node name="HifasStatus" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "Hifas: BLOQUEADAS
 "
 
-[node name="Nutrientes" type="Label" parent="CanvasLayer/VBoxContainer"]
+[node name="Nutrientes" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "Nutrientes: 0.0
 "
 
-[node name="Biomasa" type="Label" parent="CanvasLayer/VBoxContainer"]
+[node name="Biomasa" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 text = "Biomasa: 0.0
 "
 
-[node name="DesbloquearHifas" type="Button" parent="CanvasLayer/VBoxContainer"]
+[node name="DesbloquearHifas" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2

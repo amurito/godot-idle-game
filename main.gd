@@ -13,6 +13,10 @@ extends Control
 # fⁿ = c₀ · k_eff^(1 − 1/n)
 # ε(modelo) = | fⁿ − cₙ(modelo) |
 # =====================================================
+#dlc
+const FUNGI_UI_SCENE = preload("res://fungi.tscn")
+var fungi_ui: Control
+
 
 # =============== ECONOMÍA BASE =======================
 
@@ -120,7 +124,6 @@ var accounting_base_cost := 50000.0
 var accounting_cost_scale := 2.0
 
 
-
 # =============== SESIÓN / LAB MODE ===================
 
 var run_time: float = 0.0
@@ -152,7 +155,6 @@ const BUILD_CHANNEL := "stable"
 var unlocked_tree := false
 var unlocked_click_dominance := false
 var unlocked_delta_100 := false
-
 
 
 # ================= REFERENCIAS UI ===================
@@ -208,7 +210,6 @@ var unlocked_delta_100 := false
 @onready var fungi_ui_scene = preload("res://fungi.tscn")
 @onready var ui_root = $UIRootContainer
 
-var fungi_ui
 # =====================================================
 #  CAPA 1 — MODELO ECONÓMICO
 # =====================================================
@@ -776,11 +777,17 @@ func update_achievements_label():
 
 func _ready():
 	update_ui()
-	fungi_ui = fungi_ui_scene.instantiate()
-	ui_root.add_child(fungi_ui)
-	fungi_ui.hide()
+	_mount_fungi_dlc()
+func _mount_fungi_dlc():
+	fungi_ui = FUNGI_UI_SCENE.instantiate()
 
-	print("Fungi UI:", fungi_ui)
+	var ui_root = $UIRootContainer
+	ui_root.add_child(fungi_ui)
+
+	fungi_ui.name = "FungiUI"
+	fungi_ui.visible = true
+
+	print("🍄 Fungi DLC mounted:", fungi_ui)
 
 
 func _process(delta):
@@ -1024,7 +1031,6 @@ func _on_UpgradeTruequeNetworkButton_pressed():
 # =====================================================
 
 
-
 func on_institutions_unlocked():
 	print("Nueva capa estructural detectada: Instituciones")
 	show_institutions_panel = true
@@ -1037,7 +1043,7 @@ func buy_accounting():
 	accounting_level += 1
 
 	# Amortiguación estructural real
-	epsilon_runtime *= 0.85      # baja 15% el estrés
+	epsilon_runtime *= 0.85 # baja 15% el estrés
 	epsilon_peak = max(epsilon_peak * 0.9, epsilon_runtime)
 
 	add_lap("🏛️ Contabilidad — Nivel %d (ε amortiguado)" % accounting_level)

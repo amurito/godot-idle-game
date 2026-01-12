@@ -6,10 +6,10 @@ extends Control
 
 @onready var main = get_tree().root.get_node("Main")
 
-@onready var lbl_status    = $CanvasLayer/VBoxContainer/HifasStatus
-@onready var lbl_nutrients = $CanvasLayer/VBoxContainer/Nutrientes
-@onready var lbl_biomass   = $CanvasLayer/VBoxContainer/Biomasa
-@onready var btn_hifas     = $CanvasLayer/VBoxContainer/DesbloquearHifas
+@onready var lbl_status    = $Panel/VBoxContainer/HifasStatus
+@onready var lbl_nutrients = $Panel/VBoxContainer/Nutrientes
+@onready var lbl_biomass   = $Panel/VBoxContainer/Biomasa
+@onready var btn_hifas     = $Panel/VBoxContainer/DesbloquearHifas
 
 var hifas_unlocked := false
 var nutrients := 0.0
@@ -22,7 +22,6 @@ const GROWTH_RATE := 0.25
 func _ready():
 	print("🍄 Biosfera online")
 
-	# Aseguramos conexión limpia
 	if btn_hifas.pressed.is_connected(_on_DesbloquearHifas_pressed):
 		btn_hifas.pressed.disconnect(_on_DesbloquearHifas_pressed)
 
