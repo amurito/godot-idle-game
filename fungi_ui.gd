@@ -3,8 +3,10 @@ extends Control
 # ============================
 # BIOSFERA — DLC FÚNGICO
 # ============================
+func set_main(m):
+	main = m
+var main : Node = null
 
-@onready var main = get_tree().root.get_node("Main")
 
 @onready var lbl_status    = $Panel/VBoxContainer/HifasStatus
 @onready var lbl_nutrients = $Panel/VBoxContainer/Nutrientes
@@ -15,8 +17,13 @@ var hifas_unlocked := false
 var nutrients := 0.0
 var biomass := 0.0
 
+# --- Salidas físicas hacia el sistema ---
+var epsilon_effective := 0.0
+var metabolism := 0.0
+
 const NUTRIENT_FROM_EPS := 5.0
 const GROWTH_RATE := 0.25
+
 
 
 func _ready():
@@ -31,18 +38,31 @@ func _ready():
 
 
 func _process(delta):
+	if main == null:
+		return
 	if not hifas_unlocked:
 		return
-
 	var eps := float(main.epsilon_runtime)
 	var mu  := float(main.get_mu_structural_factor())
 
+
+		# 1) Nutrientes = entropía económica
 	var nutrient_flow := eps * NUTRIENT_FROM_EPS
 	nutrients += nutrient_flow * delta
-
+		# 2) Biomasa = entropía fijada
 	var growth := float(nutrients * GROWTH_RATE * mu * delta)
 	biomass += growth
 	nutrients -= growth
+	# 3) Termodinámica del sistema
+	
+	epsilon_effective = eps / (1.0 + biomass)
+
+	# metabolismo = qué tan bien el sistema digiere su propia producción
+	var delta_money := float(main.get_delta_total())
+	if delta_money > 0:
+		metabolism = biomass / delta_money
+	else:
+		metabolism = 0.0
 
 	update_ui()
 
@@ -51,6 +71,8 @@ func _on_DesbloquearHifas_pressed():
 	print("🧬 BOTÓN HIFAS OK")
 	hifas_unlocked = true
 	update_ui()
+func get_biomass() -> float:
+	return biomass
 
 
 func update_ui():
@@ -65,3 +87,5 @@ func update_ui():
 
 	lbl_nutrients.text = "Nutrientes: " + str(snapped(nutrients, 0.1))
 	lbl_biomass.text   = "Biomasa: " + str(snapped(biomass, 0.1))
+	$Panel/VBoxContainer/Metabolismo.text = "Metabolismo: " + str(snapped(metabolism, 0.001))
+	$Panel/VBoxContainer/EpsilonEff.text = "ε efectivo: " + str(snapped(epsilon_effective, 0.01))

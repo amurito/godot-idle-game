@@ -30,3 +30,9 @@ Thumbs.db
 
 # Runs / laboratorio
 runs/
+
+.godot/ >> .gitignore
+.import/ >> .gitignore
+*.import >> .gitignore
+.mono/ >> .gitignore
+.vscode/ >> .gitignore

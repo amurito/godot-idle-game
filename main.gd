@@ -123,6 +123,12 @@ var accounting_effect := 0.0
 var accounting_base_cost := 50000.0
 var accounting_cost_scale := 2.0
 
+#
+### DLC FUNGI — constantes 
+const FUNGI_MU_BETA := 0.05   # fuerza del hongo (chico!)
+# =====================================================
+var epsilon_effective := 0.0
+
 
 # =============== SESIÓN / LAB MODE ===================
 
@@ -205,8 +211,6 @@ var unlocked_delta_100 := false
 
 @onready var institution_panel_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/InstitutionPanelLabel
 
-@onready var upgrade_accounting_button = $UIRootContainer/ProductionPanel/InstitutionsPanel/UpgradeAccountingButton
-@onready var accounting_effect_label = $UIRootContainer/ProductionPanel/InstitutionsPanel/AccountingEffectLabel
 @onready var fungi_ui_scene = preload("res://fungi.tscn")
 @onready var ui_root = $UIRootContainer
 
@@ -234,12 +238,18 @@ func get_delta_total() -> float:
 	return get_click_power() + get_passive_total()
 
 func get_mu_structural_factor(n: int = cognitive_level) -> float:
-	# μ = 1 + log(1+n) * 0.08
-	# Crece lento pero nunca se aplana del todo
-	if n <= 0:
-		return 1.0
+	# μ cognitivo (tu diseño original)
+	var mu_base := 1.0
+	if n > 0:
+		mu_base = 1.0 + log(1.0 + float(n)) * 0.08
 
-	return 1.0 + log(1.0 + float(n)) * 0.08
+	# μ fúngico (biomasa)
+	var mu_fungi := 1.0
+	if fungi_ui != null and fungi_ui.has_method("get_biomass"):
+		var b := float(fungi_ui.get_biomass())
+		mu_fungi = 1.0 + log(1.0 + b) * FUNGI_MU_BETA
+
+	return mu_base * mu_fungi
 
 # =====================================================
 #  FORMATO TEXTO FÓRMULA
@@ -778,19 +788,34 @@ func update_achievements_label():
 func _ready():
 	update_ui()
 	_mount_fungi_dlc()
+
 func _mount_fungi_dlc():
 	fungi_ui = FUNGI_UI_SCENE.instantiate()
 
-	var ui_root = $UIRootContainer
-	ui_root.add_child(fungi_ui)
+	var dlc_root = get_node("DLCOverlay")
+	dlc_root.add_child(fungi_ui)
 
 	fungi_ui.name = "FungiUI"
 	fungi_ui.visible = true
+	# inyectamos el core
+	fungi_ui.set_main(self)
+	# Esperar a que Godot calcule tamaños
+	await get_tree().process_frame
+	var vp = get_viewport().get_visible_rect().size
+
+	fungi_ui.position = Vector2(
+		vp.x - 320,
+		20
+	)
 
 	print("🍄 Fungi DLC mounted:", fungi_ui)
 
 
 func _process(delta):
+	if fungi_ui:
+	epsilon_effective = fungi_ui.epsilon_effective
+else:
+	epsilon_effective = epsilon_runtime
 	apply_dynamic_persistence(delta)
 
 	delta_per_sec = get_passive_total()
@@ -812,7 +837,7 @@ func _process(delta):
 # ESTRUCTURALES v0.7.3
 func update_epsilon_runtime():
 	if baseline_delta_structural <= 0.0 or delta_per_sec <= 0.0:
-		epsilon_runtime = 0.0
+		epsilon_effective = 0.0
 		return
 
 	# -------------------------
@@ -872,7 +897,7 @@ func check_institution_unlock():
 
 	
 	var p := get_structural_pressure()
-	if p > 15.0 and omega < 0.25 and epsilon_runtime > 0.3:
+	if p > 15.0 and omega < 0.25 and epsilon_effective > 0.3:
 		institution_accounting_unlocked = true
 		institutions_unlocked = true
 		omega = 0.1

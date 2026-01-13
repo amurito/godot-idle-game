@@ -11,7 +11,7 @@ corner_radius_top_right = 80
 corner_radius_bottom_right = 80
 corner_radius_bottom_left = 80
 
-[node name="Main" type="Control"]
+[node name="UIRoot" type="Control"]
 layout_direction = 2
 layout_mode = 3
 anchors_preset = 15
@@ -267,6 +267,8 @@ size_flags_vertical = 1
 [node name="Biosfera" type="Button" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 text = "🌱 Biosfera"
+
+[node name="DLCOverlay" type="CanvasLayer" parent="."]
 
 [connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="." method="_on_BigClickButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
