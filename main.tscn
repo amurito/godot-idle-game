@@ -176,8 +176,7 @@ theme_override_constants/separation = 8
 [node name="UpgradeCognitiveButton" type="Button" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Trueque ( +e /s )
-Costo: $X
+text = "
 "
 
 [node name="CognitiveMuLabel" type="Label" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]

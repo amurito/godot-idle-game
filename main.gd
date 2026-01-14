@@ -125,7 +125,7 @@ var accounting_cost_scale := 2.0
 
 #
 ### DLC FUNGI — constantes 
-const FUNGI_MU_BETA := 0.05   # fuerza del hongo (chico!)
+var FUNGI_MU_BETA := fungi_plasticity   # impacto en μ
 # =====================================================
 var epsilon_effective := 0.0
 
@@ -210,6 +210,7 @@ var unlocked_delta_100 := false
 @onready var cognitive_mu_label = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/CognitiveMuLabel
 
 @onready var institution_panel_label = $UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/InstitutionPanelLabel
+@onready var upgrade_accounting_button = $UIRootContainer/ProductionPanel/CapitalProductivoPanel/UpgradeAccountingButton
 
 @onready var fungi_ui_scene = preload("res://fungi.tscn")
 @onready var ui_root = $UIRootContainer
@@ -222,14 +223,14 @@ func get_click_power() -> float:
 	return click_value * click_multiplier * persistence_dynamic * get_mu_structural_factor()
 
 func get_auto_income_effective() -> float:
-	return income_per_second * auto_multiplier * manual_specialization * get_mu_structural_factor()
-
+	var base= income_per_second * auto_multiplier * manual_specialization * get_mu_structural_factor()* get_biomass_beta()
+	return base * (1.0 + accounting_level * 0.05)
 func get_trueque_raw() -> float:
 	return trueque_level * trueque_base_income * trueque_efficiency
 
 func get_trueque_income_effective() -> float:
-	return get_trueque_raw() * trueque_network_multiplier * get_mu_structural_factor()
-
+	var base= get_trueque_raw() * trueque_network_multiplier * get_mu_structural_factor()* get_biomass_beta()
+	return base * (1.0 + accounting_level * 0.05)
 
 func get_passive_total() -> float:
 	return get_auto_income_effective() + get_trueque_income_effective()
@@ -247,9 +248,47 @@ func get_mu_structural_factor(n: int = cognitive_level) -> float:
 	var mu_fungi := 1.0
 	if fungi_ui != null and fungi_ui.has_method("get_biomass"):
 		var b := float(fungi_ui.get_biomass())
-		mu_fungi = 1.0 + log(1.0 + b) * FUNGI_MU_BETA
+		mu_fungi = 1.0 + log(1.0 + b) * fungi_plasticity
 
 	return mu_base * mu_fungi
+# === GENES FÚNGICOS ===
+var fungi_absorption := 0.15   # cuánto ε se disipa
+var fungi_efficiency := 0.03   # fuerza de get_biomass_beta()
+var fungi_plasticity := 0.05   # cuánto afecta a μ
+# ===== BIOSFERA =====
+var biomasa := 0.0
+var nutrientes := 0.0
+var hifas := 0.0
+
+func get_biomass_beta() -> float:
+	return 1.0 + log(1.0 + biomasa) * fungi_efficiency
+#
+# =====================================================
+#  ACTUALIZACIÓN BIOSFERA v0.8DLC
+func update_biosphere(delta):
+	if hifas <= 0 or nutrientes <= 0:
+		return
+
+	var biomass_gain = hifas * sqrt(nutrientes) * 0.02 * delta
+	biomasa += biomass_gain
+
+	nutrientes -= biomass_gain * 0.5
+	nutrientes = max(nutrientes, 0)
+
+	var eps_absorbed = biomass_gain * fungi_absorption
+	epsilon_effective = max(0.0, epsilon_runtime - eps_absorbed)
+# =====================================================
+#  CÁLCULO HIFAS v0.8 DLC
+func compute_hifas() -> float:
+	var passive = get_passive_total()
+	if passive <= 0:
+		return 0.0
+	return pow(passive, 0.6)
+# =====================================================
+# CÁLCULO NUTRIENTES v0.8 DLC
+func update_nutrients(delta):
+	var absorbed := float(epsilon_runtime - epsilon_effective)
+	nutrientes += absorbed * 5.0 * delta
 
 # =====================================================
 #  FORMATO TEXTO FÓRMULA
@@ -812,25 +851,36 @@ func _mount_fungi_dlc():
 
 
 func _process(delta):
-	if fungi_ui:
-	epsilon_effective = fungi_ui.epsilon_effective
-else:
-	epsilon_effective = epsilon_runtime
+
+	# 1) economía base
 	apply_dynamic_persistence(delta)
-
 	delta_per_sec = get_passive_total()
-
 	run_time += delta
 	update_economy(delta)
 
-	# Cooldown estructural
+	# 2) calcular estrés real del sistema
+	update_epsilon_runtime()
+
+	if fungi_ui:
+		fungi_ui.absorb_epsilon(epsilon_runtime)
+		epsilon_effective = fungi_ui.epsilon_effective
+	else:
+		epsilon_effective = epsilon_runtime
+
+	update_nutrients(delta)
+	update_biosphere(delta)
+	hifas = compute_hifas()
+
+	# 6) cooldown estructural
 	if structural_cooldown > 0.0:
 		structural_cooldown -= delta
 		if structural_cooldown <= 0.0:
 			register_structural_baseline()
 
-	update_epsilon_runtime()
+	# 7) instituciones miran ε efectivo
 	check_institution_unlock()
+
+	# 8) UI
 	update_ui()
 
 
@@ -867,12 +917,16 @@ func update_epsilon_runtime():
 	var t: float = clamp(n_struct / 40.0, 0.0, 1.0)
 	var target_ratio: float = lerp(0.8, 0.4, t)
 
-	var epsilon_comp: float = abs(active_ratio - target_ratio)
+	var epsilon_comp := float(abs(active_ratio - target_ratio))
+	epsilon_comp *= (1.0 - accounting_effect)
 
 	# -------------------------
 	# 3) Mezcla y memoria
 	# -------------------------
 	var epsilon_raw := epsilon_prod + epsilon_comp
+
+	var epsilon_complexity := 0.002 * n_struct * get_k_eff()
+	epsilon_raw += epsilon_complexity
 
 	# transición suave (inercia macroeconómica)
 	epsilon_runtime = lerp(epsilon_runtime, epsilon_raw, 0.08)
@@ -895,14 +949,14 @@ func check_institution_unlock():
 	if institution_accounting_unlocked:
 		return
 
-	
 	var p := get_structural_pressure()
-	if p > 15.0 and omega < 0.25 and epsilon_effective > 0.3:
+	if p > 15.0 and omega < 0.25 and epsilon_runtime > 0.3:
 		institution_accounting_unlocked = true
 		institutions_unlocked = true
 		omega = 0.1
 		add_lap("🏛️ Institución desbloqueada — Contabilidad Básica")
 		system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
+		on_institutions_unlocked()
 func get_accounting_cost() -> float:
 	return accounting_base_cost * pow(accounting_cost_scale, accounting_level)
 
@@ -1117,11 +1171,11 @@ func update_ui():
 		upgrade_cognitive_button.visible = true
 
 	# botón de contabilidad
-		upgrade_trueque_network_button.visible = true
-		upgrade_trueque_network_button.text = "Contabilidad (+1)\nCosto: $%s" % str(round(get_accounting_cost()))
+	if institution_accounting_unlocked:
+		upgrade_accounting_button.visible = true
+		upgrade_accounting_button.text = "Contabilidad (+1)\nCosto: $" + str(round(get_accounting_cost()))
 	else:
-			institution_panel_label.visible = false
-			upgrade_cognitive_button.visible = true
+		upgrade_accounting_button.visible = false
 
 	# =====================================================
 	#  MÉTRICAS LABORATORIO

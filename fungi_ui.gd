@@ -74,6 +74,10 @@ func _on_DesbloquearHifas_pressed():
 func get_biomass() -> float:
 	return biomass
 
+func absorb_epsilon(epsilon_runtime):
+	var absorption = clamp(epsilon_runtime * 0.4, 0.0, epsilon_runtime)
+	epsilon_effective = epsilon_runtime - absorption
+	main.nutrientes += absorption * 5.0
 
 func update_ui():
 	if hifas_unlocked:
