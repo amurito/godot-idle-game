@@ -125,7 +125,7 @@ var accounting_cost_scale := 2.0
 
 #
 ### DLC FUNGI — constantes 
-var FUNGI_MU_BETA := fungi_plasticity   # impacto en μ
+var FUNGI_MU_BETA := fungi_plasticity # impacto en μ
 # =====================================================
 var epsilon_effective := 0.0
 
@@ -138,8 +138,7 @@ var lab_mode := true
 var lap_events: Array = []
 var last_dominance := ""
 
-const RUN_EXPORT_PATH := "C:/Users/nicol/Desktop/idle/runs"
-
+var RUN_EXPORT_PATH := OS.get_user_data_dir() + "/IDLE_Fungi/runs"
 
 # ========== DESBLOQUEO PROGRESIVO DE FÓRMULA =========
 
@@ -223,13 +222,13 @@ func get_click_power() -> float:
 	return click_value * click_multiplier * persistence_dynamic * get_mu_structural_factor()
 
 func get_auto_income_effective() -> float:
-	var base= income_per_second * auto_multiplier * manual_specialization * get_mu_structural_factor()* get_biomass_beta()
+	var base = income_per_second * auto_multiplier * manual_specialization * get_mu_structural_factor() * get_biomass_beta()
 	return base * (1.0 + accounting_level * 0.05)
 func get_trueque_raw() -> float:
 	return trueque_level * trueque_base_income * trueque_efficiency
 
 func get_trueque_income_effective() -> float:
-	var base= get_trueque_raw() * trueque_network_multiplier * get_mu_structural_factor()* get_biomass_beta()
+	var base = get_trueque_raw() * trueque_network_multiplier * get_mu_structural_factor() * get_biomass_beta()
 	return base * (1.0 + accounting_level * 0.05)
 
 func get_passive_total() -> float:
@@ -252,9 +251,9 @@ func get_mu_structural_factor(n: int = cognitive_level) -> float:
 
 	return mu_base * mu_fungi
 # === GENES FÚNGICOS ===
-var fungi_absorption := 0.15   # cuánto ε se disipa
-var fungi_efficiency := 0.03   # fuerza de get_biomass_beta()
-var fungi_plasticity := 0.05   # cuánto afecta a μ
+var fungi_absorption := 0.15 # cuánto ε se disipa
+var fungi_efficiency := 0.03 # fuerza de get_biomass_beta()
+var fungi_plasticity := 0.05 # cuánto afecta a μ
 # ===== BIOSFERA =====
 var biomasa := 0.0
 var nutrientes := 0.0
@@ -704,8 +703,9 @@ func _get_timestamp_meta() -> Dictionary:
 		"filename_stamp": "%s-%s-%s_%s-%s" % [dd, mm, yyyy, hh, mi]
 	}
 func _ensure_runs_dir():
-	if not DirAccess.dir_exists_absolute("res://runs"):
-		DirAccess.make_dir_absolute("res://runs")
+	var path = "user://runs"
+	if not DirAccess.dir_exists_absolute(path):
+		DirAccess.make_dir_absolute(path)
 
 
 func _build_run_json(meta: Dictionary) -> Dictionary:
@@ -761,13 +761,13 @@ func _on_ExportRunButton_pressed():
 
 	# === JSON ===
 	var json_data := _build_run_json(meta)
-	var json_path := "res://runs/run_%s.json" % meta.filename_stamp
+	var json_path := "user://runs/run_%s.json" % meta.filename_stamp
 	var json_file := FileAccess.open(json_path, FileAccess.WRITE)
 	json_file.store_string(JSON.stringify(json_data, "\t"))
 	json_file.close()
 
 	# === CSV ===
-	var csv_path := "res://runs/run_%s.csv" % meta.filename_stamp
+	var csv_path := "user://runs/run_%s.csv" % meta.filename_stamp
 	var csv_file := FileAccess.open(csv_path, FileAccess.WRITE)
 	csv_file.store_string(_build_run_csv(meta))
 	csv_file.close()
@@ -851,7 +851,6 @@ func _mount_fungi_dlc():
 
 
 func _process(delta):
-
 	# 1) economía base
 	apply_dynamic_persistence(delta)
 	delta_per_sec = get_passive_total()
