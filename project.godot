@@ -22,3 +22,7 @@ Version="*res://version.gd"
 [editor]
 
 version_control/autoload_on_startup=true
+
+[global_group]
+
+fungi_ui=""

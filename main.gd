@@ -31,7 +31,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 1.4
+var persistence_base: float = 10.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -288,6 +288,59 @@ func compute_hifas() -> float:
 func update_nutrients(delta):
 	var absorbed := float(epsilon_runtime - epsilon_effective)
 	nutrientes += absorbed * 5.0 * delta
+# ============================
+#  GENOMA FÚNGICO — v0.1
+# ============================
+
+var genome := {
+	"hiperasimilacion": "dormido",
+	"parasitismo": "dormido",
+	"red_micelial": "dormido",
+	"esporulacion": "dormido",
+	"simbiosis": "dormido"
+}
+
+func update_genome():
+	# HIPERASIMILACIÓN
+	if epsilon_runtime > 0.6 and biomasa > 5.0:
+		genome.hiperasimilacion = "activo"
+	elif epsilon_runtime > 0.3:
+		genome.hiperasimilacion = "latente"
+	else:
+		genome.hiperasimilacion = "dormido"
+
+	# PARASITISMO (biomasa alta drenando economía)
+	if biomasa > 15.0 and get_delta_total() > 0:
+		genome.parasitismo = "activo"
+	elif biomasa > 5.0:
+		genome.parasitismo = "latente"
+	else:
+		genome.parasitismo = "dormido"
+
+	# RED MICELIAL (estructura pasiva estable)
+	if hifas > 8.0 and epsilon_runtime < 0.25:
+		genome.red_micelial = "activo"
+	elif hifas > 3.0:
+		genome.red_micelial = "latente"
+	else:
+		genome.red_micelial = "dormido"
+
+	# ESPORULACIÓN (sistema bajo estrés)
+	var bio_pressure := get_structural_pressure()
+	if bio_pressure > 20.0:
+		genome.esporulacion = "activo"
+	elif bio_pressure > 8.0:
+		genome.esporulacion = "latente"
+	else:
+		genome.esporulacion = "dormido"
+
+	# SIMBIOSIS (contabilidad + hifas)
+	if accounting_level > 0 and hifas > 5.0:
+		genome.simbiosis = "activo"
+	elif accounting_level > 0:
+		genome.simbiosis = "latente"
+	else:
+		genome.simbiosis = "dormido"
 
 # =====================================================
 #  FORMATO TEXTO FÓRMULA
@@ -829,25 +882,18 @@ func _ready():
 	_mount_fungi_dlc()
 
 func _mount_fungi_dlc():
-	fungi_ui = FUNGI_UI_SCENE.instantiate()
+	await get_tree().process_frame   # ⬅️ clave: esperar que todo exista
 
-	var dlc_root = get_node("DLCOverlay")
-	dlc_root.add_child(fungi_ui)
+	fungi_ui = FUNGI_UI_SCENE.instantiate()
+	get_node("DLCOverlay").add_child(fungi_ui)
 
 	fungi_ui.name = "FungiUI"
 	fungi_ui.visible = true
-	# inyectamos el core
 	fungi_ui.set_main(self)
-	# Esperar a que Godot calcule tamaños
-	await get_tree().process_frame
-	var vp = get_viewport().get_visible_rect().size
 
-	fungi_ui.position = Vector2(
-		vp.x - 320,
-		20
-	)
+	big_click_button.set_main(self)
 
-	print("🍄 Fungi DLC mounted:", fungi_ui)
+	print("🍄 Fungi DLC mounted")
 
 
 func _process(delta):
@@ -869,6 +915,8 @@ func _process(delta):
 	update_nutrients(delta)
 	update_biosphere(delta)
 	hifas = compute_hifas()
+	update_genome()
+
 
 	# 6) cooldown estructural
 	if structural_cooldown > 0.0:
@@ -1145,7 +1193,6 @@ func update_ui():
 
 
 	money_label.text = "Dinero: $" + str(round(money))
-	big_click_button.text = "PUSH\n(+" + str(snapped(get_click_power(), 0.01)) + ")"
 
 	formula_label.text = build_formula_text() + "\n" + build_formula_values()
 	marginal_label.text = build_marginal_contribution()
@@ -1165,6 +1212,7 @@ func update_ui():
 		institution_panel_label.text += "\nEstado del sistema = " + get_system_phase()
 		institution_panel_label.text += "\nContabilidad = nivel " + str(accounting_level)
 		institution_panel_label.text += "\nAmortiguación = " + str(round(accounting_effect * 100.0)) + "%"
+		institution_panel_label.text += "\n\n" + build_genome_text()
 
 	# μ sigue existiendo
 		upgrade_cognitive_button.visible = true
@@ -1234,3 +1282,12 @@ func update_ui():
 
 	# μ siempre existe, incluso con instituciones
 	upgrade_cognitive_button.visible = true
+
+func build_genome_text() -> String:
+		var t := "🧬 GENOMA FÚNGICO\n"
+		t += "Hiperasimilación: " + genome.hiperasimilacion + "\n"
+		t += "Parasitismo: " + genome.parasitismo + "\n"
+		t += "Red micelial: " + genome.red_micelial + "\n"
+		t += "Esporulación: " + genome.esporulacion + "\n"
+		t += "Simbiosis: " + genome.simbiosis
+		return t
