@@ -95,6 +95,8 @@ func absorb_epsilon(epsilon_runtime):
 	var absorption = clamp(epsilon_runtime * 0.4, 0.0, epsilon_runtime)
 	epsilon_effective = epsilon_runtime - absorption
 	main.nutrientes += absorption * 5.0
+func get_visual_strength() -> float:
+	return clamp(log(1.0 + biomass) / 3.0, 0.0, 1.0)
 
 func update_ui():
 	if hifas_unlocked:

@@ -13,6 +13,10 @@ var base_scale := 1.0
 
 var max_display_power := 100.0
 var current_power := 0.0
+var fungi_influence := 0.0
+
+func apply_fungi_influence(v: float):
+	fungi_influence = v
 
 func set_power(p):
 	current_power = p
@@ -25,16 +29,26 @@ func _ready():
 		base_scale = base / 200.0
 		scale = Vector2.ONE * base_scale
 		
+func get_growth_factor(norm: float) -> float:
+	# curva lenta al inicio, fuerte cerca de 1
+	return clamp(log(1.0 + norm * 4.0), 0.0, 1.4)
 func get_norm_power() -> float:
-	# Log-scale: 0 → 1 → 10 → 100 → 1000 produce crecimiento visible
-	return log(current_power + 1.0) / log(max_display_power + 1.0)
+	if max_display_power <= 0.0:
+		return 0.0
+	return clamp(current_power / max_display_power, 0.0, 1.5)
+func set_particle_size(mult: float):
+	if particles.process_material and particles.process_material is ParticleProcessMaterial:
+		var mat := particles.process_material as ParticleProcessMaterial
+		mat.scale_min = 0.6 * mult
+		mat.scale_max = 1.2 * mult
 	
 func _process(delta):
-	# Normalización 0 → 1
 	var norm = get_norm_power()
+	var growth = get_growth_factor(norm)
+	var particle_growth = lerp(0.8, 2.2, growth)
+	set_particle_size(particle_growth)
 
-	# crecimiento estructural
-	var size_growth = lerp(0.9, 2.6, pow(norm, 0.7))
+	var size_growth = lerp(1.0, 1.75, growth)
 	scale = Vector2.ONE * base_scale * size_growth
 	if norm > 1.0:
 		saturation = min(1.0, saturation + (norm - 1.0) * 0.02)
@@ -60,6 +74,9 @@ func _process(delta):
 	var color = calm.lerp(hot, activity)
 	color = color.lerp(chaotic, saturation)
 	core.modulate = color
+	# Influencia micelial: estabiliza y enfría
+	var fungi_tint = Color(0.78, 0.3, 1.0)
+	core.modulate = core.modulate.lerp(fungi_tint, fungi_influence * 0.25)
 
 	label.text = "+" + str(snapped(current_power, 0.1))
 
