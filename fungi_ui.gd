@@ -12,6 +12,8 @@ var main : Node = null
 @onready var lbl_nutrients = $Panel/VBoxContainer/Nutrientes
 @onready var lbl_biomass   = $Panel/VBoxContainer/Biomasa
 @onready var btn_hifas     = $Panel/VBoxContainer/DesbloquearHifas
+@export var fungi_color : Color = Color(0.78, 0.3, 1.0) # violeta micelial
+
 
 var hifas_unlocked := false
 var nutrients := 0.0
@@ -23,11 +25,26 @@ var metabolism := 0.0
 
 const NUTRIENT_FROM_EPS := 5.0
 const GROWTH_RATE := 0.25
+func apply_fungi_color():
+	var labels = [
+		lbl_status,
+		lbl_nutrients,
+		lbl_biomass,
+		$Panel/VBoxContainer/Metabolismo,
+		$Panel/VBoxContainer/EpsilonEff
+	]
+
+	for l in labels:
+		if l:
+			l.set("theme_override_colors/font_color", fungi_color)
+			l.set("theme_override_colors/font_outline_color", Color(0.05, 0.0, 0.08))
+			l.set("theme_override_constants/outline_size", 1)
 
 
 
 func _ready():
 	print("🍄 Biosfera online")
+	apply_fungi_color()
 
 	if btn_hifas.pressed.is_connected(_on_DesbloquearHifas_pressed):
 		btn_hifas.pressed.disconnect(_on_DesbloquearHifas_pressed)

@@ -31,7 +31,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 10.4
+var persistence_base: float = 1.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -882,7 +882,7 @@ func _ready():
 	_mount_fungi_dlc()
 
 func _mount_fungi_dlc():
-	await get_tree().process_frame   # ⬅️ clave: esperar que todo exista
+	await get_tree().process_frame # ⬅️ clave: esperar que todo exista
 
 	fungi_ui = FUNGI_UI_SCENE.instantiate()
 	get_node("DLCOverlay").add_child(fungi_ui)
