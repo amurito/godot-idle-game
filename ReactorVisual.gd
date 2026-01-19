@@ -50,6 +50,8 @@ func _process(delta):
 
 	var size_growth = lerp(1.0, 1.75, growth)
 	scale = Vector2.ONE * base_scale * size_growth
+	var p_scale = lerp(0.4, 1.6, clamp(activity + saturation * 0.5, 0.0, 1.0))
+	particles.scale = Vector2.ONE * p_scale
 	if norm > 1.0:
 		saturation = min(1.0, saturation + (norm - 1.0) * 0.02)
 
@@ -66,7 +68,9 @@ func _process(delta):
 	core.scale = Vector2.ONE * (pulse + chaos)
 
 	ring.rotation += delta * (0.4 + activity * 2.5 + saturation * 1.5)
-	particles.amount = int(20 + activity * 80 + saturation * 120)
+	particles.amount = int(30 + activity * 120 + saturation * 200)
+	particles.lifetime = lerp(0.6, 1.6, activity)
+
 
 	var calm = Color(1, 0.4, 1)
 	var hot = Color(1, 0.2, 0.8)

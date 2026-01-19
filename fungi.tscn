@@ -3,7 +3,18 @@
 [ext_resource type="Theme" uid="uid://c3i7d0q3n8d5e" path="res://fungi_theme.tres" id="1_bgtdn"]
 [ext_resource type="Script" uid="uid://chwpt8ctyh6x4" path="res://fungi_ui.gd" id="1_v67og"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v67og"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bgtdn"]
+bg_color = Color(0.19333655, 0.05544704, 0.2852705, 0.5254902)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7055968, 0.35253903, 1, 0.8)
+border_blend = true
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="FungiUI" type="Control" groups=["fungi_ui"]]
 custom_minimum_size = Vector2(300, 160)
@@ -29,7 +40,7 @@ offset_left = -360.0
 offset_bottom = 180.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_v67og")
+theme_override_styles/panel = SubResource("StyleBoxFlat_bgtdn")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 custom_minimum_size = Vector2(300, 120)

@@ -31,7 +31,7 @@ var click_multiplier: float = 1.0
 var click_multiplier_upgrade_cost: float = 200.0
 
 # Persistencia base estructural (c₀)
-var persistence_base: float = 10.4
+var persistence_base: float = 1.4
 # Estado dinámico observado (cₙ)
 var persistence_dynamic: float = 1.4
 
@@ -123,9 +123,6 @@ var accounting_effect := 0.0
 var accounting_base_cost := 50000.0
 var accounting_cost_scale := 2.0
 
-#
-### DLC FUNGI — constantes 
-var FUNGI_MU_BETA := fungi_plasticity # impacto en μ
 # =====================================================
 var epsilon_effective := 0.0
 
@@ -245,11 +242,22 @@ func get_mu_structural_factor(n: int = cognitive_level) -> float:
 
 	# μ fúngico (biomasa)
 	var mu_fungi := 1.0
-	if fungi_ui != null and fungi_ui.has_method("get_biomass"):
-		var b := float(fungi_ui.get_biomass())
-		mu_fungi = 1.0 + log(1.0 + b) * fungi_plasticity
+	var b := 0.0
+	var plasticity := fungi_plasticity
 
-	return mu_base * mu_fungi
+	if fungi_ui != null and fungi_ui.has_method("get_biomass"):
+		b = float(fungi_ui.get_biomass())
+
+	if mutation_homeostasis:
+		plasticity *= 0.5
+
+	mu_fungi = 1.0 + log(1.0 + b) * plasticity
+	var mu_total = mu_base * mu_fungi
+
+	if mutation_hyperassimilation:
+		mu_total *= 0.85  # o 0.9 según dureza deseada
+
+	return mu_total
 # === GENES FÚNGICOS ===
 var fungi_absorption := 0.15 # cuánto ε se disipa
 var fungi_efficiency := 0.03 # fuerza de get_biomass_beta()
@@ -258,6 +266,11 @@ var fungi_plasticity := 0.05 # cuánto afecta a μ
 var biomasa := 0.0
 var nutrientes := 0.0
 var hifas := 0.0
+# === MUTACIONES ACTIVAS (flags reales) ===
+var mutation_hyperassimilation := false
+var mutation_symbiosis := false
+var mutation_homeostasis := false
+
 
 func get_biomass_beta() -> float:
 	return 1.0 + log(1.0 + biomasa) * fungi_efficiency
@@ -274,15 +287,24 @@ func update_biosphere(delta):
 	nutrientes -= biomass_gain * 0.5
 	nutrientes = max(nutrientes, 0)
 
-	var eps_absorbed = biomass_gain * fungi_absorption
-	epsilon_effective = max(0.0, epsilon_runtime - eps_absorbed)
+	if mutation_hyperassimilation:
+		epsilon_effective = epsilon_runtime / (1.0 + pow(biomasa, 0.6))
+	elif mutation_symbiosis:
+		epsilon_effective = epsilon_runtime * 0.65
+	else:
+		epsilon_effective = epsilon_runtime / (1.0 + biomasa)
+	# --- HOMEOSTASIS: límite biológico ---
+	if mutation_homeostasis:
+		var BIOMASS_CAP := 10.0
+		biomasa = min(biomasa, BIOMASS_CAP)
 # =====================================================
 #  CÁLCULO HIFAS v0.8 DLC
 func compute_hifas() -> float:
 	var passive = get_passive_total()
-	if passive <= 0:
-		return 0.0
-	return pow(passive, 0.6)
+	var h := pow(passive, 0.6)
+	if mutation_homeostasis:
+		h *= 0.85
+	return h
 # =====================================================
 # CÁLCULO NUTRIENTES v0.8 DLC
 func update_nutrients(delta):
@@ -310,7 +332,9 @@ func update_genome():
 		genome.hiperasimilacion = "dormido"
 
 	# PARASITISMO (biomasa alta drenando economía)
-	if biomasa > 15.0 and get_delta_total() > 0:
+	if mutation_homeostasis:
+		genome.parasitismo = "bloqueado"
+	elif biomasa > 15.0 and get_delta_total() > 0:
 		genome.parasitismo = "activo"
 	elif biomasa > 5.0:
 		genome.parasitismo = "latente"
@@ -327,7 +351,9 @@ func update_genome():
 
 	# ESPORULACIÓN (sistema bajo estrés)
 	var bio_pressure := get_structural_pressure()
-	if bio_pressure > 20.0:
+	if mutation_homeostasis:
+		genome.esporulacion = "bloqueado"
+	elif bio_pressure > 20.0:
 		genome.esporulacion = "activo"
 	elif bio_pressure > 8.0:
 		genome.esporulacion = "latente"
@@ -341,6 +367,71 @@ func update_genome():
 		genome.simbiosis = "latente"
 	else:
 		genome.simbiosis = "dormido"
+	# ACTIVACIÓN DEFINITIVA — HIPERASIMILACIÓN
+	if genome.hiperasimilacion == "activo" and not mutation_hyperassimilation:
+		activate_hyperassimilation()
+	# ACTIVACIÓN DEFINITIVA — SIMBIOSIS
+	if not mutation_hyperassimilation \
+	and genome.simbiosis == "activo" \
+	and not mutation_symbiosis:
+		activate_symbiosis()
+	
+func activate_hyperassimilation():
+	if mutation_homeostasis:
+		return
+
+	mutation_hyperassimilation = true
+	add_lap("🧬 Mutación irreversible — HIPERASIMILACIÓN")
+	print("🧬 HIPERASIMILACIÓN ACTIVADA")
+
+	# efectos estructurales inmediatos
+	apply_flexibility_modifier(0.85)
+	enable_persistence_inertia(0.25)
+func activate_homeostasis():
+	if mutation_homeostasis:
+		return
+
+	mutation_homeostasis = true
+	mutation_hyperassimilation = false # bloqueo cruzado
+
+	# --- efectos inmediatos ---
+	epsilon_runtime *= 0.85
+	epsilon_peak = min(epsilon_peak, 1.0)
+
+	omega_min = max(omega_min, 0.35)
+
+	accounting_effect *= 1.25
+
+	add_lap("🧬 Mutación irreversible — HOMEOSTASIS")
+	system_message_label.text = "El sistema entra en HOMEOSTASIS: estabilidad estructural priorizada"
+func activate_symbiosis():
+	mutation_symbiosis = true
+	add_lap("🧬 Mutación irreversible — SIMBIOSIS ESTRUCTURAL")
+	print("🧬 SIMBIOSIS ACTIVADA")
+
+	# efectos estructurales
+	apply_symbiotic_stabilization()
+# === EFECTOS DE MUTACIÓN ===
+
+var persistence_inertia := 1.0
+
+func apply_flexibility_modifier(factor: float):
+	omega *= factor
+	omega_min *= factor
+
+func enable_persistence_inertia(factor: float):
+	persistence_inertia = factor
+
+func apply_symbiotic_stabilization():
+	# más flexibilidad estructural
+	omega = min(1.0, omega * 1.25)
+
+	# amortiguación permanente del estrés
+	accounting_effect = min(0.6, accounting_effect + 0.15)
+
+	# mejora pasivo sin romper el modelo
+	trueque_efficiency *= 1.1
+	auto_multiplier *= 1.05
 
 # =====================================================
 #  FORMATO TEXTO FÓRMULA
@@ -531,10 +622,10 @@ func apply_dynamic_persistence(delta: float) -> void:
 
 	# converge sin overshoot
 	persistence_dynamic = lerp(
-		persistence_dynamic,
-		target,
-		clamp(a * delta * 0.4, 0.0, 0.25)
-	)
+	persistence_dynamic,
+	target,
+	clamp(a * delta * 0.4 * persistence_inertia, 0.0, 0.25)
+)
 
 
 # === Persistencia estructural ===
@@ -916,6 +1007,14 @@ func _process(delta):
 	update_biosphere(delta)
 	hifas = compute_hifas()
 	update_genome()
+	# DECISIÓN EVOLUTIVA — HOMEOSTASIS
+	# ============================
+	if not mutation_homeostasis and not mutation_hyperassimilation:
+		if epsilon_runtime < 0.25 \
+		and omega_min > 0.35 \
+		and biomasa > 3.0 \
+		and accounting_level >= 1:
+			activate_homeostasis()
 
 
 	# 6) cooldown estructural
@@ -1033,7 +1132,8 @@ func get_system_phase() -> String:
 		return "TENSO"
 	else:
 		return "FLEXIBLE"
-
+func get_flexibility() -> float:
+	return omega
 # =====================================================
 # DLC — INTERFAZ FUNGÍCA v0.8
 func _on_Biosfera_pressed() -> void:
@@ -1257,6 +1357,7 @@ func update_ui():
 	else:
 		lap_markers_label.text = ""
 	
+	
 	# === BOTONES CLICK ===
 
 	upgrade_click_button.text = "Mejorar click (+%s)\nCosto: $%s" % [str(snapped(click_value + 1, 0.01)), str(round(click_upgrade_cost))]
@@ -1290,4 +1391,12 @@ func build_genome_text() -> String:
 		t += "Red micelial: " + genome.red_micelial + "\n"
 		t += "Esporulación: " + genome.esporulacion + "\n"
 		t += "Simbiosis: " + genome.simbiosis
+		if mutation_hyperassimilation:
+			t += "\n⚠️ Ruta evolutiva: HIPERASIMILACIÓN"
+		elif mutation_symbiosis:
+			t += "\n🌱 Ruta evolutiva: SIMBIOSIS"
+		if mutation_homeostasis:
+			t += "\n⚖️ Ruta evolutiva: HOMEOSTASIS"
+		elif mutation_hyperassimilation:
+			t += "\n⚠️ Ruta evolutiva: HIPERASIMILACIÓN"
 		return t
