@@ -122,6 +122,9 @@ var accounting_level := 0
 var accounting_effect := 0.0
 var accounting_base_cost := 50000.0
 var accounting_cost_scale := 2.0
+# === ε PASIVO (v0.8) ===
+const EPS_PASSIVE_SCALE := 0.35
+const PASSIVE_RATIO_START := 0.55
 
 # =====================================================
 var epsilon_effective := 0.0
@@ -1013,7 +1016,7 @@ func _process(delta):
 		if epsilon_runtime < 0.25 \
 		and omega_min > 0.35 \
 		and biomasa > 3.0 \
-		and accounting_level >= 1:
+		and (accounting_level >= 1 or institution_accounting_unlocked):
 			activate_homeostasis()
 
 
@@ -1033,15 +1036,17 @@ func _process(delta):
 # ESTRUCTURALES v0.7.3
 func update_epsilon_runtime():
 	if baseline_delta_structural <= 0.0 or delta_per_sec <= 0.0:
-		epsilon_effective = 0.0
+		epsilon_runtime = 0.0
 		return
 
-	# -------------------------
-	# 1) ε_producción
-	# -------------------------
 	var n_struct := get_effective_structural_n()
+	var k_eff := get_k_eff()
+
+	# =================================================
+	# 1) ε_activo — producción / composición (actual)
+	# =================================================
 	var expected_delta := baseline_delta_structural * pow(
-		get_k_eff(),
+		k_eff,
 		1.0 - (1.0 / n_struct)
 	)
 
@@ -1049,45 +1054,57 @@ func update_epsilon_runtime():
 	if expected_delta > 0.0:
 		epsilon_prod = max(0.0, (delta_per_sec / expected_delta) - 1.0)
 
-	# -------------------------
-	# 2) ε_composición
-	# -------------------------
-	var active: float = get_click_power()
-	var total: float = delta_per_sec
+	var active := get_click_power()
+	var passive := get_passive_total()
+	var total := active + passive
 
 	var active_ratio := 0.0
+	var passive_ratio := 0.0
 	if total > 0.0:
 		active_ratio = active / total
+		passive_ratio = passive / total
 
-	# target dinámico: sistema joven tolera click, sistema maduro no
-	var t: float = clamp(n_struct / 40.0, 0.0, 1.0)
-	var target_ratio: float = lerp(0.8, 0.4, t)
+	# target dinámico
+	var t :float = clamp(n_struct / 40.0, 0.0, 1.0)
+	var target_active :float = lerp(0.8, 0.4, t)
 
-	var epsilon_comp := float(abs(active_ratio - target_ratio))
+	var epsilon_comp :float = abs(active_ratio - target_active)
 	epsilon_comp *= (1.0 - accounting_effect)
 
-	# -------------------------
-	# 3) Mezcla y memoria
-	# -------------------------
-	var epsilon_raw := epsilon_prod + epsilon_comp
+	var epsilon_activo := epsilon_prod + epsilon_comp
 
-	var epsilon_complexity := 0.002 * n_struct * get_k_eff()
-	epsilon_raw += epsilon_complexity
+	# =================================================
+	# 2) ε_pasivo — rigidez / cristalización
+	# =================================================
+	var epsilon_pasivo := 0.0
 
-	# transición suave (inercia macroeconómica)
+	if passive_ratio > PASSIVE_RATIO_START:
+		var excess := passive_ratio - PASSIVE_RATIO_START
+		var rigidity := (1.0 - omega)
+		var size_factor := log(1.0 + n_struct)
+		epsilon_pasivo = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - accounting_effect)
+
+	# =================================================
+	# 3) Complejidad estructural
+	# =================================================
+	var epsilon_complexity := 0.002 * n_struct * k_eff
+
+	# =================================================
+	# 4) Mezcla final
+	# =================================================
+	var epsilon_raw := epsilon_activo + epsilon_pasivo + epsilon_complexity
+
+
 	epsilon_runtime = lerp(epsilon_runtime, epsilon_raw, 0.08)
-
-	# límites de estabilidad
 	epsilon_runtime = clamp(epsilon_runtime, 0.0, 2.0)
-
 	epsilon_peak = max(epsilon_peak, epsilon_runtime)
-	# -------------------------
-	# 4) Cálculo ω_runtime
-	omega = get_omega(epsilon_runtime, get_k_eff(), n_struct)
+
+	# =================================================
+	# 5) Ω (flexibilidad)
+	# =================================================
+	omega = get_omega(epsilon_runtime, k_eff, n_struct)
 	omega_min = min(omega_min, omega)
-	# ===========================
-	# EFECTO INSTITUCIONAL (ω)
-	# ===========================
+
 	accounting_effect = 1.0 - exp(-0.3 * accounting_level)
 	accounting_effect = clamp(accounting_effect, 0.0, 0.5)
 
@@ -1096,13 +1113,20 @@ func check_institution_unlock():
 		return
 
 	var p := get_structural_pressure()
+	# vía 1 (ya existe): crisis
 	if p > 15.0 and omega < 0.25 and epsilon_runtime > 0.3:
-		institution_accounting_unlocked = true
-		institutions_unlocked = true
-		omega = 0.1
-		add_lap("🏛️ Institución desbloqueada — Contabilidad Básica")
-		system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
-		on_institutions_unlocked()
+		unlock_accounting()
+
+	# vía 2 (NUEVA): estabilidad sostenida
+	elif run_time > 600.0 and epsilon_runtime < 0.15 and get_active_passive_breakdown().pasivo > 35.0:
+		unlock_accounting()
+
+func unlock_accounting():
+	institution_accounting_unlocked = true
+	institutions_unlocked = true
+	add_lap("🏛️ Institución desbloqueada — Contabilidad Básica")
+	system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
+	on_institutions_unlocked()	
 func get_accounting_cost() -> float:
 	return accounting_base_cost * pow(accounting_cost_scale, accounting_level)
 
