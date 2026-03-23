@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_trueque_net"]
+
+[resource]
+script = ExtResource("1_trueque_net")
+id = "trueque_net"
+label = "Red de Intercambio"
+base_cost = 6000.0
+cost_scale = 1.35
+gain = 1.12
+is_multiplicative = true
+base_value = 1.0
+unlock_requires = "trueque"
+one_shot = false

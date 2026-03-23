@@ -1,17 +1,30 @@
-[gd_scene load_steps=4 format=3 uid="uid://dov4eh5krwoak"]
+[gd_scene load_steps=10 format=3 uid="uid://c875qgxc4e6rx"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://xt8o6hca6a4q" path="res://main.tres" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://c70p23y0n0llt" path="res://big_click_button.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://dc4mv13bfhpxc" path="res://ReactorVisual.gd" id="4_1bvp3"]
+[ext_resource type="Texture2D" uid="uid://ckwbhncmw7un8" path="res://core_gradient.tres" id="5_lquwl"]
+[ext_resource type="Texture2D" uid="uid://db8asolpxv5a0" path="res://ring_gradient.tres" id="6_7mycd"]
+[ext_resource type="Script" uid="uid://bonwdb6474v6l" path="res://UpgradeButton.gd" id="7_upgrade"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
-bg_color = Color(0.22144273, 0.70127815, 0.44872516, 1)
-border_color = Color(0.48579577, 0.20047483, 1.6946554, 1)
-corner_radius_top_left = 80
-corner_radius_top_right = 80
-corner_radius_bottom_right = 80
-corner_radius_bottom_left = 80
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_7mycd"]
+blend_mode = 1
+light_mode = 1
 
-[node name="Main" type="Control"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7mycd"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 1.0
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 3.0
+initial_velocity_max = 10.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.29999998
+color = Color(0.9975454, 0.62884396, 1, 1)
+
+[node name="UIRoot" type="Control"]
 layout_direction = 2
 layout_mode = 3
 anchors_preset = 15
@@ -25,15 +38,21 @@ script = ExtResource("1_ig7tw")
 
 [node name="UIRootContainer" type="HBoxContainer" parent="."]
 layout_direction = 2
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.0055599, 1)
+mouse_filter = 2
 theme_override_constants/separation = 32
 alignment = 1
 
 [node name="LeftPanel" type="HBoxContainer" parent="UIRootContainer"]
 custom_minimum_size = Vector2(480, 0)
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 12
 
 [node name="SpacerLeft" type="Control" parent="UIRootContainer/LeftPanel"]
@@ -43,6 +62,7 @@ size_flags_horizontal = 3
 [node name="CenterPanel" type="VBoxContainer" parent="UIRootContainer/LeftPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
 
@@ -52,11 +72,41 @@ layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
+focus_mode = 0
 theme = ExtResource("2_0xm2m")
 theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("StyleBoxFlat_h2yge")
-text = "PUSH"
+flat = true
 icon_alignment = 1
+script = ExtResource("3_h2yge")
+
+[node name="ReactorVisual" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton"]
+position = Vector2(155, 70)
+script = ExtResource("4_1bvp3")
+
+[node name="Core" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+texture_filter = 2
+texture_repeat = 1
+material = SubResource("CanvasItemMaterial_7mycd")
+scale = Vector2(1.2, 1.2)
+texture = ExtResource("5_lquwl")
+
+[node name="Ring" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+modulate = Color(0.5370987, 0.24780053, 0.8350781, 0.4)
+scale = Vector2(1.8, 1.8)
+texture = ExtResource("6_7mycd")
+
+[node name="Particles" type="GPUParticles2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+amount = 50
+lifetime = 1.2
+explosiveness = 0.1
+process_material = SubResource("ParticleProcessMaterial_7mycd")
+
+[node name="Tendrils" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+
+[node name="Line2D" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
+position = Vector2(-1.5031554, 0.5)
+width = 1.5
+default_color = Color(1, 0.43468678, 0.98876053, 1)
 
 [node name="FormulaLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
 custom_minimum_size = Vector2(480, 160)
@@ -106,18 +156,21 @@ layout_mode = 2
 size_flags_vertical = 0
 text = "Mejorar Click ( +$a )
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="UpgradeClickMultiplierButton" type="Button" parent="UIRootContainer/ProductionPanel/ClickPanel"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Memoria Numérica ( ×b )
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="PersistenceUpgradeButton" type="Button" parent="UIRootContainer/ProductionPanel/ClickPanel"]
 layout_mode = 2
 text = "Memoria Operativa del Sistema (única)
 Persistencia → 1.6
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="AutoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
 custom_minimum_size = Vector2(0, 72)
@@ -130,18 +183,21 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Trabajo Manual ( +d /s )
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="UpgradeAutoMultiplierButton" type="Button" parent="UIRootContainer/ProductionPanel/AutoPanel"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Ritmo de Trabajo ( ×md )
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="UpgradeSpecializationButton" type="Button" parent="UIRootContainer/ProductionPanel/AutoPanel"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Trabajo Manual ( +d /s )
 Costo: $X"
+script = ExtResource("7_upgrade")
 
 [node name="TruequePanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
 custom_minimum_size = Vector2(0, 72)
@@ -155,6 +211,7 @@ layout_mode = 2
 text = "Trueque ( +e /s )
 Costo: $X
 "
+script = ExtResource("7_upgrade")
 
 [node name="UpgradeTruequeNetworkButton" type="Button" parent="UIRootContainer/ProductionPanel/TruequePanel"]
 custom_minimum_size = Vector2(0, 56)
@@ -162,59 +219,155 @@ layout_mode = 2
 text = "Red de Intercambio ( ×me )
 Costo: $X
 "
+script = ExtResource("7_upgrade")
+
+[node name="CapitalProductivoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_vertical = 6
+theme_override_constants/separation = 8
+
+[node name="UpgradeCognitiveButton" type="Button" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "
+"
+script = ExtResource("7_upgrade")
+
+[node name="CognitiveMuLabel" type="Label" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
+layout_mode = 2
+
+[node name="UpgradeAccountingButton" type="Button" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
+layout_mode = 2
+script = ExtResource("7_upgrade")
+
+[node name="UpgradeAccountingLabel" type="Label" parent="UIRootContainer/ProductionPanel/CapitalProductivoPanel"]
+layout_mode = 2
 
 [node name="RightPanel" type="VBoxContainer" parent="UIRootContainer"]
-custom_minimum_size = Vector2(0, 300)
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
-alignment = 2
+size_flags_horizontal = 3
+mouse_filter = 2
 
-[node name="MoneyLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="ReactorHUDPanel" type="PanelContainer" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="UIRootContainer/RightPanel/ReactorHUDPanel"]
+layout_mode = 2
+
+[node name="MoneyLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
 text = "
 "
 
-[node name="IncomeLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SystemDeltaLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
 layout_mode = 2
+size_flags_vertical = 1
+
+[node name="SystemStateLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="DeltaTotalLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+
+[node name="SystemActivePassiveLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="SystemBreakdownLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="IncomeLabel" type="Label" parent="UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
 text = "
 "
 
-[node name="SystemDeltaLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="UIRootContainer/RightPanel"]
 layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+horizontal_scroll_mode = 0
 
-[node name="SystemStateLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UIRootContainer/RightPanel/ScrollContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+mouse_filter = 2
 
-[node name="SystemActivePassiveLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="SessionTimeLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SystemBreakdownLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
-[node name="SessionTimeLabel" type="Label" parent="UIRootContainer/RightPanel"]
+[node name="LapMarkersLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel"]
-layout_mode = 2
-
-[node name="LapMarkersLabel" type="Label" parent="UIRootContainer/RightPanel"]
-layout_mode = 2
-
-[node name="ExportRunButton" type="Button" parent="UIRootContainer/RightPanel"]
+[node name="ExportRunButton" type="Button" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 text = "Export run"
 
-[node name="BoxContainer" type="BoxContainer" parent="."]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="SystemMessageLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.048865594, 0.70397073, 0.08954961, 1)
+vertical_alignment = 1
+autowrap_mode = 2
 
-[connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="." method="_on_BigClickButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickButton" to="." method="_on_UpgradeClickButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/UpgradeClickMultiplierButton" to="." method="_on_UpgradeClickMultiplierButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/ClickPanel/PersistenceUpgradeButton" to="." method="_on_PersistenceUpgradeButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoButton" to="." method="_on_UpgradeAutoButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeAutoMultiplierButton" to="." method="_on_UpgradeAutoMultiplierButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/AutoPanel/UpgradeSpecializationButton" to="." method="_on_UpgradeSpecializationButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeButton" to="." method="_on_UpgradeTruequeButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/ProductionPanel/TruequePanel/UpgradeTruequeNetworkButton" to="." method="_on_UpgradeTruequeNetworkButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/RightPanel/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]
+[node name="SystemAchievementsLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="InstitutionPanelLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="GenomeBlock" type="VBoxContainer" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="GenomeSummaryLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/GenomeBlock"]
+layout_mode = 2
+size_flags_vertical = 4
+fit_content = true
+autowrap_mode = 0
+
+[node name="ToggleLapViewButton" type="Button" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "📜 Ver todo"
+flat = true
+
+[node name="EpsilonStickyPanel" type="PanelContainer" parent="UIRootContainer/RightPanel"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="EpsilonStickyLabel" type="Label" parent="UIRootContainer/RightPanel/EpsilonStickyPanel"]
+layout_mode = 2
+
+[node name="StickyStack" type="VBoxContainer" parent="UIRootContainer/RightPanel/EpsilonStickyPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Biosfera" type="Button" parent="UIRootContainer/RightPanel/EpsilonStickyPanel/StickyStack"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "🌱 Biosfera"
+
+[connection signal="mouse_entered" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_mouse_exited"]
+[connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ToggleLapViewButton" to="." method="_on_ToggleLapViewButton_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/EpsilonStickyPanel/StickyStack/Biosfera" to="." method="_on_Biosfera_pressed"]

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_trueque"]
+
+[resource]
+script = ExtResource("1_trueque")
+id = "trueque"
+label = "Trueque"
+base_cost = 3000.0
+cost_scale = 1.45
+gain = 1.0
+is_multiplicative = false
+base_value = 0.0
+unlock_requires = ""
+one_shot = false

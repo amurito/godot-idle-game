@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_cognitive"]
+
+[resource]
+script = ExtResource("1_cognitive")
+id = "cognitive"
+label = "Capital Cognitivo (μ)"
+base_cost = 15000.0
+cost_scale = 1.45
+gain = 1.0
+is_multiplicative = false
+base_value = 0.0
+unlock_requires = ""
+one_shot = false

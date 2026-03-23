@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_click_mult"]
+
+[resource]
+script = ExtResource("1_click_mult")
+id = "click_mult"
+label = "Memoria Numérica"
+base_cost = 200.0
+cost_scale = 1.4
+gain = 1.06
+is_multiplicative = true
+base_value = 1.0
+unlock_requires = ""
+one_shot = false

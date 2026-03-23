@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_specialization"]
+
+[resource]
+script = ExtResource("1_specialization")
+id = "specialization"
+label = "Especialización de Oficio"
+base_cost = 9000.0
+cost_scale = 1.35
+gain = 1.1
+is_multiplicative = true
+base_value = 1.0
+unlock_requires = "auto"
+one_shot = false

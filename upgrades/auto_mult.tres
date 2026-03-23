@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_auto_mult"]
+
+[resource]
+script = ExtResource("1_auto_mult")
+id = "auto_mult"
+label = "Ritmo de Trabajo"
+base_cost = 1200.0
+cost_scale = 1.2
+gain = 1.06
+is_multiplicative = true
+base_value = 1.0
+unlock_requires = "auto"
+one_shot = false

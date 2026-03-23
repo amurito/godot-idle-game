@@ -1,0 +1,13 @@
+{
+  "model": "meta-llama/llama-3.3-70b-instruct:free",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Eres un experto en arquitectura de juegos en Godot 4. El usuario está refactorizando un juego incremental llamado Idle Antigravity."
+    },
+    {
+      "role": "user",
+      "content": "Acabamos de mover la lógica biológica a BiosphereEngine.gd y la evolutiva a EvoManager.gd. main.gd sigue teniendo docenas de @onready var para labels y botones de la UI (ej: @onready var money_label = $UIRootContainer/RightPanel/ReactorHUDPanel/VBoxContainer2/MoneyLabel). ¿Qué opinas de los @onready y qué harías ahora para seguir refactorizando la UI? Responde de forma técnica y estratégica."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_accounting"]
+
+[resource]
+script = ExtResource("1_accounting")
+id = "accounting"
+label = "Contabilidad Básica"
+base_cost = 20000.0
+cost_scale = 2.0
+gain = 1.0
+is_multiplicative = false
+base_value = 0.0
+unlock_requires = ""
+one_shot = false

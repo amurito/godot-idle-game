@@ -1,0 +1,42 @@
+extends Node
+
+# EcoModel.gd — Autoload (o Static)
+# Centraliza las fórmulas matemáticas del sistema económico.
+
+# Fórmulas de Producción
+func get_click_power(base: float, multiplier: float, dynamic_p: float, mu_factor: float) -> float:
+	return base * multiplier * dynamic_p * mu_factor
+
+func get_auto_income_effective(income: float, multiplier: float, specialization: float, mu_factor: float, biomass_beta: float, accounting_level: int) -> float:
+	var base = income * multiplier * specialization * mu_factor * biomass_beta
+	return base * (1.0 + accounting_level * 0.05)
+
+func get_trueque_raw(level: int, base_income: float, efficiency: float) -> float:
+	return level * base_income * efficiency
+
+func get_trueque_income_effective(raw_trueque: float, network: float, mu_factor: float, biomass_beta: float, accounting_level: int) -> float:
+	var base = raw_trueque * network * mu_factor * biomass_beta
+	return base * (1.0 + accounting_level * 0.05)
+
+# Fórmulas Estructurales
+func get_persistence_target(base_p: float, k_eff: float, n_struct: float) -> float:
+	if n_struct <= 1:
+		return base_p
+	return base_p * pow(k_eff, (1.0 - 1.0 / n_struct))
+
+func get_k_eff(base_k: float, alpha: float, mu: float) -> float:
+	# FIX: mu debe DIVIDIR la rigidez (k), no aumentarla.
+	return base_k / (1.0 + alpha * (mu - 1.0))
+
+func get_omega(epsilon: float, k_mu: float, n: float) -> float:
+	var denom := 1.0 + epsilon * k_mu * n
+	return 1.0 / max(denom, 0.0001)
+
+func get_effective_structural_n(raw_n: int, accounting_level: int) -> float:
+	# FIX: La contabilidad debe REDUCIR el peso estructural efectivo.
+	return float(raw_n) / (1.0 + accounting_level * 0.25)
+
+func get_structural_pressure(eps_eff: float, eps_peak: float, n_struct: int, accounting_effect: float) -> float:
+	var base := eps_eff * (1.0 + eps_peak) * float(n_struct)
+	var mitigated := base * (1.0 - accounting_effect)
+	return mitigated
