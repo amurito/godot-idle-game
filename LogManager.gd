@@ -80,9 +80,9 @@ func update_log_label(main: Control) -> void:
 func update_toggle_button(_main: Control) -> void:
 	if UIManager.toggle_lap_button:
 		UIManager.toggle_lap_button.text = (
-			"Ver todos los eventos"
+			"📜 Ver todos los eventos"
 			if not show_all_laps
-			else "Ver eventos clave"
+			else "📋 Ver eventos clave"
 		)
 
 func toggle_view(main: Control) -> void:

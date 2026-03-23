@@ -130,10 +130,10 @@ func update_ui():
 	btn_hifas.visible = false
 	var current_color = fungi_color
 	if EvoManager.mutation_hyperassimilation:
-		lbl_status.text = "🟣 HIFAS: HIPERASIMILACIÓN"
+		lbl_status.text = "🟣 HIFAS: %s (H-A)" % snapped(BiosphereEngine.hifas, 0.1)
 		current_color = Color(1.0, 0.2, 0.8) # Rosa neón más fuerte
 	elif hifas_unlocked:
-		lbl_status.text = "🟣 Hifas: ACTIVAS"
+		lbl_status.text = "🟣 Hifas: %s" % snapped(BiosphereEngine.hifas, 0.1)
 		current_color = fungi_color
 	else:
 		lbl_status.text = "⚫ Hifas: BLOQUEADAS"

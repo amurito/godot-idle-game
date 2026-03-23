@@ -47,7 +47,6 @@ func update_genome(main: Control):
 		return
 
 	var epsilon_runtime = main.epsilon_runtime
-	var omega = main.omega
 	var accounting_level = UpgradeManager.level("accounting")
 	var run_time = main.run_time
 	var bio_pressure = main.get_structural_pressure()
@@ -56,20 +55,20 @@ func update_genome(main: Control):
 	var hifas = BiosphereEngine.hifas
 	var epsilon_effective = BiosphereEngine.epsilon_effective
 
-	# HIPERASIMILACIÓN
+	# HIPERASIMILACIÓN (Exceso)
 	if mutation_homeostasis or mutation_symbiosis or mutation_parasitism or mutation_red_micelial:
 		_set_genome_state("hiperasimilacion", "bloqueado")
-	elif epsilon_runtime > 0.6 and biomasa > 5.0 and omega < 0.30 and accounting_level == 0 and run_time > 300.0:
+	elif epsilon_runtime > 0.6 and biomasa > 5.0 and accounting_level == 0 and run_time > 300.0:
 		_set_genome_state("hiperasimilacion", "activo")
-	elif epsilon_runtime > 0.3:
+	elif epsilon_runtime > 0.4:
 		_set_genome_state("hiperasimilacion", "latente")
 	else:
 		_set_genome_state("hiperasimilacion", "dormido")
 
-	# PARASITISMO
+	# PARASITISMO (Degeneración)
 	if mutation_homeostasis or mutation_symbiosis or mutation_hyperassimilation:
-		_set_genome_state("parasitismo", "bloqueado") # PARASITISMO (Requiere raw stress alto y sistema inestable)
-	elif biomasa > 6.0 and main.epsilon_runtime > 0.45 and omega < 0.4 and accounting_level == 0 and run_time > 420.0:
+		_set_genome_state("parasitismo", "bloqueado")
+	elif biomasa > 6.0 and epsilon_runtime > 0.45 and accounting_level == 0 and run_time > 420.0:
 		_set_genome_state("parasitismo", "activo")
 	elif biomasa > 4.0:
 		_set_genome_state("parasitismo", "latente")
@@ -84,10 +83,10 @@ func update_genome(main: Control):
 	else:
 		_set_genome_state("simbiosis", "dormido")
 
-	# RED MICELIAL
-	if hifas > 8.0 and biomasa >= 3.0 and epsilon_effective < 0.25 and accounting_level >= 1 and not mutation_homeostasis and not mutation_hyperassimilation:
+	# RED MICELIAL (Distribución)
+	if hifas > 10.0 and biomasa >= 5.0 and epsilon_effective < 0.30 and accounting_level >= 1 and not mutation_homeostasis and not mutation_hyperassimilation:
 		_set_genome_state("red_micelial", "activo")
-	elif hifas > 3.0:
+	elif hifas > 5.0:
 		_set_genome_state("red_micelial", "latente")
 	else:
 		_set_genome_state("red_micelial", "dormido")

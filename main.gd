@@ -110,7 +110,7 @@ var unlocked_me := false
 
 
 # === VERSION INFO ===
-const VERSION := "0.8"
+const VERSION := "0.8.2"
 const CODENAME := "v0.8 — “Fungi Evolution”"
 const BUILD_CHANNEL := "stable"
 
@@ -556,39 +556,46 @@ func _on_upgrade_bought_actions(id: String) -> void:
 	structural_cooldown = STRUCTURAL_COOLDOWN_TIME
 	match id:
 		"auto":
-			unlocked_d = true
-			add_lap("Desbloqueado d (Trabajo Manual)")
+			if not unlocked_d:
+				unlocked_d = true
+				add_lap("🟢 Desbloqueado d (Trabajo Manual)")
 		"auto_mult":
-			unlocked_md = true
-			add_lap("Desbloqueado md (Ritmo de Trabajo)")
+			if not unlocked_md:
+				unlocked_md = true
+				add_lap("🟢 Desbloqueado md (Ritmo de Trabajo)")
 		"trueque":
-			unlocked_e = true
-			add_lap("Desbloqueado e (Trueque)")
+			if not unlocked_e:
+				unlocked_e = true
+				add_lap("🔵 Desbloqueado e (Trueque)")
 		"trueque_net":
-			unlocked_me = true
-			add_lap("Desbloqueado me (Red de Intercambio)")
+			if not unlocked_me:
+				unlocked_me = true
+				add_lap("🔵 Desbloqueado me (Red de Intercambio)")
 		"specialization":
-			add_lap("Especialización de Oficio → x%s" % str(snapped(UpgradeManager.value("specialization"), 0.01)))
+			if UpgradeManager.level("specialization") == 1:
+				add_lap("🎓 Especialización de Oficio Activa")
 		"cognitive":
-			add_lap("Upgrade estructural → Capital Cognitivo (μ ↑ nivel %d)" % UpgradeManager.level("cognitive"))
+			pass
 		"persistence":
-			persistence_dynamic = UpgradeManager.value("persistence")
-			persistence_upgrade_unlocked = true
-			add_lap("Memoria Operativa del Sistema Activada")
+			if not persistence_upgrade_unlocked:
+				persistence_dynamic = UpgradeManager.value("persistence")
+				persistence_upgrade_unlocked = true
+				add_lap("💾 Memoria Operativa del Sistema Activada")
 		"accounting":
 			if UpgradeManager.level("accounting") == 1:
 				omega = max(omega, 0.38)
+				institutions_unlocked = true
+				institution_accounting_unlocked = true
 				add_lap("⚖️ Ventana institucional — flexibilidad restaurada")
 			epsilon_runtime *= 0.85
 			epsilon_peak = max(epsilon_peak * 0.9, epsilon_runtime)
-			add_lap("🏛️ Contabilidad — Nivel %d (ε amortiguado)" % UpgradeManager.level("accounting"))
 # =====================================================
 #  HOMEOSTASIS TRACKING helper v0.8
 # =====================================================
 func is_homeostasis_candidate(delta: float) -> bool:
 	# condiciones suaves, no ideales
-	var stable_epsilon := epsilon_effective < 0.35
-	var not_crystallized := omega > 0.25
+	var stable_epsilon := epsilon_effective < 0.30
+	var not_crystallized := omega > 0.20
 	var enough_biomass := BiosphereEngine.biomasa > 2.5
 	var institutionalized := UpgradeManager.level("accounting") >= 1 # Use UpgradeManager
 	var no_hyper := not EvoManager.mutation_hyperassimilation
@@ -720,8 +727,7 @@ func check_red_micelial_transition(_delta: float):
 	# Condiciones para mover A -> B (pauta: estabilidad distribuida + tiempo)
 	if BiosphereEngine.hifas > 10.0 \
 	and BiosphereEngine.biomasa >= 5.0 \
-	and epsilon_effective < 0.22 \
-	and omega > 0.45 \
+	and epsilon_effective < 0.32 \
 	and UpgradeManager.level("accounting") >= 1 \
 	and run_time > 200.0:
 		
@@ -1080,8 +1086,7 @@ func _ready():
 	add_to_group("main")
 	UIManager.setup(ui_root)
 	LogManager.show_all_laps = false
-	if UIManager.toggle_lap_button:
-		UIManager.toggle_lap_button.text = "📜 Ver todos los eventos"
+	update_lap_toggle_button()
 	if legacy_homeostasis:
 		omega_min = max(omega_min, 0.15)
 		# accounting_effect += 0.05 # This is now handled by get_accounting_effect()
@@ -1510,7 +1515,6 @@ func build_institution_panel_text() -> String:
 
 	t += build_genome_text()
 	t += build_mutation_status_text()
-	t += build_final_line()
 
 	if homeostasis_mode:
 		t += "\n\n⚖️ HOMEOSTASIS MODE"
@@ -1519,6 +1523,67 @@ func build_institution_panel_text() -> String:
 
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
 		t += "\n⚠️ La red no puede estabilizarse localmente"
+
+	t += build_evo_checklist()
+
+	return t
+
+func build_evo_checklist() -> String:
+	var t := "\n--- Próxima transición ---\n"
+	var acc := UpgradeManager.level("accounting")
+	var ch : String
+
+	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
+		t += "Esporulación (Fase B activa):\n"
+		ch = "[x] " if epsilon_peak >= 0.75 else "[ ] "
+		t += ch + "ε_peak >= 0.75  (%s)\n" % snapped(epsilon_peak, 0.01)
+		ch = "[x] " if epsilon_effective <= 0.35 else "[ ] "
+		t += ch + "ε_ef <= 0.35  (%s)\n" % snapped(epsilon_effective, 0.01)
+		ch = "[x] " if omega <= 0.30 else "[ ] "
+		t += ch + "Ω <= 0.30  (%s)\n" % snapped(omega, 0.01)
+		ch = "[x] " if BiosphereEngine.biomasa >= 10.0 else "[ ] "
+		t += ch + "Biomasa >= 10  (%s)\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = "[x] " if BiosphereEngine.hifas >= 12.0 else "[ ] "
+		t += ch + "Hifas >= 12  (%s)\n" % snapped(BiosphereEngine.hifas, 0.1)
+		ch = "[x] " if run_time >= 900.0 else "[ ] "
+		t += ch + "Tiempo >= 15 min  (%s)\n" % format_time(run_time)
+
+	elif EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 1:
+		t += "Red Micelial → Fase B:\n"
+		ch = "[x] " if BiosphereEngine.hifas > 10.0 else "[ ] "
+		t += ch + "Hifas > 10  (%s)\n" % snapped(BiosphereEngine.hifas, 0.1)
+		ch = "[x] " if BiosphereEngine.biomasa >= 5.0 else "[ ] "
+		t += ch + "Biomasa >= 5  (%s)\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = "[x] " if epsilon_effective < 0.32 else "[ ] "
+		t += ch + "ε_ef < 0.32  (%s)\n" % snapped(epsilon_effective, 0.01)
+		ch = "[x] " if acc >= 1 else "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: %d)\n" % acc
+		ch = "[x] " if run_time > 200.0 else "[ ] "
+		t += ch + "Tiempo > 200 s  (%s)\n" % format_time(run_time)
+
+	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
+		and not EvoManager.mutation_hyperassimilation:
+		t += "Red Micelial (Fase A):\n"
+		ch = "[x] " if BiosphereEngine.hifas > 10.0 else "[ ] "
+		t += ch + "Hifas > 10  (%s)\n" % snapped(BiosphereEngine.hifas, 0.1)
+		ch = "[x] " if BiosphereEngine.biomasa >= 5.0 else "[ ] "
+		t += ch + "Biomasa >= 5  (%s)\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = "[x] " if BiosphereEngine.epsilon_effective < 0.30 else "[ ] "
+		t += ch + "ε_ef < 0.30  (%s)\n" % snapped(BiosphereEngine.epsilon_effective, 0.01)
+		ch = "[x] " if acc >= 1 else "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: %d)\n" % acc
+
+	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
+		and not EvoManager.mutation_sporulation:
+		t += "\nHomeostasis (paralelo):\n"
+		ch = "[x] " if epsilon_effective < 0.30 else "[ ] "
+		t += ch + "ε_ef < 0.30  (%s)\n" % snapped(epsilon_effective, 0.01)
+		ch = "[x] " if omega > 0.20 else "[ ] "
+		t += ch + "Ω > 0.20  (%s)\n" % snapped(omega, 0.01)
+		ch = "[x] " if BiosphereEngine.biomasa > 2.5 else "[ ] "
+		t += ch + "Biomasa > 2.5  (%s)\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = "[x] " if acc >= 1 else "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: %d)\n" % acc
 
 	return t
 
@@ -1614,6 +1679,7 @@ func update_lap_toggle_button():
 
 func toggle_lap_view():
 	LogManager.toggle_view(self)
+	update_lap_toggle_button()
 # =====================================================
 
 
@@ -1631,7 +1697,7 @@ func update_ui():
 	update_core_labels()
 	update_buttons()
 
-	if institutions_unlocked:
+	if institutions_unlocked or UpgradeManager.level("accounting") >= 1:
 		if UIManager.institution_panel_label:
 			UIManager.institution_panel_label.visible = true
 			UIManager.institution_panel_label.text = build_institution_panel_text()
