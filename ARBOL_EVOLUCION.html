@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol Evolutivo — Idle Antigravity v0.8.5</title>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --text: #e0e0e0;
+            --accent: #7d4dff;
+            --green: #4ade80;
+            --blue: #3b82f6;
+            --orange: #f97316;
+            --magenta: #d946ef;
+            --cyan: #06b6d4;
+            --border: #333;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .version {
+            font-family: monospace;
+            opacity: 0.6;
+            margin-bottom: 40px;
+        }
+
+        /* Árbol CSS */
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .node {
+            background: #151518;
+            border: 2px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            width: 250px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .node:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .node b {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        /* Conector Base */
+        .connector {
+            width: 4px;
+            height: 40px;
+            background: var(--border);
+            position: relative;
+        }
+
+        /* Ramas */
+        .branches {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Colores Específicos */
+        .tier-0 { border-color: #666; }
+        .tier-1 { border-color: var(--accent); box-shadow: 0 0 15px rgba(125, 77, 255, 0.2); }
+        .tier-2-green { border-color: var(--green); }
+        .tier-2-blue { border-color: var(--blue); }
+        .end-biological { border-color: var(--green); background: linear-gradient(180deg, #151518, #0a2e10); }
+        .end-mechanical { border-color: var(--cyan); background: linear-gradient(180deg, #151518, #063e4d); }
+        .failure { border-color: var(--orange); opacity: 0.8; }
+
+        .desc {
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        .requirements {
+            font-size: 0.75em;
+            background: rgba(0,0,0,0.3);
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 4px;
+            color: #888;
+        }
+
+        /* Leyenda */
+        .legend {
+            margin-top: 60px;
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Estructura de Mutación v0.8.5</h1>
+    <div class="version">Ciclo de Vida: Ramificación Irreversible</div>
+
+    <div class="tree">
+        
+        <!-- TIER 0 -->
+        <div class="node tier-0">
+            <b>ESTADO BASE</b>
+            <div class="desc">Reactor Estándar</div>
+            <div class="requirements">Control Humano</div>
+        </div>
+
+        <div class="connector"></div>
+
+        <!-- TIER 1 -->
+        <div class="branches">
+            
+            <div class="node failure">
+                <b style="color: var(--orange);">🦠 PARASITISMO</b>
+                <div class="desc">Inactividad o Abandono</div>
+                <div class="requirements">Biomasa > 6 / T > 10m<br><b>+1 PL (Game Over)</b></div>
+            </div>
+
+            <div class="node tier-1">
+                <b style="color: var(--magenta);">🕸️ RED MICELIAL</b>
+                <div class="desc">Cuna Evolutiva (Elección)</div>
+                <div class="requirements">Hifas 11.5 / Esporas 5.0</div>
+            </div>
+
+            <div class="node tier-1">
+                <b style="color: var(--accent);">⚖️ HOMEOSTASIS</b>
+                <div class="desc">Equilibrio Institucional</div>
+                <div class="requirements">ε < 0.3 / Contab. 1</div>
+            </div>
+
+        </div>
+
+        <div class="connector"></div>
+
+        <!-- TIER 2 -->
+        <div class="branches">
+            
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="node tier-2-green">
+                    <b style="color: var(--green);">🟢 COLONIZACIÓN</b>
+                    <div class="desc">Evolución Biológica Directa</div>
+                    <div class="requirements">Biomasa > 8.0 / Hifas 14.5</div>
+                </div>
+                <div class="connector"></div>
+                <div class="node end-biological">
+                    <b style="color: var(--green);">🍄 SETA FRUCTÍFERA</b>
+                    <div class="desc">Final: Esporulación Total</div>
+                    <div class="requirements">Esporas >> PL</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="node tier-2-blue">
+                    <b style="color: var(--blue);">🔵 SIMBIOSIS MECÁNICA</b>
+                    <div class="desc">Integración con el Mainframe</div>
+                    <div class="requirements">Contab. 2 / ε < 0.25</div>
+                </div>
+                <div class="connector"></div>
+                <div class="node end-mechanical">
+                    <b style="color: var(--cyan);">⚡ SINGULARIDAD</b>
+                    <div class="desc">Final: Conciencia Digital</div>
+                    <div class="requirements">Sincronización >> 6-10 PL</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="dot" style="background: var(--magenta);"></div> Tier 1</div>
+        <div class="legend-item"><div class="dot" style="background: var(--green);"></div> Rama Biológica</div>
+        <div class="legend-item"><div class="dot" style="background: var(--blue);"></div> Rama Mecánica</div>
+        <div class="legend-item"><div class="dot" style="background: var(--orange);"></div> Fallo del Sistema</div>
+    </div>
+
+</body>
+</html>

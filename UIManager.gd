@@ -24,6 +24,7 @@ var genome_summary_label
 var click_stats_label
 var lap_markers_label
 var epsilon_sticky_panel
+var fungal_cycle_bar   # Barra de progreso del ciclo biológico (Micelio)
 
 # Referencias de Botones (Upgrades) (Sin tipo fijo para flexibilidad)
 var upgrade_click_button
@@ -64,6 +65,7 @@ func setup(ui_root: Control):
 	click_stats_label = _find("ClickStatsLabel")
 	lap_markers_label = _find("LapLogLabel")
 	epsilon_sticky_panel = _find("EpsilonStickyPanel")
+	fungal_cycle_bar = _find("FungalCycleBar")
 	
 	# Botones
 	upgrade_click_button = _find("UpgradeClickButton")
@@ -97,46 +99,141 @@ func update_timer(t: float):
 # --- Generación de Textos de HUD ---
 
 func build_formula_text(main: Node) -> String:
-	var t := "Δ$ = (a · b · c) + (d · md) + (e · me)"
+	var has_abc = UpgradeManager.level("click_mult") > 0
+	
+	# --- TÉRMINO ACTIVO (Clicks) ---
+	# clicks · a · b · cₙ
+	var active_term = "clicks · a"
+	if has_abc: active_term += " · b"
+	active_term += " · cₙ"
+	
+	if LegacyManager.get_buff_value("impulso_manual"):
+		active_term = "( " + active_term + " · [color=#ffcc00]im[/color] )"
+	
+	var formula_main = active_term
+	
+	# --- TÉRMINOS PASIVOS (D y E) ---
+	if main.unlocked_d: 
+		var d_term = "d"
+		if main.unlocked_md:
+			d_term = "d · md"
+			if UpgradeManager.level("specialization") > 0:
+				d_term += " · so"
+		formula_main += " + " + d_term
+		
+		if main.unlocked_e:
+			var e_term = "e"
+			if main.unlocked_me:
+				e_term = "e · me"
+			if UpgradeManager.level("trueque_allo") > 0:
+				e_term += " · [color=cyan]ea[/color]"
+			formula_main += " + " + e_term
+		
+	# --- MULTIPLICADOR GLOBAL (μ) ---
+	if LegacyManager.get_buff_value("redireccion_energia"):
+		formula_main += " + [color=#ffcc00]re[/color]"
+
 	if main.cached_mu > 1.01:
-		t = "Δ$ = [(a · b · c) + (d · md) + (e · me)] · μ"
+		formula_main = "[ " + formula_main + " ] · [color=#ff4dff]μ[/color]"
+	
+	var plain_str = formula_main.replace("[color=#ffcc00]", "").replace("[color=#ff4dff]", "").replace("[/color]", "")
+	var fLen = plain_str.length()
+	var fSize = 18
+	if fLen > 70: fSize = 13
+	elif fLen > 55: fSize = 15
+	elif fLen > 40: fSize = 16
+	
+	var t: String = "[center][font_size=%d]∫$ = " % fSize + formula_main + "[/font_size]\n"
+	
+	# Información del Modelo
+	t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
+	t += "κμ = k · (1 + α · (μ - 1))\n"
+	
+	var raw_n = main.get_structural_upgrades()
+	t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
+		main.persistence_base, main.persistence_dynamic, main.cached_mu, raw_n
+	]
+		
 	return t
 
-func build_formula_values(main: Node) -> String:
-	var p = main.get_click_power()
-	var d = main.get_auto_income_effective()
-	var e = main.get_trueque_income_effective()
-	
-	var txt = "p = +%s | d = +%s | e = +%s" % [
-		str(snapped(p, 0.01)),
-		str(snapped(d, 0.01)),
-		str(snapped(e, 0.01))
-	]
-	
-	if main.cached_mu > 1.01:
-		txt += " | μ = x%s" % str(snapped(main.cached_mu, 0.01))
-	
-	return txt
+func build_formula_values(_main: Node) -> String:
+	return ""
 
-func build_marginal_contribution(main: Node) -> String:
-	var p = main.get_click_power()
-	var d = main.get_auto_income_effective()
-	var e = main.get_trueque_income_effective()
-	var total = p + d + e
-	if total <= 0: return "Sin producción activa"
-	
-	var pp = (p / total) * 100.0
-	var pd = (d / total) * 100.0
-	var pe = (e / total) * 100.0
-	
-	return "Contribución: P(%.0f%%) D(%.0f%%) E(%.0f%%)" % [pp, pd, pe]
+func build_marginal_contribution(_main: Node) -> String:
+	return ""
 
 func update_click_stats_panel(main: Node) -> String:
-	var p = main.get_click_power()
-	var t = "--- Detalle de Producción ---\n"
-	t += "Potencia Click : %s\n" % snapped(p, 0.01)
-	t += "μ Efectivo     : x%s\n" % snapped(main.cached_mu, 0.02)
-	t += "Persistencia cₙ: %s" % snapped(main.persistence_dynamic, 0.02)
+	var a = UpgradeManager.value("click")
+	var b = UpgradeManager.value("click_mult")
+	var c_n = main.persistence_dynamic
+	
+	var d_raw = UpgradeManager.value("auto")
+	var md = UpgradeManager.value("auto_mult")
+	var so = UpgradeManager.value("specialization")
+	
+	var e_raw = UpgradeManager.value("trueque")
+	var me = UpgradeManager.value("trueque_net")
+	
+	var ap = main.get_active_passive_breakdown()
+	var push = ap.push_abs
+		
+	var t = "[b]Aporte actual:[/b]\n"
+	t += "[color=#cccccc]• Click PUSH = +%.2f\n" % push
+	if main.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % main.get_auto_income_effective()
+	if main.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % main.get_trueque_income_effective()
+	
+	t += "[b]Δ$ total = +%.2f[/b]\n" % ap.total
+	if ap.total > 0:
+		if ap.activo > ap.pasivo:
+			t += "CLICK domina el sistema\n\n"
+		else:
+			t += "La RED SISTÉMICA domina\n\n"
+		
+	t += "[color=#d946ef]--- Producción activa ---\n"
+	t += "a = %.1f   Click base\n" % a
+	if UpgradeManager.level("click_mult") > 0:
+		t += "b = %.2f   Multiplicador\n" % b
+	if main.persistence_upgrade_unlocked:
+		t += "c_n(actual) = %.2f\n" % c_n
+	if LegacyManager.get_buff_value("impulso_manual"):
+		t += "im = 2.00   Impulso Manual (Legado)\n"
+	t += "\n"
+	
+	if main.unlocked_d:
+		t += "d = %.1f/s   Trabajo Manual\n" % d_raw
+		if main.unlocked_md: t += "md = %.2f   Ritmo de Trabajo\n" % md
+		else: t += "md = -- (estructura latente)\n"
+		if UpgradeManager.level("specialization") > 0: t += "so = %.2f   Especialización de Oficio\n" % so
+		t += "\n"
+	
+	if main.unlocked_e:
+		t += "e = %.1f/s   Trueque corregido\n" % e_raw
+		if main.unlocked_me: 
+			t += "me = %.2f   Red de Intercambio\n" % me
+			if UpgradeManager.level("trueque_allo") > 0:
+				t += "ea = %.2f   Escalado Alostático (Legado)\n" % UpgradeManager.value("trueque_allo")
+		else: t += "me = -- (estructura latente)\n"
+	
+	if LegacyManager.get_buff_value("redireccion_energia"):
+		t += "re = +%.1f/s   Redirección (10%% Click a Pasivo)\n" % (main.get_click_power() * 0.10)
+	
+	t += "\n\n--- MODELO ESTRUCTURAL ---\n"
+	var n_struct = main.get_effective_structural_n()
+	var k_base = EcoModel.get_k_structural(n_struct)
+	var alpha = EcoModel.get_alpha(n_struct)
+	
+	t += "μ = %.2f\n" % main.cached_mu
+	t += "k = %.2f\n" % k_base
+	t += "α = %.2f\n" % alpha
+	t += "κμ = %.2f\n" % main.get_k_eff()
+	t += "n = %d\n" % main.get_structural_upgrades()
+	
+	t += "\n\n--- Capital Cognitivo ---\n"
+	t += "μ = %.2f\n" % main.cached_mu
+	t += "Nivel cognitivo = %d" % UpgradeManager.level("cognitive")
+	
+	t += "[/color]"
+	
 	return t
 
 # --- Helpers ---

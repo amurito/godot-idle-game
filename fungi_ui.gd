@@ -33,7 +33,8 @@ func apply_fungi_color():
 		lbl_nutrients,
 		lbl_biomass,
 		$Panel/VBoxContainer/Metabolismo,
-		$Panel/VBoxContainer/EpsilonEff
+		$Panel/VBoxContainer/EpsilonEff,
+		$Panel/VBoxContainer/Esporas
 	]
 
 	for l in labels:
@@ -142,7 +143,7 @@ func update_ui():
 	lbl_status.modulate = current_color
 	
 	# Aplicar el color actual a todos los labels del panel
-	for l in [lbl_nutrients, lbl_biomass, $Panel/VBoxContainer/Metabolismo, $Panel/VBoxContainer/EpsilonEff]:
+	for l in [lbl_nutrients, lbl_biomass, $Panel/VBoxContainer/Metabolismo, $Panel/VBoxContainer/EpsilonEff, $Panel/VBoxContainer/Esporas]:
 		if l:
 			l.modulate = current_color
 
@@ -150,3 +151,8 @@ func update_ui():
 	lbl_biomass.text   = "Biomasa: " + str(snapped(BiosphereEngine.biomasa, 0.1))
 	$Panel/VBoxContainer/Metabolismo.text = "Metabolismo: " + str(snapped(metabolism, 0.001))
 	$Panel/VBoxContainer/EpsilonEff.text = "ε efectivo: " + str(snapped(BiosphereEngine.epsilon_effective, 0.01))
+	
+	# Estimación de esporas
+	var est_spores = BiosphereEngine.biomasa * 0.8
+	if EvoManager.seta_formada: est_spores *= 3.0
+	$Panel/VBoxContainer/Esporas.text = "Esporas est.: " + str(snapped(est_spores, 0.1))

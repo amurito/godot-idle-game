@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c875qgxc4e6rx"]
+[gd_scene load_steps=11 format=3 uid="uid://c875qgxc4e6rx"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://xt8o6hca6a4q" path="res://main.tres" id="2_0xm2m"]
@@ -9,8 +9,6 @@
 [ext_resource type="Script" uid="uid://bonwdb6474v6l" path="res://UpgradeButton.gd" id="7_upgrade"]
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_7mycd"]
-blend_mode = 1
-light_mode = 1
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7mycd"]
 particle_flag_disable_z = true
@@ -22,7 +20,25 @@ initial_velocity_min = 3.0
 initial_velocity_max = 10.0
 gravity = Vector3(0, 0, 0)
 scale_min = 0.29999998
-color = Color(0.9975454, 0.62884396, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_evo"]
+content_margin_left = 25.0
+content_margin_top = 25.0
+content_margin_right = 25.0
+content_margin_bottom = 25.0
+bg_color = Color(0.02, 0.02, 0.05, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.8, 0.3, 0.9, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 20
+shadow_offset = Vector2(0, 8)
 
 [node name="UIRoot" type="Control"]
 layout_direction = 2
@@ -91,7 +107,6 @@ scale = Vector2(1.2, 1.2)
 texture = ExtResource("5_lquwl")
 
 [node name="Ring" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
-modulate = Color(0.5370987, 0.24780053, 0.8350781, 0.4)
 scale = Vector2(1.8, 1.8)
 texture = ExtResource("6_7mycd")
 
@@ -102,23 +117,68 @@ explosiveness = 0.1
 process_material = SubResource("ParticleProcessMaterial_7mycd")
 
 [node name="Tendrils" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+unique_name_in_owner = true
 
-[node name="Line2D" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
-position = Vector2(-1.5031554, 0.5)
-width = 1.5
-default_color = Color(1, 0.43468678, 0.98876053, 1)
+[node name="Line1" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
+width = 2.0
+default_color = Color(0.1, 0.8, 0.2, 0.6)
 
-[node name="FormulaLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
-custom_minimum_size = Vector2(480, 160)
+[node name="Line2" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
+width = 2.0
+default_color = Color(0.1, 0.8, 0.2, 0.6)
+
+[node name="Line3" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
+width = 2.0
+default_color = Color(0.1, 0.8, 0.2, 0.6)
+
+[node name="Line4" type="Line2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual/Tendrils"]
+width = 2.0
+default_color = Color(0.1, 0.8, 0.2, 0.6)
+
+[node name="SporulationFinalButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "🔵 DISPERSAR ESPORAS (Final)"
+
+[node name="EvolutionProgressBar" type="ProgressBar" parent="UIRootContainer/LeftPanel/CenterPanel"]
+visible = false
+custom_minimum_size = Vector2(300, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+step = 0.1
+
+[node name="FungalCycleBar" type="ProgressBar" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(300, 28)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.45, 1, 0.05, 1)
+theme_override_font_sizes/font_size = 13
+step = 0.1
+show_percentage = false
+
+[node name="PrimordioButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(300, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 13
+text = "🟡 Iniciar Primordio"
+
+[node name="FormulaLabel" type="RichTextLabel" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(480, 200)
 layout_mode = 2
 size_flags_vertical = 6
-horizontal_alignment = 1
-autowrap_mode = 2
-clip_text = true
-
-[node name="MarginalLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel"]
-layout_mode = 2
-size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
 
 [node name="ClickStatsScroll" type="ScrollContainer" parent="UIRootContainer/LeftPanel/CenterPanel"]
 layout_mode = 2
@@ -126,13 +186,20 @@ size_flags_vertical = 3
 follow_focus = true
 horizontal_scroll_mode = 0
 
-[node name="ClickStatsLabel" type="Label" parent="UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll"]
+[node name="ClickStatsLabel" type="RichTextLabel" parent="UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-size_flags_vertical = 1
-theme_override_colors/font_color = Color(0.8, 0.44313726, 0.8, 1)
-theme_override_font_sizes/font_size = 12
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.8, 0.44313726, 0.8, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+fit_content = true
+
+[node name="BottomSpacer" type="Control" parent="UIRootContainer/LeftPanel/CenterPanel"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
 
 [node name="SpacerRight" type="Control" parent="UIRootContainer/LeftPanel"]
 layout_mode = 2
@@ -169,7 +236,7 @@ script = ExtResource("7_upgrade")
 layout_mode = 2
 text = "Memoria Operativa del Sistema (única)
 Persistencia → 1.6
-Costo: $X"
+Costo: $500"
 script = ExtResource("7_upgrade")
 
 [node name="AutoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
@@ -220,6 +287,14 @@ text = "Red de Intercambio ( ×me )
 Costo: $X
 "
 script = ExtResource("7_upgrade")
+
+[node name="UpgradeTruequeAlloButton" type="Button" parent="UIRootContainer/ProductionPanel/TruequePanel"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Escalado Alostático ( ×ea )
+Costo: $X"
+script = ExtResource("7_upgrade")
+upgrade_id = "trueque_allo"
 
 [node name="CapitalProductivoPanel" type="VBoxContainer" parent="UIRootContainer/ProductionPanel"]
 custom_minimum_size = Vector2(0, 72)
@@ -326,10 +401,11 @@ autowrap_mode = 2
 layout_mode = 2
 size_flags_vertical = 1
 
-[node name="InstitutionPanelLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+[node name="InstitutionPanelLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
-size_flags_vertical = 1
+bbcode_enabled = true
+fit_content = true
 
 [node name="GenomeBlock" type="VBoxContainer" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
@@ -346,6 +422,14 @@ layout_mode = 2
 text = "📜 Ver todo"
 flat = true
 
+[node name="BtnEvolve" type="Button" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.9, 1)
+text = "🧬 INICIAR MUTACIÓN"
+
 [node name="EpsilonStickyPanel" type="PanelContainer" parent="UIRootContainer/RightPanel"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
@@ -360,14 +444,244 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Biosfera" type="Button" parent="UIRootContainer/RightPanel/EpsilonStickyPanel/StickyStack"]
+[node name="BottomLeftControls" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = -50.0
+offset_right = 415.0
+offset_bottom = -15.0
+grow_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="DimmerBackground" type="ColorRect" parent="."]
+visible = false
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="EvoChoicePanel" type="PanelContainer" parent="."]
+visible = false
+z_index = 21
+custom_minimum_size = Vector2(620, 360)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -180.0
+offset_right = 310.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_evo")
+
+[node name="Margin" type="MarginContainer" parent="EvoChoicePanel"]
 layout_mode = 2
-size_flags_vertical = 4
-text = "🌱 Biosfera"
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="EvoChoicePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="TopBar" type="HBoxContainer" parent="EvoChoicePanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Header" type="Label" parent="EvoChoicePanel/Margin/VBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.45, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 22
+text = "BIFURCACIÓN DEL GENOMA"
+horizontal_alignment = 1
+
+[node name="CloseEvoButton" type="Button" parent="EvoChoicePanel/Margin/VBox/TopBar"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+text = "X"
+
+[node name="HBox" type="HBoxContainer" parent="EvoChoicePanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="OptHomeostasis" type="VBoxContainer" parent="EvoChoicePanel/Margin/VBox/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "⚖️"
+horizontal_alignment = 1
+
+[node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "HOMEOSTASIS
+Optimización administrativa.
+
++ Total x1.5
++ Ω estable
+- Biomasa limitada"
+fit_content = true
+
+[node name="BtnHomeostasis" type="Button" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+text = "Estabilizar"
+
+[node name="OptColonization" type="VBoxContainer" parent="EvoChoicePanel/Margin/VBox/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "🟢"
+horizontal_alignment = 1
+
+[node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "COLONIZACIÓN INVASIVA
+El hongo asimila redes externas.
+
++ Producción pasiva x2.5
++ Crecimiento acelerado
+- Estrés mínimo 0.40"
+fit_content = true
+
+[node name="BtnColonization" type="Button" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+text = "Asimilar Mundo"
+
+[node name="OptSymbiosis" type="VBoxContainer" parent="EvoChoicePanel/Margin/VBox/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "🔵"
+horizontal_alignment = 1
+
+[node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "SIMBIOSIS MECÁNICA
+Fusión íntima con el hardware.
+
++ Flexibilidad Ω mín 0.50
++ Absorción de Estrés +75%
+- Producción pasiva x0.7"
+fit_content = true
+
+[node name="BtnSymbiosis" type="Button" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+text = "Integrar Hardware"
+
+[node name="LegacyPanel" type="PanelContainer" parent="."]
+visible = false
+z_index = 25
+custom_minimum_size = Vector2(500, 400)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_evo")
+
+[node name="Margin" type="MarginContainer" parent="LegacyPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="LegacyPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="LegacyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🧬 Banco Genético (Plásmidos)"
+horizontal_alignment = 1
+
+[node name="PLLabel" type="Label" parent="LegacyPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 0.9, 1)
+text = "PL Disponibles: 0"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="LegacyPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LegacyList" type="VBoxContainer" parent="LegacyPanel/Margin/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CloseLegacyButton" type="Button" parent="LegacyPanel/Margin/VBox"]
+layout_mode = 2
+text = "Cerrar banco"
 
 [connection signal="mouse_entered" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_mouse_exited"]
 [connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" to="UIRootContainer/LeftPanel/CenterPanel/BigClickButton" method="_on_pressed"]
+[connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/SporulationFinalButton" to="." method="_on_sporulation_final_pressed"]
+[connection signal="pressed" from="UIRootContainer/LeftPanel/CenterPanel/PrimordioButton" to="." method="_on_primordio_button_pressed"]
 [connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ExportRunButton" to="." method="_on_ExportRunButton_pressed"]
 [connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/ToggleLapViewButton" to="." method="_on_ToggleLapViewButton_pressed"]
-[connection signal="pressed" from="UIRootContainer/RightPanel/EpsilonStickyPanel/StickyStack/Biosfera" to="." method="_on_Biosfera_pressed"]
+[connection signal="pressed" from="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/BtnEvolve" to="." method="_on_btn_evolve_pressed"]
+[connection signal="pressed" from="EvoChoicePanel/Margin/VBox/TopBar/CloseEvoButton" to="." method="_on_close_evo_button_pressed"]
+[connection signal="pressed" from="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis/BtnHomeostasis" to="." method="_on_btn_homeostasis_pressed"]
+[connection signal="pressed" from="EvoChoicePanel/Margin/VBox/HBox/OptColonization/BtnColonization" to="." method="_on_btn_colonization_pressed"]
+[connection signal="pressed" from="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis/BtnSymbiosis" to="." method="_on_btn_symbiosis_pressed"]
+[connection signal="pressed" from="LegacyPanel/Margin/VBox/CloseLegacyButton" to="." method="_on_close_legacy_pressed"]

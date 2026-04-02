@@ -80,3 +80,9 @@ layout_mode = 2
 size_flags_vertical = 1
 text = "Nutrientes: 0.0
 "
+
+[node name="Esporas" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Esporas estimadas: 0.0
+"

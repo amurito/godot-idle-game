@@ -19,7 +19,10 @@ func _ready() -> void:
 	if upgrade_id == "" or not UpgradeManager.states.has(upgrade_id):
 		# Intento final: ver si el nombre del nodo coincide directo con algún id
 		var n = name.to_lower()
-		for id in UpgradeManager.states.keys():
+		var all_ids = UpgradeManager.states.keys()
+		# Ordenar por longitud descendente para evitar que 'trueque' coincida antes que 'trueque_allo'
+		all_ids.sort_custom(func(a, b): return a.length() > b.length())
+		for id in all_ids:
 			if n.contains(id):
 				upgrade_id = id
 				break
@@ -52,18 +55,25 @@ func update_appearance(current_money: float) -> void:
 	# Visibilidad basada en desbloqueo
 	visible = state.unlocked
 	
-	# Caso especial para one-shot ya comprados
 	if def.one_shot and state.level > 0:
 		text = def.label + "\n[ ADQUIRIDO ]"
 		disabled = true
 		return
 
 	# Texto dinámico
+	var gain_str := ""
+	if def.is_multiplicative:
+		gain_str = "(×%.2f)" % def.gain
+	else:
+		gain_str = "(+%.1f)" % def.gain
+		
 	var cost = state.current_cost
 	var cost_str = str(round(cost))
 	
-	# Usar el label de la definición
-	text = "%s\nCosto: $%s" % [def.label, cost_str]
+	if def.one_shot:
+		text = "%s\nCosto: $%s" % [def.label, cost_str]
+	else:
+		text = "%s %s\nCosto: $%s" % [def.label, gain_str, cost_str]
 	
 	# Desactivar si no alcanza el dinero
 	disabled = current_money < cost

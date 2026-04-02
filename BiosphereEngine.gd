@@ -17,6 +17,7 @@ var plasticity := 0.05   # Cuánto afecta a μ
 var biomasa: float = 0.0
 var nutrientes: float = 0.0
 var hifas: float = 0.0
+var micelio: float = 0.0   # 0.0 → 100.0 (solo activo en Rama Red Micelial)
 
 # Guarda el epsilon efectivo devuelto al sistema económico
 var epsilon_effective: float = 0.0
@@ -25,6 +26,7 @@ func reset() -> void:
 	biomasa = 0.0
 	nutrientes = 0.0
 	hifas = 0.0
+	micelio = 0.0
 	epsilon_effective = 0.0
 	absorption = 0.15
 	efficiency = 0.03
@@ -34,10 +36,11 @@ func reset() -> void:
 # INTERFAZ PRINCIPAL (Llamada por el Logic Tick)
 # =====================================================
 
-func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool) -> float:
+func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool, is_red_micelial: bool = false, is_parasitism: bool = false) -> float:
 	_compute_hifas(passive_income, is_homeostasis)
 	_update_nutrients(delta, epsilon_runtime)
-	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis)
+	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism)
+	_grow_micelio(delta, is_red_micelial)
 	
 	# Aseguramos que el epsilon efectivo se calcule siempre, incluso si no hubo crecimiento
 	_compute_epsilon_breakdown(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis)
@@ -48,18 +51,29 @@ func process_tick(delta: float, passive_income: float, epsilon_runtime: float, i
 # LÓGICA INTERNA MINUTO A MINUTO
 # =====================================================
 
+func _grow_micelio(delta: float, is_red_micelial: bool) -> void:
+	if not is_red_micelial:
+		return
+	# Crece proporcional a hifas. Sin hifas, se desintegra levemente.
+	if hifas >= 5.0:
+		micelio = min(micelio + hifas * 0.4 * delta, 100.0)
+	else:
+		micelio = max(micelio - 1.5 * delta, 0.0)
+
 func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
 	var h := pow(passive_income, 0.6)
 	if is_homeostasis:
 		h *= 0.85
 	hifas = h
 
-func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool) -> void:
+func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false) -> void:
 	if hifas <= 0 or nutrientes <= 0:
 		return
 
 	# Crecimiento base
 	var biomass_gain = hifas * sqrt(nutrientes) * 0.02 * delta
+	if is_parasitism:
+		biomass_gain *= 2.0 # Descontrol parásito
 	biomasa += biomass_gain
 
 	# Consumo de nutrientes
@@ -69,14 +83,18 @@ func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation:
 	# --- CÁLCULO DE ESTRÉS ABSORBIDO (Epsilon Efectivo) ---
 	_compute_epsilon_breakdown(delta, _epsilon_runtime, _is_hyperassimilation, is_homeostasis, _is_symbiosis)
 
-	# --- PRE-HOMEOSTASIS SOFT CAP ---
-	if not is_homeostasis:
-		if biomasa > PRE_HOMEOSTASIS_CAP:
-			biomasa = lerp(biomasa, PRE_HOMEOSTASIS_CAP, 0.15)
+	# --- CAP LIMITS (Ignorados en Parasitismo e Hiperasimilación) ---
+	var has_cap := not (is_parasitism or _is_hyperassimilation)
+	
+	if has_cap:
+		# --- PRE-HOMEOSTASIS SOFT CAP ---
+		if not is_homeostasis:
+			if biomasa > PRE_HOMEOSTASIS_CAP:
+				biomasa = lerp(biomasa, PRE_HOMEOSTASIS_CAP, 0.15 * delta * 60.0)
 
-	# --- HOMEOSTASIS: límite biológico duro ---
-	if is_homeostasis:
-		biomasa = min(biomasa, BIOMASS_CAP)
+		# --- HOMEOSTASIS: límite biológico duro ---
+		if is_homeostasis:
+			biomasa = min(biomasa, BIOMASS_CAP)
 
 func _compute_epsilon_breakdown(_delta: float, epsilon_runtime: float, is_hyperassimilation: bool, _is_homeostasis: bool, is_symbiosis: bool) -> void:
 	if hifas <= 0:
@@ -88,7 +106,8 @@ func _compute_epsilon_breakdown(_delta: float, epsilon_runtime: float, is_hypera
 		# Multiplicamos por la biomasa para que sea un efecto creciente
 		epsilon_effective = epsilon_runtime * (1.0 + biomasa * 0.25)
 	elif is_symbiosis:
-		epsilon_effective = epsilon_runtime * 0.4 # Gran absorción
+		# Simbiosis Estructural: El hongo disipa el 75% del estrés (v0.8.6)
+		epsilon_effective = epsilon_runtime * 0.25
 	else:
 		# Absorción estándar por biomasa
 		epsilon_effective = epsilon_runtime / (1.0 + biomasa * 0.5)
@@ -129,9 +148,14 @@ func get_mu_fungi_multiplier(is_hyperassimilation: bool, is_homeostasis: bool) -
 
 # Cuando ocurre una esporulación, el ecosistema colapsa pero deja esporas
 func trigger_sporulation() -> float:
-	var spores := biomasa * 0.7
-	biomasa = max(biomasa * 0.3, 0.0)
-	hifas = max(hifas * 0.2, 0.0)
+	var spores := biomasa * 0.8
+	
+	# Bonus por Ciclo Biológico Completo (v0.8.42)
+	if EvoManager.seta_formada:
+		spores *= 3.0
+		
+	biomasa = max(biomasa * 0.1, 0.0) # El hongo se agota casi totalmente
+	hifas = max(hifas * 0.1, 0.0)
 	nutrientes += spores * 1.5
 	return spores
 

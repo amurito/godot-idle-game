@@ -11,13 +11,14 @@ config_version=5
 [application]
 
 config/name="AntiIDLE"
-run/main_scene="uid://c875qgxc4e6rx"
+run/main_scene="res://MainMenu.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 Version="*res://version.gd"
+LegacyManager="*res://LegacyManager.gd"
 SaveManager="*res://SaveManager.gd"
 EcoModel="*res://EcoModel.gd"
 BiosphereEngine="*res://BiosphereEngine.gd"

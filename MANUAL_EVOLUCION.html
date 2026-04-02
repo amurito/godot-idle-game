@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IDLE Antigravity — Manual de Evolución</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+    :root {
+    --bg: #09090b;
+    --panel: #111114;
+    --panel-hover: #18181f;
+    --accent-purple: #a855f7;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+    --accent-cyan: #06b6d4;
+    --accent-magenta: #d946ef;
+    --accent-orange: #f97316;
+    --accent-yellow: #eab308;
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --border: rgba(255,255,255,0.08);
+    }
+
+    body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+    padding: 60px 20px;
+    background-image:
+    radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+    }
+
+    .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    }
+
+    header {
+    text-align: center;
+    margin-bottom: 60px;
+    }
+
+    h1 {
+    font-size: 3.5rem;
+    margin: 0;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple), var(--accent-magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    font-weight: 700;
+    }
+
+    .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    margin-top: 10px;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    }
+
+    .category-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 40px;
+    }
+
+    .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 30px;
+    }
+
+    .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px -15px rgba(0,0,0,0.5);
+    }
+
+    .card:hover {
+    transform: translateY(-8px);
+    background: var(--panel-hover);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.7);
+    }
+
+    .tier-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    }
+
+    .card-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    }
+
+    .icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    background: rgba(255,255,255,0.03);
+    box-shadow: inset 0 0 12px rgba(255,255,255,0.02);
+    }
+
+    .name-group h2 {
+    font-size: 1.6rem;
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-main);
+    }
+
+    .name-group p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    }
+
+    .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin: 20px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    }
+
+    .section-label::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+    }
+
+    .req-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+    }
+
+    .req-item {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #d1d5db;
+    }
+
+    .req-item.met { color: var(--accent-yellow); }
+
+    .tag-pill {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.1);
+    }
+
+    .effect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    }
+
+    .effect-item {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 8px;
+    border-radius: 8px;
+    }
+
+    .buff { color: var(--accent-green); background: rgba(34, 197, 94, 0.05); border-left: 3px solid var(--accent-green);
+    }
+    .nerf { color: var(--accent-red); background: rgba(239, 68, 68, 0.05); border-left: 3px solid var(--accent-red); }
+
+    .branch-choice {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #18181b, #09090b);
+    border: 1px dashed var(--accent-purple);
+    text-align: center;
+    padding: 40px;
+    border-radius: 24px;
+    margin: 20px 0;
+    }
+
+    .branch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 30px;
+    }
+
+    .branch-side { padding: 20px; border-radius: 16px; background: rgba(255,255,255,0.02); }
+    .branch-side h4 { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; margin-bottom: 15px; }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>IDLE Antigravity</h1>
+            <div class="subtitle">Manual de Evolución Fúngica v0.8.5</div>
+            <div class="category-tag">Tier 1: Mutaciones de Estabilidad</div>
+        </header>
+
+        <div class="grid">
+            <!-- HOMEOSTASIS -->
+            <div class="card" style="border-top: 4px solid var(--accent-cyan)">
+                <span class="tier-badge">TIER 1</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-cyan)">⚖️</div>
+                    <div class="name-group">
+                        <h2>Homeostasis</h2>
+                        <p>Estabilización Sistémica</p>
+                    </div>
+                </div>
+                <div class="section-label">REQUISITOS</div>
+                <ul class="req-list">
+                    <li class="req-item met">ε estático < 0.30 por 18s</li>
+                    <li class="req-item">Biomasa < 10.0</li>
+                    <li class="req-item">Contabilidad Nivel 1 activa</li>
+                </ul>
+                <div class="section-label">PARÁMETROS</div>
+                <div class="effect-grid">
+                    <div class="effect-item buff">Disipa ε bruto acumulado.</div>
+                    <div class="effect-item nerf">Cap de Biomasa: 10.0</div>
+                </div>
+            </div>
+
+            <!-- HIPERASIMILACIÓN -->
+            <div class="card" style="border-top: 4px solid var(--accent-magenta)">
+                <span class="tier-badge">TIER 1</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-magenta)">☄️</div>
+                    <div class="name-group">
+                        <h2>Hiperasimilación</h2>
+                        <p>Ruta de Absorción Total</p>
+                    </div>
+                </div>
+                <div class="section-label">CONDICIONES REQUERIDAS</div>
+                <ul class="req-list">
+                    <li class="req-item met">ε_runtime > 0.60</li>
+                    <li class="req-item">Biomasa > 5.0 (Masa Crítica)</li>
+                    <li class="req-item">Contabilidad: Nivel 0</li>
+                    <li class="req-item">Tiempo run > 300s</li>
+                </ul>
+                <div class="section-label">PARÁMETROS EVOLUTIVOS</div>
+                <div class="effect-grid">
+                    <div class="effect-item buff">ε_eff amplifica feedback positivo.</div>
+                    <div class="effect-item buff">Crecimiento biomasa exponencial.</div>
+                    <div class="effect-item nerf">Ω Colapsa a 0.25 irreversible.</div>
+                </div>
+            </div>
+
+            <!-- SIMBIOSIS -->
+            <div class="card" style="border-top: 4px solid var(--accent-green)">
+                <span class="tier-badge">TIER 1</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-green)">🌱</div>
+                    <div class="name-group">
+                        <h2>Simbiosis Estructural</h2>
+                        <p>Cooperación Estructura-Bio</p>
+                    </div>
+                </div>
+                <div class="section-label">CONDICIONES REQUERIDAS</div>
+                <ul class="req-list">
+                    <li class="req-item met">0.15 ≤ ε_runtime ≤ 0.45</li>
+                    <li class="req-item">Hifas ≥ 5.0</li>
+                    <li class="req-item">Contabilidad ≥ Nivel 1</li>
+                </ul>
+                <div class="section-label">PARÁMETROS EVOLUTIVOS</div>
+                <div class="effect-grid">
+                    <div class="effect-item buff">Disipación de ε en nutrientes.</div>
+                    <div class="effect-item buff">Bonus a Trueque (x1.10).</div>
+                    <div class="effect-item nerf">Frena Homeostasis local.</div>
+                </div>
+            </div>
+
+            <!-- PARASITISMO -->
+            <div class="card" style="border-top: 4px solid var(--accent-orange)">
+                <span class="tier-badge">TIER 1</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-orange)">🦠</div>
+                    <div class="name-group">
+                        <h2>Parasitismo</h2>
+                        <p>Consumo Sistémico</p>
+                    </div>
+                </div>
+                <div class="section-label">CONDICIONES REQUERIDAS</div>
+                <ul class="req-list">
+                    <li class="req-item met">Biomasa > 6.0 | ε_runtime > 0.45</li>
+                    <li class="req-item">Contabilidad: Nivel 0</li>
+                    <li class="req-item">Tiempo run > 420s (7 min)</li>
+                </ul>
+                <div class="section-label">PARÁMETROS EVOLUTIVOS</div>
+                <div class="effect-grid">
+                    <div class="effect-item buff">Absorción estrés +60%.</div>
+                    <div class="effect-item nerf">Drenaje pasivo: 1.5% biomasa/s.</div>
+                    <div class="effect-item nerf">Peligro: Bancarrota Biológica.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 60px 0 20px;">
+            <div class="category-tag"
+                style="background: rgba(168, 85, 247, 0.1); color: var(--accent-purple); border: 1px solid var(--accent-purple);">
+                Tier 2: Evolución Distribuída</div>
+        </div>
+
+        <div class="grid">
+            <!-- RED MICELIAL -->
+            <div class="card" style="border-top: 4px solid var(--accent-purple); grid-column: 1 / -1;">
+                <span class="tier-badge">TIER 2</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-purple)">🌐</div>
+                    <div class="name-group">
+                        <h2>Red Micelial (Fase de Bifurcación)</h2>
+                        <p>Estado de Red Global</p>
+                    </div>
+                </div>
+                <div class="branch-grid">
+                    <div class="branch-side">
+                        <div class="section-label">REQUISITOS</div>
+                        <ul class="req-list">
+                            <li class="req-item">Contabilidad Nivel 2</li>
+                            <li class="req-item">Biomasa ≥ 10.0</li>
+                            <li class="req-item">ε_runtime estable</li>
+                        </ul>
+                    </div>
+                    <div class="branch-side">
+                        <div class="section-label">DIVERGENCIA</div>
+                        <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">Esta fase exige una decisión crítica: redirigir la energía hacia la expansión biológica o hacia la integración con el hardware.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BIFURCACIÓN -->
+            <div class="branch-choice">
+                <h3>ELECCIÓN IRREVERSIBLE</h3>
+                <div class="branch-grid">
+                    <div class="branch-side" style="border: 1px solid var(--accent-green); background: rgba(34, 197, 94, 0.05)">
+                        <h4 style="color: var(--accent-green)">🌿 Rama VERDE: Colonización</h4>
+                        <ul class="req-list" style="text-align: left">
+                            <li class="req-item">Final: Esporulación Total</li>
+                            <li class="req-item buff">Legado: Reserva Biótica (Esporas)</li>
+                            <li class="req-item buff">Buff: Multiplicador Biomasa x2.5</li>
+                        </ul>
+                    </div>
+                    <div class="branch-side" style="border: 1px solid var(--accent-cyan); background: rgba(6, 182, 212, 0.05)">
+                        <h4 style="color: var(--accent-cyan)">🔵 Rama AZUL: Simbiosis Mecánica</h4>
+                        <ul class="req-list" style="text-align: left">
+                            <li class="req-item">Final: Singularidad</li>
+                            <li class="req-item buff">Legado: Puntos de Legado (PL)</li>
+                            <li class="req-item buff">Buff: Disipación Stress 75%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIMORDIO / SINCRONÍA -->
+            <div class="card" style="border-top: 4px solid var(--accent-yellow)">
+                <span class="tier-badge">COMPROMISO</span>
+                <div class="card-header">
+                    <div class="icon-box" style="color: var(--accent-yellow)">⏳</div>
+                    <div class="name-group">
+                        <h2>Estado Primordio / Sincronía</h2>
+                        <p>Transición Crítica (90 segundos)</p>
+                    </div>
+                </div>
+                <div class="section-label">REQUISITOS DE INICIO</div>
+                <ul class="req-list">
+                    <li class="req-item">Micelio ≥ 60%</li>
+                    <li class="req-item">Costo de activación: 20% micelio base</li>
+                </ul>
+                <div class="section-label">CONDICIONES DE ABORTO (PELIGRO)</div>
+                <ul class="req-list">
+                    <li class="req-item nerf">ε_runtime ≥ 0.50 (Estrés excesivo)</li>
+                    <li class="req-item nerf">Hifas ≥ 60.0 (Sobrepoblación)</li>
+                    <li class="req-item nerf">Ingresos < $50/s (Desnutrición financiera)</li>
+                </ul>
+                <div class="section-label">RESULTADO</div>
+                <p style="font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;">Al
+                    sobrevivir 90s, la mutación se vuelve <strong>Absoluta</strong>. El hongo ya no puede ser detenido,
+                    permitiendo el cierre de la run con máximo bonus de Legado.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,15 +1,12 @@
 extends Node
 
-const TITLE := "IDLE — Observatorio fⁿ"
-const VERSION := "0.6"
-const NAME := "Observatorio fⁿ"
-
-
-
+const TITLE := "IDLE Antigravity — v0.9.0"
+const VERSION := "0.9.0"
+const NAME := "Era Alostática"
 
 const MAJOR := 0
-const MINOR := 5
-const PATCH := 1
+const MINOR := 9
+const PATCH := 0
 
 
 func get_env(var_name: String) -> String:

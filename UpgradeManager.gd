@@ -65,7 +65,13 @@ func can_buy(id: String, money: float) -> bool:
 	var def = get_def(id)
 	if def == null: return false
 	if def.one_shot and s.level > 0: return false
-	return money >= s.current_cost and s.unlocked
+	
+	# LEGADO: Memoria de Recurso (Costo 0 en nivel 0)
+	var real_cost = s.current_cost
+	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
+		real_cost = 0.0
+		
+	return money >= real_cost and s.unlocked
 
 ## Compra la mejora. Devuelve true si fue exitosa.
 ## Pasar money ANTES de restar el costo.
@@ -83,7 +89,19 @@ func buy(id: String, money: float) -> bool:
 	else:
 		s.current_value += def.gain
 
-	s.current_cost *= def.cost_scale
+	# LEGADO: Deflación (Reducir escalado de costos un 5%)
+	var effective_cost_scale = def.cost_scale
+	if LegacyManager.get_buff_value("deflacion"):
+		# Reduce el componente inflacionario (el excedente sobre 1.0)
+		effective_cost_scale = 1.0 + (def.cost_scale - 1.0) * 0.95
+		
+	# SUBSIDIO HOMEOSTASIS (v0.8.7)
+	# Si estamos en Homeostasis, la Contabilidad es más fácil de escalar.
+	if id == "accounting" and EvoManager.mutation_homeostasis:
+		effective_cost_scale = 1.0 + (effective_cost_scale - 1.0) * 0.8
+		print("⚖️ Subsidio Homeostasis aplicado a Contabilidad")
+
+	s.current_cost *= effective_cost_scale
 
 	# Desbloquear dependientes
 	for other in _defs:
@@ -94,7 +112,14 @@ func buy(id: String, money: float) -> bool:
 
 ## Costo actual del upgrade (para mostrar en botón)
 func cost(id: String) -> float:
-	return states.get(id, {}).get("current_cost", 0.0)
+	var s = states.get(id, {})
+	if s.is_empty(): return 0.0
+	
+	# LEGADO: Visualizar costo 0 en nivel 0 si aplica
+	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
+		return 0.0
+		
+	return s.get("current_cost", 0.0)
 
 ## Valor actual (click_value, income_per_second, etc.)
 func value(id: String) -> float:
@@ -125,3 +150,33 @@ func deserialize(d: Dictionary) -> void:
 			states[id].current_cost = s.get("current_cost", states[id].current_cost)
 			states[id].current_value = s.get("current_value", states[id].current_value)
 			states[id].unlocked = s.get("unlocked", states[id].unlocked)
+
+func devour_random_upgrade() -> bool:
+	var valid_keys = []
+	for k in states.keys():
+		if states[k].level > 0:
+			valid_keys.append(k)
+	
+	if valid_keys.is_empty():
+		return false
+		
+	var target = valid_keys[randi() % valid_keys.size()]
+	var s = states[target]
+	var def = get_def(target)
+	
+	s.level -= 1
+	
+	# Recalcular desde la base para evitar drift
+	s.current_value = def.base_value
+	if def.is_multiplicative:
+		for i in range(s.level): s.current_value *= def.gain
+	else:
+		s.current_value += def.gain * s.level
+
+	var effective_cost_scale = def.cost_scale
+	if LegacyManager.get_buff_value("deflacion"):
+		# Reduce el componente inflacionario
+		effective_cost_scale = 1.0 + (def.cost_scale - 1.0) * 0.95
+
+	s.current_cost /= effective_cost_scale
+	return true

@@ -37,11 +37,14 @@ func load_game(main: Control):
 	print("📂 [SaveManager] Juego cargado con éxito.")
 
 func delete_save_and_restart():
+	# Incrementar contador de ciclos persistentes antes de borrar la run actual
+	LegacyManager.increment_run()
+	
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
-		print("🗑️ [SaveManager] Archivo de guardado eliminado.")
+		print("🗑️ [SaveManager] Archivo de run eliminado. Iniciando nuevo ciclo.")
 	
-	# Resetear Autoloads persistentes
+	# Resetear Autoloads persistentes (solo los de la sesión actual)
 	UpgradeManager.reset()
 	BiosphereEngine.reset()
 	EvoManager.reset()

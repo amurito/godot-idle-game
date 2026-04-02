@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>IDLE Antigravity — Matemática del Sistema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg: #09090d;
+            --panel: #13131a;
+            --panel-hover: #1e1e2a;
+            --border: rgba(255,255,255,0.07);
+            --border-bright: rgba(255,255,255,0.15);
+
+            --yellow: #f1c40f;
+            --cyan: #00d2ff;
+            --green: #2ecc71;
+            --red: #e74c3c;
+            --purple: #9d4edd;
+            --magenta: #e040fb;
+            --orange: #ff6d00;
+            --white: #f0f0f5;
+            --dim: #7a8296;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 48px 32px;
+            min-height: 100vh;
+        }
+
+        a { color: var(--cyan); text-decoration: none; }
+
+        /* === HEADINGS === */
+        .masthead {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        .masthead h1 {
+            font-size: 3rem;
+            margin: 0 0 8px;
+            background: linear-gradient(120deg, var(--cyan), var(--purple), var(--magenta));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .masthead p { color: var(--dim); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+        /* === SECTIONS === */
+        section { margin-bottom: 56px; }
+        section > h2 {
+            font-size: 1.6rem;
+            color: var(--cyan);
+            border-bottom: 1px solid var(--border-bright);
+            padding-bottom: 8px;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* === VARIABLE CARDS === */
+        .var-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .var-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 4px solid;
+            border-radius: 10px;
+            padding: 18px 20px;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .var-card:hover { background: var(--panel-hover); transform: translateY(-3px); }
+
+        .var-card .var-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .var-card .var-symbol {
+            font-size: 0.8rem;
+            color: var(--dim);
+            margin-bottom: 10px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .var-card p { font-size: 0.9rem; color: #c0c0d0; line-height: 1.5; margin: 0; }
+        .var-card .var-range {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.04);
+            display: inline-block;
+        }
+
+        /* === FORMULA BLOCKS === */
+        .formula-block {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--yellow);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 18px;
+        }
+        .formula-block .formula-title {
+            font-weight: 700;
+            color: var(--yellow);
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+        .formula-block .formula-source {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--dim);
+            margin-bottom: 12px;
+        }
+        .formula-block .desc { color: #b0b8cc; font-size: 0.9rem; line-height: 1.6; }
+        .formula-block .desc strong { color: var(--white); }
+
+        .math-display {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin: 12px 0;
+            overflow-x: auto;
+            font-size: 1.05rem;
+        }
+
+        /* === TABLE === */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.04);
+            color: var(--dim);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-bright);
+        }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #c0c0d0;
+            vertical-align: top;
+        }
+        td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--yellow); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* === TAGS === */
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-right: 4px; }
+        .tag-eco { background: rgba(0,210,255,0.15); color: var(--cyan); }
+        .tag-bio { background: rgba(46,204,113,0.15); color: var(--green); }
+        .tag-struct { background: rgba(157,78,221,0.15); color: var(--purple); }
+        .tag-danger { background: rgba(231,76,60,0.15); color: var(--red); }
+
+        /* === NAV === */
+        nav {
+            position: sticky;
+            top: 16px;
+            float: right;
+            width: 200px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-left: 32px;
+            margin-bottom: 32px;
+            font-size: 0.85rem;
+        }
+        nav h3 { margin: 0 0 12px; font-size: 0.9rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+        nav a { display: block; color: var(--dim); margin-bottom: 8px; transition: color 0.2s; }
+        nav a:hover { color: var(--cyan); }
+
+        @media (max-width: 900px) {
+            nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h3>Índice</h3>
+    <a href="#produccion">Producción</a>
+    <a href="#structural">Estructura</a>
+    <a href="#biosfera">Biosfera</a>
+    <a href="#epsilon">Estrés ε</a>
+    <a href="#omega">Flexibilidad Ω</a>
+    <a href="#formulas">Fórmulas Completas</a>
+    <a href="#constants">Constantes</a>
+</nav>
+
+<div class="masthead">
+    <h1>IDLE Antigravity</h1>
+    <p>Documentación matemática del sistema · v0.8.5 "Fungi Evolution: Branching"</p>
+</div>
+
+<!-- ████████  PRODUCCIÓN  ████████ -->
+<section id="produccion">
+    <h2>⚙️ Variables de Producción</h2>
+    <div class="var-grid">
+
+        <div class="var-card" style="border-left-color: var(--cyan)">
+            <div class="var-name">a — Click Base</div>
+            <div class="var-symbol">upgrade value "click"</div>
+            <p>Fuerza del acto manual. Cuánto dinero genera un solo click. <strong>No genera complejidad estructural (n=0)</strong>, permitiendo un juego manual puro.</p>
+            <div class="var-range">Escalada Lineal</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--cyan)">
+            <div class="var-name">b — Multiplicador Click</div>
+            <div class="var-symbol">upgrade value "click_mult"</div>
+            <p>Memoria numérica acumulada. Amplifica el impacto de cada click. Opera directamente en el brazo activo sin penalización de estrés.</p>
+            <div class="var-range">Escalada Logarítmica</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--cyan)">
+            <div class="var-name">cₙ — Persistencia Dinámica</div>
+            <div class="var-symbol">persistence_dynamic</div>
+            <p>La sostenibilidad del esfuerzo. Converge lentamente hacia su objetivo teórico <em>fⁿ</em> mediante interpolación sigmoide. Determina cuánto "aguanta" el click en el tiempo.</p>
+            <div class="var-range">Inicial: 1.4 · Objetivo máximo: ~2.2+</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--yellow)">
+            <div class="var-name">im — Impulso Manual (Legado)</div>
+            <div class="var-symbol">Legacy: im (manual_impulse)</div>
+            <p>Multiplicador x2.0 directo al bloque activo. Solo disponible si se ha activado el Legado correspondiente. Representa la destreza biológica heredada.</p>
+            <div class="var-range">Fijo: 2.0</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">d — Trabajo Manual</div>
+            <div class="var-symbol">auto_income · md</div>
+            <p>Ingreso pasivo estructural. Representa la economía "mientras duermes". Crece lento pero es estable. No compite directamente con el click.</p>
+            <div class="var-range">Desbloqueo: primera compra automática</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">md — Ritmo de Trabajo</div>
+            <div class="var-symbol">upgrade value "auto_mult"</div>
+            <p>Multiplicador de eficiencia de la producción automática. Impacto fuerte pero coste progresivo alto. Refleja la optimización del sistema productivo.</p>
+            <div class="var-range">Escalada lineal a moderada</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--purple)">
+            <div class="var-name">e — Trueque</div>
+            <div class="var-symbol">trueque_base_income × nivel</div>
+            <p>Ingreso por intercambio social. Ineficiente por naturaleza (efficiency := 0.75), pero tiene gran potencial de expansión. Depende del nivel de Trueque.</p>
+            <div class="var-range">Base: 8.0 · Eficiencia: 0.75</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--purple)">
+            <div class="var-name">me — Red de Intercambio</div>
+            <div class="var-symbol">upgrade value "trueque_net"</div>
+            <p>Multiplicador expansivo del sistema de trueque. Representa la escala de relaciones sociales. Opera junto a μ y β.</p>
+            <div class="var-range">Desbloqueo: mejora red de trueque</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--orange)">
+            <div class="var-name">β — Beta Biomasa</div>
+            <div class="var-symbol">biomass_beta = 1 + ln(1+B)·eff</div>
+            <p>Multiplicador que los ingresos automáticos y de trueque reciben de la biomasa fúngica. A más biomasa, mayor productividad de la red.</p>
+            <div class="var-range">Mín: 1.0 · efficiency = 0.03</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--purple)">
+            <div class="var-name">M — Micelio</div>
+            <div class="var-symbol">BiosphereEngine.micelio</div>
+            <p>Recurso de transición biológica. Crece proporcionalmente a las hifas en la rama de Red Micelial. Se consume para iniciar el Primordio.</p>
+            <div class="var-range">0.0 a 100.0 (Cap al llegar a Seta)</div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ████████  ESTRUCTURA  ████████ -->
+<section id="structural">
+    <h2>🏛️ Variables Estructurales</h2>
+    <div class="var-grid">
+
+        <div class="var-card" style="border-left-color: var(--yellow)">
+            <div class="var-name">n — Upgrades Estructurales</div>
+            <div class="var-symbol">get_structural_upgrades()</div>
+            <p>Complejidad acumulada de la automatización. <strong>Excluye Clicks y Click Mult.</strong> Alimenta ε y define cuán "rígida" es la burocracia del sistema.</p>
+            <div class="var-range">n = n_auto + n_trueque + n_pers</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--yellow)">
+            <div class="var-name">n_eff — n Estructural Efectivo</div>
+            <div class="var-symbol">n / (1 + accounting·0.25)</div>
+            <p>La contabilidad reduce el peso del sistema. Con nivel 1 de Contabilidad, un sistema de 8 upgrades se comporta como uno de 6.4, reduciendo el estrés generado.</p>
+            <div class="var-range">Siempre ≤ n</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--yellow)">
+            <div class="var-name">k — Constante de Persistencia</div>
+            <div class="var-symbol">K_PERSISTENCE = 1.25</div>
+            <p>La "voluntad de crecer" del sistema. Determina cuánta persistencia puede acumular la estructura a medida que se vuelve más compleja.</p>
+            <div class="var-range">Fija: 1.25</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--yellow)">
+            <div class="var-name">k_eff — k Efectivo por μ</div>
+            <div class="var-symbol">k / (1 + α·(μ-1))</div>
+            <p>El capital cognitivo μ <em>reduce</em> la rigidez estructural. Un sistema con más conocimiento acumulado crece menos "forzado" y genera menos estrés por comparación.</p>
+            <div class="var-range">α = 0.55 · Siempre ≤ k</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--magenta)">
+            <div class="var-name">fⁿ — Objetivo Teórico de Persistencia</div>
+            <div class="var-symbol">c₀ · k_eff^(1 − 1/n)</div>
+            <p>El valor de persistencia que el sistema "debería" tener dado su tamaño. cₙ converge hacia fⁿ de forma suave. La distancia |fⁿ − cₙ| genera estrés ε.</p>
+            <div class="var-range">Aumenta con n y k_eff</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--red)">
+            <div class="var-name">Presión Estructural</div>
+            <div class="var-symbol">ε_ef · (1+ε_peak) · n · (1-acc)</div>
+            <p>Índice compuesto de estrés acumulado. Activa el desbloqueo de Instituciones cuando supera 15 con Ω bajo. A mayor n, mayor presión base.</p>
+            <div class="var-range">Umbral institucional: >15</div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ████████  BIOSFERA  ████████ -->
+<section id="biosfera">
+    <h2>🍄 Variables de la Biosfera (Fungi DLC)</h2>
+    <div class="var-grid">
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">Hifas</div>
+            <div class="var-symbol">hifas = passive_income^0.6</div>
+            <p>La densidad de la red micelial. Calculada en cada tick como la potencia 0.6 del ingreso pasivo total. Mide cuán extendida está la red antes de que crezca la biomasa.</p>
+            <div class="var-range">En Homeostasis: ×0.85</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">Nutrientes</div>
+            <div class="var-symbol">+= (ε_runtime − ε_ef) · 12 · Δt</div>
+            <p>El "alimento" que la biosfera extrae del estrés del sistema. Cuando el hongo absorbe estrés (ε_ef &lt; ε_runtime), los nutrientes aumentan. En Hiperasimilación, los gasta para inyectar más estrés.</p>
+            <div class="var-range">Mín: 0 · Sin límite superior</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">Biomasa</div>
+            <div class="var-symbol">+= hifas · √nutrientes · 0.02 · Δt</div>
+            <p>La masa del tejido fúngico. Depende de las hifas y los nutrientes acumulados. Tiene un soft-cap pre-homeostasis a 8.0 y un hard-cap de 10.0 en homeostasis. El parasitismo rompe estos límites.</p>
+            <div class="var-range">Soft-cap: 8.0 · Cap homeostasis: 10.0</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--green)">
+            <div class="var-name">Metabolismo (UI)</div>
+            <div class="var-symbol">biomasa / Δ$_total</div>
+            <p>Índice visual de eficiencia del hongo. Muestra cuánta biomasa existe por cada unidad de ingreso. Un valor alto indica un hongo "gordo" respecto al sistema económico.</p>
+            <div class="var-range">Informativo, no afecta mecánicas</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--cyan)">
+            <div class="var-name">Absorción</div>
+            <div class="var-symbol">absorption = 0.15 (base)</div>
+            <p>Cuánto estrés disipa el hongo. En modo estándar, define la curva de ε_efectivo. En Parasitismo, sube a ×1.6 (0.24). En Simbiosis, la absorción es del 75%.</p>
+            <div class="var-range">Base: 0.15 · Simbiosis: 0.75</div>
+        </div>
+
+        <div class="var-card" style="border-left-color: var(--cyan)">
+            <div class="var-name">Plasticidad</div>
+            <div class="var-symbol">plasticity = 0.05 (base)</div>
+            <p>Cuánto afecta la biomasa al multiplicador μ. Define el componente fúngico de μ: μ_fungi = 1 + ln(1+B)·plasticidad. En Homeostasis, la plasticidad se reduce a la mitad.</p>
+            <div class="var-range">Base: 0.05 · Homeostasis: 0.025</div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ████████  EPSILON  ████████ -->
+<section id="epsilon">
+    <h2>📊 El Estrés del Sistema (ε)</h2>
+
+    <div class="formula-block">
+        <div class="formula-title">ε Activo — Divergencia Productiva</div>
+        <div class="formula-source">main.gd → update_epsilon_runtime() → Bloque 1</div>
+        <div class="math-display">
+            \[ \epsilon_{activo} = \left(\frac{\Delta\$_{actual}}{\Delta\$_{esperado}} - 1\right) + \left|ratio_{activo} - target_{activo}\right| \cdot (1 - acc) \]
+        </div>
+        <div class="desc">
+            Mide cuánto se desvía la producción real del modelo teórico. La primera parte captura el exceso de producción (inflación); la segunda captura el desequilibrio entre Click y Pasivos. La Contabilidad (<strong>acc</strong>) amortigua ambas componentes.
+        </div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">ε Pasivo — Rigidez / Cristalización</div>
+        <div class="formula-source">main.gd → update_epsilon_runtime() → Bloque 2</div>
+        <div class="math-display">
+            \[ \epsilon_{pasivo} = (ratio_{pasivo} - 0.60) \cdot \ln(1 + n) \cdot 0.45 \cdot (1-\Omega) \cdot 0.24 \cdot (1-acc) \]
+        </div>
+        <div class="desc">
+            Aparece cuando los ingresos pasivos superan el 60% del total. Un sistema muy automatizado pierde flexibilidad (<strong>Ω bajo</strong> amplifica este estrés). Representa la "cristalización" burocrática del sistema.
+        </div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">ε Complejidad Estructural</div>
+        <div class="formula-source">main.gd → update_epsilon_runtime() → Bloque 3</div>
+        <div class="math-display">
+            \[ \epsilon_{complejidad} = 0.0012 \cdot n \cdot k_{eff} \]
+        </div>
+        <div class="desc">
+            Coste fijo de existir: cada upgrade añade una pequeña carga estructural permanente. No se puede eliminar, solo mitigar con la Contabilidad.
+        </div>
+    </div>
+
+    <div class="formula-block" style="border-left-color: var(--purple)">
+        <div class="formula-title">ε Runtime (Acumulación suavizada)</div>
+        <div class="formula-source">main.gd → update_epsilon_runtime()</div>
+        <div class="math-display">
+            \[ \epsilon_{runtime} = lerp(\epsilon_{runtime},\; \epsilon_{activo} + \epsilon_{pasivo} + \epsilon_{complejidad},\; 0.045) \]
+        </div>
+        <div class="desc">
+            El estrés no salta instantáneamente: converge con un factor de 0.045 por tick. El historial de pico se guarda como <strong>ε_peak</strong> (máximo histórico irrecuperable de la run).
+        </div>
+    </div>
+
+    <div class="formula-block" style="border-left-color: var(--green)">
+        <div class="formula-title">ε Efectivo — Transformación Biológica</div>
+        <div class="formula-source">BiosphereEngine.gd → _compute_epsilon_breakdown()</div>
+        <div class="math-display">
+            \[
+            \epsilon_{efectivo} =
+            \begin{cases}
+                \epsilon_{runtime} \cdot (1 + B \cdot 0.25) & \text{Hiperasimilación} \\
+                \epsilon_{runtime} \cdot 0.25 & \text{Simbiosis (Absorción 75%)} \\
+                \dfrac{\epsilon_{runtime}}{1 + B \cdot 0.5} & \text{Estándar / Colonización}
+            \end{cases}
+            \]
+        </div>
+        <div class="desc">
+            El hongo procesa el estrés y devuelve una versión modificada al sistema económico. En modo estándar, a más biomasa (B), más estrés absorbe. En Hiperasimilación, <em>amplifica</em> el estrés. En Simbiosis Mecánica, el hongo se integra al hardware y disipa un 75% fijo del estrés bruto.
+        </div>
+    </div>
+</section>
+
+<!-- ████████  OMEGA  ████████ -->
+<section id="omega">
+    <h2>🔩 Flexibilidad Estructural (Ω)</h2>
+
+    <div class="formula-block" style="border-left-color: var(--cyan)">
+        <div class="formula-title">Omega — Flexibilidad del Sistema</div>
+        <div class="formula-source">EcoModel.gd → get_omega()</div>
+        <div class="math-display">
+            \[ \Omega = \frac{1}{1 + \epsilon_{runtime} \cdot k_{eff} \cdot n_{eff}} \]
+        </div>
+        <div class="desc">
+            La inversa compuesta de la rigidez. A más estrés, más upgrades y más rigidez estructural (k_eff), <strong>menor Ω</strong>. Cuando Ω baja de 0.25 el sistema está en zona de colapso. El sistema guarda <strong>Ω_min</strong> = el punto más bajo alcanzado (irreversible salvo Homeostasis).
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Rango Ω</th>
+                <th>Estado</th>
+                <th>Interpretación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>> 0.65</td><td>🟢 Estable / Flexible</td><td>El sistema puede absorber cambios sin romperse.</td></tr>
+            <tr><td>0.45 – 0.65</td><td>⚠️ Cristalización incipiente</td><td>Señal de alerta temprana. Invertir en Contabilidad.</td></tr>
+            <tr><td>0.25 – 0.45</td><td>🔴 Rigidez Crítica</td><td>Riesgo de Hiperasimilación. Parar de comprar upgrades.</td></tr>
+            <tr><td>< 0.25</td><td>💀 Colapso Predictivo</td><td>Zona de peligro máximo. Parasitismo o Hiperasimilación inminente.</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ████████  FÓRMULAS COMPLETAS  ████████ -->
+<section id="formulas">
+    <h2>📐 Todas las Fórmulas del Sistema</h2>
+
+    <div class="formula-block">
+        <div class="formula-title">Ley Madre del Sistema (v0.8.5)</div>
+        <div class="formula-source">EcoModel.gd + UIManager.gd</div>
+        <div class="math-display">
+            \[ \Delta\$ = \left[ ((\text{clicks} \cdot a \cdot b \cdot c_n) \cdot im) + d \cdot m_d \cdot so + e \cdot m_e \right] \cdot \mu \]
+        </div>
+        <div class="desc">La arquitectura definitiva. El bloque activo (clicks) tiene prioridad de escalado mediante legados (im). Los bloques pasivos se suman de forma aditiva y el Capital Cognitivo (μ) escala el resultado final.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">μ Total (Capital Cognitivo)</div>
+        <div class="formula-source">main.gd → get_mu_structural_factor()</div>
+        <div class="math-display">
+            \[ \mu_{cognitivo} = 1 + \ln(1 + n_{cog}) \cdot 0.08 \]
+            \[ \mu_{fungi} = 1 + \ln(1 + B) \cdot plasticity \]
+            \[ \mu = \mu_{cognitivo} \cdot \mu_{fungi} \]
+        </div>
+        <div class="desc">μ tiene dos fuentes: las mejoras cognitivas compradas y la biomasa viva. Ambas crecen de forma logarítmica para evitar inflación exponencial.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">β — Biomass Beta (Amplificador Pasivo)</div>
+        <div class="formula-source">BiosphereEngine.gd → get_biomass_beta()</div>
+        <div class="math-display">
+            \[ \beta = 1 + \ln(1 + B) \cdot 0.03 \]
+        </div>
+        <div class="desc">Crecimiento logarítmico desde 1.0. Con B=10, β≈1.072. Con B=25, β≈1.098. Es un amplificador suave que recompensa el crecimiento fúngico sin romper la economía.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">Persistencia Dinámica (cₙ → fⁿ)</div>
+        <div class="formula-source">main.gd → apply_dynamic_persistence()</div>
+        <div class="math-display">
+            \[ f^n = c_0 \cdot k_{eff}^{(1 - 1/n)} \]
+            \[ \alpha(n) = \frac{1}{1 + e^{-0.35(n-6)}} \]
+            \[ c_n \leftarrow lerp\left(c_n,\; f^n,\; \clamp(\alpha \cdot \Delta t \cdot 0.4 \cdot inertia,\; 0,\; 0.25)\right) \]
+        </div>
+        <div class="desc">La curva sigmoide α controla la velocidad de convergencia. Antes de n=6 upgrades converge muy lento; después, acelera. La inercia (activada por Hiperasimilación = 0.20) frena la convergencia.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">Ingresos Automáticos Efectivos</div>
+        <div class="formula-source">EcoModel.gd → get_auto_income_effective()</div>
+        <div class="math-display">
+            \[ d_{ef} = d \cdot m_d \cdot specialization \cdot \mu \cdot \beta \cdot (1 + acc \cdot 0.05) \]
+        </div>
+        <div class="desc">Cada nivel de Contabilidad suma un 5% fijo al brazo pasivo y al de trueque. Especialización es un multiplicador adicional de la rama automática.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">Trueque Efectivo</div>
+        <div class="formula-source">EcoModel.gd → get_trueque_income_effective()</div>
+        <div class="math-display">
+            \[ e_{ef} = nivel_{trueque} \cdot 8.0 \cdot 0.75_{(base)} \cdot m_e \cdot \mu \cdot \beta \cdot (1 + acc \cdot 0.05) \]
+        </div>
+        <div class="desc">El trueque tiene una ineficiencia estructural de 0.75 que es filosófica: el intercambio social siempre tiene fricción. La Red de Intercambio (me) y la Simbiosis pueden reducirla.</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">Crecimiento de Biomasa</div>
+        <div class="formula-source">BiosphereEngine.gd → _grow_biomass()</div>
+        <div class="math-display">
+            \[ \Delta B = hifas \cdot \sqrt{nutrientes} \cdot 0.02 \cdot \Delta t \]
+            \[ hifas = d_{total}^{0.6} \]
+        </div>
+        <div class="desc">La biomasa crece con la raíz cuadrada de los nutrientes para moderar el crecimiento exponencial. Las hifas dependen del ingreso pasivo total con un exponente 0.6 (sublineal).</div>
+    </div>
+
+    <div class="formula-block">
+        <div class="formula-title">Drenaje por Parasitismo</div>
+        <div class="formula-source">main.gd → _on_logic_tick()</div>
+        <div class="math-display">
+            \[ drain = B \cdot 0.015 \cdot \Delta t \quad \Rightarrow \quad \$\; -=\; drain \]
+        </div>
+        <div class="desc">El parasitismo cobra una "renta" de dinero proporcional a la biomasa viva. A mayor biomasa, mayor drenaje de liquidez. Combinado con las condiciones de final de run, crea una tensión creciente.</div>
+    </div>
+</section>
+
+<!-- ████████  CONSTANTS  ████████ -->
+<section id="constants">
+    <h2>🔧 Tabla de Constantes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Constante</th>
+                <th>Valor</th>
+                <th>Rol</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>K_PERSISTENCE</td><td>1.25</td><td>Base de crecimiento de la persistencia por upgrade</td></tr>
+            <tr><td>ALPHA_KAPPA</td><td>0.55</td><td>Peso de μ sobre la reducción de rigidez en k_eff</td></tr>
+            <tr><td>COGNITIVE_MULTIPLIER</td><td>0.05</td><td>Escala de crecimiento logarítmico del capital cognitivo</td></tr>
+            <tr><td>EPS_PASSIVE_SCALE</td><td>0.24</td><td>Amplitud del componente pasivo de ε</td></tr>
+            <tr><td>PASSIVE_RATIO_START</td><td>0.60</td><td>Umbral de dominancia pasiva (por encima genera ε_pasivo)</td></tr>
+            <tr><td>HOMEOSTASIS_TIME_REQUIRED</td><td>18 s</td><td>Segundos en condiciones estables para activar Homeostasis</td></tr>
+            <tr><td>BIOMASS_CAP (Homeostasis)</td><td>10.0</td><td>Límite duro de biomasa en modo Homeostasis</td></tr>
+            <tr><td>PRE_HOMEOSTASIS_CAP</td><td>8.0</td><td>Soft-cap de biomasa antes de Homeostasis (lerp suave)</td></tr>
+            <tr><td>absorption (base)</td><td>0.15</td><td>Absorción base de estrés por la biosfera</td></tr>
+            <tr><td>absorption (Simbiosis)</td><td>0.75</td><td>Reducción fija del estrés en rama Simbiosis</td></tr>
+            <tr><td>PRIMORDIO_DURATION</td><td>90 s</td><td>Supervivencia requerida para Seta o Singularidad</td></tr>
+            <tr><td>efficiency (base)</td><td>0.03</td><td>Peso de biomasa en β (amplificador productivo pasivo)</td></tr>
+            <tr><td>plasticity (base)</td><td>0.05</td><td>Peso de biomasa en μ_fungi</td></tr>
+            <tr><td>LOGIC_TICK</td><td>0.2 s</td><td>Frecuencia del motor de simulación (5 Hz)</td></tr>
+            <tr><td>UI_TICK</td><td>0.1 s</td><td>Frecuencia de actualización visual (10 Hz)</td></tr>
+            <tr><td>AUTOSAVE_INTERVAL</td><td>30 s</td><td>Guardado automático cada 30 segundos</td></tr>
+        </tbody>
+    </table>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UpgradeDef.gd" id="1_trueque_allo"]
+
+[resource]
+script = ExtResource("1_trueque_allo")
+id = "trueque_allo"
+label = "Escalado Alostático"
+base_cost = 25000.0
+cost_scale = 3.5
+gain = 2.0
+is_multiplicative = true
+base_value = 1.0
+unlock_requires = "trueque_net"
+one_shot = false

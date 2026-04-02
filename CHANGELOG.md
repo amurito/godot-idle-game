@@ -9,10 +9,60 @@ El proyecto prioriza:
 - decisiones de diseño fundamentadas
 
 
-## 🟢 v0.8.2 — “Fungi Stability” (Rework Evolutivo)
+## 🔵 v0.9.0 — “Era Alostática” (Evolución Tier 2)
+
+**Fecha:** 02/04/2026  
+**Estado:** ESTABLE — Tier 2 Implementado — Balance NG+
+ 
+### ✨ Cambios principales
+#### 🧬 Evolución y Tier 2
+- **Allostasis (Tier 2)**: Transición completa desde Homeostasis. Requiere 3 perturbaciones sobrevividas, 150 resiliencia y metabolismo > 200/s.
+- **Bonus Alostático**: Multiplicador masivo de **x5.0** al metabolismo pasivo al activar la mutación.
+- **Resiliencia Blindada**: Nuevo piso de estabilidad adaptativo ($\Omega \geq 0.60$) en Allostasis.
+- **Legado "Resiliencia Alostática"**: Desbloqueo permanente tras cerrar la run que otorga un piso de $\Omega \geq 0.45$ en futuras partidas.
+
+#### 🧮 Refuerzo de la Fórmula Central
+- **Término `re` (Redirección de Energía)**: Integración visual y matemática del legado de redirección (10% Click -> Pasivo).
+- **Término `ea` (Escalado Alostático)**: Nueva mejora de Tier 2 que potencia el metabolismo basado en la estabilidad.
+- **μ-Buff**: El Capital Cognitivo ahora amortigua de forma más agresiva el impacto de la complejidad mecánica.
+
+#### 📺 Interfaz Adaptativa (v0.9)
+- **Botón de Evolución Inteligente**: El botón de "Iniciar Mutación" ahora cambia de color (Cian) y se habilita automáticamente al detectar requisitos de Tier 2.
+- **Checklist Multi-Tier**: El panel de bifurcación ahora alterna requisitos entre Tier 1 y Tier 2 según el estado del genoma.
+
+#### 🔧 Bug Fixes y Limpieza
+- **Deduplicación de Botones**: Corregido error que generaba botones duplicados en el panel de evolución tras múltiples resets.
+- **Signal Safety**: Restaurados encabezados de funciones perdidos y corregidos errores de puntero nulo en el EvoChoicePanel.
+
+
+---
+
+
+## 🟢 v0.8.3 — “Visual Insights & Achievements Fix” (Upgrade UI)
+
+**Fecha:** 24/03/2026  
+**Estado:** ESTABLE — Documentado — UX Refinada
+
+### ✨ Cambios principales
+#### 🎨 Interfaz y Documentación
+- **Soporte BBCode**: El panel de Contabilidad ahora usa `RichTextLabel` con colores dinámicos (Buffs en verde, Nerfs en rojo).
+- **Checklist Evolutivo**: Requisitos de evolución con indicadores de color `[x]` (verde) / `[ ]` (rojo).
+- **Manuales Externos**: Generación de `MANUAL_EVOLUCION.HTML` y `MATEMATICA.HTML` con todas las fórmulas y rutas del juego.
+
+#### 🏁 Logros y Progresión
+- **Nuevos Logros**: Añadidos "Millonario de Esporas", "Equilibrio Frágil" y "Parásito Insaciable".
+- **Fix Dominancia Click**: El logro ya no se obtiene al primer click, requiere haber desbloqueado al menos una mejora de producción automática.
+
+#### 🔧 Bug Fixes (Críticos)
+- **Homeostasis Fix**: Ahora el mínimo de Ω (0.35) actúa como un piso real en el cálculo, permitiendo alcanzar las condiciones de cierre de run.
+- **Ω Enforced**: Corregido bug donde la flexibilidad podía bajar de 0.35 incluso con la mutación de estabilidad activa.
+
+---
+
+## 🟡 v0.8.2 — “Fungi Stability” (Rework Evolutivo)
 
 **Fecha:** 23/03/2026  
-**Estado:** ESTABLE — Balanceado — Final biológico funcional
+**Estado:** ARCHIVADO
 
 ### ✨ Cambios principales
 #### 🧬 Rework de Evoluciones (Basado en CAMINOS.HTML)
