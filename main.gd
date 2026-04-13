@@ -1174,7 +1174,7 @@ func update_achievements_label():
 	if AchievementManager.achievement_red_micelial: t += "✓ RED MICELIAL\n"
 	if AchievementManager.achievement_sporulation: t += "✓ ESPORULACIÓN\n"
 	if AchievementManager.achievement_parasitism: t += "✓ PARASITISMO\n"
-	if achievement_insatiable_parasite: t += "✓ PARÁSITO INSACIABLE\n"
+	if AchievementManager.achievement_insatiable_parasite: t += "✓ PARÁSITO INSACIABLE\n"
 
 	if UIManager.system_achievements_label:
 		UIManager.system_achievements_label.text = t
@@ -1215,8 +1215,7 @@ func reset_local_state():
 	AchievementManager.achievement_parasitism = false
 	AchievementManager.achievement_millionaire = false
 	AchievementManager.achievement_fragile_balance = false
-	achievement_insatiable_parasite = false
-	fragile_balance_timer = 0.0
+	AchievementManager.achievement_insatiable_parasite = false
 	run_closed = false
 	final_route = "NONE"
 	final_reason = ""
