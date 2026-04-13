@@ -215,10 +215,10 @@ func get_click_power() -> float:
 	if EvoManager.mutation_hyperassimilation:
 		power *= 10.0 # RUSH DE CLICK EXTREMO
 		
-	if LegacyManager.unlocked_legacies.has("aura_dorada") and LegacyManager.unlocked_legacies["aura_dorada"]:
+	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 1.5 # Aura Dorada (Bonus permanente)
-		
-	if LegacyManager.unlocked_legacies.has("semilla_cosmica") and LegacyManager.unlocked_legacies["semilla_cosmica"]:
+
+	if LegacyManager.get_buff_value("semilla_cosmica"):
 		power *= 2.0 # Semilla Cósmica (Bonus permanente)
 		
 	# Corrosión Parasitaria (Converge a 0)
@@ -283,13 +283,13 @@ func get_passive_total() -> float:
 		total *= 1.2 # Crecimiento Parásito inicial
 		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
 		
-	if LegacyManager.unlocked_legacies.has("aura_dorada") and LegacyManager.unlocked_legacies["aura_dorada"]:
+	if LegacyManager.get_buff_value("aura_dorada"):
 		total *= 1.5 # Aura Dorada (Bonus permanente)
 
-	if LegacyManager.unlocked_legacies.has("semilla_cosmica") and LegacyManager.unlocked_legacies["semilla_cosmica"]:
+	if LegacyManager.get_buff_value("semilla_cosmica"):
 		total *= 2.0 # Semilla Cósmica (Bonus permanente)
-		
-	if LegacyManager.unlocked_legacies.has("mente_colmena") and LegacyManager.unlocked_legacies["mente_colmena"]:
+
+	if LegacyManager.get_buff_value("mente_colmena"):
 		total *= 3.0 # IA Automática (Bonus permanente)
 		
 	# Mult por Rama Evolutiva (Nodos Finales DLC)
@@ -1290,8 +1290,21 @@ func _ready():
 		UIManager.export_run_button.text = "📤 Export run (disponible al cerrar run)"
 		
 	update_ui()
+
+	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
+	if not UpgradeManager.states.has("trueque_allo"):
+		var def = load("res://upgrades/trueque_allo.tres")
+		if def:
+			UpgradeManager._defs.append(def)
+			UpgradeManager.states["trueque_allo"] = {
+				"level": 0,
+				"current_cost": def.base_cost,
+				"current_value": def.base_value,
+				"unlocked": false
+			}
+
 	_mount_fungi_dlc()
-	
+
 	# === CONTROLES MINIMALISTAS (SUPERIOR IZQUIERDA) ===
 	var menu_btn := Button.new()
 	menu_btn.text = "🏠 Menú"
@@ -1377,13 +1390,13 @@ func _ready():
 			evo_choice_panel.visible = true
 			print("🚨 Recuperando elección de rama pendiente")
 
-func on_reactor_click():
+func on_reactor_click(epsilon_delta: float = 0.015):
 	time_since_last_click = 0.0
 	var power := get_click_power()
 	money += power
-	
+
 	# El click ahora genera un pequeño pico de estrés runtime (v0.8.2)
-	epsilon_runtime += 0.015 # Subido de 0.008 para dar más control al jugador 
+	epsilon_runtime += epsilon_delta
 
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.set_active_delta(power)
@@ -1907,7 +1920,7 @@ func _on_sporulation_final_pressed() -> void:
 	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and money >= 100000.0:
 		# FINAL SECRETO: PANSPERMIA NEGRA
 		money -= 100000.0
-		if not LegacyManager.unlocked_legacies.has("semilla_cosmica") or not LegacyManager.unlocked_legacies["semilla_cosmica"]:
+		if not LegacyManager.get_buff_value("semilla_cosmica"):
 			LegacyManager.unlocked_legacies["semilla_cosmica"] = true
 			LegacyManager.save_legacy()
 			show_system_toast("✨ Has desbloqueado el legado: SEMILLA CÓSMICA")
@@ -1923,7 +1936,7 @@ func activate_mente_colmena():
 		UIManager.big_click_button.text = "🧠 AUTO-OVERRIDE"
 		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
 	
-	if not LegacyManager.unlocked_legacies.has("mente_colmena") or not LegacyManager.unlocked_legacies["mente_colmena"]:
+	if not LegacyManager.get_buff_value("mente_colmena"):
 		LegacyManager.unlocked_legacies["mente_colmena"] = true
 		LegacyManager.save_legacy()
 		show_system_toast("✨ Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
@@ -2210,17 +2223,7 @@ var persistence_upgrade_unlocked := false
 var memory_trigger_count := 0
 
 func _on_BigClickButton_pressed():
-	var power := get_click_power()
-	money += power
-	
-	# El click ahora genera un pequeño pico de estrés runtime (v0.8.2)
-	epsilon_runtime += 0.008 
-	time_since_last_click = 0.0
-
-	if is_instance_valid(UIManager.big_click_button):
-		UIManager.big_click_button.set_active_delta(power)
-
-	update_ui()
+	on_reactor_click(0.008)
 
 # =====================================================
 #  DESBLOQUEO INSTITUCIONES v0.7.2
@@ -2271,127 +2274,7 @@ func build_institution_panel_text() -> String:
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
 		t += "\n⚠️ La red no puede estabilizarse localmente"
 
-	t += build_evo_checklist()
-
-	return t
-
-func build_evo_checklist() -> String:
-	var t := "[color=cyan][b]--- Próxima transición ---[/b][/color]\n"
-	var acc := UpgradeManager.level("accounting")
-	var ch : String
-	var ok_color := "[color=#00ff00]"
-	var fail_color := "[color=#ff4444]"
-
-	if homeostasis_mode:
-		t += "[b][color=cyan]Allostasis (Tier 2):[/color][/b]\n"
-		ch = ok_color + "[x] " if disturbances_survived >= 3 else fail_color + "[ ] "
-		t += ch + "Superar 3 perturbaciones (%d/3)[/color]\n" % disturbances_survived
-		ch = ok_color + "[x] " if resilience_score >= 150.0 else fail_color + "[ ] "
-		t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(resilience_score)
-		ch = ok_color + "[x] " if omega_min >= 0.40 else fail_color + "[ ] "
-		t += ch + "Flexibilidad Ω_min >= 0.40 (%s)[/color]\n" % snapped(omega_min, 0.01)
-		ch = ok_color + "[x] " if delta_per_sec > 200.0 else fail_color + "[ ] "
-		t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(delta_per_sec, 0.1)
-		ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
-		t += ch + "Contabilidad nvl 2 (%d)[/color]\n" % acc
-		t += "\n"
-
-	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		t += "[b]Objetivo: Integración Mecánica[/b]\n"
-		
-		# Hito 1: Estabilidad
-		var eps_ok := epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
-		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
-		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(epsilon_runtime, 0.01)) + ")[/color]\n"
-		
-		# Hito 2: Sincronización
-		if EvoManager.primordio_active:
-			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / EvoManager.PRIMORDIO_DURATION * 100.0))
-		elif EvoManager.nucleo_conciencia:
-			t += ok_color + "[x] Núcleo de Conciencia Sincronizado[/color]\n"
-		else:
-			var acc_ok := acc >= 2
-			ch = ok_color + "[x] " if acc_ok else fail_color + "[ ] "
-			t += ch + "Integrar redes en Mainframe (Contabilidad nvl 2)[/color]\n"
-		
-		# Hito 3: Núcleo
-		ch = ok_color + "[x] " if EvoManager.nucleo_conciencia else fail_color + "[ ] "
-		t += ch + "Singularidad Biomecánica lista[/color]\n"
-		
-	elif EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		t += "[b]Objetivo: Ciclo de Vida Biológico[/b]\n"
-		
-		# Hito 1: Micelio
-		var mic_ok := BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
-		ch = ok_color + "[x] " if mic_ok else fail_color + "[ ] "
-		t += ch + "Micelio desarrollado (>60%) (" + str(int(BiosphereEngine.micelio)) + "%) [/color]\n"
-		
-		# Hito 2: Primordio
-		if EvoManager.primordio_active:
-			t += "[color=yellow]>>> PRIMORDIO EN CURSO: %ds / 90s[/color]\n" % int(EvoManager.primordio_timer)
-		elif EvoManager.seta_formada:
-			t += ok_color + "[x] Ciclo biológico completado exitosamente[/color]\n"
-		else:
-			ch = fail_color + "[ ] "
-			t += ch + "Sobrevivir fase Primordio (90s)[/color]\n"
-		
-		# Hito 3: Seta
-		ch = ok_color + "[x] " if EvoManager.seta_formada else fail_color + "[ ] "
-		t += ch + "Seta Fructífera madura[/color]\n"
-		
-		if EvoManager.seta_formada:
-			t += "[color=cyan][b]¡LISTO PARA ESPORULACIÓN TOTAL![/b][/color]\n"
-
-	elif EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 1:
-		t += "[b]Red Micelial → Fase B:[/b]\n"
-		ch = ok_color + "[x] " if BiosphereEngine.hifas > 10.0 else fail_color + "[ ] "
-		t += ch + "Hifas > 10  (%s)[/color]\n" % snapped(BiosphereEngine.hifas, 0.1)
-		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 5  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if epsilon_effective < 0.32 else fail_color + "[ ] "
-		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(epsilon_effective, 0.01)
-		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
-		ch = ok_color + "[x] " if run_time > 200.0 else fail_color + "[ ] "
-		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(run_time)
-
-	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
-		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism:
-		t += "[b]Red Micelial (Fase A):[/b]\n"
-		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 11.5 else fail_color + "[ ] "
-		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
-		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 5  (" + str(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
-		ch = ok_color + "[x] " if epsilon_runtime < 0.65 else fail_color + "[ ] "
-		t += ch + "ε_runtime < 0.65  (" + str(snapped(epsilon_runtime, 0.01)) + ")[/color]\n"
-		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
-
-	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
-		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial:
-		t += "\n[color=gray]Homeostasis (Tier 1):[/color]\n"
-		ch = ok_color + "[x] " if get_en_banda_homeostatica() else fail_color + "[ ] "
-		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(epsilon_effective, 0.01)
-		ch = ok_color + "[x] " if omega > 0.25 else fail_color + "[ ] "
-		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(omega, 0.01)
-		ch = ok_color + "[x] " if BiosphereEngine.biomasa < 12.0 else fail_color + "[ ] "
-		t += ch + "Biomasa < 12  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if delta_per_sec > 30.0 else fail_color + "[ ] "
-		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(delta_per_sec, 0.1)
-		ch = ok_color + "[x] " if unlocked_d and unlocked_e else fail_color + "[ ] "
-		t += ch + "Pasivos d+e activos[/color]\n"
-		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
-
-	if EvoManager.mutation_parasitism:
-		t += "\n[color=#ffaa00]--- Objetivos de Colapso ---[/color]\n"
-		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 15.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 15 (Succión)  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if money < 1000.0 else fail_color + "[ ] "
-		t += ch + "Liquidez < $1000  ($%s)[/color]\n" % snapped(money, 1)
-		t += "\nÓ\n"
-		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 25.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 25 (Masa Crítica) (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+	t += UIManager.build_evo_checklist(self)
 
 	return t
 
@@ -2422,23 +2305,11 @@ func update_lab_metrics():
 		UIManager.sys_breakdown_label.text = txt
 
 func _sync_reactor_color() -> void:
-	# Inyectar si no existe (hotpatch para evitar reinicio)
-	if not UpgradeManager.states.has("trueque_allo"):
-		var def = load("res://upgrades/trueque_allo.tres")
-		if def:
-			UpgradeManager._defs.append(def)
-			UpgradeManager.states["trueque_allo"] = {
-				"level": 0,
-				"current_cost": def.base_cost,
-				"current_value": def.base_value,
-				"unlocked": false
-			}
-
 	# Especial: Bloqueo de Escalado Alostático si no viene de Homeostasis
 	if UpgradeManager.states.has("trueque_allo"):
 		var ready_to_show = UpgradeManager.level("trueque_net") > 0
 		var came_from_success = LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS"
-		
+
 		if ready_to_show and came_from_success:
 			UpgradeManager.states["trueque_allo"].unlocked = true
 		else:

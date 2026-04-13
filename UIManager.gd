@@ -257,3 +257,123 @@ func format_time(t: float) -> String:
 
 func epsilon_flag(v: float, limit: float) -> String:
 	return "⚠️" if v > limit else "✅"
+
+func build_evo_checklist(main: Node) -> String:
+	var t := "[color=cyan][b]--- Próxima transición ---[/b][/color]\n"
+	var acc := UpgradeManager.level("accounting")
+	var ch : String
+	var ok_color := "[color=#00ff00]"
+	var fail_color := "[color=#ff4444]"
+
+	if main.homeostasis_mode:
+		t += "[b][color=cyan]Allostasis (Tier 2):[/color][/b]\n"
+		ch = ok_color + "[x] " if main.disturbances_survived >= 3 else fail_color + "[ ] "
+		t += ch + "Superar 3 perturbaciones (%d/3)[/color]\n" % main.disturbances_survived
+		ch = ok_color + "[x] " if main.resilience_score >= 150.0 else fail_color + "[ ] "
+		t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(main.resilience_score)
+		ch = ok_color + "[x] " if main.omega_min >= 0.40 else fail_color + "[ ] "
+		t += ch + "Flexibilidad Ω_min >= 0.40 (%s)[/color]\n" % snapped(main.omega_min, 0.01)
+		ch = ok_color + "[x] " if main.delta_per_sec > 200.0 else fail_color + "[ ] "
+		t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
+		ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
+		t += ch + "Contabilidad nvl 2 (%d)[/color]\n" % acc
+		t += "\n"
+
+	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
+		t += "[b]Objetivo: Integración Mecánica[/b]\n"
+
+		# Hito 1: Estabilidad
+		var eps_ok := main.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
+		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
+		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(main.epsilon_runtime, 0.01)) + ")[/color]\n"
+
+		# Hito 2: Sincronización
+		if EvoManager.primordio_active:
+			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / EvoManager.PRIMORDIO_DURATION * 100.0))
+		elif EvoManager.nucleo_conciencia:
+			t += ok_color + "[x] Núcleo de Conciencia Sincronizado[/color]\n"
+		else:
+			var acc_ok := acc >= 2
+			ch = ok_color + "[x] " if acc_ok else fail_color + "[ ] "
+			t += ch + "Integrar redes en Mainframe (Contabilidad nvl 2)[/color]\n"
+
+		# Hito 3: Núcleo
+		ch = ok_color + "[x] " if EvoManager.nucleo_conciencia else fail_color + "[ ] "
+		t += ch + "Singularidad Biomecánica lista[/color]\n"
+
+	elif EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+		t += "[b]Objetivo: Ciclo de Vida Biológico[/b]\n"
+
+		# Hito 1: Micelio
+		var mic_ok := BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
+		ch = ok_color + "[x] " if mic_ok else fail_color + "[ ] "
+		t += ch + "Micelio desarrollado (>60%) (" + str(int(BiosphereEngine.micelio)) + "%) [/color]\n"
+
+		# Hito 2: Primordio
+		if EvoManager.primordio_active:
+			t += "[color=yellow]>>> PRIMORDIO EN CURSO: %ds / 90s[/color]\n" % int(EvoManager.primordio_timer)
+		elif EvoManager.seta_formada:
+			t += ok_color + "[x] Ciclo biológico completado exitosamente[/color]\n"
+		else:
+			ch = fail_color + "[ ] "
+			t += ch + "Sobrevivir fase Primordio (90s)[/color]\n"
+
+		# Hito 3: Seta
+		ch = ok_color + "[x] " if EvoManager.seta_formada else fail_color + "[ ] "
+		t += ch + "Seta Fructífera madura[/color]\n"
+
+		if EvoManager.seta_formada:
+			t += "[color=cyan][b]¡LISTO PARA ESPORULACIÓN TOTAL![/b][/color]\n"
+
+	elif EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 1:
+		t += "[b]Red Micelial → Fase B:[/b]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.hifas > 10.0 else fail_color + "[ ] "
+		t += ch + "Hifas > 10  (%s)[/color]\n" % snapped(BiosphereEngine.hifas, 0.1)
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
+		t += ch + "Biomasa >= 5  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = ok_color + "[x] " if main.epsilon_effective < 0.32 else fail_color + "[ ] "
+		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(main.epsilon_effective, 0.01)
+		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
+		ch = ok_color + "[x] " if main.run_time > 200.0 else fail_color + "[ ] "
+		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(main.run_time)
+
+	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
+		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism:
+		t += "[b]Red Micelial (Fase A):[/b]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 11.5 else fail_color + "[ ] "
+		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
+		t += ch + "Biomasa >= 5  (" + str(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
+		ch = ok_color + "[x] " if main.epsilon_runtime < 0.65 else fail_color + "[ ] "
+		t += ch + "ε_runtime < 0.65  (" + str(snapped(main.epsilon_runtime, 0.01)) + ")[/color]\n"
+		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
+
+	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
+		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial:
+		t += "\n[color=gray]Homeostasis (Tier 1):[/color]\n"
+		ch = ok_color + "[x] " if main.get_en_banda_homeostatica() else fail_color + "[ ] "
+		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(main.epsilon_effective, 0.01)
+		ch = ok_color + "[x] " if main.omega > 0.25 else fail_color + "[ ] "
+		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(main.omega, 0.01)
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa < 12.0 else fail_color + "[ ] "
+		t += ch + "Biomasa < 12  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = ok_color + "[x] " if main.delta_per_sec > 30.0 else fail_color + "[ ] "
+		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
+		ch = ok_color + "[x] " if main.unlocked_d and main.unlocked_e else fail_color + "[ ] "
+		t += ch + "Pasivos d+e activos[/color]\n"
+		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
+
+	if EvoManager.mutation_parasitism:
+		t += "\n[color=#ffaa00]--- Objetivos de Colapso ---[/color]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 15.0 else fail_color + "[ ] "
+		t += ch + "Biomasa >= 15 (Succión)  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		ch = ok_color + "[x] " if main.money < 1000.0 else fail_color + "[ ] "
+		t += ch + "Liquidez < $1000  ($%s)[/color]\n" % snapped(main.money, 1)
+		t += "\nÓ\n"
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 25.0 else fail_color + "[ ] "
+		t += ch + "Biomasa >= 25 (Masa Crítica) (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+
+	return t
