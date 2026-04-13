@@ -27,6 +27,7 @@ UIManager="*res://UIManager.gd"
 LogManager="*res://LogManager.gd"
 UpgradeManager="*res://UpgradeManager.gd"
 AchievementManager="*res://AchievementManager.gd"
+RunManager="*res://RunManager.gd"
 
 [editor]
 

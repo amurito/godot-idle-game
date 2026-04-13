@@ -80,30 +80,7 @@ var epsilon_active: float = 0.0
 var epsilon_passive: float = 0.0
 var epsilon_complex: float = 0.0
 
-# === HOMEOSTASIS TRACKING ===
-var homeostasis_timer := 0.0
-const HOMEOSTASIS_TIME_REQUIRED := 18.0  # segundos estables
-# === CIERRE DE RUN / RUTA FINAL ===
-var run_closed := false
-var final_route := "NONE"
-# === POST-HOMEOSTASIS MODE ===
-var homeostasis_mode := false
-var post_homeostasis := false
-var resilience_score := 0.0
-var disturbance_timer := 0.0
-const DISTURBANCE_INTERVAL := 20.0
-
-var legacy_homeostasis := false
-
-# --- SHOCK TRACKERS ---
-var disturbances_survived: int = 0
-var is_recovering_from_shock: bool = false
-var extreme_shock_survived: bool = false
-var evolution_button: Button
-var target_evolution: String = ""
-
-func get_en_banda_homeostatica() -> bool:
-	return epsilon_effective >= 0.03 and epsilon_effective <= 0.30
+# Estado de run movido a RunManager.gd
 
 # =====================================================
 var epsilon_effective := 0.0
@@ -114,8 +91,7 @@ var epsilon_effective := 0.0
 var run_time: float = 0.0
 var lab_mode := true
 
-# estado final
-var final_reason := ""           # guardamos la razón textual del cierre
+# RunManager.final_reason movido a RunManager.gd
 var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
 
 var RUN_EXPORT_PATH := OS.get_user_data_dir() + "/IDLE_Fungi/runs"
@@ -321,35 +297,7 @@ func update_genome():
 
 # === FUNCIONES DE LOGROS Y CICLO DE VIDA (Restauradas) ===
 func close_run(route: String, reason: String):
-	if run_closed: return
-	run_closed = true
-	final_route = route
-	final_reason = reason
-	add_lap("🚩 RUN CERRADA: " + route)
-	
-	# Guardar el final en NG+
-	LegacyManager.last_run_ending = route
-	LegacyManager.save_legacy()
-	
-	# --- OTORGAR PUNTOS DE LEGADO (PL) ---
-	var pl_to_add := 0
-	match route:
-		"HOMEOSTASIS": pl_to_add = 3
-		"ALLOSTASIS": pl_to_add = 4
-		"HOMEORHESIS": pl_to_add = 6
-		"SIMBIOSIS", "SINGULARIDAD": pl_to_add = 4
-		"ESPORULACION", "ESPORULACION TOTAL": pl_to_add = 5
-		"PARASITISMO": pl_to_add = 2
-		"HIPERASIMILACION": pl_to_add = 1
-		"MUTACION_FINAL", "METABOLISMO OSCURO": pl_to_add = 4
-		"MENTE COLMENA DISTRIBUIDA": pl_to_add = 8
-		"DEPREDADOR DE REALIDADES": pl_to_add = 12
-	
-	if pl_to_add > 0:
-		LegacyManager.add_pl(pl_to_add)
-		show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
-
-	SaveManager.save_game(self)
+	RunManager.close_run(route, reason)
 
 func unlock_hyperassimilation_achievement():
 	AchievementManager.unlock_hyperassimilation_achievement()
@@ -361,8 +309,7 @@ func unlock_red_micelial_achievement():
 	AchievementManager.unlock_red_micelial_achievement()
 
 func enter_post_homeostasis():
-	post_homeostasis = true
-	add_lap("⚖️ Iniciando fase de Post-Homeostasis")
+	RunManager.enter_post_homeostasis()
 
 func activate_sporulation():
 	EvoManager.activate_mutation("esporulacion")
@@ -400,9 +347,9 @@ func apply_symbiotic_stabilization():
 #  RUTA FINAL — detalles
 # =====================================================
 func build_final_line() -> String:
-	if not run_closed:
+	if not RunManager.run_closed:
 		return ""
-	var t := "\n🏁 FINAL: %s" % final_route
+	var t := "\n🏁 FINAL: %s" % RunManager.final_route
 	if show_final_details:
 		t += "\n" + get_final_reason()
 	return t
@@ -607,7 +554,7 @@ func get_structural_pressure() -> float:
 # CAPITAL COGNITIVO EFECTIVO (n ajustado por contabilidad) v0.8
 func get_accounting_effect() -> float:
 	var base = float(UpgradeManager.level("accounting")) * 0.05
-	return base + mutation_accounting_bonus + (0.05 if legacy_homeostasis else 0.0)
+	return base + mutation_accounting_bonus + (0.05 if RunManager.legacy_homeostasis else 0.0)
 
 func get_structural_upgrades() -> int:
 	var total = 0
@@ -695,8 +642,8 @@ func is_homeostasis_candidate(_delta: float) -> bool:
 #  RUTA FINAL DE LA RUN v0.8
 # =====================================================
 func get_final_route() -> String:
-	if final_route != "NONE":
-		return final_route
+	if RunManager.final_route != "NONE":
+		return RunManager.final_route
 	if EvoManager.mutation_sporulation:
 		return "ESPORULACION"
 	if EvoManager.mutation_homeostasis:
@@ -709,11 +656,11 @@ func get_final_route() -> String:
 		return "RED_MICELIAL"
 	return "NONE"
 func get_final_reason() -> String:
-	# si tenemos final_reason explícito, lo devolvemos; si no, generamos un texto por ruta
-	if final_reason != "" :
-		return final_reason
+	# si tenemos RunManager.final_reason explícito, lo devolvemos; si no, generamos un texto por ruta
+	if RunManager.final_reason != "" :
+		return RunManager.final_reason
 
-	match final_route:
+	match RunManager.final_route:
 		"HOMEOSTASIS":
 			return "Estabilidad estructural priorizada — run cerrada por homeostasis"
 		"ALLOSTASIS":
@@ -735,201 +682,35 @@ func get_final_reason() -> String:
 # =====================================================
 #  CHEQUEO FINAL DE HOMEOSTASIS v0.8
 # =====================================================
+func get_en_banda_homeostatica() -> bool:
+	return RunManager.get_en_banda_homeostatica()
+
 func check_homeostasis_final(delta: float):
-	if run_closed or LegacyManager.last_run_ending == "HOMEOSTASIS":
-		return
+	RunManager.check_homeostasis_final(delta)
 
-	if not EvoManager.mutation_homeostasis:
-		homeostasis_timer = max(homeostasis_timer - delta * 2.0, 0.0)
-		return
+func check_allostasis_final(delta: float):
+	RunManager.check_allostasis_final(delta)
 
-	# Requisitos estrictos de Homeostasis
-	var banda_estricta = get_en_banda_homeostatica()
-	var flexibilidad_minima = omega > 0.25
-	var control_activo = UpgradeManager.level("accounting") >= 1
-	var metabolismo_activo = delta_per_sec > 30.0
-	var crecimiento_controlado = BiosphereEngine.biomasa < 12.0
-	var redundancia = unlocked_d and unlocked_e
+func check_homeorhesis_final(delta: float):
+	RunManager.check_homeorhesis_final(delta)
 
-	if banda_estricta and flexibilidad_minima and control_activo and metabolismo_activo and crecimiento_controlado and redundancia:
-		homeostasis_timer += delta
-	else:
-		# Si epsilon sube demasiado, castigo fuerte o reinicio
-		if epsilon_effective > 0.35:
-			homeostasis_timer = 0.0
-		else:
-			homeostasis_timer = max(homeostasis_timer - delta, 0.0)
+func check_symbiosis_final(delta: float):
+	RunManager.check_symbiosis_final(delta)
 
-	if homeostasis_timer >= HOMEOSTASIS_TIME_REQUIRED:
-		close_run(
-			"HOMEOSTASIS",
-			"Estabilidad estructural sostenida en banda homeostática"
-		)
-		enter_post_homeostasis()
+func check_parasitism_final(delta: float):
+	RunManager.check_parasitism_final(delta)
 
-# =====================================================
-#  CHEQUEQUEO FINAL DE ALOSTASIS
-# =====================================================
-func check_allostasis_final(_delta: float):
-	if run_closed or LegacyManager.last_run_ending != "HOMEOSTASIS":
-		return
-		
-	if not get_en_banda_homeostatica() and epsilon_effective > 0.45:
-		# El setpoint de Allostasis permite epsilon hasta 0.45
-		return
+func check_sporulation_trigger(delta: float):
+	RunManager.check_sporulation_trigger(delta)
 
-	if disturbances_survived >= 3 and omega_min >= 0.40 and resilience_score >= 150.0 and UpgradeManager.level("accounting") >= 2 and delta_per_sec > 200.0:
-		_show_evolution_button("ALLOSTASIS")
-
-# =====================================================
-#  CHEQUEO FINAL DE HOMEORRESIS
-# =====================================================
-func check_homeorhesis_final(_delta: float):
-	if run_closed or LegacyManager.last_run_ending != "ALLOSTASIS":
-		return
-
-	if extreme_shock_survived and resilience_score >= 400.0 and omega_min >= 0.55 and BiosphereEngine.hifas >= 15.0 and run_time >= 1800.0:
-		_show_evolution_button("HOMEORHESIS")
-
-func _show_evolution_button(target: String):
-	if target_evolution == target:
-		return
-	target_evolution = target
-	
-	if not is_instance_valid(evolution_button):
-		evolution_button = Button.new()
-		evolution_button.add_theme_font_size_override("font_size", 22)
-		evolution_button.custom_minimum_size = Vector2(0, 80)
-		evolution_button.pressed.connect(_on_evolution_button_pressed)
-		get_node("UIRootContainer/RightPanel").add_child(evolution_button)
-		get_node("UIRootContainer/RightPanel").move_child(evolution_button, 0)
-		
-	evolution_button.text = "🧬 TRASCENDER GENOMA (" + target + ")"
-	if target == "ALLOSTASIS":
-		evolution_button.add_theme_color_override("font_color", Color.AQUAMARINE)
-	else:
-		evolution_button.add_theme_color_override("font_color", Color.GOLD)
-	evolution_button.visible = true
-
-func _on_evolution_button_pressed():
-	if target_evolution == "ALLOSTASIS":
-		UIManager.big_click_button.modulate = Color(0.2, 0.9, 1.0)
-		LegacyManager.unlocked_legacies["legado_alostasis"] = true
-		close_run(
-			"ALLOSTASIS",
-			"El sistema aprendió a tolerar el cambio calibrando un nuevo setpoint"
-		)
-	elif target_evolution == "HOMEORHESIS":
-		UIManager.big_click_button.modulate = Color(1.0, 0.8, 0.2)
-		LegacyManager.unlocked_legacies["legado_homeorresis"] = true
-		close_run(
-			"HOMEORHESIS",
-			"Evolución irreversible: el metabolismo trasciende la regulación basal"
-		)
-	evolution_button.visible = false
-# =====================================================
-#  CHEQUEO FINAL DE SIMBIOSIS v0.8 helper
-
-func check_symbiosis_final(_delta: float):
-	if run_closed or not EvoManager.mutation_symbiosis:
-		return
-
-	var stable_band := (
-		epsilon_effective >= 0.12 # Bajado de 0.18
-		and epsilon_effective <= 0.45 # Subido de 0.40
-		and omega > 0.35
-		and UpgradeManager.level("accounting") >= 1
-	)
-
-	if stable_band and run_time > 900.0: # ~15 min
-		close_run(
-			"SIMBIOSIS",
-			"Cooperación sostenida entre estructura y biología"
-		)
-# =====================================================
-#  CHEQUEO FINAL DE PARASITISMO v0.8 helper
-func check_parasitism_final(_delta: float):
-	if run_closed or not EvoManager.mutation_parasitism:
-		return
-
-	# colapso por extracción sostenida
-	if BiosphereEngine.biomasa > 18.0 \
-	and omega < 0.22 \
-	and epsilon_effective > 0.45:
-		close_run(
-			"PARASITISMO",
-			"La biosfera drenó la estructura hasta el colapso"
-		)
-# =====================================================
-#  CHEQUEO FINAL DE RED MICELIAL v0.8 helper
-# =====================================================
-
-# =====================================================
-# CHEQUEO TRANSICIÓN RED MICELIAL A FASE B v0.8 helper
-# =====================================================
-
-func check_sporulation_trigger(_delta: float):
-	if run_closed or EvoManager.mutation_sporulation:
-		return
-
-	if not EvoManager.mutation_red_micelial or EvoManager.red_micelial_phase != 2:
-		return
-	if EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation:
-		return
-
-	var _structural_pressure := get_structural_pressure()
-
-	if (
-		epsilon_peak >= 0.75
-		and epsilon_effective <= 0.35
-		and omega <= 0.30
-		and BiosphereEngine.biomasa >= 10.0
-		and BiosphereEngine.hifas >= 12.0
-		and run_time >= 900.0
-	):
-		activate_sporulation()
-# =====================================================
-#  MODO HOMEOSTASIS v0.8
-# =====================================================
 func update_homeostasis_mode(delta: float):
-	# 1) El sistema intenta mantenerse
-	var n_struct := get_effective_structural_n()
-	var complexity_impact :float = n_struct / max(cached_mu, 1.0)
-	omega = 1.0 / max(1.0 + epsilon_effective * complexity_impact, 0.0001)
-	var stability :float = clamp(1.0 - epsilon_effective, 0.0, 1.0)
-	resilience_score += stability * delta
+	RunManager.update_homeostasis_mode(delta)
 
-	# 2) Perturbaciones externas
-	disturbance_timer += delta
-	if disturbance_timer >= DISTURBANCE_INTERVAL:
-		disturbance_timer = 0.0
-		trigger_disturbance()
-	# Homeostasis intenta corregir sola
-	epsilon_runtime = lerp(
-		epsilon_runtime,
-		epsilon_effective,
-		0.05 * delta
-	)
 func trigger_disturbance():
-	var shock := randf_range(0.1, 0.4)
-	if LegacyManager.last_run_ending == "ALLOSTASIS" and randf() < 0.2:
-		shock = randf_range(0.8, 1.0) # Extreme shock possibility internally
-		add_lap("🌋 SHOCK EXTREMO DETECTADO — ε +" + str(snapped(shock, 0.01)))
-	else:
-		add_lap("🌪️ Perturbación externa — shock ε +" + str(snapped(shock, 0.01)))
-		
-	epsilon_runtime += shock
-	is_recovering_from_shock = true
-func check_perfect_homeostasis():
-	if not post_homeostasis or AchievementManager.achievement_homeostasis_perfect:
-		return
+	RunManager.trigger_disturbance()
 
-	if resilience_score >= 300.0:
-		AchievementManager.achievement_homeostasis_perfect = true
-		add_lap("🏆 LOGRO — HOMEOSTASIS PERFECTA")
-		show_system_toast("LOGRO — HOMEOSTASIS PERFECTA: resiliencia máxima")
-		legacy_homeostasis = true
-		post_homeostasis = false
+func check_perfect_homeostasis():
+	RunManager.check_perfect_homeostasis()
 # =====================================================
 #  TOOLTIP HIPERASIMILACIÓN v0.8
 # =====================================================
@@ -1081,9 +862,9 @@ func _build_run_json(meta: Dictionary) -> Dictionary:
 		"accounting_level": UpgradeManager.level("accounting")
 	},
 	"post_final": {
-		"homeostasis_mode": homeostasis_mode,
-		"resilience_score": resilience_score,
-		"legacy_homeostasis": legacy_homeostasis
+		"homeostasis_mode": RunManager.homeostasis_mode,
+		"resilience_score": RunManager.resilience_score,
+		"legacy_homeostasis": RunManager.legacy_homeostasis
 	},
 	"achievements": AchievementManager.get_achievements_dict(),
 	"legacy": {
@@ -1216,17 +997,7 @@ func reset_local_state():
 	AchievementManager.achievement_millionaire = false
 	AchievementManager.achievement_fragile_balance = false
 	AchievementManager.achievement_insatiable_parasite = false
-	run_closed = false
-	final_route = "NONE"
-	final_reason = ""
-	homeostasis_mode = false
-	post_homeostasis = false
-	resilience_score = 0.0
-	homeostasis_timer = 0.0
-	disturbances_survived = 0
-	is_recovering_from_shock = false
-	extreme_shock_survived = false
-	legacy_homeostasis = false
+	RunManager.reset()
 	
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = ""
@@ -1237,12 +1008,12 @@ func _ready():
 	UIManager.setup(ui_root)
 	LogManager.show_all_laps = false
 	update_lap_toggle_button()
-	if legacy_homeostasis:
+	if RunManager.legacy_homeostasis:
 		omega_min = max(omega_min, 0.15)
 	
 	if LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS":
-		homeostasis_mode = true
-		post_homeostasis = true # Allows perfect homeostasis legacy to proc, or just perturbations
+		RunManager.homeostasis_mode = true
+		RunManager.post_homeostasis = true # Allows perfect homeostasis legacy to proc, or just perturbations
 		
 	update_lap_toggle_button()
 	if UIManager.export_run_button:
@@ -1251,7 +1022,8 @@ func _ready():
 		
 	update_ui()
 
-	# Inicializar AchievementManager
+	# Inicializar managers con referencia a main
+	RunManager.set_main(self)
 	AchievementManager.set_main(self)
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
@@ -1339,16 +1111,16 @@ func _ready():
 
 	# --- EMERGENCY RE-OPEN (v0.8.43) ---
 	# Si la run se cerró por el bug del Legado, la reabrimos
-	if run_closed and final_route == "ESPORULACION TOTAL" and not EvoManager.mutation_sporulation:
-		run_closed = false
-		final_route = "NONE"
-		final_reason = ""
+	if RunManager.run_closed and RunManager.final_route == "ESPORULACION TOTAL" and not EvoManager.mutation_sporulation:
+		RunManager.run_closed = false
+		RunManager.final_route = "NONE"
+		RunManager.final_reason = ""
 		print("🛠️ Recuperando run cerrada por bug")
 
 	# --- RECUPERACIÓN DE ESTADO PENDIENTE (v0.8.8) ---
 	# Si cargamos una partida donde la mutación está activa pero no se eligió rama
 	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE:
-		if is_instance_valid(evo_choice_panel) and not run_closed:
+		if is_instance_valid(evo_choice_panel) and not RunManager.run_closed:
 			dimmer.visible = true
 			evo_choice_panel.visible = true
 			print("🚨 Recuperando elección de rama pendiente")
@@ -1500,12 +1272,12 @@ func _on_logic_tick():
 	# --- SHOCK TRACKING ---
 	if epsilon_effective > 0.8:
 		# Si superamos 0.8 y el juego no se ha cerrado por colapso, significa que estamos sobreviviendo un shock extremo
-		extreme_shock_survived = true
+		RunManager.extreme_shock_survived = true
 		
-	if is_recovering_from_shock and get_en_banda_homeostatica():
-		disturbances_survived += 1
-		is_recovering_from_shock = false
-		add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
+	if RunManager.is_recovering_from_shock and get_en_banda_homeostatica():
+		RunManager.disturbances_survived += 1
+		RunManager.is_recovering_from_shock = false
+		add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(RunManager.disturbances_survived))
 
 	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
 	if EvoManager.mutation_homeostasis:
@@ -1519,9 +1291,9 @@ func _on_logic_tick():
 	if EvoManager.mutation_red_micelial:
 		EvoManager.check_red_micelial_transition(self)
 		EvoManager.update_primordio(self)  # Timer del ciclo biológico
-	if homeostasis_mode:
+	if RunManager.homeostasis_mode:
 		update_homeostasis_mode(dt)
-	if post_homeostasis:
+	if RunManager.post_homeostasis:
 		check_perfect_homeostasis()
 	if EvoManager.mutation_parasitism:
 		check_parasitism_final(dt)
@@ -1542,7 +1314,7 @@ func _on_ui_tick():
 	_update_evolution_progress_bar()
 
 func _update_evolution_progress_bar():
-	if run_closed or not is_instance_valid(evolution_bar):
+	if RunManager.run_closed or not is_instance_valid(evolution_bar):
 		evolution_bar.visible = false
 		return
 		
@@ -1551,8 +1323,8 @@ func _update_evolution_progress_bar():
 	var max_val := 60.0 # Default
 	
 	if EvoManager.mutation_homeostasis:
-		current_val = homeostasis_timer
-		max_val = HOMEOSTASIS_TIME_REQUIRED
+		current_val = RunManager.homeostasis_timer
+		max_val = RunManager.HOMEOSTASIS_TIME_REQUIRED
 		show_bar = true # Siempre visible si la ruta está activa
 			
 	# En el futuro podemos añadir aquí Simbiosis, Esporulación, etc.
@@ -1619,8 +1391,8 @@ func update_bifurcation_panel():
 		
 		# Feedback de cuenta regresiva
 		if EvoManager.mutation_homeostasis:
-			if homeostasis_timer > 0.1:
-				var ratio = min(homeostasis_timer / HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
+			if RunManager.homeostasis_timer > 0.1:
+				var ratio = min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
 				h_txt += "\n[color=#ffff00]Estabilizando... %d%%[/color][/center]" % int(ratio)
 			else:
 				h_txt += "\n[color=#555555]Iniciando estabilización...[/color][/center]"
@@ -1800,7 +1572,7 @@ func _on_btn_colonization_pressed() -> void:
 func _trigger_allostasis() -> void:
 	print("🟣 EVOLUCIÓN: ALLOSTASIS (TIER 2)")
 	EvoManager.activate_mutation("allostasis")
-	homeostasis_mode = false # Salimos de homeostasis pura
+	RunManager.homeostasis_mode = false # Salimos de homeostasis pura
 	
 	# Bonus de entrada
 	money += 50000.0
@@ -1861,7 +1633,7 @@ func _on_primordio_button_pressed() -> void:
 		LogManager.add("⚠️ Primordio no disponible — necesitás 60%% de micelio y Colonización activa", self)
 
 func _on_sporulation_final_pressed() -> void:
-	if run_closed: return
+	if RunManager.run_closed: return
 	
 	if EvoManager.nucleo_conciencia:
 		# FINAL: SINGULARIDAD MECÁNICA
@@ -2229,10 +2001,10 @@ func build_institution_panel_text() -> String:
 	t += build_genome_text()
 	t += build_mutation_status_text()
 
-	if homeostasis_mode:
+	if RunManager.homeostasis_mode:
 		t += "\n\n⚖️ HOMEOSTASIS MODE"
-		t += "\nResiliencia = %s" % snapped(resilience_score, 1)
-		t += "\nPerturbaciones cada %ds" % DISTURBANCE_INTERVAL
+		t += "\nResiliencia = %s" % snapped(RunManager.resilience_score, 1)
+		t += "\nPerturbaciones cada %ds" % RunManager.DISTURBANCE_INTERVAL
 
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
 		t += "\n⚠️ La red no puede estabilizarse localmente"
@@ -2349,7 +2121,7 @@ func update_ui():
 				btn_evolve.modulate = Color(1, 1, 1)
 
 	# Habilitar Export Run al cerrar la run
-	if run_closed and UIManager.export_run_button:
+	if RunManager.run_closed and UIManager.export_run_button:
 		UIManager.export_run_button.disabled = false
 		UIManager.export_run_button.text = "📤 Export run"
 
@@ -2381,8 +2153,8 @@ func build_genome_text() -> String:
 		t += "\n🦠 Ruta evolutiva: PARASITISMO"
 
 	# --- Final de run ---
-	if run_closed:
-		t += "\n\n🏁 FINAL ALCANZADO: " + final_route
+	if RunManager.run_closed:
+		t += "\n\n🏁 FINAL ALCANZADO: " + RunManager.final_route
 
 	return t
 func build_mutation_status_text() -> String:
@@ -2474,9 +2246,9 @@ func get_save_data() -> Dictionary:
 			"achievement_millionaire": AchievementManager.achievement_millionaire,
 			"achievement_fragile_balance": AchievementManager.achievement_fragile_balance,
 			"achievement_insatiable_parasite": AchievementManager.achievement_insatiable_parasite,
-			"run_closed": run_closed,
-			"final_route": final_route,
-			"final_reason": final_reason
+			"run_closed": RunManager.run_closed,
+			"final_route": RunManager.final_route,
+			"final_reason": RunManager.final_reason
 		},
 		"evolution": {
 			"genome": EvoManager.genome,
@@ -2498,11 +2270,11 @@ func get_save_data() -> Dictionary:
 			"micelio": BiosphereEngine.micelio
 		},
 		"homeostasis": {
-			"homeostasis_mode": homeostasis_mode,
-			"post_homeostasis": post_homeostasis,
-			"resilience_score": resilience_score,
-			"homeostasis_timer": homeostasis_timer,
-			"legacy_homeostasis": legacy_homeostasis
+			"homeostasis_mode": RunManager.homeostasis_mode,
+			"post_homeostasis": RunManager.post_homeostasis,
+			"resilience_score": RunManager.resilience_score,
+			"homeostasis_timer": RunManager.homeostasis_timer,
+			"legacy_homeostasis": RunManager.legacy_homeostasis
 		},
 		"laps": LogManager.get_lap_array()
 	}
@@ -2552,9 +2324,9 @@ func _apply_save_data(data: Dictionary):
 		AchievementManager.achievement_millionaire = f.get("achievement_millionaire", AchievementManager.achievement_millionaire)
 		AchievementManager.achievement_fragile_balance = f.get("achievement_fragile_balance", AchievementManager.achievement_fragile_balance)
 		AchievementManager.achievement_insatiable_parasite = f.get("achievement_insatiable_parasite", AchievementManager.achievement_insatiable_parasite)
-		run_closed = f.get("run_closed", run_closed)
-		final_route = f.get("final_route", final_route)
-		final_reason = f.get("final_reason", final_reason)
+		RunManager.run_closed = f.get("run_closed", RunManager.run_closed)
+		RunManager.final_route = f.get("final_route", RunManager.final_route)
+		RunManager.final_reason = f.get("final_reason", RunManager.final_reason)
 
 	if data.has("evolution"):
 		var ev = data.evolution
@@ -2583,11 +2355,11 @@ func _apply_save_data(data: Dictionary):
 
 	if data.has("homeostasis"):
 		var h = data.homeostasis
-		homeostasis_mode = h.get("homeostasis_mode", homeostasis_mode)
-		post_homeostasis = h.get("post_homeostasis", post_homeostasis)
-		resilience_score = h.get("resilience_score", resilience_score)
-		homeostasis_timer = h.get("homeostasis_timer", homeostasis_timer)
-		legacy_homeostasis = h.get("legacy_homeostasis", legacy_homeostasis)
+		RunManager.homeostasis_mode = h.get("homeostasis_mode", RunManager.homeostasis_mode)
+		RunManager.post_homeostasis = h.get("post_homeostasis", RunManager.post_homeostasis)
+		RunManager.resilience_score = h.get("resilience_score", RunManager.resilience_score)
+		RunManager.homeostasis_timer = h.get("homeostasis_timer", RunManager.homeostasis_timer)
+		RunManager.legacy_homeostasis = h.get("legacy_homeostasis", RunManager.legacy_homeostasis)
 
 	# Cargar achievements
 	if data.has("achievements"):
@@ -2598,8 +2370,8 @@ func _apply_save_data(data: Dictionary):
 		LogManager.load_laps(data["laps"])
 
 	# Migración
-	if not run_closed and (EvoManager.mutation_hyperassimilation or EvoManager.mutation_sporulation):
-		run_closed = true
-		final_route = final_route if final_route != "" else "MUTACION_FINAL"
+	if not RunManager.run_closed and (EvoManager.mutation_hyperassimilation or EvoManager.mutation_sporulation):
+		RunManager.run_closed = true
+		RunManager.final_route = RunManager.final_route if RunManager.final_route != "" else "MUTACION_FINAL"
 
 	update_ui()
