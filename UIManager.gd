@@ -283,7 +283,7 @@ func build_evo_checklist(main: Node) -> String:
 		t += "[b]Objetivo: Integración Mecánica[/b]\n"
 
 		# Hito 1: Estabilidad
-		var eps_ok := main.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
+		var eps_ok: bool = main.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
 		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
 		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(main.epsilon_runtime, 0.01)) + ")[/color]\n"
 
@@ -305,7 +305,7 @@ func build_evo_checklist(main: Node) -> String:
 		t += "[b]Objetivo: Ciclo de Vida Biológico[/b]\n"
 
 		# Hito 1: Micelio
-		var mic_ok := BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
+		var mic_ok: bool = BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
 		ch = ok_color + "[x] " if mic_ok else fail_color + "[ ] "
 		t += ch + "Micelio desarrollado (>60%) (" + str(int(BiosphereEngine.micelio)) + "%) [/color]\n"
 
