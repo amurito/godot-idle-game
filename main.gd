@@ -148,18 +148,7 @@ const AUTOSAVE_INTERVAL := 30.0
 var unlocked_tree := false
 var unlocked_click_dominance := false
 var unlocked_delta_100 := false
-var achievement_homeostasis := false
-var achievement_homeostasis_perfect := false
-var achievement_hyperassimilation := false
-var achievement_symbiosis := false
-var achievement_red_micelial := false
-var achievement_sporulation := false
-var achievement_parasitism := false
-var achievement_millionaire := false
-var achievement_fragile_balance := false
-var achievement_insatiable_parasite := false
-
-var fragile_balance_timer := 0.0
+# Achievements moved to AchievementManager.gd
 
 
 # === GENES FÚNGICOS ===
@@ -363,19 +352,13 @@ func close_run(route: String, reason: String):
 	SaveManager.save_game(self)
 
 func unlock_hyperassimilation_achievement():
-	if achievement_hyperassimilation: return
-	achievement_hyperassimilation = true
-	show_system_toast("LOGRO: Hiperasimilación Desbloqueada")
+	AchievementManager.unlock_hyperassimilation_achievement()
 
 func unlock_sporulation_achievement():
-	if achievement_sporulation: return
-	achievement_sporulation = true
-	show_system_toast("LOGRO: Esporulación Irreversible")
+	AchievementManager.unlock_sporulation_achievement()
 
 func unlock_red_micelial_achievement():
-	if achievement_red_micelial: return
-	achievement_red_micelial = true
-	show_system_toast("LOGRO: Red Micelial Alcanzada")
+	AchievementManager.unlock_red_micelial_achievement()
 
 func enter_post_homeostasis():
 	post_homeostasis = true
@@ -938,11 +921,11 @@ func trigger_disturbance():
 	epsilon_runtime += shock
 	is_recovering_from_shock = true
 func check_perfect_homeostasis():
-	if not post_homeostasis or achievement_homeostasis_perfect:
+	if not post_homeostasis or AchievementManager.achievement_homeostasis_perfect:
 		return
 
 	if resilience_score >= 300.0:
-		achievement_homeostasis_perfect = true
+		AchievementManager.achievement_homeostasis_perfect = true
 		add_lap("🏆 LOGRO — HOMEOSTASIS PERFECTA")
 		show_system_toast("LOGRO — HOMEOSTASIS PERFECTA: resiliencia máxima")
 		legacy_homeostasis = true
@@ -1102,10 +1085,7 @@ func _build_run_json(meta: Dictionary) -> Dictionary:
 		"resilience_score": resilience_score,
 		"legacy_homeostasis": legacy_homeostasis
 	},
-	"achievements": {
-		"homeostasis": achievement_homeostasis,
-		"homeostasis_perfect": achievement_homeostasis_perfect
-	},
+	"achievements": AchievementManager.get_achievements_dict(),
 	"legacy": {
 	"type": "ESPORULATION",
 	"spores": BiosphereEngine.biomasa,
@@ -1172,28 +1152,9 @@ func check_achievements():
 			unlocked_delta_100 = true
 			add_lap("🏁 Logro — Δ$ 100 / s alcanzado")
 			show_system_toast("LOGRO — Δ$ 100 / s alcanzado")
-	
-	# Millonario de Esporas
-	if not achievement_millionaire and total_money_generated >= 1000000.0:
-		achievement_millionaire = true
-		add_lap("🏁 Logro — Millonario de Esporas ($1M acumulado)")
-		show_system_toast("LOGRO — Millonario de Esporas ($1M acumulado)")
-	
-	# Equilibrio Frágil
-	if not achievement_fragile_balance and epsilon_effective > 0.10 and epsilon_effective < 0.20:
-		fragile_balance_timer += LOGIC_TICK
-		if fragile_balance_timer >= 60.0:
-			achievement_fragile_balance = true
-			add_lap("🏁 Logro — Equilibrio Frágil (60s en ε óptimo)")
-			show_system_toast("LOGRO — Equilibrio Frágil")
-	else:
-		fragile_balance_timer = 0.0
-	
-	# Parásito Insaciable
-	if not achievement_insatiable_parasite and EvoManager.mutation_parasitism and BiosphereEngine.biomasa >= 20.0:
-		achievement_insatiable_parasite = true
-		add_lap("🏁 Logro — Parásito Insaciable (Biomasa 20 en Parasitismo)")
-		show_system_toast("LOGRO — Parásito Insaciable")
+
+	# Logros movidos a AchievementManager
+	AchievementManager.check_achievements()
 func show_system_toast(message: String) -> void:
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = message
@@ -1203,16 +1164,16 @@ func update_achievements_label():
 	if unlocked_tree: t += "✓ Árbol productivo completo\n"
 	if unlocked_click_dominance: t += "✓ CLICK domina el sistema\n"
 	if unlocked_delta_100: t += "✓ Δ$ ≥ 100 alcanzado\n"
-	if achievement_millionaire: t += "✓ Millonario de Esporas\n"
-	if achievement_fragile_balance: t += "✓ Equilibrio Frágil\n"
+	if AchievementManager.achievement_millionaire: t += "✓ Millonario de Esporas\n"
+	if AchievementManager.achievement_fragile_balance: t += "✓ Equilibrio Frágil\n"
 	t += "\n--- Logros evolutivos ---\n"
-	if achievement_homeostasis: t += "✓ HOMEOSTASIS\n"
-	if achievement_homeostasis_perfect: t += "✓ HOMEOSTASIS PERFECTA\n"
-	if achievement_symbiosis: t += "✓ SIMBIOSIS ESTRUCTURAL\n"
-	if achievement_hyperassimilation: t += "✓ HIPERASIMILACIÓN\n"
-	if achievement_red_micelial: t += "✓ RED MICELIAL\n"
-	if achievement_sporulation: t += "✓ ESPORULACIÓN\n"
-	if achievement_parasitism: t += "✓ PARASITISMO\n"
+	if AchievementManager.achievement_homeostasis: t += "✓ HOMEOSTASIS\n"
+	if AchievementManager.achievement_homeostasis_perfect: t += "✓ HOMEOSTASIS PERFECTA\n"
+	if AchievementManager.achievement_symbiosis: t += "✓ SIMBIOSIS ESTRUCTURAL\n"
+	if AchievementManager.achievement_hyperassimilation: t += "✓ HIPERASIMILACIÓN\n"
+	if AchievementManager.achievement_red_micelial: t += "✓ RED MICELIAL\n"
+	if AchievementManager.achievement_sporulation: t += "✓ ESPORULACIÓN\n"
+	if AchievementManager.achievement_parasitism: t += "✓ PARASITISMO\n"
 	if achievement_insatiable_parasite: t += "✓ PARÁSITO INSACIABLE\n"
 
 	if UIManager.system_achievements_label:
@@ -1245,15 +1206,15 @@ func reset_local_state():
 	unlocked_tree = false
 	unlocked_click_dominance = false
 	unlocked_delta_100 = false
-	achievement_homeostasis = false
-	achievement_homeostasis_perfect = false
-	achievement_hyperassimilation = false
-	achievement_symbiosis = false
-	achievement_red_micelial = false
-	achievement_sporulation = false
-	achievement_parasitism = false
-	achievement_millionaire = false
-	achievement_fragile_balance = false
+	AchievementManager.achievement_homeostasis = false
+	AchievementManager.AchievementManager.achievement_homeostasis_perfect = false
+	AchievementManager.achievement_hyperassimilation = false
+	AchievementManager.achievement_symbiosis = false
+	AchievementManager.achievement_red_micelial = false
+	AchievementManager.achievement_sporulation = false
+	AchievementManager.achievement_parasitism = false
+	AchievementManager.achievement_millionaire = false
+	AchievementManager.achievement_fragile_balance = false
 	achievement_insatiable_parasite = false
 	fragile_balance_timer = 0.0
 	run_closed = false
@@ -1290,6 +1251,9 @@ func _ready():
 		UIManager.export_run_button.text = "📤 Export run (disponible al cerrar run)"
 		
 	update_ui()
+
+	# Inicializar AchievementManager
+	AchievementManager.set_main(self)
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
 	if not UpgradeManager.states.has("trueque_allo"):
@@ -2508,9 +2472,9 @@ func get_save_data() -> Dictionary:
 			"unlocked_tree": unlocked_tree,
 			"unlocked_click_dominance": unlocked_click_dominance,
 			"unlocked_delta_100": unlocked_delta_100,
-			"achievement_millionaire": achievement_millionaire,
-			"achievement_fragile_balance": achievement_fragile_balance,
-			"achievement_insatiable_parasite": achievement_insatiable_parasite,
+			"achievement_millionaire": AchievementManager.achievement_millionaire,
+			"achievement_fragile_balance": AchievementManager.achievement_fragile_balance,
+			"achievement_insatiable_parasite": AchievementManager.achievement_insatiable_parasite,
 			"run_closed": run_closed,
 			"final_route": final_route,
 			"final_reason": final_reason
@@ -2586,9 +2550,9 @@ func _apply_save_data(data: Dictionary):
 		unlocked_tree = f.get("unlocked_tree", unlocked_tree)
 		unlocked_click_dominance = f.get("unlocked_click_dominance", unlocked_click_dominance)
 		unlocked_delta_100 = f.get("unlocked_delta_100", unlocked_delta_100)
-		achievement_millionaire = f.get("achievement_millionaire", achievement_millionaire)
-		achievement_fragile_balance = f.get("achievement_fragile_balance", achievement_fragile_balance)
-		achievement_insatiable_parasite = f.get("achievement_insatiable_parasite", achievement_insatiable_parasite)
+		AchievementManager.achievement_millionaire = f.get("achievement_millionaire", AchievementManager.achievement_millionaire)
+		AchievementManager.achievement_fragile_balance = f.get("achievement_fragile_balance", AchievementManager.achievement_fragile_balance)
+		AchievementManager.achievement_insatiable_parasite = f.get("achievement_insatiable_parasite", AchievementManager.achievement_insatiable_parasite)
 		run_closed = f.get("run_closed", run_closed)
 		final_route = f.get("final_route", final_route)
 		final_reason = f.get("final_reason", final_reason)
@@ -2625,6 +2589,10 @@ func _apply_save_data(data: Dictionary):
 		resilience_score = h.get("resilience_score", resilience_score)
 		homeostasis_timer = h.get("homeostasis_timer", homeostasis_timer)
 		legacy_homeostasis = h.get("legacy_homeostasis", legacy_homeostasis)
+
+	# Cargar achievements
+	if data.has("achievements"):
+		AchievementManager.load_achievements(data["achievements"])
 
 	# Bitácora de eventos
 	if data.has("laps"):

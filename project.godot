@@ -26,6 +26,7 @@ EvoManager="*res://EvoManager.gd"
 UIManager="*res://UIManager.gd"
 LogManager="*res://LogManager.gd"
 UpgradeManager="*res://UpgradeManager.gd"
+AchievementManager="*res://AchievementManager.gd"
 
 [editor]
 
