@@ -130,7 +130,7 @@ func check_symbiosis_final(_delta: float):
 	if run_closed or not EvoManager.mutation_symbiosis:
 		return
 
-	var stable_band := (
+	var stable_band: bool = (
 		main.epsilon_effective >= 0.12
 		and main.epsilon_effective <= 0.45
 		and main.omega > 0.35
@@ -156,7 +156,7 @@ func check_sporulation_trigger(_delta: float):
 	if EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation:
 		return
 
-	var _structural_pressure := main.get_structural_pressure()
+	var _structural_pressure: float = main.get_structural_pressure()
 
 	if (
 		main.epsilon_peak >= 0.75
@@ -170,7 +170,7 @@ func check_sporulation_trigger(_delta: float):
 
 # ==================== HOMEOSTASIS DINÁMICA ====================
 func update_homeostasis_mode(delta: float):
-	var n_struct := main.get_effective_structural_n()
+	var n_struct: float = main.get_effective_structural_n()
 	var complexity_impact: float = n_struct / max(main.cached_mu, 1.0)
 	main.omega = 1.0 / max(1.0 + main.epsilon_effective * complexity_impact, 0.0001)
 	var stability: float = clamp(1.0 - main.epsilon_effective, 0.0, 1.0)
