@@ -9,11 +9,7 @@ var fungi_ui: Control
 
 var reactor_visual: Node = null
 
-# --- PERSISTENCIA estructural ---
-# c₀: Valor base (1.4). fⁿ: Objetivo dinámico. cₙ: Estado actual.
-var persistence_dynamic: float = 1.4
-var persistence_base: float = 1.4
-
+# --- PERSISTENCIA ESTRUCTURAL (moved to StructuralModel.gd)
 # VARIABLES DE DINÁMICA ECONÓMICA (moved to EconomyManager)
 
 # NG+ Mente Colmena
@@ -23,10 +19,7 @@ var mente_colmena_timer := 0.0
 # NG+ Depredador
 var depredador_tick := 0.0
 
-# CONSTANTES DE MODELO
-const K_PERSISTENCE := 1.25
-const ALPHA_KAPPA := 0.55
-const COGNITIVE_MULTIPLIER := 0.05
+# CONSTANTES DE MODELO (moved to StructuralModel.gd)
 const CLICK_RATE := 1.0
 
 # OBSERVADORES DINÁMICOS (Caché por tick)
@@ -34,46 +27,20 @@ var cached_mu: float = 1.0
 var mu_structural: float = 1.0
 
 ## =====================================================
+# MÉTRICAS ESTRUCTURALES (moved to StructuralModel.gd)
 # =====================================================
-#  MÉTRICAS ESTRUCTURALES v0.7.2
-# =====================================================
-
-var epsilon_runtime: float = 0.0
-var epsilon_peak: float = 0.0
 
 var delta_per_sec: float = 0.0
-
-var baseline_delta_structural: float = 0.0
-var last_stable_structural_upgrades: int = 0
 
 var pressure := 0.0
 var pressure_structural := 0.0
 
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
-# === ε DEBUG X FRAME  (v0.8.2) ===
-var epsilon_debug := false
-var epsilon_debug_throttle := 0.0
-const EPSILON_DEBUG_INTERVAL := 0.25  # segundos
-# Cooldown estructural (clave para ε_runtime)
-var structural_cooldown := 0.0
-const STRUCTURAL_COOLDOWN_TIME := 8.0
-var omega := 1.0
-var omega_min := 1.0
-var institution_accounting_unlocked := false
 
 # === ε PASIVO (v0.8) ===
 const EPS_PASSIVE_SCALE := 0.24
 const PASSIVE_RATIO_START := 0.60
-# === ε desglosado (HUD / debug) ===
-var epsilon_active: float = 0.0
-var epsilon_passive: float = 0.0
-var epsilon_complex: float = 0.0
-
-# Estado de run movido a RunManager.gd
-
-# =====================================================
-var epsilon_effective := 0.0
 
 
 # =============== SESIÓN / LAB MODE ===================
@@ -86,13 +53,7 @@ var show_final_details := false  # ya lo tenías; lo usamos para controlar detal
 
 var RUN_EXPORT_PATH := OS.get_user_data_dir() + "/IDLE_Fungi/runs"
 
-# ========== DESBLOQUEO PROGRESIVO DE FÓRMULA =========
-
-var unlocked_d := false
-var unlocked_md := false
-var unlocked_e := false
-var unlocked_me := false
-
+# ========== DESBLOQUEO PROGRESIVO DE FÓRMULA (moved to StructuralModel.gd)
 
 # === VERSION INFO ===
 const VERSION := "0.8.2"
@@ -164,15 +125,7 @@ func get_delta_total() -> float:
 	return EconomyManager.get_delta_total()
 
 func get_mu_structural_factor() -> float:
-	var n = UpgradeManager.level("cognitive")
-	var mu_base := 1.0
-	if n > 0:
-		mu_base = 1.0 + log(1.0 + float(n)) * 0.08
-
-	var mu_fungi := BiosphereEngine.get_mu_fungi_multiplier(EvoManager.mutation_hyperassimilation, EvoManager.mutation_homeostasis)
-	var mu_total = mu_base * mu_fungi
-
-	return mu_total
+	return StructuralModel.get_mu_structural_factor()
 
 
 
@@ -222,11 +175,10 @@ func activate_homeostasis():
 var persistence_inertia := 1.0
 
 func apply_flexibility_modifier(factor: float):
-	omega *= factor
-	omega_min *= factor
+	StructuralModel.apply_flexibility_modifier(factor)
 
 func enable_persistence_inertia(factor: float):
-	persistence_inertia = factor
+	StructuralModel.enable_persistence_inertia(factor)
 
 func apply_symbiotic_stabilization():
 	# más flexibilidad estructural
@@ -289,10 +241,10 @@ func get_active_passive_breakdown() -> Dictionary:
 
 
 func get_n_log() -> float:
-	return 1.0 + log(1.0 + float(get_structural_upgrades()))
+	return StructuralModel.get_n_log()
 
 func get_n_power() -> float:
-	return pow(float(get_structural_upgrades()) + 1.0, 0.35)
+	return StructuralModel.get_n_power()
 
 
 # =====================================================
@@ -302,20 +254,7 @@ func f_n_alpha(n: float) -> float:
 	return 1.0 / (1.0 + exp(-0.35 * (n - 6.0)))
 
 func apply_dynamic_persistence(delta: float) -> void:
-	var n_struct := float(get_structural_upgrades())
-
-	# valor teórico esperado
-	var target := get_persistence_target()
-
-	# peso sigmoide — transición suave
-	var a := f_n_alpha(n_struct)
-
-	# converge sin overshoot
-	persistence_dynamic = lerp(
-	persistence_dynamic,
-	target,
-	clamp(a * delta * 0.4 * persistence_inertia, 0.0, 0.25)
-)
+	StructuralModel.apply_dynamic_persistence(delta)
 
 
 # === Persistencia estructural ===
@@ -324,13 +263,10 @@ func apply_dynamic_persistence(delta: float) -> void:
 # cₙ  → estado dinámico observado
 
 func get_persistence_target() -> float:
-	var n_struct := get_effective_structural_n()
-	var k_eff := get_k_eff()
-	return EcoModel.get_persistence_target(persistence_base, k_eff, n_struct)
+	return StructuralModel.get_persistence_target()
 
 func get_cognitive_mu() -> float:
-	var mu = 1.0 + log(1.0 + float(UpgradeManager.level("cognitive"))) * COGNITIVE_MULTIPLIER
-	return snapped(mu, 0.01)
+	return StructuralModel.get_cognitive_mu()
 
 
 # =====================================================
@@ -339,61 +275,28 @@ func get_cognitive_mu() -> float:
 # =====================================================
 
 func compute_structural_model() -> Dictionary:
-	var n_struct := get_effective_structural_n()
+	return StructuralModel.compute_structural_model()
 
-
-	# k ajustado por μ
-	var k_eff := get_k_eff()
-
-	# fⁿ(teórico) — sigue alineado al target de persistencia
-	var f_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n_struct, 1.0)))
-
-	# cₙ(modelo) — misma estructura formal
-	var c_n_model := persistence_base * pow(k_eff, (1.0 - 1.0 / max(n_struct, 1.0)))
-
-	# ε(modelo) = | fⁿ − cₙ |
-	var eps_model := float(abs(f_n_model - c_n_model))
-
-	return {
-		"f_n": f_n_model,
-		"c_n_model": c_n_model,
-		"eps_model": eps_model,
-		"k": K_PERSISTENCE,
-		"k_eff": k_eff,
-		"n": n_struct,
-		"n_log": get_n_log(),
-		"n_power": get_n_power()
-	}
-# ε(modelo) — distancia estructural del modelo (no runtime)
 func get_structural_epsilon() -> float:
-	var m := compute_structural_model()
-	return m.eps_model
+	return StructuralModel.get_structural_epsilon()
+
 func get_k_eff() -> float:
-	var mu := cached_mu
-	var n_struct := get_effective_structural_n()
-	var alpha := EcoModel.get_alpha(int(n_struct))
-	var k_base := EcoModel.get_k_structural(int(n_struct))
-	return EcoModel.get_k_eff(k_base, alpha, mu)
+	return StructuralModel.get_k_eff()
 
 func register_structural_baseline():
-	baseline_delta_structural = delta_per_sec
-	last_stable_structural_upgrades = get_structural_upgrades()
+	StructuralModel.register_structural_baseline()
 
 func get_omega(epsilon: float, k_mu: float, n: float) -> float:
-	var denom := 1.0 + epsilon * k_mu * n
-	return 1.0 / max(denom, 0.0001)
+	return StructuralModel.get_omega(epsilon, k_mu, n)
 
 # -----------------------------------------------------
 #  RUNTIME — contraste observacional (secundario)
 # -----------------------------------------------------
 func compute_structural_runtime() -> float:
-	return persistence_dynamic
+	return StructuralModel.compute_structural_runtime()
 
-
-
-# Alias estable — ahora SOLO devuelve el modelo
 func update_structural_hud_model_block() -> Dictionary:
-	return compute_structural_model()
+	return StructuralModel.update_structural_hud_model_block()
 
 # =====================================================
 #  CAPITAL COGNITIVO (μ) — v0.7
@@ -411,30 +314,16 @@ func _on_ToggleLapViewButton_pressed():
 #====================================
 # INSTITUCIONES V0.8
 func get_structural_pressure() -> float:
-	return EcoModel.get_structural_pressure(epsilon_effective, epsilon_peak, get_structural_upgrades(), get_accounting_effect())
-#====================================
-# CAPITAL COGNITIVO EFECTIVO (n ajustado por contabilidad) v0.8
+	return StructuralModel.get_structural_pressure()
+
 func get_accounting_effect() -> float:
-	var base = float(UpgradeManager.level("accounting")) * 0.05
-	return base + mutation_accounting_bonus + (0.05 if RunManager.legacy_homeostasis else 0.0)
+	return StructuralModel.get_accounting_effect()
 
 func get_structural_upgrades() -> int:
-	var total = 0
-	# Suma literal de todos los niveles para complejizar n (c_n y mu estructural)
-	# REMOVIDO: click y click_mult ya no afectan a la estructura (n)
-	total += UpgradeManager.level("auto")
-	total += UpgradeManager.level("auto_mult")
-	total += UpgradeManager.level("trueque")
-	total += UpgradeManager.level("trueque_net")
-	total += UpgradeManager.level("trueque_allo") * 3 # Masivo impacto estructural
-	total += UpgradeManager.level("cognitive")
-	total += UpgradeManager.level("accounting")
-	total += UpgradeManager.level("specialization")
-	if persistence_upgrade_unlocked: total += 5 # Bono por hito de persistencia
-	return total
+	return StructuralModel.get_structural_upgrades()
 
 func get_effective_structural_n() -> float:
-	return EcoModel.get_effective_structural_n(get_structural_upgrades(), UpgradeManager.level("accounting"))
+	return StructuralModel.get_effective_structural_n()
 
 func purchase_upgrade(id: String) -> void:
 	var cost = UpgradeManager.cost(id)
@@ -828,23 +717,14 @@ func update_achievements_label():
 # =====================================================
 func reset_local_state():
 	EconomyManager.reset()
-	persistence_dynamic = 1.4
-	persistence_base = 1.4
-	epsilon_runtime = 0.0
-	epsilon_peak = 0.0
+	StructuralModel.reset()
 	delta_per_sec = 0.0
 	run_time = 0.0
-	omega = 1.0
-	omega_min = 1.0
-	unlocked_d = false
-	unlocked_md = false
-	unlocked_e = false
-	unlocked_me = false
 	unlocked_tree = false
 	unlocked_click_dominance = false
 	unlocked_delta_100 = false
 	AchievementManager.achievement_homeostasis = false
-	AchievementManager.AchievementManager.achievement_homeostasis_perfect = false
+	AchievementManager.achievement_homeostasis_perfect = false
 	AchievementManager.achievement_hyperassimilation = false
 	AchievementManager.achievement_symbiosis = false
 	AchievementManager.achievement_red_micelial = false
@@ -882,6 +762,7 @@ func _ready():
 	RunManager.set_main(self)
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
+	StructuralModel.set_main(self)
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
 	if not UpgradeManager.states.has("trueque_allo"):

@@ -29,6 +29,7 @@ UpgradeManager="*res://UpgradeManager.gd"
 AchievementManager="*res://AchievementManager.gd"
 RunManager="*res://RunManager.gd"
 EconomyManager="*res://EconomyManager.gd"
+StructuralModel="*res://StructuralModel.gd"
 
 [editor]
 
