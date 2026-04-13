@@ -9,21 +9,12 @@ var fungi_ui: Control
 
 var reactor_visual: Node = null
 
-var money: float = 0.0
-
 # --- PERSISTENCIA estructural ---
 # c₀: Valor base (1.4). fⁿ: Objetivo dinámico. cₙ: Estado actual.
 var persistence_dynamic: float = 1.4
 var persistence_base: float = 1.4
 
-# VARIABLES DE DINÁMICA ECONÓMICA (pueden ser modificadas por mutaciones)
-var trueque_base_income := 8.0
-var trueque_efficiency := 0.75
-var mutation_auto_factor := 1.0
-var mutation_trueque_factor := 1.0
-var mutation_accounting_bonus := 0.0
-var time_since_last_click := 0.0
-var parasitism_corrosion := 1.0 # 1.0 -> 0.0 (Colapso total)
+# VARIABLES DE DINÁMICA ECONÓMICA (moved to EconomyManager)
 
 # NG+ Mente Colmena
 var mente_colmena_active := false
@@ -51,7 +42,6 @@ var epsilon_runtime: float = 0.0
 var epsilon_peak: float = 0.0
 
 var delta_per_sec: float = 0.0
-var total_money_generated: float = 0.0
 
 var baseline_delta_structural: float = 0.0
 var last_stable_structural_upgrades: int = 0
@@ -156,117 +146,22 @@ var unlocked_delta_100 := false
 # =====================================================
 
 func get_click_power() -> float:
-	var base := UpgradeManager.value("click")
-	# LEGADO: Impulso Manual (Base 1.0 -> 2.0)
-	if LegacyManager.get_buff_value("impulso_manual"):
-		base *= 2.0
-		
-	var power := EcoModel.get_click_power(
-		base, 
-		UpgradeManager.value("click_mult"), 
-		persistence_dynamic, 
-		cached_mu
-	)
-	
-	# LEGADO: Sincronía Total (Beta afecta al click)
-	if LegacyManager.get_buff_value("sincronia_total"):
-		power *= BiosphereEngine.get_biomass_beta()
-		
-	# Buffs de Mutación (Rutas)
-	if EvoManager.mutation_symbiosis:
-		power *= 2.5
-	if EvoManager.mutation_red_micelial:
-		power *= 0.5
-	if EvoManager.mutation_hyperassimilation:
-		power *= 10.0 # RUSH DE CLICK EXTREMO
-		
-	if LegacyManager.get_buff_value("aura_dorada"):
-		power *= 1.5 # Aura Dorada (Bonus permanente)
-
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		power *= 2.0 # Semilla Cósmica (Bonus permanente)
-		
-	# Corrosión Parasitaria (Converge a 0)
-	if EvoManager.mutation_parasitism:
-		power *= parasitism_corrosion
-		
-	return power
+	return EconomyManager.get_click_power()
 
 func get_auto_income_effective() -> float:
-	var auto_mult := UpgradeManager.value("auto_mult") * mutation_auto_factor
-	
-	# LEGADO: Inercia de Escala (Bonus md por contabilidad)
-	if LegacyManager.get_buff_value("inercia_escala"):
-		var acc_lvl = UpgradeManager.level("accounting")
-		auto_mult *= (1.0 + acc_lvl * 0.05)
-		
-	var effective := EcoModel.get_auto_income_effective(
-		UpgradeManager.value("auto"), 
-		auto_mult, 
-		UpgradeManager.value("specialization"), 
-		cached_mu, 
-		BiosphereEngine.get_biomass_beta(), 
-		UpgradeManager.level("accounting")
-	)
-	
-	# ALLOSTASIS: Impulso Metabólico Adaptativo (v0.9)
-	if EvoManager.mutation_allostasis:
-		effective *= 5.0
-		
-	return effective
+	return EconomyManager.get_auto_income_effective()
 
 func get_trueque_raw() -> float:
-	return UpgradeManager.value("trueque")
+	return EconomyManager.get_trueque_raw()
 
 func get_trueque_income_effective() -> float:
-	var allo_mult = UpgradeManager.value("trueque_allo") if UpgradeManager.level("trueque_allo") > 0 else 1.0
-	return EcoModel.get_trueque_income_effective(
-		get_trueque_raw(), 
-		UpgradeManager.value("trueque_net") * mutation_trueque_factor * allo_mult, 
-		cached_mu, 
-		BiosphereEngine.get_biomass_beta(), 
-		UpgradeManager.level("accounting")
-	)
+	return EconomyManager.get_trueque_income_effective()
 
 func get_passive_total() -> float:
-	var total := get_auto_income_effective() + get_trueque_income_effective()
-	
-	# LEGADO: Redirección de Energía (10% click a pasivo)
-	if LegacyManager.get_buff_value("redireccion_energia"):
-		total += get_click_power() * 0.10
-		
-	# Buffs de Mutación (Rutas)
-	if EvoManager.mutation_symbiosis:
-		total *= 0.5
-	if EvoManager.mutation_red_micelial:
-		total *= 2.5
-	if EvoManager.mutation_hyperassimilation:
-		total *= 0.25 # Sacrifica el pasivo por el núcleo
-	if EvoManager.mutation_homeostasis:
-		total *= 1.5 # Orden Administrativa
-	if EvoManager.mutation_parasitism:
-		total *= 1.2 # Crecimiento Parásito inicial
-		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
-		
-	if LegacyManager.get_buff_value("aura_dorada"):
-		total *= 1.5 # Aura Dorada (Bonus permanente)
-
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		total *= 2.0 # Semilla Cósmica (Bonus permanente)
-
-	if LegacyManager.get_buff_value("mente_colmena"):
-		total *= 3.0 # IA Automática (Bonus permanente)
-		
-	# Mult por Rama Evolutiva (Nodos Finales DLC)
-	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		total *= 2.5
-	elif EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		pass
-		
-	return total
+	return EconomyManager.get_passive_total()
 
 func get_delta_total() -> float:
-	return get_click_power() + get_passive_total()
+	return EconomyManager.get_delta_total()
 
 func get_mu_structural_factor() -> float:
 	var n = UpgradeManager.level("cognitive")
@@ -379,46 +274,13 @@ func update_click_stats_panel() -> void:
 # =====================================================
 
 func get_dominant_term() -> String:
-	var p := get_click_power()
-	var d := get_auto_income_effective()
-	var e := get_trueque_income_effective()
-	var m: float = float(max(max(p, d), e))
-
-	if m == p: return "CLICK domina el sistema"
-	if m == d: return "Trabajo Manual domina el sistema"
-	return "Trueque domina el sistema"
-
+	return EconomyManager.get_dominant_term()
 
 func get_contribution_breakdown() -> Dictionary:
-	var push := get_click_power() * CLICK_RATE
-	var d := get_auto_income_effective()
-	var e := get_trueque_income_effective()
-
-	var total := push + d + e
-	if total == 0: total = 0.00001
-
-	return {
-		"click": push / total * 100.0,
-		"d": d / total * 100.0,
-		"e": e / total * 100.0,
-		"total": total
-	}
-
+	return EconomyManager.get_contribution_breakdown()
 
 func get_active_passive_breakdown() -> Dictionary:
-	var push := get_click_power() * CLICK_RATE
-	var passive := get_auto_income_effective() + get_trueque_income_effective()
-
-	var total := push + passive
-	if total == 0: total = 0.00001
-
-	return {
-		"activo": push / total * 100.0,
-		"pasivo": passive / total * 100.0,
-		"push_abs": push,
-		"passive_abs": passive,
-		"total": total
-	}
+	return EconomyManager.get_active_passive_breakdown()
 
 
 # =====================================================
@@ -576,9 +438,9 @@ func get_effective_structural_n() -> float:
 
 func purchase_upgrade(id: String) -> void:
 	var cost = UpgradeManager.cost(id)
-	if money >= cost:
-		if UpgradeManager.buy(id, money):
-			money -= cost
+	if EconomyManager.money >= cost:
+		if UpgradeManager.buy(id, EconomyManager.money):
+			EconomyManager.money -= cost
 			_on_upgrade_bought_actions(id)
 			update_ui()
 			add_lap("Comprado: " + UpgradeManager.get_def(id).label)
@@ -965,18 +827,12 @@ func update_achievements_label():
 #  CICLO DE VIDA
 # =====================================================
 func reset_local_state():
-	money = 0.0
+	EconomyManager.reset()
 	persistence_dynamic = 1.4
 	persistence_base = 1.4
-	trueque_base_income = 8.0
-	trueque_efficiency = 0.75
-	mutation_auto_factor = 1.0
-	mutation_trueque_factor = 1.0
-	mutation_accounting_bonus = 0.0
 	epsilon_runtime = 0.0
 	epsilon_peak = 0.0
 	delta_per_sec = 0.0
-	total_money_generated = 0.0
 	run_time = 0.0
 	omega = 1.0
 	omega_min = 1.0
@@ -1025,6 +881,7 @@ func _ready():
 	# Inicializar managers con referencia a main
 	RunManager.set_main(self)
 	AchievementManager.set_main(self)
+	EconomyManager.set_main(self)
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
 	if not UpgradeManager.states.has("trueque_allo"):
@@ -1126,9 +983,9 @@ func _ready():
 			print("🚨 Recuperando elección de rama pendiente")
 
 func on_reactor_click(epsilon_delta: float = 0.015):
-	time_since_last_click = 0.0
+	EconomyManager.time_since_last_click = 0.0
 	var power := get_click_power()
-	money += power
+	EconomyManager.money += power
 
 	# El click ahora genera un pequeño pico de estrés runtime (v0.8.2)
 	epsilon_runtime += epsilon_delta
@@ -1190,7 +1047,7 @@ func _on_logic_tick():
 	# NG+ Mente Colmena (Juego automático por IA fúngica)
 	if mente_colmena_active:
 		var sim_power = get_click_power() * 10.0 * dt
-		money += sim_power
+		EconomyManager.money += sim_power
 		epsilon_runtime += 0.008 * 10.0 * dt
 		if is_instance_valid(UIManager.big_click_button):
 			UIManager.big_click_button.set_active_delta(sim_power)
@@ -1250,11 +1107,11 @@ func _on_logic_tick():
 	if EvoManager.mutation_parasitism:
 		var drain_intensity = clamp(BiosphereEngine.biomasa / 15.0, 0.4, 3.0)
 		# Corrosión irreversible de la infraestructura
-		parasitism_corrosion = max(0.0, parasitism_corrosion - 0.002 * drain_intensity * dt)
+		EconomyManager.parasitism_corrosion = max(0.0, EconomyManager.parasitism_corrosion - 0.002 * drain_intensity * dt)
 		
 		# Drenaje de liquidez directa
 		var money_drain = BiosphereEngine.biomasa * 0.25 * dt
-		money = max(money - money_drain, 0.0)
+		EconomyManager.money = max(EconomyManager.money - money_drain, 0.0)
 
 	# 6) Genoma
 	update_genome()
@@ -1522,7 +1379,7 @@ func update_fungal_cycle_bar() -> void:
 				btn_f.text = "🔵 DISPERSAR ESPORAS (Final)"
 				btn_f.modulate = Color(0.4, 1.0, 0.2) # Verde neón
 			elif show_panspermia:
-				if money >= 100000.0:
+				if EconomyManager.money >= 100000.0:
 					btn_f.text = "🚀 PANSPERMIA NEGRA ($100k) (Final)"
 					btn_f.modulate = Color(0.8, 0.2, 1.0) # Magenta brillante
 				else:
@@ -1575,7 +1432,7 @@ func _trigger_allostasis() -> void:
 	RunManager.homeostasis_mode = false # Salimos de homeostasis pura
 	
 	# Bonus de entrada
-	money += 50000.0
+	EconomyManager.money += 50000.0
 	epsilon_runtime *= 0.5 # Reset de estrés para que pueda respirar
 	
 	add_lap("🛸 ERA ALOSTÁTICA ALCANZADA (Metabolismo > 200/s)")
@@ -1652,9 +1509,9 @@ func _on_sporulation_final_pressed() -> void:
 		
 		close_run("ESPORULACIÓN", "El ciclo biológico se ha completado. Millones de esporas han infectado el sistema. Legado fúngico asegurado.")
 		
-	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and money >= 100000.0:
+	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and EconomyManager.money >= 100000.0:
 		# FINAL SECRETO: PANSPERMIA NEGRA
-		money -= 100000.0
+		EconomyManager.money -= 100000.0
 		if not LegacyManager.get_buff_value("semilla_cosmica"):
 			LegacyManager.unlocked_legacies["semilla_cosmica"] = true
 			LegacyManager.save_legacy()
@@ -1918,10 +1775,8 @@ func unlock_accounting():
 #
 # =====================================================
 # 	Acumulación del histórico de dinero generado v0.7.2
-func update_economy(delta):
-	var delta_money = delta_per_sec * delta
-	money += delta_money
-	total_money_generated += delta_money
+func update_economy(delta: float):
+	EconomyManager.update_economy(delta)
 
 
 func format_time(t: float) -> String:
@@ -1977,7 +1832,7 @@ func on_institutions_unlocked():
 # =====================================================
 # UI HELPERS — v0.8
 func update_core_labels():
-	UIManager.update_money(money)
+	UIManager.update_money(EconomyManager.money)
 	if UIManager.formula_label:
 		UIManager.formula_label.text = build_formula_text()
 	
@@ -2056,7 +1911,7 @@ func _sync_reactor_color() -> void:
 func update_buttons():
 	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):
 		if btn.has_method("update_appearance"):
-			btn.update_appearance(money)
+			btn.update_appearance(EconomyManager.money)
 
 func is_major_lap(event: String) -> bool:
 	return LogManager.is_major(event)
@@ -2209,25 +2064,25 @@ func build_mutation_status_text() -> String:
 func get_save_data() -> Dictionary:
 	return {
 		"economy": {
-			"money": money,
+			"money": EconomyManager.money,
 			"persistence_dynamic": persistence_dynamic,
 			"persistence_base": persistence_base,
 			"persistence_upgrade_unlocked": persistence_upgrade_unlocked,
 			"memory_trigger_count": memory_trigger_count,
-			"parasitism_corrosion": parasitism_corrosion
+			"parasitism_corrosion": EconomyManager.parasitism_corrosion
 		},
 		"dynamic_vars": {
-			"trueque_base_income": trueque_base_income,
-			"trueque_efficiency": trueque_efficiency,
-			"mutation_auto_factor": mutation_auto_factor,
-			"mutation_trueque_factor": mutation_trueque_factor,
-			"mutation_accounting_bonus": mutation_accounting_bonus
+			"trueque_base_income": EconomyManager.trueque_base_income,
+			"trueque_efficiency": EconomyManager.trueque_efficiency,
+			"mutation_auto_factor": EconomyManager.mutation_auto_factor,
+			"mutation_trueque_factor": EconomyManager.mutation_trueque_factor,
+			"mutation_accounting_bonus": EconomyManager.mutation_accounting_bonus
 		},
 		"upgrades": UpgradeManager.serialize(),
 		"structural": {
 			"epsilon_runtime": epsilon_runtime,
 			"epsilon_peak": epsilon_peak,
-			"total_money_generated": total_money_generated,
+			"total_money_generated": EconomyManager.total_money_generated,
 			"run_time": run_time,
 			"baseline_delta_structural": baseline_delta_structural,
 			"omega": omega,
@@ -2285,26 +2140,26 @@ func _apply_save_data(data: Dictionary):
 
 	if data.has("economy"):
 		var e = data.economy
-		money = e.get("money", money)
+		EconomyManager.money = e.get("money", EconomyManager.money)
 		persistence_dynamic = e.get("persistence_dynamic", persistence_dynamic)
 		persistence_base = e.get("persistence_base", persistence_base)
 		persistence_upgrade_unlocked = e.get("persistence_upgrade_unlocked", persistence_upgrade_unlocked)
 		memory_trigger_count = e.get("memory_trigger_count", memory_trigger_count)
-		parasitism_corrosion = e.get("parasitism_corrosion", parasitism_corrosion)
-	
+		EconomyManager.parasitism_corrosion = e.get("parasitism_corrosion", EconomyManager.parasitism_corrosion)
+
 	if data.has("dynamic_vars"):
 		var d = data.dynamic_vars
-		trueque_base_income = d.get("trueque_base_income", trueque_base_income)
-		trueque_efficiency = d.get("trueque_efficiency", trueque_efficiency)
-		mutation_auto_factor = d.get("mutation_auto_factor", mutation_auto_factor)
-		mutation_trueque_factor = d.get("mutation_trueque_factor", mutation_trueque_factor)
-		mutation_accounting_bonus = d.get("mutation_accounting_bonus", mutation_accounting_bonus)
+		EconomyManager.trueque_base_income = d.get("trueque_base_income", EconomyManager.trueque_base_income)
+		EconomyManager.trueque_efficiency = d.get("trueque_efficiency", EconomyManager.trueque_efficiency)
+		EconomyManager.mutation_auto_factor = d.get("mutation_auto_factor", EconomyManager.mutation_auto_factor)
+		EconomyManager.mutation_trueque_factor = d.get("mutation_trueque_factor", EconomyManager.mutation_trueque_factor)
+		EconomyManager.mutation_accounting_bonus = d.get("mutation_accounting_bonus", EconomyManager.mutation_accounting_bonus)
 
 	if data.has("structural"):
 		var s = data.structural
 		epsilon_runtime = s.get("epsilon_runtime", epsilon_runtime)
 		epsilon_peak = s.get("epsilon_peak", epsilon_peak)
-		total_money_generated = s.get("total_money_generated", total_money_generated)
+		EconomyManager.total_money_generated = s.get("total_money_generated", EconomyManager.total_money_generated)
 		run_time = s.get("run_time", run_time)
 		baseline_delta_structural = s.get("baseline_delta_structural", baseline_delta_structural)
 		omega = s.get("omega", omega)

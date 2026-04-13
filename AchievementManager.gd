@@ -54,7 +54,7 @@ func check_achievements():
 		return
 
 	# Homeostasis (Tier 1)
-	if main.post_homeostasis and not achievement_homeostasis_perfect:
+	if RunManager.post_homeostasis and not achievement_homeostasis_perfect:
 		achievement_homeostasis_perfect = true
 		main.add_lap("🏁 Logro — Homeostasis Perfecta")
 		show_toast("LOGRO — Homeostasis Perfecta")
