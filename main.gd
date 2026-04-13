@@ -170,7 +170,6 @@ var fragile_balance_timer := 0.0
 # Movidas a EvoManager
 # ================= REFERENCIAS UI ===================
 # La mayoría movidas a UIManager.gd
-@onready var fungi_ui_scene = preload("res://fungi.tscn")
 @onready var ui_root = $UIRootContainer
 @onready var evolution_bar = $UIRootContainer/LeftPanel/CenterPanel/EvolutionProgressBar
 @onready var bottom_left_panel = $BottomLeftControls
@@ -325,13 +324,6 @@ func get_biomass_beta() -> float:
 #  GENOMA FÚNGICO — v0.1
 # ============================
 
-var genome := {
-	"hiperasimilacion": "dormido",
-	"parasitismo": "dormido",
-	"red_micelial": "dormido",
-	"esporulacion": "dormido",
-	"simbiosis": "dormido"
-}
 # =====================================================
 # EVOLUCIÓN BIOLÓGICA v0.8 DLC
 # =====================================================
@@ -768,9 +760,6 @@ func check_homeostasis_final(delta: float):
 		homeostasis_timer = max(homeostasis_timer - delta * 2.0, 0.0)
 		return
 
-	if run_closed or not EvoManager.mutation_homeostasis:
-		return
-
 	# Requisitos estrictos de Homeostasis
 	var banda_estricta = get_en_banda_homeostatica()
 	var flexibilidad_minima = omega > 0.25
@@ -962,7 +951,7 @@ func check_perfect_homeostasis():
 #  TOOLTIP HIPERASIMILACIÓN v0.8
 # =====================================================
 func get_hyperassimilation_tooltip() -> String:
-	if genome.hiperasimilacion == "bloqueado":
+	if EvoManager.genome.get("hiperasimilacion","dormido") == "bloqueado":
 		return "Bloqueada por HOMEOSTASIS o SIMBIOSIS"
 
 	if EvoManager.genome.hiperasimilacion == "activo":
@@ -1483,9 +1472,6 @@ func _on_logic_tick():
 			else:
 				close_run("DEPREDADOR DE REALIDADES", "El hongo ha consumido todo tu código fuente. Ya no existes. (+12 PL)")
 
-	# Timers de interacción
-	time_since_last_click += dt
-
 	# 1) Economía base
 	apply_dynamic_persistence(dt)
 	delta_per_sec = get_passive_total()
@@ -1557,8 +1543,6 @@ func _on_logic_tick():
 	if EvoManager.mutation_red_micelial:
 		EvoManager.check_red_micelial_transition(self)
 		EvoManager.update_primordio(self)  # Timer del ciclo biológico
-	if EvoManager.mutation_parasitism:
-		EvoManager.check_parasitism_final(self)
 	if homeostasis_mode:
 		update_homeostasis_mode(dt)
 	if post_homeostasis:
@@ -2511,7 +2495,6 @@ func update_ui():
 
 	update_lab_metrics()
 	update_lap_log()
-	update_buttons()	
 
 	if is_instance_valid(btn_evolve):
 		if EvoManager.mutation_parasitism:
