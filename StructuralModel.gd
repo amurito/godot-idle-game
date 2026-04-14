@@ -135,7 +135,7 @@ func get_structural_epsilon() -> float:
 	return m.eps_model
 
 func get_k_eff() -> float:
-	var mu := main.cached_mu
+	var mu :float = main.cached_mu
 	var n_struct := get_effective_structural_n()
 	var alpha := EcoModel.get_alpha(int(n_struct))
 	var k_base := EcoModel.get_k_structural(int(n_struct))

@@ -363,7 +363,7 @@ func _on_upgrade_bought_actions(id: String) -> void:
 				add_lap("💾 Memoria Operativa: c₀ incrementado un 25% (1.75)")
 		"accounting":
 			if UpgradeManager.level("accounting") == 1:
-				omega = max(omega, 0.45) # Subido de 0.38
+				StructuralModel.omega = max(StructuralModel.omega, 0.45) # Subido de 0.38
 				StructuralModel.omega_min = max(StructuralModel.omega_min, 0.45) # Limpiamos historial de errores previos
 				institutions_unlocked = true
 				StructuralModel.institution_accounting_unlocked = true
@@ -1003,7 +1003,7 @@ func _on_logic_tick():
 	# 8) Actualizar Omega (Flexibilidad)
 	# Buff: El capital cognitivo (cached_mu) ahora ayuda a manejar la complejidad (n_struct)
 	var complexity_impact: float	 = get_effective_structural_n() / max(cached_mu, 1.0)
-	omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
+	StructuralModel.omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
 		
 	# --- SHOCK TRACKING ---
 	if StructuralModel.epsilon_effective > 0.8:
@@ -1559,10 +1559,10 @@ func update_epsilon_runtime():
 	# =================================================
 	# 5) Ω (flexibilidad)
 	# =================================================
-	omega = EcoModel.get_omega(StructuralModel.epsilon_runtime, k_eff, n_struct)
+	StructuralModel.omega = EcoModel.get_omega(StructuralModel.epsilon_runtime, k_eff, n_struct)
 	if not EvoManager.mutation_homeostasis:
-		# Si StructuralModel.omegaes mejor que el mínimo, el mínimo se recupera lentamente (v0.8.9)
-		if StructuralModel.omega> StructuralModel.omega_min:
+		# Si omega es mejor que el mínimo, el mínimo se recupera lentamente (v0.8.9)
+		if StructuralModel.omega > StructuralModel.omega_min:
 			StructuralModel.omega_min = move_toward(StructuralModel.omega_min, StructuralModel.omega, 0.002) # Recuperación por alivio de estrés
 	else:
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.35)
@@ -1666,7 +1666,7 @@ func update_epsilon_sticky():
 	
 	var t := ""
 	t += "%s ε runtime = %s\n" % [UIManager.epsilon_flag(StructuralModel.epsilon_runtime, 0.30), snapped(StructuralModel.epsilon_runtime, 0.01)]
-	t += "Ω = %s (%s)\n" % [snapped(omega, 0.01), get_system_phase()]
+	t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase()]
 	t += "Presión = %s" % snapped(get_structural_pressure(), 1)
 
 	UIManager.epsilon_sticky_label.text = t
