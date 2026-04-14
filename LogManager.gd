@@ -140,7 +140,7 @@ func build_run_json(main: Control, meta: Dictionary) -> Dictionary:
 		"dominio": main.get_dominant_term(),
 		"laps": lap_events,
 		"evolution": {
-			"final_route": main.final_route,
+			"final_route": RunManager.final_route,
 			"mutation_flags": {
 				"homeostasis": EvoManager.mutation_homeostasis,
 				"hyperassimilation": EvoManager.mutation_hyperassimilation,

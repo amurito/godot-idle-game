@@ -88,7 +88,7 @@ func reset() -> void:
 
 func update_genome(main_node: Control):
 	self.main = main_node # Guardamos la referencia
-	if main.run_closed:
+	if RunManager.run_closed:
 		return
 
 	# --- BLOQUEO POR RED MICELIAL O PARASITISMO (Rutas Finales/Tier 1 bloqueado) ---
@@ -205,7 +205,7 @@ func update_genome(main_node: Control):
 	elif mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or not mutation_allostasis:
 		_set_genome_state("homeorhesis", "bloqueado")
 	elif LegacyManager.last_run_ending == "ALLOSTASIS":
-		if LegacyManager.get_buff_value("legado_homeorresis") or main.extreme_shock_survived:
+		if LegacyManager.get_buff_value("legado_homeorresis") or RunManager.extreme_shock_survived:
 			_set_genome_state("homeorhesis", "latente")
 		else:
 			_set_genome_state("homeorhesis", "dormido")
@@ -370,7 +370,7 @@ func activate_parasitism():
 	# El parasitismo no cierra la run inmediatamente, requiere un hito de drenaje o colapso.
 
 func check_parasitism_final(_main: Control):
-	if not mutation_parasitism or main.run_closed: return
+	if not mutation_parasitism or RunManager.run_closed: return
 	
 	# Condición de victoria por parasitismo: 1 PL (mínimo histórico)
 	if BiosphereEngine.biomasa >= 15.0 and EconomyManager.money < 1000.0:
