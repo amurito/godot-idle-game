@@ -127,7 +127,7 @@ func update_genome(main_node: Control):
 		_set_genome_state("hiperasimilacion", "dormido")
 
 	# PARASITISMO (Degeneración)
-	var inactivity_trigger = main.time_since_last_click > 120.0 and biomasa > 5.0 and epsilon_runtime > 0.35
+	var inactivity_trigger = EconomyManager.time_since_last_click > 120.0 and biomasa > 5.0 and epsilon_runtime > 0.35
 	var stagnation_trigger = run_time > 1800.0 and biomasa > 5.0 and (epsilon_runtime > 0.3 or not mutation_red_micelial) and LegacyManager.last_run_ending != "HOMEOSTASIS"
 	
 	if mutation_parasitism:
