@@ -172,24 +172,22 @@ func activate_homeostasis():
 
 # === EFECTOS DE MUTACIÓN ===
 
-var StructuralModel.persistence_inertia := 1.0
-
 func apply_flexibility_modifier(factor: float):
 	StructuralModel.apply_flexibility_modifier(factor)
 
-func enable_StructuralModel.persistence_inertia(factor: float):
-	StructuralModel.enable_StructuralModel.persistence_inertia(factor)
+func enable_persistence_inertia(factor: float):
+	StructuralModel.enable_persistence_inertia(factor)
 
 func apply_symbiotic_stabilization():
 	# más flexibilidad estructural
 	StructuralModel.omega = min(1.0, StructuralModel.omega * 1.25)
 
 	# amortiguación permanente del estrés
-	mutation_accounting_bonus = min(0.6, mutation_accounting_bonus + 0.15)
+	EconomyManager.mutation_accounting_bonus = min(0.6, EconomyManager.mutation_accounting_bonus + 0.15)
 
 	# mejora pasivo sin romper el modelo
-	trueque_efficiency *= 1.1
-	mutation_auto_factor *= 1.05
+	EconomyManager.trueque_efficiency *= 1.1
+	EconomyManager.mutation_auto_factor *= 1.05
 # =====================================================
 #  RUTA FINAL — detalles
 # =====================================================
@@ -335,7 +333,7 @@ func purchase_upgrade(id: String) -> void:
 			add_lap("Comprado: " + UpgradeManager.get_def(id).label)
 
 func _on_upgrade_bought_actions(id: String) -> void:
-	StructuralModel.structural_cooldown = STRUCTURAL_COOLDOWN_TIME
+	StructuralModel.structural_cooldown = StructuralModel.STRUCTURAL_COOLDOWN_TIME
 	match id:
 		"auto":
 			if not StructuralModel.unlocked_d:
@@ -915,7 +913,7 @@ func adjust_scroll_for_dlc():
 func _process(delta):
 	# Solo lo que NECESITA 60 Hz: tiempo de sesión y animaciones
 	run_time += delta
-	time_since_last_click += delta
+	EconomyManager.time_since_last_click += delta
 	_sync_reactor_color()
 
 func _on_logic_tick():
@@ -1342,7 +1340,7 @@ func _on_branch_selected(branch: int):
 	
 	if branch == EvoManager.RedBranch.COLONIZATION:
 		LogManager.add("🟢 RAMA ELEGIDA: COLONIZACIÓN INVASIVA", self)
-		mutation_auto_factor *= 1.5 
+		EconomyManager.mutation_auto_factor *= 1.5 
 	elif branch == EvoManager.RedBranch.SYMBIOSIS:
 		LogManager.add("🔵 RAMA ELEGIDA: SIMBIOSIS MECÁNICA", self)
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
@@ -1521,7 +1519,7 @@ func update_epsilon_runtime():
 
 	# DECAY DE ESTRÉS ACTIVO (v0.8.8)
 	# Si no clickeas por más de 3s, el ruido del potencial de click se disipa.
-	var decay_factor = clamp(1.0 - (time_since_last_click / 5.0), 0.0, 1.0)
+	var decay_factor = clamp(1.0 - (EconomyManager.time_since_last_click / 5.0), 0.0, 1.0)
 	StructuralModel.epsilon_active = (epsilon_prod + epsilon_comp) * decay_factor
 
 	# =================================================
@@ -1531,7 +1529,7 @@ func update_epsilon_runtime():
 
 	if passive_ratio > PASSIVE_RATIO_START:
 		var excess := passive_ratio - PASSIVE_RATIO_START
-		var rigidity := (1.0 - omega)
+		var rigidity := (1.0 - StructuralModel.omega)
 		var size_factor := log(1.0 + n_struct) * 0.45
 		StructuralModel.epsilon_passive = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - get_accounting_effect()) # Use function
 
@@ -1565,25 +1563,25 @@ func update_epsilon_runtime():
 	if not EvoManager.mutation_homeostasis:
 		# Si StructuralModel.omegaes mejor que el mínimo, el mínimo se recupera lentamente (v0.8.9)
 		if StructuralModel.omega> StructuralModel.omega_min:
-			StructuralModel.omega_min = move_toward(StructuralModel.omega_min, omega, 0.002) # Recuperación por alivio de estrés
+			StructuralModel.omega_min = move_toward(StructuralModel.omega_min, StructuralModel.omega, 0.002) # Recuperación por alivio de estrés
 	else:
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.35)
-	# CRÍTICO: StructuralModel.omega_min no solo registra el mínimo, PROTEGE el piso real de Ω
-	omega = max(omega, StructuralModel.omega_min)
-	
+	# CRÍTICO: omega_min no solo registra el mínimo, PROTEGE el piso real de Ω
+	StructuralModel.omega = max(StructuralModel.omega, StructuralModel.omega_min)
+
 	# ALOSTASIS: Piso de estabilidad adaptativo (Ω >= 0.60)
 	if EvoManager.mutation_allostasis:
-		omega = max(omega, 0.60)
+		StructuralModel.omega = max(StructuralModel.omega, 0.60)
 	elif LegacyManager.get_buff_value("legado_alostasis"):
-		omega = max(omega, 0.45) # Beneficio persistente del legado
+		StructuralModel.omega = max(StructuralModel.omega, 0.45) # Beneficio persistente del legado
 
-	# RAMA SIMBIOSIS: Piso de StructuralModel.omega0.50 (v0.8.5)
+	# RAMA SIMBIOSIS: Piso de omega 0.50 (v0.8.5)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		omega = max(omega, 0.50)
+		StructuralModel.omega = max(StructuralModel.omega, 0.50)
 		
 	# HIPERASIMILACIÓN: Colapso Estructural y Fragilidad
 	if EvoManager.mutation_hyperassimilation:
-		omega = min(omega, 0.75) # Cap de fragilidad
+		StructuralModel.omega = min(StructuralModel.omega, 0.75) # Cap de fragilidad
 		# Decaimiento de persistencia (Inercia negativa)
 		StructuralModel.persistence_dynamic = lerp(StructuralModel.persistence_dynamic, 1.0, 0.001)
 
@@ -1597,7 +1595,7 @@ func update_epsilon_runtime():
 		"act=", StructuralModel.epsilon_active,
 		"pas=", StructuralModel.epsilon_passive,
 		"cmp=", StructuralModel.epsilon_complex,
-		"Ω=", omega
+		"Ω=", StructuralModel.omega
 	)
 # =====================================================
 #  DEBUG EPSILON PRINTOUT v0.8.2
@@ -1633,7 +1631,7 @@ func check_institution_unlock():
 
 	var p := get_structural_pressure()
 	# vía 1 (ya existe): crisis
-	var inactivity_trigger = time_since_last_click > 120.0 and BiosphereEngine.biomasa > 5.0 and StructuralModel.epsilon_runtime > 0.35
+	var inactivity_trigger = EconomyManager.time_since_last_click > 120.0 and BiosphereEngine.biomasa > 5.0 and StructuralModel.epsilon_runtime > 0.35
 	if p > 15.0 and StructuralModel.omega< 0.25 and StructuralModel.epsilon_runtime > 0.3 or inactivity_trigger:
 		unlock_accounting()
 
@@ -1674,9 +1672,9 @@ func update_epsilon_sticky():
 	UIManager.epsilon_sticky_label.text = t
 
 func get_system_phase() -> String:
-	return UIManager.get_system_phase(omega)
+	return UIManager.get_system_phase(StructuralModel.omega)
 func get_flexibility() -> float:
-	return omega
+	return StructuralModel.omega
 # =====================================================
 # DLC — INTERFAZ FUNGÍCA v0.8
 func _on_Biosfera_pressed() -> void:
@@ -1689,8 +1687,7 @@ func _on_Biosfera_pressed() -> void:
 # =====================================================
 
 
-# PERSISTENCIA ÚNICA
-var StructuralModel.persistence_upgrade_unlocked := false
+# PERSISTENCIA ÚNICA (persistence_upgrade_unlocked moved to StructuralModel.gd)
 var memory_trigger_count := 0
 
 func _on_BigClickButton_pressed():
@@ -1946,9 +1943,9 @@ func get_save_data() -> Dictionary:
 	return {
 		"economy": {
 			"money": EconomyManager.money,
-			"StructuralModel.persistence_dynamic": StructuralModel.persistence_dynamic,
-			"StructuralModel.persistence_base": StructuralModel.persistence_base,
-			"StructuralModel.persistence_upgrade_unlocked": StructuralModel.persistence_upgrade_unlocked,
+			"persistence_dynamic": StructuralModel.persistence_dynamic,
+			"persistence_base": StructuralModel.persistence_base,
+			"persistence_upgrade_unlocked": StructuralModel.persistence_upgrade_unlocked,
 			"memory_trigger_count": memory_trigger_count,
 			"parasitism_corrosion": EconomyManager.parasitism_corrosion
 		},
@@ -1961,24 +1958,24 @@ func get_save_data() -> Dictionary:
 		},
 		"upgrades": UpgradeManager.serialize(),
 		"structural": {
-			"StructuralModel.epsilon_runtime": StructuralModel.epsilon_runtime,
-			"StructuralModel.epsilon_peak": StructuralModel.epsilon_peak,
+			"epsilon_runtime": StructuralModel.epsilon_runtime,
+			"epsilon_peak": StructuralModel.epsilon_peak,
 			"total_money_generated": EconomyManager.total_money_generated,
 			"run_time": run_time,
-			"StructuralModel.baseline_delta_structural": StructuralModel.baseline_delta_structural,
-			"omega": omega,
-			"StructuralModel.omega_min": StructuralModel.omega_min,
-			"StructuralModel.institution_accounting_unlocked": StructuralModel.institution_accounting_unlocked,
+			"baseline_delta_structural": StructuralModel.baseline_delta_structural,
+			"omega": StructuralModel.omega,
+			"omega_min": StructuralModel.omega_min,
+			"institution_accounting_unlocked": StructuralModel.institution_accounting_unlocked,
 			"institutions_unlocked": institutions_unlocked
 		},
 		"flags": {
-			"StructuralModel.unlocked_d": StructuralModel.unlocked_d,
-			"StructuralModel.unlocked_md": StructuralModel.unlocked_md,
-			"StructuralModel.unlocked_e": StructuralModel.unlocked_e,
-			"StructuralModel.unlocked_me": StructuralModel.unlocked_me,
+			"unlocked_d": StructuralModel.unlocked_d,
+			"unlocked_md": StructuralModel.unlocked_md,
+			"unlocked_e": StructuralModel.unlocked_e,
+			"unlocked_me": StructuralModel.unlocked_me,
 			"unlocked_tree": unlocked_tree,
 			"unlocked_click_dominance": unlocked_click_dominance,
-			"StructuralModel.unlocked_delta_100": StructuralModel.unlocked_delta_100,
+			"unlocked_delta_100": unlocked_delta_100,
 			"achievement_millionaire": AchievementManager.achievement_millionaire,
 			"achievement_fragile_balance": AchievementManager.achievement_fragile_balance,
 			"achievement_insatiable_parasite": AchievementManager.achievement_insatiable_parasite,
@@ -2022,9 +2019,9 @@ func _apply_save_data(data: Dictionary):
 	if data.has("economy"):
 		var e = data.economy
 		EconomyManager.money = e.get("money", EconomyManager.money)
-		StructuralModel.persistence_dynamic = e.get("StructuralModel.persistence_dynamic", StructuralModel.persistence_dynamic)
-		StructuralModel.persistence_base = e.get("StructuralModel.persistence_base", StructuralModel.persistence_base)
-		StructuralModel.persistence_upgrade_unlocked = e.get("StructuralModel.persistence_upgrade_unlocked", StructuralModel.persistence_upgrade_unlocked)
+		StructuralModel.persistence_dynamic = e.get("persistence_dynamic", StructuralModel.persistence_dynamic)
+		StructuralModel.persistence_base = e.get("persistence_base", StructuralModel.persistence_base)
+		StructuralModel.persistence_upgrade_unlocked = e.get("persistence_upgrade_unlocked", StructuralModel.persistence_upgrade_unlocked)
 		memory_trigger_count = e.get("memory_trigger_count", memory_trigger_count)
 		EconomyManager.parasitism_corrosion = e.get("parasitism_corrosion", EconomyManager.parasitism_corrosion)
 
@@ -2038,25 +2035,25 @@ func _apply_save_data(data: Dictionary):
 
 	if data.has("structural"):
 		var s = data.structural
-		StructuralModel.epsilon_runtime = s.get("StructuralModel.epsilon_runtime", StructuralModel.epsilon_runtime)
-		StructuralModel.epsilon_peak = s.get("StructuralModel.epsilon_peak", StructuralModel.epsilon_peak)
+		StructuralModel.epsilon_runtime = s.get("epsilon_runtime", StructuralModel.epsilon_runtime)
+		StructuralModel.epsilon_peak = s.get("epsilon_peak", StructuralModel.epsilon_peak)
 		EconomyManager.total_money_generated = s.get("total_money_generated", EconomyManager.total_money_generated)
 		run_time = s.get("run_time", run_time)
-		StructuralModel.baseline_delta_structural = s.get("StructuralModel.baseline_delta_structural", StructuralModel.baseline_delta_structural)
-		omega = s.get("omega", omega)
-		StructuralModel.omega_min = s.get("StructuralModel.omega_min", StructuralModel.omega_min)
-		StructuralModel.institution_accounting_unlocked = s.get("StructuralModel.institution_accounting_unlocked", StructuralModel.institution_accounting_unlocked)
+		StructuralModel.baseline_delta_structural = s.get("baseline_delta_structural", StructuralModel.baseline_delta_structural)
+		StructuralModel.omega = s.get("omega", StructuralModel.omega)
+		StructuralModel.omega_min = s.get("omega_min", StructuralModel.omega_min)
+		StructuralModel.institution_accounting_unlocked = s.get("institution_accounting_unlocked", StructuralModel.institution_accounting_unlocked)
 		institutions_unlocked = s.get("institutions_unlocked", institutions_unlocked)
 
 	if data.has("flags"):
 		var f = data.flags
-		StructuralModel.unlocked_d = f.get("StructuralModel.unlocked_d", StructuralModel.unlocked_d)
-		StructuralModel.unlocked_md = f.get("StructuralModel.unlocked_md", StructuralModel.unlocked_md)
-		StructuralModel.unlocked_e = f.get("StructuralModel.unlocked_e", StructuralModel.unlocked_e)
-		StructuralModel.unlocked_me = f.get("StructuralModel.unlocked_me", StructuralModel.unlocked_me)
+		StructuralModel.unlocked_d = f.get("unlocked_d", StructuralModel.unlocked_d)
+		StructuralModel.unlocked_md = f.get("unlocked_md", StructuralModel.unlocked_md)
+		StructuralModel.unlocked_e = f.get("unlocked_e", StructuralModel.unlocked_e)
+		StructuralModel.unlocked_me = f.get("unlocked_me", StructuralModel.unlocked_me)
 		unlocked_tree = f.get("unlocked_tree", unlocked_tree)
 		unlocked_click_dominance = f.get("unlocked_click_dominance", unlocked_click_dominance)
-		unlocked_delta_100 = f.get("StructuralModel.unlocked_delta_100", StructuralModel.unlocked_delta_100)
+		unlocked_delta_100 = f.get("unlocked_delta_100", unlocked_delta_100)
 		AchievementManager.achievement_millionaire = f.get("achievement_millionaire", AchievementManager.achievement_millionaire)
 		AchievementManager.achievement_fragile_balance = f.get("achievement_fragile_balance", AchievementManager.achievement_fragile_balance)
 		AchievementManager.achievement_insatiable_parasite = f.get("achievement_insatiable_parasite", AchievementManager.achievement_insatiable_parasite)

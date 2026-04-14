@@ -108,7 +108,7 @@ func get_persistence_target() -> float:
 
 # ==================== CAPITAL COGNITIVO EFECTIVO (μ) ====================
 func get_cognitive_mu() -> float:
-	var mu = 1.0 + log(1.0 + float(UpgradeManager.level("cognitive"))) * COGNITIVE_MULTIPLIER
+	var mu: float = 1.0 + log(1.0 + float(UpgradeManager.level("cognitive"))) * COGNITIVE_MULTIPLIER
 	return snapped(mu, 0.01)
 
 # ==================== MODELO ESTRUCTURAL ====================
@@ -185,13 +185,13 @@ func get_effective_structural_n() -> float:
 	return EcoModel.get_effective_structural_n(get_structural_upgrades(), UpgradeManager.level("accounting"))
 
 func get_mu_structural_factor() -> float:
-	var n = UpgradeManager.level("cognitive")
-	var mu_base := 1.0
+	var n: int = UpgradeManager.level("cognitive")
+	var mu_base: float = 1.0
 	if n > 0:
 		mu_base = 1.0 + log(1.0 + float(n)) * 0.08
 
-	var mu_fungi := BiosphereEngine.get_mu_fungi_multiplier(EvoManager.mutation_hyperassimilation, EvoManager.mutation_homeostasis)
-	var mu_total = mu_base * mu_fungi
+	var mu_fungi: float = BiosphereEngine.get_mu_fungi_multiplier(EvoManager.mutation_hyperassimilation, EvoManager.mutation_homeostasis)
+	var mu_total: float = mu_base * mu_fungi
 
 	return mu_total
 
