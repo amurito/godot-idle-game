@@ -60,13 +60,13 @@ func check_achievements():
 		show_toast("LOGRO — Homeostasis Perfecta")
 
 	# Millonario de Esporas
-	if not achievement_millionaire and main.total_money_generated >= 1000000.0:
+	if not achievement_millionaire and EconomyManager.total_money_generated >= 1000000.0:
 		achievement_millionaire = true
 		main.add_lap("🏁 Logro — Millonario de Esporas ($1M acumulado)")
 		show_toast("LOGRO — Millonario de Esporas ($1M acumulado)")
 
 	# Equilibrio Frágil (60s en ε óptimo)
-	if not achievement_fragile_balance and main.epsilon_effective > 0.10 and main.epsilon_effective < 0.20:
+	if not achievement_fragile_balance and StructuralModel.epsilon_effective > 0.10 and StructuralModel.epsilon_effective < 0.20:
 		fragile_balance_timer += main.LOGIC_TICK
 		if fragile_balance_timer >= FRAGILE_BALANCE_REQUIRED_TIME:
 			achievement_fragile_balance = true
