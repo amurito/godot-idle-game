@@ -41,10 +41,10 @@ func get_click_power() -> float:
 	if LegacyManager.get_buff_value("impulso_manual"):
 		base *= 2.0
 
-	var power := EcoModel.get_click_power(
+	var power :float = EcoModel.get_click_power(
 		base,
 		UpgradeManager.value("click_mult"),
-		main.persistence_dynamic,
+		StructuralModel.persistence_dynamic,
 		main.cached_mu
 	)
 

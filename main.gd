@@ -753,14 +753,14 @@ func _ready():
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
 		UIManager.export_run_button.text = "📤 Export run (disponible al cerrar run)"
-		
-	update_ui()
 
-	# Inicializar managers con referencia a main
+	# Inicializar managers con referencia a main ANTES de update_ui()
 	RunManager.set_main(self)
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
+
+	update_ui()
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
 	if not UpgradeManager.states.has("trueque_allo"):
