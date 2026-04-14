@@ -113,17 +113,17 @@ func build_formula_text(main: Node) -> String:
 	var formula_main = active_term
 	
 	# --- TÉRMINOS PASIVOS (D y E) ---
-	if main.unlocked_d: 
+	if StructuralModel.unlocked_d: 
 		var d_term = "d"
-		if main.unlocked_md:
+		if StructuralModel.unlocked_md:
 			d_term = "d · md"
 			if UpgradeManager.level("specialization") > 0:
 				d_term += " · so"
 		formula_main += " + " + d_term
 		
-		if main.unlocked_e:
+		if StructuralModel.unlocked_e:
 			var e_term = "e"
-			if main.unlocked_me:
+			if StructuralModel.unlocked_me:
 				e_term = "e · me"
 			if UpgradeManager.level("trueque_allo") > 0:
 				e_term += " · [color=cyan]ea[/color]"
@@ -151,7 +151,7 @@ func build_formula_text(main: Node) -> String:
 	
 	var raw_n = main.get_structural_upgrades()
 	t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
-		main.persistence_base, main.persistence_dynamic, main.cached_mu, raw_n
+		StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
 	]
 		
 	return t
@@ -165,7 +165,7 @@ func build_marginal_contribution(_main: Node) -> String:
 func update_click_stats_panel(main: Node) -> String:
 	var a = UpgradeManager.value("click")
 	var b = UpgradeManager.value("click_mult")
-	var c_n = main.persistence_dynamic
+	var c_n = StructuralModel.persistence_dynamic
 	
 	var d_raw = UpgradeManager.value("auto")
 	var md = UpgradeManager.value("auto_mult")
@@ -179,8 +179,8 @@ func update_click_stats_panel(main: Node) -> String:
 		
 	var t = "[b]Aporte actual:[/b]\n"
 	t += "[color=#cccccc]• Click PUSH = +%.2f\n" % push
-	if main.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % main.get_auto_income_effective()
-	if main.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % main.get_trueque_income_effective()
+	if StructuralModel.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % main.get_auto_income_effective()
+	if StructuralModel.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % main.get_trueque_income_effective()
 	
 	t += "[b]Δ$ total = +%.2f[/b]\n" % ap.total
 	if ap.total > 0:
@@ -193,22 +193,22 @@ func update_click_stats_panel(main: Node) -> String:
 	t += "a = %.1f   Click base\n" % a
 	if UpgradeManager.level("click_mult") > 0:
 		t += "b = %.2f   Multiplicador\n" % b
-	if main.persistence_upgrade_unlocked:
+	if StructuralModel.persistence_upgrade_unlocked:
 		t += "c_n(actual) = %.2f\n" % c_n
 	if LegacyManager.get_buff_value("impulso_manual"):
 		t += "im = 2.00   Impulso Manual (Legado)\n"
 	t += "\n"
 	
-	if main.unlocked_d:
+	if StructuralModel.unlocked_d:
 		t += "d = %.1f/s   Trabajo Manual\n" % d_raw
-		if main.unlocked_md: t += "md = %.2f   Ritmo de Trabajo\n" % md
+		if StructuralModel.unlocked_md: t += "md = %.2f   Ritmo de Trabajo\n" % md
 		else: t += "md = -- (estructura latente)\n"
 		if UpgradeManager.level("specialization") > 0: t += "so = %.2f   Especialización de Oficio\n" % so
 		t += "\n"
 	
-	if main.unlocked_e:
+	if StructuralModel.unlocked_e:
 		t += "e = %.1f/s   Trueque corregido\n" % e_raw
-		if main.unlocked_me: 
+		if StructuralModel.unlocked_me: 
 			t += "me = %.2f   Red de Intercambio\n" % me
 			if UpgradeManager.level("trueque_allo") > 0:
 				t += "ea = %.2f   Escalado Alostático (Legado)\n" % UpgradeManager.value("trueque_allo")
@@ -265,14 +265,14 @@ func build_evo_checklist(main: Node) -> String:
 	var ok_color := "[color=#00ff00]"
 	var fail_color := "[color=#ff4444]"
 
-	if main.homeostasis_mode:
+	if RunManager.homeostasis_mode:
 		t += "[b][color=cyan]Allostasis (Tier 2):[/color][/b]\n"
-		ch = ok_color + "[x] " if main.disturbances_survived >= 3 else fail_color + "[ ] "
-		t += ch + "Superar 3 perturbaciones (%d/3)[/color]\n" % main.disturbances_survived
-		ch = ok_color + "[x] " if main.resilience_score >= 150.0 else fail_color + "[ ] "
-		t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(main.resilience_score)
-		ch = ok_color + "[x] " if main.omega_min >= 0.40 else fail_color + "[ ] "
-		t += ch + "Flexibilidad Ω_min >= 0.40 (%s)[/color]\n" % snapped(main.omega_min, 0.01)
+		ch = ok_color + "[x] " if RunManager.disturbances_survived >= 3 else fail_color + "[ ] "
+		t += ch + "Superar 3 perturbaciones (%d/3)[/color]\n" % RunManager.disturbances_survived
+		ch = ok_color + "[x] " if RunManager.resilience_score >= 150.0 else fail_color + "[ ] "
+		t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(RunManager.resilience_score)
+		ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.40 else fail_color + "[ ] "
+		t += ch + "Flexibilidad Ω_min >= 0.40 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
 		ch = ok_color + "[x] " if main.delta_per_sec > 200.0 else fail_color + "[ ] "
 		t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
 		ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
@@ -283,9 +283,9 @@ func build_evo_checklist(main: Node) -> String:
 		t += "[b]Objetivo: Integración Mecánica[/b]\n"
 
 		# Hito 1: Estabilidad
-		var eps_ok: bool = main.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
+		var eps_ok: bool = StructuralModel.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
 		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
-		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(main.epsilon_runtime, 0.01)) + ")[/color]\n"
+		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
 
 		# Hito 2: Sincronización
 		if EvoManager.primordio_active:
@@ -331,8 +331,8 @@ func build_evo_checklist(main: Node) -> String:
 		t += ch + "Hifas > 10  (%s)[/color]\n" % snapped(BiosphereEngine.hifas, 0.1)
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 5  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if main.epsilon_effective < 0.32 else fail_color + "[ ] "
-		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(main.epsilon_effective, 0.01)
+		ch = ok_color + "[x] " if StructuralModel.epsilon_effective < 0.32 else fail_color + "[ ] "
+		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
 		ch = ok_color + "[x] " if main.run_time > 200.0 else fail_color + "[ ] "
@@ -345,8 +345,8 @@ func build_evo_checklist(main: Node) -> String:
 		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 5  (" + str(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
-		ch = ok_color + "[x] " if main.epsilon_runtime < 0.65 else fail_color + "[ ] "
-		t += ch + "ε_runtime < 0.65  (" + str(snapped(main.epsilon_runtime, 0.01)) + ")[/color]\n"
+		ch = ok_color + "[x] " if StructuralModel.epsilon_runtime < 0.65 else fail_color + "[ ] "
+		t += ch + "ε_runtime < 0.65  (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
 
@@ -354,14 +354,14 @@ func build_evo_checklist(main: Node) -> String:
 		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial:
 		t += "\n[color=gray]Homeostasis (Tier 1):[/color]\n"
 		ch = ok_color + "[x] " if main.get_en_banda_homeostatica() else fail_color + "[ ] "
-		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(main.epsilon_effective, 0.01)
-		ch = ok_color + "[x] " if main.omega > 0.25 else fail_color + "[ ] "
-		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(main.omega, 0.01)
+		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
+		ch = ok_color + "[x] " if StructuralModel.omega > 0.25 else fail_color + "[ ] "
+		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(StructuralModel.omega, 0.01)
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa < 12.0 else fail_color + "[ ] "
 		t += ch + "Biomasa < 12  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
 		ch = ok_color + "[x] " if main.delta_per_sec > 30.0 else fail_color + "[ ] "
 		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
-		ch = ok_color + "[x] " if main.unlocked_d and main.unlocked_e else fail_color + "[ ] "
+		ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
 		t += ch + "Pasivos d+e activos[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
@@ -370,8 +370,8 @@ func build_evo_checklist(main: Node) -> String:
 		t += "\n[color=#ffaa00]--- Objetivos de Colapso ---[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 15.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 15 (Succión)  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if main.money < 1000.0 else fail_color + "[ ] "
-		t += ch + "Liquidez < $1000  ($%s)[/color]\n" % snapped(main.money, 1)
+		ch = ok_color + "[x] " if EconomyManager.money < 1000.0 else fail_color + "[ ] "
+		t += ch + "Liquidez < $1000  ($%s)[/color]\n" % snapped(EconomyManager.money, 1)
 		t += "\nÓ\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 25.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 25 (Masa Crítica) (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)

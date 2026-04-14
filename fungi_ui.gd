@@ -77,7 +77,7 @@ func _process(delta):
 			update_ui()
 			return
 
-		if main.epsilon_runtime > 0.38 \
+		if StructuralModel.epsilon_runtime > 0.38 \
 		and main.get_delta_total() > 5.0:
 			hifas_unlocked = true
 			update_ui()

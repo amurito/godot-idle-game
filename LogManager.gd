@@ -148,10 +148,10 @@ func build_run_json(main: Control, meta: Dictionary) -> Dictionary:
 				"red_micelial": EvoManager.mutation_red_micelial
 			},
 			"structural_state": {
-				"epsilon_runtime": main.epsilon_runtime,
-				"epsilon_peak": main.epsilon_peak,
-				"omega": main.omega,
-				"omega_min": main.omega_min,
+				"epsilon_runtime": StructuralModel.epsilon_runtime,
+				"epsilon_peak": StructuralModel.epsilon_peak,
+				"omega": StructuralModel.omega,
+				"omega_min": StructuralModel.omega_min,
 				"biomasa": BiosphereEngine.biomasa,
 				"hifas": BiosphereEngine.hifas,
 				"accounting_level": UpgradeManager.level("accounting")

@@ -106,7 +106,7 @@ func update_genome(main_node: Control):
 		_check_automatic_activations()
 		return
 
-	var epsilon_runtime = main.epsilon_runtime
+	var epsilon_runtime = StructuralModel.epsilon_runtime
 	var accounting_level = UpgradeManager.level("accounting")
 	var run_time = main.run_time
 	var bio_pressure = main.get_structural_pressure()
@@ -163,7 +163,7 @@ func update_genome(main_node: Control):
 		_set_genome_state("simbiosis", "activo")
 	elif mutation_homeostasis or mutation_hyperassimilation or mutation_red_micelial or mutation_parasitism:
 		_set_genome_state("simbiosis", "bloqueado")
-	elif accounting_level >= 1 and hifas >= 5.0 and main.epsilon_runtime >= 0.15 and main.epsilon_runtime <= 0.45 and act_domina:
+	elif accounting_level >= 1 and hifas >= 5.0 and StructuralModel.epsilon_runtime >= 0.15 and StructuralModel.epsilon_runtime <= 0.45 and act_domina:
 		_set_genome_state("simbiosis", "latente")
 	elif accounting_level >= 1:
 		_set_genome_state("simbiosis", "latente")
@@ -190,9 +190,9 @@ func update_genome(main_node: Control):
 		_set_genome_state("allostasis", "bloqueado")
 	elif LegacyManager.last_run_ending == "HOMEOSTASIS":
 		# Solo se pone latente, la condición de cierre real está en main.gd
-		if LegacyManager.get_buff_value("legado_alostasis") and main.disturbances_survived >= 1:
+		if LegacyManager.get_buff_value("legado_alostasis") and RunManager.disturbances_survived >= 1:
 			_set_genome_state("allostasis", "latente")
-		elif main.disturbances_survived >= 1:
+		elif RunManager.disturbances_survived >= 1:
 			_set_genome_state("allostasis", "latente")
 		else:
 			_set_genome_state("allostasis", "dormido")
@@ -217,7 +217,7 @@ func update_genome(main_node: Control):
 		_set_genome_state("red_micelial", "activo")
 	elif mutation_homeostasis or mutation_hyperassimilation or mutation_symbiosis:
 		_set_genome_state("red_micelial", "bloqueado")
-	elif hifas >= 11.5 and biomasa >= 5.0 and main.epsilon_runtime < 0.65 and accounting_level >= 1 and not act_domina:
+	elif hifas >= 11.5 and biomasa >= 5.0 and StructuralModel.epsilon_runtime < 0.65 and accounting_level >= 1 and not act_domina:
 		_set_genome_state("red_micelial", "latente")
 	elif hifas >= 5.0:
 		_set_genome_state("red_micelial", "latente")
@@ -269,7 +269,7 @@ func is_simbiosis_ready() -> bool:
 	var acc = UpgradeManager.level("accounting")
 	var ap = main.get_active_passive_breakdown()
 	var act_domina = ap.activo > ap.pasivo
-	var eps = main.epsilon_runtime
+	var eps = StructuralModel.epsilon_runtime
 	return acc >= 1 and hifas >= 5.0 and eps >= 0.15 and eps <= 0.45 and act_domina
 
 func is_red_micelial_ready() -> bool:
@@ -278,7 +278,7 @@ func is_red_micelial_ready() -> bool:
 	var acc = UpgradeManager.level("accounting")
 	var ap = main.get_active_passive_breakdown()
 	var act_domina = ap.activo > ap.pasivo
-	var eps = main.epsilon_runtime
+	var eps = StructuralModel.epsilon_runtime
 	return hifas >= 11.5 and biomasa >= 5.0 and eps < 0.65 and acc >= 1 and not act_domina
 
 func is_allostasis_ready(main_node: Node) -> bool:
@@ -373,7 +373,7 @@ func check_parasitism_final(_main: Control):
 	if not mutation_parasitism or main.run_closed: return
 	
 	# Condición de victoria por parasitismo: 1 PL (mínimo histórico)
-	if BiosphereEngine.biomasa >= 15.0 and main.money < 1000.0:
+	if BiosphereEngine.biomasa >= 15.0 and EconomyManager.money < 1000.0:
 		LegacyManager.add_pl(1)
 		main.close_run("PARASITISMO", "Bancarrota Biológica: el hongo ha drenado toda la liquidez del sistema (+1 PL)")
 	elif BiosphereEngine.biomasa >= 25.0:

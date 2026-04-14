@@ -45,7 +45,7 @@ func reset():
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
-	return main.epsilon_effective >= 0.03 and main.epsilon_effective <= 0.30
+	return StructuralModel.epsilon_effective >= 0.03 and StructuralModel.epsilon_effective <= 0.30
 
 # ==================== CIERRE DE RUN ====================
 func close_run(route: String, reason: String):
@@ -91,16 +91,16 @@ func check_homeostasis_final(delta: float):
 		return
 
 	var banda_estricta = get_en_banda_homeostatica()
-	var flexibilidad_minima = main.omega > 0.25
+	var flexibilidad_minima = StructuralModel.omega > 0.25
 	var control_activo = UpgradeManager.level("accounting") >= 1
 	var metabolismo_activo = main.delta_per_sec > 30.0
 	var crecimiento_controlado = BiosphereEngine.biomasa < 12.0
-	var redundancia = main.unlocked_d and main.unlocked_e
+	var redundancia = StructuralModel.unlocked_d and StructuralModel.unlocked_e
 
 	if banda_estricta and flexibilidad_minima and control_activo and metabolismo_activo and crecimiento_controlado and redundancia:
 		homeostasis_timer += delta
 	else:
-		if main.epsilon_effective > 0.35:
+		if StructuralModel.epsilon_effective > 0.35:
 			homeostasis_timer = 0.0
 		else:
 			homeostasis_timer = max(homeostasis_timer - delta, 0.0)
@@ -113,17 +113,17 @@ func check_allostasis_final(_delta: float):
 	if run_closed or LegacyManager.last_run_ending != "HOMEOSTASIS":
 		return
 
-	if not get_en_banda_homeostatica() and main.epsilon_effective > 0.45:
+	if not get_en_banda_homeostatica() and StructuralModel.epsilon_effective > 0.45:
 		return
 
-	if disturbances_survived >= 3 and main.omega_min >= 0.40 and resilience_score >= 150.0 and UpgradeManager.level("accounting") >= 2 and main.delta_per_sec > 200.0:
+	if disturbances_survived >= 3 and StructuralModel.omega_min >= 0.40 and resilience_score >= 150.0 and UpgradeManager.level("accounting") >= 2 and main.delta_per_sec > 200.0:
 		_show_evolution_button("ALLOSTASIS")
 
 func check_homeorhesis_final(_delta: float):
 	if run_closed or LegacyManager.last_run_ending != "ALLOSTASIS":
 		return
 
-	if extreme_shock_survived and resilience_score >= 400.0 and main.omega_min >= 0.55 and BiosphereEngine.hifas >= 15.0 and main.run_time >= 1800.0:
+	if extreme_shock_survived and resilience_score >= 400.0 and StructuralModel.omega_min >= 0.55 and BiosphereEngine.hifas >= 15.0 and main.run_time >= 1800.0:
 		_show_evolution_button("HOMEORHESIS")
 
 func check_symbiosis_final(_delta: float):
@@ -131,9 +131,9 @@ func check_symbiosis_final(_delta: float):
 		return
 
 	var stable_band: bool = (
-		main.epsilon_effective >= 0.12
-		and main.epsilon_effective <= 0.45
-		and main.omega > 0.35
+		StructuralModel.epsilon_effective >= 0.12
+		and StructuralModel.epsilon_effective <= 0.45
+		and StructuralModel.omega > 0.35
 		and UpgradeManager.level("accounting") >= 1
 	)
 
@@ -144,7 +144,7 @@ func check_parasitism_final(_delta: float):
 	if run_closed or not EvoManager.mutation_parasitism:
 		return
 
-	if BiosphereEngine.biomasa > 18.0 and main.omega < 0.22 and main.epsilon_effective > 0.45:
+	if BiosphereEngine.biomasa > 18.0 and StructuralModel.omega < 0.22 and StructuralModel.epsilon_effective > 0.45:
 		close_run("PARASITISMO", "La biosfera drenó la estructura hasta el colapso")
 
 func check_sporulation_trigger(_delta: float):
@@ -159,9 +159,9 @@ func check_sporulation_trigger(_delta: float):
 	var _structural_pressure: float = main.get_structural_pressure()
 
 	if (
-		main.epsilon_peak >= 0.75
-		and main.epsilon_effective <= 0.35
-		and main.omega <= 0.30
+		StructuralModel.epsilon_peak >= 0.75
+		and StructuralModel.epsilon_effective <= 0.35
+		and StructuralModel.omega <= 0.30
 		and BiosphereEngine.biomasa >= 10.0
 		and BiosphereEngine.hifas >= 12.0
 		and main.run_time >= 900.0
@@ -172,8 +172,8 @@ func check_sporulation_trigger(_delta: float):
 func update_homeostasis_mode(delta: float):
 	var n_struct: float = main.get_effective_structural_n()
 	var complexity_impact: float = n_struct / max(main.cached_mu, 1.0)
-	main.omega = 1.0 / max(1.0 + main.epsilon_effective * complexity_impact, 0.0001)
-	var stability: float = clamp(1.0 - main.epsilon_effective, 0.0, 1.0)
+	StructuralModel.omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
+	var stability: float = clamp(1.0 - StructuralModel.epsilon_effective, 0.0, 1.0)
 	resilience_score += stability * delta
 
 	disturbance_timer += delta
@@ -181,9 +181,9 @@ func update_homeostasis_mode(delta: float):
 		disturbance_timer = 0.0
 		trigger_disturbance()
 
-	main.epsilon_runtime = lerp(
-		main.epsilon_runtime,
-		main.epsilon_effective,
+	StructuralModel.epsilon_runtime = lerp(
+		StructuralModel.epsilon_runtime,
+		StructuralModel.epsilon_effective,
 		0.05 * delta
 	)
 
@@ -195,7 +195,7 @@ func trigger_disturbance():
 	else:
 		main.add_lap("🌪️ Perturbación externa — shock ε +" + str(snapped(shock, 0.01)))
 
-	main.epsilon_runtime += shock
+	StructuralModel.epsilon_runtime += shock
 	is_recovering_from_shock = true
 
 func check_perfect_homeostasis():
