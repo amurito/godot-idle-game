@@ -397,7 +397,7 @@ func check_red_micelial_transition(main_ref: Node):
 		
 		if BiosphereEngine.hifas >= hifas_req \
 		and BiosphereEngine.biomasa >= 5.0 \
-		and main_ref.epsilon_runtime <= eps_req \
+		and StructuralModel.epsilon_runtime <= eps_req \
 		and main_ref.run_time >= 200.0:
 			red_micelial_phase = 1
 			main_ref.add_lap("🕸️ Red Micelial Evolucionada (Fase B)")
@@ -423,7 +423,7 @@ func _process_primordio_biological(main_ref: Node):
 		
 		# Condiciones de supervivencia (Relajadas v0.8.40)
 		var reason := ""
-		if main_ref.epsilon_runtime >= 0.50: reason = "Estrés Crítico (>0.50)"
+		if StructuralModel.epsilon_runtime >= 0.50: reason = "Estrés Crítico (>0.50)"
 		elif BiosphereEngine.hifas >= 60.0: reason = "Inestabilidad por Hifas (>60)"
 		elif main_ref.delta_per_sec < 50.0: reason = "Falta de Nutrientes (<50/$s)"
 		
@@ -438,14 +438,14 @@ func _process_primordio_mechanical(main_ref: Node):
 	# En la rama azul, el "primordio" es un proceso de Computación Estructural
 	if not primordio_active and not nucleo_conciencia and red_micelial_phase == 1:
 		# Requisitos: Contabilidad alta y estabilidad
-		if UpgradeManager.level("accounting") >= 2 and main_ref.epsilon_runtime <= 0.25:
+		if UpgradeManager.level("accounting") >= 2 and StructuralModel.epsilon_runtime <= 0.25:
 			primordio_active = true
 			main_ref.add_lap("⚡ INICIANDO: Sincronización de Núcleo de Conciencia")
 			main_ref.show_system_toast("SISTEMA: Integrando redes bióticas en el mainframe")
 	
 	if primordio_active:
 		# La estabilidad acelera el proceso
-		var speed_mult = clamp(1.0 + (0.5 - main_ref.epsilon_runtime), 0.5, 2.0)
+		var speed_mult = clamp(1.0 + (0.5 - StructuralModel.epsilon_runtime), 0.5, 2.0)
 		primordio_timer += main_ref.LOGIC_TICK * speed_mult
 		
 		if primordio_timer >= PRIMORDIO_DURATION:
@@ -453,7 +453,7 @@ func _process_primordio_mechanical(main_ref: Node):
 			nucleo_conciencia = true
 			main_ref.add_lap("💾 HITO: Núcleo de Conciencia Sincronizado")
 			# Bonus de eficiencia tecnológica
-			main_ref.mutation_accounting_bonus += 0.2
+			EconomyManager.mutation_accounting_bonus += 0.2
 
 func try_iniciar_primordio() -> bool:
 	# Guards
