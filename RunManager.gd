@@ -63,13 +63,16 @@ func close_run(route: String, reason: String):
 		"HOMEOSTASIS": pl_to_add = 3
 		"ALLOSTASIS": pl_to_add = 4
 		"HOMEORHESIS": pl_to_add = 6
-		"SIMBIOSIS", "SINGULARIDAD": pl_to_add = 4
-		"ESPORULACION", "ESPORULACION TOTAL": pl_to_add = 5
+		"SIMBIOSIS": pl_to_add = 4
+		# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
+		# No agregar aquí para evitar doble award
+		"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL": pl_to_add = 5
 		"PARASITISMO": pl_to_add = 2
-		"HIPERASIMILACION": pl_to_add = 1
+		"HIPERASIMILACION", "HIPERASIMILACIÓN": pl_to_add = 1
 		"MUTACION_FINAL", "METABOLISMO OSCURO": pl_to_add = 4
 		"MENTE COLMENA DISTRIBUIDA": pl_to_add = 8
 		"DEPREDADOR DE REALIDADES": pl_to_add = 12
+		"PANSPERMIA NEGRA": pl_to_add = 0 # PL ya otorgado explícitamente en main.gd
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
