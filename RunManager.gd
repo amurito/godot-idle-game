@@ -174,13 +174,21 @@ func check_symbiosis_final(_delta: float):
 
 	var stable_band: bool = (
 		StructuralModel.epsilon_effective >= 0.12
-		and StructuralModel.epsilon_effective <= 0.45
-		and StructuralModel.omega > 0.35
+		and StructuralModel.epsilon_effective <= 0.55
+		and StructuralModel.omega > 0.30
 		and UpgradeManager.level("accounting") >= 1
 	)
 
-	if stable_band and main.run_time > 900.0:
+	# Auto-cierre: 5 minutos en banda estable (antes 15 min)
+	if stable_band and main.run_time > 300.0:
 		close_run("SIMBIOSIS", "Cooperación sostenida entre estructura y biología")
+		return
+
+	# Cierre de emergencia: si omega > 0.50 (rama Simbiosis Mecánica activa) por 60s
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS \
+		and StructuralModel.omega >= 0.50 \
+		and main.run_time > 60.0:
+		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
 
 func check_parasitism_final(_delta: float):
 	if run_closed or not EvoManager.mutation_parasitism:

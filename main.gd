@@ -30,6 +30,7 @@ var _met_oscuro_income_accum := 0.0  # Acumulador fraccional para ingreso pasivo
 var _met_oscuro_status_timer := 0.0
 const MET_OSCURO_STATUS_INTERVAL := 12.0
 var _met_oscuro_seal_btn: Button = null
+var _simbiosis_seal_btn: Button = null
 
 # CONSTANTES DE MODELO (moved to StructuralModel.gd)
 const CLICK_RATE := 1.0
@@ -238,6 +239,32 @@ func _on_met_oscuro_seal_pressed():
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.visible = false
 	close_run("METABOLISMO OSCURO", "Sellado voluntario: la bioquímica oscura queda registrada como ruta alternativa")
+
+func _update_simbiosis_seal_button():
+	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
+		if is_instance_valid(_simbiosis_seal_btn):
+			_simbiosis_seal_btn.visible = false
+		return
+	# Sólo mostrar si lleva más de 60s en SIMBIOSIS
+	if run_time < 60.0:
+		return
+	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn = Button.new()
+		_simbiosis_seal_btn.text = "🌱 SELLAR SIMBIOSIS (+4 PL)"
+		_simbiosis_seal_btn.add_theme_font_size_override("font_size", 20)
+		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
+		_simbiosis_seal_btn.pressed.connect(_on_simbiosis_seal_pressed)
+		var panel := get_node_or_null("UIRootContainer/RightPanel")
+		if panel:
+			panel.add_child(_simbiosis_seal_btn)
+			panel.move_child(_simbiosis_seal_btn, 0)
+	_simbiosis_seal_btn.visible = true
+
+func _on_simbiosis_seal_pressed():
+	if is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn.visible = false
+	close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
 
 func apply_flexibility_modifier(factor: float):
 	StructuralModel.apply_flexibility_modifier(factor)
@@ -806,6 +833,9 @@ func reset_local_state():
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.queue_free()
 		_met_oscuro_seal_btn = null
+	if is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn.queue_free()
+		_simbiosis_seal_btn = null
 	mente_colmena_timer = 0.0
 	RunManager.reset()
 	
@@ -1140,10 +1170,12 @@ func _on_logic_tick():
 		check_homeorhesis_final(dt)
 	if EvoManager.mutation_symbiosis:
 		check_symbiosis_final(dt)
+		_update_simbiosis_seal_button()
 	if EvoManager.mutation_red_micelial:
 		EvoManager.check_red_micelial_transition(self)
 		EvoManager.update_primordio(self)  # Timer del ciclo biológico
-	if RunManager.homeostasis_mode:
+	# homeostasis_mode genera shocks periódicos — NO aplica durante SIMBIOSIS
+	if RunManager.homeostasis_mode and not EvoManager.mutation_symbiosis:
 		update_homeostasis_mode(dt)
 	if RunManager.post_homeostasis:
 		check_perfect_homeostasis()
