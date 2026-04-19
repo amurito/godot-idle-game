@@ -79,6 +79,12 @@ func close_run(route: String, reason: String):
 		LegacyManager.add_pl(pl_to_add)
 		main.show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
 
+	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
+	disturbances_survived = 0
+	is_recovering_from_shock = false
+	extreme_shock_survived = false
+	homeostasis_tier_reached = 0
+
 	SaveManager.save_game(main)
 
 func enter_post_homeostasis():
