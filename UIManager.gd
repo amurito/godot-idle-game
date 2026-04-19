@@ -259,24 +259,63 @@ func epsilon_flag(v: float, limit: float) -> String:
 	return "⚠️" if v > limit else "✅"
 
 func build_evo_checklist(main: Node) -> String:
+	# Si la run ya cerró, mostrar lore/resumen del final alcanzado en vez de la checklist
+	if RunManager.run_closed:
+		return _build_run_end_lore(RunManager.final_route)
+
 	var t := "[color=cyan][b]--- Próxima transición ---[/b][/color]\n"
 	var acc := UpgradeManager.level("accounting")
 	var ch : String
 	var ok_color := "[color=#00ff00]"
 	var fail_color := "[color=#ff4444]"
 
-	if RunManager.homeostasis_mode:
-		t += "[b][color=cyan]Allostasis (Tier 2):[/color][/b]\n"
-		ch = ok_color + "[x] " if RunManager.disturbances_survived >= 3 else fail_color + "[ ] "
-		t += ch + "Superar 3 perturbaciones (%d/3)[/color]\n" % RunManager.disturbances_survived
-		ch = ok_color + "[x] " if RunManager.resilience_score >= 150.0 else fail_color + "[ ] "
-		t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(RunManager.resilience_score)
-		ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.40 else fail_color + "[ ] "
-		t += ch + "Flexibilidad Ω_min >= 0.40 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
-		ch = ok_color + "[x] " if main.delta_per_sec > 200.0 else fail_color + "[ ] "
-		t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
-		ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
-		t += ch + "Contabilidad nvl 2 (%d)[/color]\n" % acc
+	if EvoManager.mutation_homeostasis:
+		var tier := RunManager.homeostasis_tier_reached
+		# Tier 1 — HOMEOSTASIS
+		if tier == 0:
+			t += "[b][color=cyan]── Tier 1: HOMEOSTASIS ──[/color][/b]\n"
+			ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
+			t += ch + "En banda ε (0.03–0.30)[/color]\n"
+			ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
+			t += ch + "Trabajo Manual + Trueque desbloqueados[/color]\n"
+			ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
+			t += ch + "Contabilidad nvl 1 (%d)[/color]\n" % acc
+			var pct := int(min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0)
+			t += "[color=cyan]Estabilizando: %d%% (%.0f/18s)[/color]\n" % [pct, RunManager.homeostasis_timer]
+		# Tier 2 — ALLOSTASIS
+		elif tier == 1:
+			t += ok_color + "[x] Tier 1 HOMEOSTASIS completado[/color]\n"
+			t += "[b][color=aquamarine]── Tier 2: ALLOSTASIS ──[/color][/b]\n"
+			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 3 else fail_color + "[ ] "
+			t += ch + "Perturbaciones (%d/3)[/color]\n" % RunManager.disturbances_survived
+			ch = ok_color + "[x] " if RunManager.resilience_score >= 150.0 else fail_color + "[ ] "
+			t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(RunManager.resilience_score)
+			ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.40 else fail_color + "[ ] "
+			t += ch + "Ω_min >= 0.40 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
+			var delta_real2 :float = EconomyManager.get_contribution_breakdown().total
+			ch = ok_color + "[x] " if delta_real2 > 200.0 else fail_color + "[ ] "
+			t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(delta_real2, 0.1)
+			ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
+			t += ch + "Contabilidad nvl 2 (%d)[/color]\n" % acc
+		# Tier 3 — HOMEORHESIS
+		elif tier == 2:
+			t += ok_color + "[x] Tier 1 + 2 completados[/color]\n"
+			t += "[b][color=gold]── Tier 3: HOMEORHESIS ──[/color][/b]\n"
+			ch = ok_color + "[x] " if RunManager.extreme_shock_survived else fail_color + "[ ] "
+			t += ch + "Sobrevivir SHOCK EXTREMO (ε > 0.8)[/color]\n"
+			ch = ok_color + "[x] " if RunManager.resilience_score >= 400.0 else fail_color + "[ ] "
+			t += ch + "Resiliencia >= 400 (%d)[/color]\n" % int(RunManager.resilience_score)
+			ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.50 else fail_color + "[ ] "
+			t += ch + "Ω_min >= 0.50 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
+			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 5 else fail_color + "[ ] "
+			t += ch + "Perturbaciones (%d/5)[/color]\n" % RunManager.disturbances_survived
+			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total
+			ch = ok_color + "[x] " if delta_real3 > 300.0 else fail_color + "[ ] "
+			t += ch + "Metabolismo > 300/s (%s)[/color]\n" % snapped(delta_real3, 0.1)
+			ch = ok_color + "[x] " if main.run_time >= 1200.0 else fail_color + "[ ] "
+			t += ch + "Run >= 20min (%s)[/color]\n" % format_time(main.run_time)
+		elif tier == 3:
+			t += ok_color + "[x] Tier 3 HOMEORHESIS desbloqueado — sellá el final[/color]\n"
 		t += "\n"
 
 	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
@@ -376,4 +415,107 @@ func build_evo_checklist(main: Node) -> String:
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 25.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 25 (Masa Crítica) (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
 
+	return t
+
+func _build_run_end_lore(route: String) -> String:
+	var lore_data := {
+		# ── RAMA AZUL: HOMEOSTASIS ────────────────────────────────────────────────
+		"HOMEOSTASIS": {
+			"emoji": "⚖️", "color": "#00ccff",
+			"lore": "Regulación interna de variables críticas. Con al menos 2 sistemas activos y sin colapso, el sistema alcanzó equilibrio sostenido. La entropía fue domesticada, no eliminada.",
+			"buffs": ["Producción total +50% (Orden Administrativo)", "Ω_min 0.35 — seguridad estructural base", "Evita pérdidas grandes ante perturbaciones", "+3 PL ganados"],
+			"nerfs": ["Cap de crecimiento biológico (biomasa < 12)", "Requiere 2+ sistemas activos sin colapso activo", "Velocidad de scaling reducida"]
+		},
+		"ALLOSTASIS": {
+			"emoji": "💜", "color": "#aa55ff",
+			"lore": "Adaptación dinámica a nuevos estados de equilibrio. El hongo sobrevivió perturbaciones y aprendió a recalibrar su setpoint. El equilibrio ya no es un punto: es una trayectoria.",
+			"buffs": ["Setpoint adaptativo — resiliencia +80% dinámica", "Ω_min >= 0.45 permanente en próxima run", "Impulso Metabólico Adaptativo: pasivo ×5", "+4 PL ganados"],
+			"nerfs": ["Requiere haber sobrevivido ≥1 perturbación activa", "Requiere Resiliencia ≥ 150 + Δ$ > 200/s + Cont. nivel 2"]
+		},
+		"HOMEORHESIS": {
+			"emoji": "💎", "color": "#00ffee",
+			"lore": "Equilibrio dinámico avanzado. El sistema atravesó 5+ ciclos de perturbación sin colapso y alcanzó auto-regulación en trayectorias de cambio continuo. Más allá de la homeostasis.",
+			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+8 PL ganados"],
+			"nerfs": ["Requiere ≥5 disturbances + shock extremo + Resiliencia ≥ 400", "Run ≥ 20 min + Δ$ > 300/s + Ω_min ≥ 0.50", "Extremadamente difícil de sostener"]
+		},
+		# ── RAMA VERDE: SIMBIOSIS / SINGULARIDAD ─────────────────────────────────
+		"SIMBIOSIS": {
+			"emoji": "💚", "color": "#00dd66",
+			"lore": "Cooperación mutualista. Con estabilidad del ecosistema > 40% (Ω ≥ 0.40), cada sistema activo potenció al siguiente. Linkeo exponencial emergente.",
+			"buffs": ["Click ×2.5 (dominio activo)", "Buffs compartidos — linkeo entre sistemas", "Ruta hacia SINGULARIDAD desbloqueada", "+4 PL ganados"],
+			"nerfs": ["Pasivo -50% (atrofia autómata)", "Requiere estabilidad ecosistema > 40% (Ω ≥ 0.40)", "Desaparece si la estabilidad colapsa"]
+		},
+		"SINGULARIDAD": {
+			"emoji": "📡", "color": "#00ffff",
+			"lore": "Punto de no retorno tecnológico. La Mecánica Simbiótica integró el tejido fúngico al mainframe. Ya no hay distinción entre código y micelio.",
+			"buffs": ["Núcleo de Conciencia sincronizado (+20% eficiencia tecnológica)", "Desbloquea MENTE COLMENA en NG+ (ratio 50/50 por 180s)", "PL variable (6 + bonus ε)"],
+			"nerfs": ["Requiere Simbiosis previa (NG+) + Rama Mecánica elegida", "Requiere 90s de sincronización sin interrupciones (ε ≤ 0.25)"]
+		},
+		"MENTE COLMENA DISTRIBUIDA": {
+			"emoji": "🧠", "color": "#40aaff",
+			"lore": "Fusión total entre biología y tecnología. El hongo opera como entidad autónoma e inteligente. El administrador fue reemplazado. La IA fúngica opera sola.",
+			"buffs": ["Auto-click permanente ×10 (decisiones automáticas óptimas)", "+300% automation efectiva", "+8 PL ganados", "Legado Mente Colmena: pasivo ×3 permanente"],
+			"nerfs": ["Control del jugador anulado al activarse", "Requiere ratio activo/pasivo 50/50 sostenido 180s (NG+ Singularidad)"]
+		},
+		# ── RAMA ROJA: RED MICELIAL / ESPORULACIÓN ───────────────────────────────
+		"ESPORULACIÓN": {
+			"emoji": "✨", "color": "#aaff44",
+			"lore": "El Núcleo Central maduró y la biomasa superó el umbral de reproducción. La seta dispersó su carga genética. Una nueva generación hereda la memoria estructural.",
+			"buffs": ["Desbloquea PANSPERMIA NEGRA en NG+ (Colonización)", "+5 PL ganados", "Esporas acumuladas = biomasa del ciclo"],
+			"nerfs": ["Requiere Red Micelial Fase C (seta formada)", "Requiere ε_peak ≥ 0.75 y ε_effective ≤ 0.35 sostenido", "Requiere biomasa ≥ umbral de reproducción"]
+		},
+		"ESPORULACION": {
+			"emoji": "✨", "color": "#aaff44",
+			"lore": "El Núcleo Central maduró y la biomasa superó el umbral de reproducción. La seta dispersó su carga genética. Una nueva generación hereda la memoria estructural.",
+			"buffs": ["Desbloquea PANSPERMIA NEGRA en NG+ (Colonización)", "+5 PL ganados"],
+			"nerfs": ["Requiere Red Micelial Fase C (seta formada)", "Requiere ε_peak ≥ 0.75 y ε_effective ≤ 0.35 sostenido"]
+		},
+		"PANSPERMIA NEGRA": {
+			"emoji": "🚀", "color": "#dd22ff",
+			"lore": "Las esporas fueron disparadas al vacío interestelar. El hongo ya no es de este mundo. La próxima civilización ya está infectada.",
+			"buffs": ["Legado Semilla Cósmica: ×2 producción pasiva permanente", "+10 PL ganados", "Scaling exponencial inter-run desbloqueado"],
+			"nerfs": ["Requiere Esporulación previa + $100k durante primordio activo", "Única ruta sin PL en close_run (ya otorgados en main)"]
+		},
+		# ── RAMA NARANJA: PARASITISMO / HIPERASIMILACIÓN ─────────────────────────
+		"PARASITISMO": {
+			"emoji": "☣️", "color": "#ff4400",
+			"lore": "Explotación parasitaria del ecosistema. Extrae recursos sin retribuir. El organismo vacía el sistema antes de colapsar sobre sí mismo. Victoria pírrica.",
+			"buffs": ["Biomasa ×2 (crecimiento descontrolado)", "Pasivo +20% inicial (Decay mechanic)", "+2 PL ganados", "Habilita ruta NG+ → DEPREDADOR DE REALIDADES"],
+			"nerfs": ["Degradación constante (corrosión estructural irreversible)", "Pérdida progresiva de ingresos (parasitism_corrosion → 0)", "Drenaje de dinero = biomasa × 0.25/s", "Ω máx 0.25 (fragilidad permanente)", "Colapso inevitable por masa crítica o bancarrota"]
+		},
+		"HIPERASIMILACIÓN": {
+			"emoji": "🔥", "color": "#ff8800",
+			"lore": "Absorción agresiva total. El sistema quema todo en un instante de velocidad extrema. Overheat — acumulás demasiado y la penalización es exponencial.",
+			"buffs": ["Click PUSH ×10 (≈+250% velocidad efectiva)", "+50% absorción de biomasa global", "Escala early-game explosivamente", "+1 PL ganado"],
+			"nerfs": ["-60% estabilidad estructural (Ω colapsa a 0)", "-75% producción pasiva (Atrofia Autómata)", "Colapso garantizado — la run termina al activarse (salvo NG+ Parasitismo)"]
+		},
+		# ── RAMA GLITCH: DEPREDADOR / MET.OSCURO ─────────────────────────────────
+		"DEPREDADOR DE REALIDADES": {
+			"emoji": "👾", "color": "#ff0055",
+			"lore": "El hongo no solo sobrevivió al glitch: lo consumió. Convierte biomasa de competidores en energía propia. La realidad del sistema fue su último recurso.",
+			"buffs": ["+12 PL ganados (máximo del juego)", "Devora upgrades → +15 biomasa cada uno", "Legado METABOLISMO GLITCH desbloqueado", "Habilita ruta NG++ → METABOLISMO OSCURO"],
+			"nerfs": ["Agotar todos los upgrades termina la run automáticamente", "Requiere NG+ Parasitismo + Hiperasimilación + ε > 0.95 sostenido 30s", "Comportamiento de UI impredecible (glitch visual)"]
+		},
+		"METABOLISMO OSCURO": {
+			"emoji": "🌑", "color": "#8844aa",
+			"lore": "Metabolismo en condiciones extremas. Con recursos críticos (< 20%) y depredación activa, el hongo activó rutas bioquímicas alternativas en entornos hostiles. La ciencia no predijo esta ruta.",
+			"buffs": ["Pasivo alternativo: biomasa × 0.8/s (bioquímica oscura)", "Click ×3 (energía alternativa)", "Biomasa autoalimentada +0.1/s", "ε_runtime decae (autorregulación emergente)", "+4 PL base (hasta +6 por saturación Bio ≥ 100)"],
+			"nerfs": ["Upgrades bloqueados permanentemente (sin compras)", "Ω forzado a 0.10 (fragilidad extrema)", "Pasivo estructural anulado (solo biomasa produce)", "Requiere Depredador activo + 3 devours + Bio ≥ 25 + dinero crítico (< $1000) sostenidos 15s"]
+		},
+	}
+
+	var data = lore_data.get(route, null)
+	if data == null:
+		return "[color=gray]--- Run completada: %s ---[/color]\n" % route
+
+	var t := ""
+	t += "[color=%s][b]%s %s[/b][/color]\n\n" % [data.color, data.emoji, route]
+	t += "[color=#cccccc][i]%s[/i][/color]\n\n" % data.lore
+	t += "[color=#00ff88][b]Efectos:[/b][/color]\n"
+	for buff in data.buffs:
+		t += "[color=#00ff88]+ %s[/color]\n" % buff
+	t += "\n"
+	for nerf in data.nerfs:
+		t += "[color=#ff4444]- %s[/color]\n" % nerf
+	t += "\n[color=gray]Iniciá nueva run para continuar.[/color]"
 	return t

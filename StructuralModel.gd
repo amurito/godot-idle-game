@@ -25,7 +25,7 @@ const EPSILON_DEBUG_INTERVAL := 0.25
 
 # ==================== FLEXIBILIDAD ====================
 var omega: float = 1.0
-var omega_min: float = 1.0
+var omega_min: float = 0.0
 
 # ==================== INSTITUCIONES ====================
 var institution_accounting_unlocked: bool = false
@@ -69,7 +69,7 @@ func reset():
 	epsilon_debug = false
 	epsilon_debug_throttle = 0.0
 	omega = 1.0
-	omega_min = 1.0
+	omega_min = 0.0
 	structural_cooldown = 0.0
 	baseline_delta_structural = 0.0
 	last_stable_structural_upgrades = 0

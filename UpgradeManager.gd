@@ -65,12 +65,16 @@ func can_buy(id: String, money: float) -> bool:
 	var def = get_def(id)
 	if def == null: return false
 	if def.one_shot and s.level > 0: return false
-	
+
+	# MET.OSCURO: upgrades bloqueados (bioquímica reemplazó la infraestructura)
+	if EvoManager.mutation_met_oscuro:
+		return false
+
 	# LEGADO: Memoria de Recurso (Costo 0 en nivel 0)
 	var real_cost = s.current_cost
 	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
 		real_cost = 0.0
-		
+
 	return money >= real_cost and s.unlocked
 
 ## Compra la mejora. Devuelve true si fue exitosa.

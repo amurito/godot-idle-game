@@ -60,6 +60,10 @@ func get_click_power() -> float:
 	if EvoManager.mutation_hyperassimilation:
 		power *= 10.0 # RUSH DE CLICK EXTREMO
 
+	# MET.OSCURO: energía alternativa ×3 (reemplaza el x10 de hiper)
+	if EvoManager.mutation_met_oscuro:
+		power *= 3.0
+
 	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 1.5 # Aura Dorada (Bonus permanente)
 
@@ -127,6 +131,10 @@ func get_passive_total() -> float:
 	if EvoManager.mutation_parasitism:
 		total *= 1.2 # Crecimiento Parásito inicial
 		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
+
+	# MET.OSCURO: pasivo estructural anulado — toda la economía viene de biomasa (en main)
+	if EvoManager.mutation_met_oscuro:
+		total = 0.0
 
 	if LegacyManager.get_buff_value("aura_dorada"):
 		total *= 1.5 # Aura Dorada (Bonus permanente)

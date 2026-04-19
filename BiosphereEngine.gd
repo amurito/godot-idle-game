@@ -36,10 +36,10 @@ func reset() -> void:
 # INTERFAZ PRINCIPAL (Llamada por el Logic Tick)
 # =====================================================
 
-func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool, is_red_micelial: bool = false, is_parasitism: bool = false) -> float:
+func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool, is_red_micelial: bool = false, is_parasitism: bool = false, is_colonization: bool = false) -> float:
 	_compute_hifas(passive_income, is_homeostasis)
 	_update_nutrients(delta, epsilon_runtime)
-	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism)
+	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism, is_colonization)
 	_grow_micelio(delta, is_red_micelial)
 	
 	# Aseguramos que el epsilon efectivo se calcule siempre, incluso si no hubo crecimiento
@@ -61,12 +61,15 @@ func _grow_micelio(delta: float, is_red_micelial: bool) -> void:
 		micelio = max(micelio - 1.5 * delta, 0.0)
 
 func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
+	# Cap suave con log para evitar explosión en NG+ con legados acumulados
+	# pow(x,0.6) sin cap llegaba a >60 con legados acumulados (Mente Colmena x3, etc.)
 	var h := pow(passive_income, 0.6)
+	h = h / (1.0 + h / 40.0)  # Cap suave: asíntota en ~40 hifas, nunca llega a 60
 	if is_homeostasis:
 		h *= 0.85
 	hifas = h
 
-func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false) -> void:
+func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false) -> void:
 	if hifas <= 0 or nutrientes <= 0:
 		return
 
@@ -85,15 +88,19 @@ func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation:
 
 	# --- CAP LIMITS (Ignorados en Parasitismo e Hiperasimilación) ---
 	var has_cap := not (is_parasitism or _is_hyperassimilation)
-	
+
 	if has_cap:
-		# --- PRE-HOMEOSTASIS SOFT CAP ---
-		if not is_homeostasis:
+		# --- COLONIZACIÓN: cap más alto para permitir primordio y esporulación ---
+		if is_colonization:
+			# Cap suave en 20 (Esporulación necesita ≥10, primordio ≥8)
+			if biomasa > 20.0:
+				biomasa = lerp(biomasa, 20.0, 0.15 * delta * 60.0)
+		elif not is_homeostasis:
+			# --- PRE-HOMEOSTASIS SOFT CAP (otras ramas) ---
 			if biomasa > PRE_HOMEOSTASIS_CAP:
 				biomasa = lerp(biomasa, PRE_HOMEOSTASIS_CAP, 0.15 * delta * 60.0)
-
-		# --- HOMEOSTASIS: límite biológico duro ---
-		if is_homeostasis:
+		else:
+			# --- HOMEOSTASIS: límite biológico duro ---
 			biomasa = min(biomasa, BIOMASS_CAP)
 
 func _compute_epsilon_breakdown(_delta: float, epsilon_runtime: float, is_hyperassimilation: bool, _is_homeostasis: bool, is_symbiosis: bool) -> void:
