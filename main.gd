@@ -266,6 +266,49 @@ func _on_simbiosis_seal_pressed():
 		_simbiosis_seal_btn.visible = false
 	close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
 
+func _apply_cosmic_buffs() -> void:
+	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)
+	if LegacyManager.trascendencia_count == 0:
+		return
+
+	# IMPULSO INICIAL (T1): +$500 al empezar la run
+	if LegacyManager.has_cosmic_buff("impulso_inicial"):
+		if not SaveManager._file_existed_on_load:
+			EconomyManager.money += 500.0
+			add_lap("✦ [Cósmico] Impulso Inicial: +$500")
+
+	# OMEGA PRIMORDIAL (T1): Ω_min +0.05
+	if LegacyManager.has_cosmic_buff("omega_primordial"):
+		StructuralModel.omega_min = max(StructuralModel.omega_min, StructuralModel.omega_min + 0.05)
+		add_lap("✦ [Cósmico] Omega Primordial: Ω_min +0.05")
+
+	# RESONANCIA BIÓTICA (T1): Biomasa inicial 1.5
+	if LegacyManager.has_cosmic_buff("resonancia_biotica"):
+		if BiosphereEngine.biomasa < 1.5:
+			BiosphereEngine.biomasa = 1.5
+			add_lap("✦ [Cósmico] Resonancia Biótica: Biomasa → 1.5")
+
+	# ECO DE LEGADO (T1): +5 PL al inicio de run
+	if LegacyManager.has_cosmic_buff("eco_de_legado"):
+		if not SaveManager._file_existed_on_load:
+			LegacyManager.add_pl(5)
+			add_lap("✦ [Cósmico] Eco de Legado: +5 PL")
+
+	# MEMORIA PERSISTENTE (T2): Accounting y Trueque nivel 1 gratis
+	if LegacyManager.has_cosmic_buff("memoria_persistente"):
+		if UpgradeManager.level("accounting") == 0:
+			UpgradeManager.states["accounting"].level = 1
+			var def_acc = UpgradeManager.get_def("accounting")
+			if def_acc:
+				UpgradeManager.states["accounting"].current_value = def_acc.base_value + def_acc.gain
+				UpgradeManager.states["accounting"].unlocked = true
+			add_lap("✦ [Cósmico] Memoria Persistente: Contabilidad nivel 1 gratis")
+		# Desbloquear dependientes de accounting
+		for other_id in UpgradeManager.states.keys():
+			var other_def = UpgradeManager.get_def(other_id)
+			if other_def and other_def.unlock_requires == "accounting":
+				UpgradeManager.states[other_id].unlocked = true
+
 func apply_flexibility_modifier(factor: float):
 	StructuralModel.apply_flexibility_modifier(factor)
 
@@ -866,6 +909,11 @@ func _ready():
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
 
+	# =====================================================
+	#  BANCO CÓSMICO — Aplicar buffs al inicio de run
+	# =====================================================
+	_apply_cosmic_buffs()
+
 	update_ui()
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
@@ -1181,6 +1229,9 @@ func _on_logic_tick():
 		check_perfect_homeostasis()
 	if EvoManager.mutation_parasitism:
 		check_parasitism_final(dt)
+	# FRACTURA EPISTÉMICA: siempre chequear si está habilitada
+	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
+		RunManager.check_fractura_epistemica(dt)
 		_parasitism_status_timer += dt
 		if _parasitism_status_timer >= PARASITISM_STATUS_INTERVAL:
 			_parasitism_status_timer = 0.0

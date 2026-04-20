@@ -75,6 +75,7 @@ func close_run(route: String, reason: String):
 		"MENTE COLMENA DISTRIBUIDA": pl_to_add = 8
 		"DEPREDADOR DE REALIDADES": pl_to_add = 12
 		"PANSPERMIA NEGRA": pl_to_add = 0 # PL ya otorgado explícitamente en main.gd
+		"COLAPSO CONTROLADO": pl_to_add = 6 # Fractura Epistémica (Banco Cósmico T3)
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
@@ -190,6 +191,14 @@ func check_symbiosis_final(_delta: float):
 		and StructuralModel.omega >= 0.50 \
 		and main.run_time > 60.0:
 		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
+
+func check_fractura_epistemica(_delta: float):
+	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
+	if run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
+		return
+	# Condición: ε_effective > 0.90 Y Ω > 0.30 (colapso controlado)
+	if StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30:
+		close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
 
 func check_parasitism_final(_delta: float):
 	if run_closed or not EvoManager.mutation_parasitism:

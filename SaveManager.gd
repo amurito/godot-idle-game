@@ -5,6 +5,10 @@ extends Node
 
 const SAVE_PATH := "user://savegame.json"
 
+# Flag para detectar si se cargó un save existente (vs run nueva sin archivo).
+# Usado por _apply_cosmic_buffs para no duplicar bonuses al recargar.
+var _file_existed_on_load: bool = false
+
 func save_game(main: Control):
 	var data = main.get_save_data()
 	var json_string = JSON.stringify(data)
@@ -17,7 +21,9 @@ func save_game(main: Control):
 func load_game(main: Control):
 	if not FileAccess.file_exists(SAVE_PATH):
 		print("ℹ️ [SaveManager] No se encontró archivo de guardado.")
+		_file_existed_on_load = false
 		return
+	_file_existed_on_load = true
 
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if not file:

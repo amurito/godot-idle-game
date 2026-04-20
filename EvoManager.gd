@@ -171,7 +171,9 @@ func update_genome(main_node: Control):
 			met_oscuro_timer += main.LOGIC_TICK
 			if prev_mt == 0.0 and met_oscuro_timer > 0.0:
 				LogManager.add("🌑 BIOQUÍMICA OSCURA — Recursos críticos detectados ($%.0f). Estabilizando en %ds… (devours: %d, bio %.1f)" % [EconomyManager.money, int(MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, biomasa], main)
-			if met_oscuro_timer >= MET_OSCURO_REQUIRED_TIME:
+			# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
+			var met_oscuro_threshold := MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+			if met_oscuro_timer >= met_oscuro_threshold:
 				_set_genome_state("met_oscuro", "activo")
 			else:
 				_set_genome_state("met_oscuro", "latente")
@@ -194,7 +196,9 @@ func update_genome(main_node: Control):
 			# Notificar al iniciar la carga
 			if prev_timer == 0.0 and depredador_timer > 0.0:
 				LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." % epsilon_runtime, main)
-			if depredador_timer >= 30.0:
+			# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
+			var depredador_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+			if depredador_timer >= depredador_threshold:
 				_set_genome_state("depredador", "activo")
 			else:
 				_set_genome_state("depredador", "latente")

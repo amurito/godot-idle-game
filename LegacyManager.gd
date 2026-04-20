@@ -284,6 +284,14 @@ func transcend() -> int:
 		return 0
 
 	var esencia_gain := calculate_esencia_gain()
+
+	# SUSTRATO CÓSMICO: dobla la Esencia de esta trascendencia (uso único por compra)
+	if has_cosmic_buff("sustrato_cosmico"):
+		esencia_gain *= 2
+		# Resetear el upgrade para que el efecto sea de un solo uso
+		cosmic_unlocked["sustrato_cosmico"] = false
+		print("✦ [Cosmic] Sustrato Cósmico consumido — Esencia ×2 aplicado")
+
 	esencia += esencia_gain
 	trascendencia_count += 1
 
@@ -312,26 +320,69 @@ func get_trascendencia_title() -> String:
 # =====================================================
 #  BANCO CÓSMICO — Upgrades con Esencia (v0.9.2)
 # =====================================================
-# Placeholder: los 10 upgrades finales se diseñan en sesión aparte.
-# Por ahora, 3 entradas de prueba para validar la infraestructura.
 const COSMIC_DATA := {
-	"memoria_persistente": {
-		"cost": 5,
-		"name": "Memoria Persistente",
-		"desc": "Los upgrades comprados mantienen un 10% de su nivel al iniciar una nueva run.",
+	# --- TIER 1: Fundamentos ---
+	"impulso_inicial": {
+		"cost": 6,
+		"name": "Impulso Inicial",
+		"desc": "Comenzás cada run con $500 ya generados. La economía tiene memoria del ciclo anterior.",
 		"tier": 1
 	},
 	"omega_primordial": {
-		"cost": 10,
+		"cost": 8,
 		"name": "Omega Primordial",
-		"desc": "Tu flexibilidad estructural mínima (Ω_min) sube permanentemente +0.05.",
+		"desc": "Tu Ω_min sube permanentemente +0.05 al inicio de cada run. El sistema recuerda su flexibilidad.",
 		"tier": 1
 	},
-	"arbol_acelerado": {
+	"resonancia_biotica": {
+		"cost": 10,
+		"name": "Resonancia Biótica",
+		"desc": "Tu biomasa inicial es 1.5 (en lugar de 0). El sustrato biológico persiste entre ciclos.",
+		"tier": 1
+	},
+	"deflacion_cosmica": {
+		"cost": 12,
+		"name": "Deflación Cósmica",
+		"desc": "El escalado de precios de todos los upgrades se reduce un 8% adicional (apilable con Deflación Biótica).",
+		"tier": 1
+	},
+	"eco_de_legado": {
 		"cost": 15,
+		"name": "Eco de Legado",
+		"desc": "Al inicio de cada run ganás +5 PL automáticos para gastar en el Banco Genético.",
+		"tier": 1
+	},
+	# --- TIER 2: Catalizadores ---
+	"arbol_acelerado": {
+		"cost": 18,
 		"name": "Árbol Acelerado",
-		"desc": "Las mutaciones Tier 1 se evalúan un 50% más rápido.",
+		"desc": "Los timers de activación de MET.OSCURO y DEPREDADOR se reducen un 40%. La evolución recuerda el camino.",
 		"tier": 2
+	},
+	"memoria_persistente": {
+		"cost": 22,
+		"name": "Memoria Persistente",
+		"desc": "Al inicio de run, el primer nivel de Contabilidad y Trueque son gratuitos automáticamente.",
+		"tier": 2
+	},
+	"convergencia_ciclica": {
+		"cost": 28,
+		"name": "Convergencia Cíclica",
+		"desc": "Cada trascendencia acumulada suma +5% a todos tus ingresos globales de forma permanente.",
+		"tier": 2
+	},
+	# --- TIER 3: Transformadores ---
+	"fractura_epistemica": {
+		"cost": 35,
+		"name": "Fractura Epistémica",
+		"desc": "Desbloquea la ruta COLAPSO CONTROLADO: cuando ε > 0.90 y Ω > 0.30, podés cerrar la run con +6 PL.",
+		"tier": 3
+	},
+	"sustrato_cosmico": {
+		"cost": 50,
+		"name": "Sustrato Cósmico",
+		"desc": "La próxima trascendencia otorga el doble de Esencia (Ξ ×2). Efecto de un solo uso por compra. Desbloquea el Lore Fragment I.",
+		"tier": 3
 	}
 }
 

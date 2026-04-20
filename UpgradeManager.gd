@@ -105,6 +105,10 @@ func buy(id: String, money: float) -> bool:
 		effective_cost_scale = 1.0 + (effective_cost_scale - 1.0) * 0.8
 		print("⚖️ Subsidio Homeostasis aplicado a Contabilidad")
 
+	# DEFLACIÓN CÓSMICA (Banco Cósmico T1): -8% adicional al escalado
+	if LegacyManager.has_cosmic_buff("deflacion_cosmica"):
+		effective_cost_scale = 1.0 + (effective_cost_scale - 1.0) * 0.92
+
 	s.current_cost *= effective_cost_scale
 
 	# Desbloquear dependientes

@@ -67,6 +67,10 @@ func get_click_power() -> float:
 	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 1.5 # Aura Dorada (Bonus permanente)
 
+	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% por trascendencia acumulada
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		power *= (1.0 + LegacyManager.trascendencia_count * 0.05)
+
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		power *= 2.0 # Semilla Cósmica (Bonus permanente)
 
@@ -144,6 +148,10 @@ func get_passive_total() -> float:
 
 	if LegacyManager.get_buff_value("mente_colmena"):
 		total *= 3.0 # IA Automática (Bonus permanente)
+
+	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% pasivo por trascendencia acumulada
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
 
 	# Mult por Rama Evolutiva (Nodos Finales DLC)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
