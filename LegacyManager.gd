@@ -25,6 +25,59 @@ var unlocked_legacies: Dictionary = {
 var total_runs: int = 0
 var last_run_ending: String = ""
 
+# =====================================================
+#  TRASCENDENCIA — Meta-prestige (v0.9.2)
+# =====================================================
+# Esencia (Ξ): moneda meta obtenida al trascender. Persiste forever.
+var esencia: int = 0
+# Cantidad de veces que el jugador trascendió. Define el "tier" cósmico.
+var trascendencia_count: int = 0
+# Flag que indica si ya se mostró la pantalla narrativa especial de primera trascendencia.
+var first_trascendencia_shown: bool = false
+# Set persistente de rutas de cierre completadas (clave → true). Persiste entre trascendencias.
+# Se usa para el gate de trascendencia (familias completas).
+var endings_achieved: Dictionary = {}
+# Upgrades del Banco Cósmico comprados con Ξ (persisten entre trascendencias).
+var cosmic_unlocked: Dictionary = {}
+
+# Mapeo ruta de cierre → familia. Usado por el gate (requiere 1 cierre por familia).
+const ENDING_FAMILIES := {
+	# Familia ORDEN (regulación homeostática)
+	"HOMEOSTASIS": "orden",
+	"ALLOSTASIS": "orden",
+	"HOMEORHESIS": "orden",
+	"SINGULARIDAD": "orden",
+
+	# Familia BIOLOGÍA (expansión biótica)
+	"ESPORULACION": "biologia",
+	"ESPORULACIÓN": "biologia",
+	"ESPORULACION TOTAL": "biologia",
+	"PARASITISMO": "biologia",
+	"SIMBIOSIS": "biologia",
+	"PANSPERMIA NEGRA": "biologia",
+	"MENTE COLMENA DISTRIBUIDA": "biologia",
+
+	# Familia COLAPSO (rutas destructivas / NG++)
+	"HIPERASIMILACION": "colapso",
+	"HIPERASIMILACIÓN": "colapso",
+	"DEPREDADOR DE REALIDADES": "colapso",
+	"METABOLISMO OSCURO": "colapso",
+	"MUTACION_FINAL": "colapso"
+}
+
+const TRASCENDENCIA_PL_GATE := 50
+
+# Títulos cósmicos según cantidad de trascendencias
+const TRASCENDENCIA_TITLES := [
+	"",                          # 0
+	"Trascendido",              # 1
+	"Trascendido II",           # 2
+	"Trascendido III",          # 3
+	"Arquitecto Cósmico",       # 4
+	"Arquitecto Cósmico II",    # 5
+	"Demiurgo",                 # 6+
+]
+
 # --- DEFINICIÓN DE COSTOS Y DESCRIPCIONES ---
 const LEGACY_DATA := {
 	"deflacion": {"cost": 4, "name": "Deflación Biótica", "desc": "Reduce un 5% el escalado de precios de todas las mejoras."},
@@ -49,7 +102,13 @@ func save_legacy():
 		"unlocked_legacies": unlocked_legacies,
 		"spores_buffer": internal_spores_total,
 		"total_runs": total_runs,
-		"last_run_ending": last_run_ending
+		"last_run_ending": last_run_ending,
+		# --- TRASCENDENCIA v0.9.2 ---
+		"esencia": esencia,
+		"trascendencia_count": trascendencia_count,
+		"first_trascendencia_shown": first_trascendencia_shown,
+		"endings_achieved": endings_achieved,
+		"cosmic_unlocked": cosmic_unlocked
 	}
 	var file = FileAccess.open(LEGACY_PATH, FileAccess.WRITE)
 	if file:
@@ -70,12 +129,57 @@ func load_legacy():
 			for key in loaded_unlocked.keys():
 				if unlocked_legacies.has(key):
 					unlocked_legacies[key] = loaded_unlocked[key]
-			
+
 			internal_spores_total = data.get("spores_buffer", 0.0)
 			total_runs = data.get("total_runs", 0)
 			last_run_ending = data.get("last_run_ending", "")
-			print("📂 [Legacy] Banco genético cargado y sincronizado. PL:", legacy_points)
+
+			# --- TRASCENDENCIA v0.9.2 ---
+			esencia = data.get("esencia", 0)
+			trascendencia_count = data.get("trascendencia_count", 0)
+			first_trascendencia_shown = data.get("first_trascendencia_shown", false)
+			endings_achieved = data.get("endings_achieved", {})
+			cosmic_unlocked = data.get("cosmic_unlocked", {})
+
+			# Migración retroactiva para saves pre-v0.9.2:
+			# inferir rutas ya completadas desde buffs legacy y last_run_ending
+			_migrate_retroactive_endings()
+
+			print("📂 [Legacy] Banco genético cargado. PL:", legacy_points, " Ξ:", esencia, " T#:", trascendencia_count)
 		file.close()
+
+# Migración: si endings_achieved está vacío pero hay evidencia de rutas previas,
+# inferirlas desde unlocked_legacies (buffs NG+) y last_run_ending
+func _migrate_retroactive_endings() -> void:
+	if endings_achieved.size() > 0:
+		return # Ya migrado o registrado normalmente
+	if total_runs == 0 and last_run_ending == "":
+		return # Save nuevo, nada que migrar
+
+	# Inferir desde buffs NG+ desbloqueados (cada uno implica una ruta completada)
+	if unlocked_legacies.get("legado_alostasis", false):
+		endings_achieved["ALLOSTASIS"] = true
+		endings_achieved["HOMEOSTASIS"] = true # Prerequisito
+	if unlocked_legacies.get("legado_homeorresis", false):
+		endings_achieved["HOMEORHESIS"] = true
+		endings_achieved["ALLOSTASIS"] = true
+		endings_achieved["HOMEOSTASIS"] = true
+	if unlocked_legacies.get("semilla_cosmica", false):
+		endings_achieved["PANSPERMIA NEGRA"] = true
+		endings_achieved["ESPORULACIÓN"] = true
+	if unlocked_legacies.get("mente_colmena", false):
+		endings_achieved["MENTE COLMENA DISTRIBUIDA"] = true
+		endings_achieved["SINGULARIDAD"] = true
+	if unlocked_legacies.get("metabolismo_glitch", false):
+		endings_achieved["PARASITISMO"] = true
+
+	# Last run ending como fallback mínimo
+	if last_run_ending != "" and last_run_ending != "NONE":
+		endings_achieved[last_run_ending] = true
+
+	if endings_achieved.size() > 0:
+		print("🔄 [Legacy] Migración retroactiva: ", endings_achieved.size(), " rutas recuperadas")
+		save_legacy()
 
 # --- LÓGICA DEL BANCO ---
 func can_afford(legacy_id: String) -> bool:
@@ -114,3 +218,135 @@ func increment_run():
 	total_runs += 1
 	save_legacy()
 	print("📈 Ciclo Biótico completado. Total: ", total_runs)
+
+# =====================================================
+#  TRASCENDENCIA — API pública (v0.9.2)
+# =====================================================
+
+## Registra una ruta de cierre como completada (persiste entre trascendencias).
+## Se llama desde RunManager.close_run().
+func mark_ending_achieved(route: String) -> void:
+	if route == "" or route == "NONE": return
+	if not endings_achieved.get(route, false):
+		endings_achieved[route] = true
+		save_legacy()
+		print("🏁 [Legacy] Ruta registrada: ", route)
+
+## Devuelve un dict { "orden": bool, "biologia": bool, "colapso": bool }
+## indicando si cada familia tiene al menos 1 cierre completado.
+func get_family_progress() -> Dictionary:
+	var prog := {"orden": false, "biologia": false, "colapso": false}
+	for route in endings_achieved.keys():
+		if endings_achieved[route]:
+			var fam: String = ENDING_FAMILIES.get(route, "")
+			if prog.has(fam):
+				prog[fam] = true
+	return prog
+
+## Total de rutas únicas completadas (para calcular Ξ).
+func unique_endings_count() -> int:
+	var n := 0
+	for route in endings_achieved.keys():
+		if endings_achieved[route]: n += 1
+	return n
+
+## Gate de activación: requiere 3 familias completas + PL ≥ 50
+func can_transcend() -> bool:
+	var prog := get_family_progress()
+	if not (prog.orden and prog.biologia and prog.colapso):
+		return false
+	if legacy_points < TRASCENDENCIA_PL_GATE:
+		return false
+	return true
+
+## Texto descriptivo del estado del gate (para UI)
+func get_transcend_gate_status() -> String:
+	var prog := get_family_progress()
+	var t := ""
+	t += ("✓" if prog.orden else "✗") + " Familia ORDEN (Homeostasis/Allostasis/Homeorresis/Singularidad)\n"
+	t += ("✓" if prog.biologia else "✗") + " Familia BIOLOGÍA (Esporulación/Parasitismo/Simbiosis/Panspermia)\n"
+	t += ("✓" if prog.colapso else "✗") + " Familia COLAPSO (Hiperasimilación/Depredador/Met.Oscuro)\n"
+	t += ("✓" if legacy_points >= TRASCENDENCIA_PL_GATE else "✗") + " PL acumulado ≥ %d (tenés %d)" % [TRASCENDENCIA_PL_GATE, legacy_points]
+	return t
+
+## Calcula cuánta Esencia (Ξ) otorga la trascendencia actual.
+## Fórmula: 1 Ξ por cada 10 PL + 5 Ξ por cada ruta única + bonus por tier actual
+func calculate_esencia_gain() -> int:
+	var from_pl := int(legacy_points / 10.0)
+	var from_routes := unique_endings_count() * 5
+	var tier_bonus := trascendencia_count * 2  # Cada trascendencia previa suma +2 Ξ al siguiente ciclo
+	return from_pl + from_routes + tier_bonus
+
+## Ejecuta la trascendencia: reset completo + award de Ξ + incremento.
+## Returns: int (Esencia ganada)
+func transcend() -> int:
+	if not can_transcend():
+		return 0
+
+	var esencia_gain := calculate_esencia_gain()
+	esencia += esencia_gain
+	trascendencia_count += 1
+
+	# Reset de estado acumulable entre runs (PL, buffs legacy, esporas internas)
+	legacy_points = 0
+	internal_spores_total = 0.0
+	for id in unlocked_legacies:
+		unlocked_legacies[id] = false
+	total_runs = 0
+	last_run_ending = ""
+
+	# Preservamos: esencia, trascendencia_count, first_trascendencia_shown,
+	# endings_achieved (histórico), cosmic_unlocked (upgrades meta)
+
+	save_legacy()
+	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])
+	return esencia_gain
+
+## Devuelve el título cósmico actual según cantidad de trascendencias.
+func get_trascendencia_title() -> String:
+	if trascendencia_count <= 0:
+		return ""
+	var idx: int = min(trascendencia_count, TRASCENDENCIA_TITLES.size() - 1)
+	return TRASCENDENCIA_TITLES[idx]
+
+# =====================================================
+#  BANCO CÓSMICO — Upgrades con Esencia (v0.9.2)
+# =====================================================
+# Placeholder: los 10 upgrades finales se diseñan en sesión aparte.
+# Por ahora, 3 entradas de prueba para validar la infraestructura.
+const COSMIC_DATA := {
+	"memoria_persistente": {
+		"cost": 5,
+		"name": "Memoria Persistente",
+		"desc": "Los upgrades comprados mantienen un 10% de su nivel al iniciar una nueva run.",
+		"tier": 1
+	},
+	"omega_primordial": {
+		"cost": 10,
+		"name": "Omega Primordial",
+		"desc": "Tu flexibilidad estructural mínima (Ω_min) sube permanentemente +0.05.",
+		"tier": 1
+	},
+	"arbol_acelerado": {
+		"cost": 15,
+		"name": "Árbol Acelerado",
+		"desc": "Las mutaciones Tier 1 se evalúan un 50% más rápido.",
+		"tier": 2
+	}
+}
+
+func can_afford_cosmic(cosmic_id: String) -> bool:
+	if not COSMIC_DATA.has(cosmic_id): return false
+	if cosmic_unlocked.get(cosmic_id, false): return false
+	return esencia >= COSMIC_DATA[cosmic_id].cost
+
+func purchase_cosmic(cosmic_id: String) -> bool:
+	if not can_afford_cosmic(cosmic_id): return false
+	esencia -= COSMIC_DATA[cosmic_id].cost
+	cosmic_unlocked[cosmic_id] = true
+	save_legacy()
+	print("✨ [Cosmic] Desbloqueado: ", cosmic_id)
+	return true
+
+func has_cosmic_buff(cosmic_id: String) -> bool:
+	return cosmic_unlocked.get(cosmic_id, false)

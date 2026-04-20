@@ -1378,12 +1378,29 @@ func update_bifurcation_panel():
 		opt_homeostasis.visible = false
 		opt_colonization.visible = true
 		opt_symbiosis.visible = true
-		
+
+		# Actualizar descriptores de las sub-ramas (limpia residuos del TIER 1)
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = "🌿"
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = \
+			"[center]COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
+			"[color=#00ff00]+ Automatización ×1.5[/color]\n" + \
+			"[color=#00ff00]+ Ciclo Primordio → Seta → Esporulación[/color]\n" + \
+			"[color=#ffaa00]Sin requisitos extra[/color][/center]"
+		btn_colonization.text = "Colonizar"
+		btn_colonization.disabled = false
+
 		# Rama Azul (Simbiosis Mecánica) requiere contabilidad 2
 		var has_mechanics = UpgradeManager.level("accounting") >= 2
+		var mec_txt := "[center]SIMBIOSIS MECÁNICA\nRama hardware.\n\n" + \
+			"[color=#00ff00]+ Ω_min 0.50 (estabilidad)[/color]\n" + \
+			"[color=#00ff00]+ Núcleo de Conciencia → SINGULARIDAD[/color]\n" + \
+			("[color=#00ff00]✓ Contabilidad ≥ 2[/color]" if has_mechanics else "[color=#ff4444]✗ Requiere Contabilidad nvl 2[/color]") + \
+			"[/center]"
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = "💾"
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = mec_txt
 		if not has_mechanics:
 			btn_symbiosis.disabled = true
-			btn_symbiosis.text = "[BLOQUEADO: Req. Contabilidad nvl 2]"
+			btn_symbiosis.text = "Integrar Hardware [req. Cont. 2]"
 		else:
 			btn_symbiosis.disabled = false
 			btn_symbiosis.text = "Integrar Hardware"

@@ -57,6 +57,7 @@ func close_run(route: String, reason: String):
 	main.add_lap("🚩 RUN CERRADA: " + route)
 
 	LegacyManager.last_run_ending = route
+	LegacyManager.mark_ending_achieved(route) # Tracking persistente para gate de Trascendencia
 	LegacyManager.save_legacy()
 
 	var pl_to_add := 0
