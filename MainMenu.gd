@@ -43,35 +43,59 @@ func _on_continue_pressed():
 	get_tree().change_scene_to_file("res://main.tscn")
 
 func _on_new_game_pressed():
-	# 1. Borrar archivo de guardado previo y LEGADO (Hard Reset)
+	# Si el jugador tiene progreso meta (legacy o trascendencias), hacer Nueva Run
+	# (preserva Banco Genético y Cósmico). Hard Reset solo si no hay nada.
+	var has_meta_progress := LegacyManager.legacy_points > 0 \
+		or LegacyManager.trascendencia_count > 0 \
+		or LegacyManager.total_runs > 0
+
+	if has_meta_progress:
+		_start_new_run()
+	else:
+		_hard_reset()
+
+## Nueva Run: resetea solo la partida actual. Preserva legacy y trascendencia.
+func _start_new_run() -> void:
+	# 1. Borrar save de run
 	if FileAccess.file_exists(SaveManager.SAVE_PATH):
 		DirAccess.remove_absolute(SaveManager.SAVE_PATH)
-		print("🗑️ Memoria de run borrada.")
-	
-	if FileAccess.file_exists(LegacyManager.LEGACY_PATH):
-		DirAccess.remove_absolute(LegacyManager.LEGACY_PATH)
-		print("🗑️ Banco Genético formateado.")
-	
-	# 2. Resetear estados de los sistemas Autoload
+		print("🗑️ Run anterior borrada. Legacy y Trascendencia preservados.")
+
+	# 2. Resetear solo los sistemas de run
 	UpgradeManager.reset()
 	BiosphereEngine.reset()
 	EvoManager.reset()
 	LogManager.reset()
-	
-	# Resetear LegacyManager manualmente ya que no tiene método reset() estándar
+
+	# 3. Incrementar contador de ciclos en legacy
+	LegacyManager.increment_run()
+
+	# 4. Ir al juego (los buffs cósmicos se aplican en _ready de main.gd)
+	get_tree().change_scene_to_file("res://main.tscn")
+
+## Hard Reset absoluto: borra TODO (legacy, trascendencia, upgrades). Sin vuelta atrás.
+func _hard_reset() -> void:
+	if FileAccess.file_exists(SaveManager.SAVE_PATH):
+		DirAccess.remove_absolute(SaveManager.SAVE_PATH)
+	if FileAccess.file_exists(LegacyManager.LEGACY_PATH):
+		DirAccess.remove_absolute(LegacyManager.LEGACY_PATH)
+
+	UpgradeManager.reset()
+	BiosphereEngine.reset()
+	EvoManager.reset()
+	LogManager.reset()
+
 	LegacyManager.legacy_points = 0
 	LegacyManager.total_runs = 0
 	LegacyManager.internal_spores_total = 0.0
 	for id in LegacyManager.unlocked_legacies:
 		LegacyManager.unlocked_legacies[id] = false
-	# Meta-prestige: Nueva Partida borra TAMBIÉN trascendencias (hard reset absoluto)
 	LegacyManager.esencia = 0
 	LegacyManager.trascendencia_count = 0
 	LegacyManager.first_trascendencia_shown = false
 	LegacyManager.endings_achieved = {}
 	LegacyManager.cosmic_unlocked = {}
-	
-	# 3. Cambiar a la escena principal
+
 	get_tree().change_scene_to_file("res://main.tscn")
 
 func _on_achievements_pressed():
@@ -193,6 +217,17 @@ func _update_achievements_view():
 # =====================================================
 
 func _setup_trascendencia_ui() -> void:
+	# Actualizar texto del botón Nueva Partida según estado del jugador
+	var has_meta := LegacyManager.legacy_points > 0 \
+		or LegacyManager.trascendencia_count > 0 \
+		or LegacyManager.total_runs > 0
+	if has_meta:
+		btn_new_game.text = "Nueva Run"
+		btn_new_game.tooltip_text = "Inicia una nueva run preservando tu Banco Genético y Banco Cósmico."
+	else:
+		btn_new_game.text = "Nueva Partida"
+		btn_new_game.tooltip_text = ""
+
 	# 1. Actualizar Subtitle con título cósmico (si aplica)
 	var subtitle = $CenterContainer/VBoxContainer/Subtitle
 	var title_cosmic = LegacyManager.get_trascendencia_title()
