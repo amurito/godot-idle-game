@@ -401,9 +401,8 @@ func activate_depredador():
 	mutation_activated.emit("depredador", "Depredador de Realidades")
 	AchievementManager.on_depredador_activated()
 
-	if not LegacyManager.unlocked_legacies.has("metabolismo_glitch") or not LegacyManager.unlocked_legacies["metabolismo_glitch"]:
-		LegacyManager.unlocked_legacies["metabolismo_glitch"] = true
-		LegacyManager.save_legacy()
+	if not LegacyManager.get_buff_value("metabolismo_glitch"):
+		LegacyManager.grant_buff("metabolismo_glitch")
 		main.show_system_toast("✨ Has desbloqueado el legado oculto: METABOLISMO GLITCH")
 
 func activate_met_oscuro():

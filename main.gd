@@ -253,6 +253,28 @@ func _on_simbiosis_seal_pressed():
 		_simbiosis_seal_btn.visible = false
 	close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
 
+func _apply_legacy_buffs() -> void:
+	# LEGADO METABÓLICO: dinero inicial (150 × level, escala con cost_growth)
+	var run_start_money: float = LegacyManager.get_effect_value("run_start_money")
+	if run_start_money > 0.0 and not SaveManager._file_existed_on_load:
+		EconomyManager.money += run_start_money
+		add_lap("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
+
+	# PLASTICIDAD ADAPTATIVA: omega_min floor 0.30
+	if LegacyManager.get_buff_value("plasticidad_adaptativa"):
+		var floor_val: float = LegacyManager.get_effect_value("omega_min_floor")
+		if StructuralModel.omega_min < floor_val:
+			StructuralModel.omega_min = floor_val
+			add_lap("✦ [Legado] Plasticidad Adaptativa: Ω_min → %.2f" % floor_val)
+
+	# UMBRAL COGNITIVO / RESONANCIA COGNITIVA: nivel cognitivo inicial +1
+	var cog_bonus: float = LegacyManager.get_effect_value("start_nivel_cognitivo_bonus")
+	if cog_bonus >= 1.0 and not SaveManager._file_existed_on_load:
+		var bonus_int: int = int(cog_bonus)
+		if UpgradeManager.states.has("cognitive"):
+			UpgradeManager.states["cognitive"].level += bonus_int
+			add_lap("✦ [Legado] Bonus Cognitivo: nivel_cognitivo +%d" % bonus_int)
+
 func _apply_cosmic_buffs() -> void:
 	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)
 	if LegacyManager.trascendencia_count == 0:
@@ -875,6 +897,11 @@ func _ready():
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
+
+	# =====================================================
+	#  BANCO GENÉTICO — Aplicar buffs al inicio de run
+	# =====================================================
+	_apply_legacy_buffs()
 
 	# =====================================================
 	#  BANCO CÓSMICO — Aplicar buffs al inicio de run
@@ -1610,8 +1637,7 @@ func _on_sporulation_final_pressed() -> void:
 		# FINAL SECRETO: PANSPERMIA NEGRA
 		EconomyManager.money -= 100000.0
 		if not LegacyManager.get_buff_value("semilla_cosmica"):
-			LegacyManager.unlocked_legacies["semilla_cosmica"] = true
-			LegacyManager.save_legacy()
+			LegacyManager.grant_buff("semilla_cosmica")
 			show_system_toast("✨ Has desbloqueado el legado: SEMILLA CÓSMICA")
 			
 		LegacyManager.add_pl(10)
@@ -1626,8 +1652,7 @@ func activate_mente_colmena():
 		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
 	
 	if not LegacyManager.get_buff_value("mente_colmena"):
-		LegacyManager.unlocked_legacies["mente_colmena"] = true
-		LegacyManager.save_legacy()
+		LegacyManager.grant_buff("mente_colmena")
 		show_system_toast("✨ Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
 		
 	close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores han sido asimilados. El administrador es obsoleto. (+8 PL)")
@@ -1649,46 +1674,54 @@ func _refresh_legacy_store():
 	for child in legacy_list.get_children():
 		child.queue_free()
 		
-	# Iterar sobre las mejoras disponibles
-	var data = LegacyManager.LEGACY_DATA
-	for id in data.keys():
-		var info = data[id]
-		var is_unlocked = LegacyManager.unlocked_legacies[id]
-		
-		var h_box = HBoxContainer.new()
+	# Iterar sobre las mejoras disponibles (solo reveladas)
+	for id in LegacyManager.LEGACY_DEFS:
+		if not LegacyManager.is_revealed(id):
+			continue
+		var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+		var lvl: int = LegacyManager.get_buff_level(id)
+		var max_lvl: int = int(def.get("max_level", 1))
+		var is_maxed: bool = lvl >= max_lvl
+		var cost: int = LegacyManager.get_current_cost(id)
+
+		var h_box: HBoxContainer = HBoxContainer.new()
 		h_box.custom_minimum_size = Vector2(0, 50)
-		
-		var v_info = VBoxContainer.new()
+
+		var v_info: VBoxContainer = VBoxContainer.new()
 		v_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		var l_title = Label.new()
-		l_title.text = info.name + (" [DESBLOQUEADO]" if is_unlocked else " (" + str(info.cost) + " PL)")
+
+		var l_title: Label = Label.new()
+		var lvl_str: String = (" [%d/%d]" % [lvl, max_lvl]) if max_lvl > 1 else ""
+		l_title.text = def.get("name", id) + lvl_str + (" [MÁXIMO]" if is_maxed else " (%d PL)" % cost if def.get("cost", 0) > 0 else " [GRATIS]")
 		l_title.add_theme_font_size_override("font_size", 13)
-		if is_unlocked: l_title.modulate = Color.GREEN
-		
-		var l_desc = Label.new()
-		l_desc.text = info.desc
+		if is_maxed:
+			l_title.modulate = Color.GREEN
+		elif lvl > 0:
+			l_title.modulate = Color(0.5, 0.9, 0.6)
+
+		var l_desc: Label = Label.new()
+		l_desc.text = def.get("flavor", "")
 		l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l_desc.add_theme_font_size_override("font_size", 10)
 		l_desc.modulate = Color(0.7, 0.7, 0.7)
-		
+
 		v_info.add_child(l_title)
 		v_info.add_child(l_desc)
-		
-		var btn = Button.new()
+
+		var btn: Button = Button.new()
 		btn.text = "COMPRAR"
 		btn.custom_minimum_size = Vector2(100, 30)
-		btn.disabled = is_unlocked or LegacyManager.legacy_points < info.cost
+		btn.disabled = is_maxed or not LegacyManager.can_afford(id)
 		btn.pressed.connect(func():
 			if LegacyManager.purchase_legacy(id):
 				_refresh_legacy_store()
-				show_system_toast("Banco: Compraste " + info.name)
+				show_system_toast("Banco: Compraste " + def.get("name", id))
 		)
-		
+
 		h_box.add_child(v_info)
 		h_box.add_child(btn)
-		
-		var sep = HSeparator.new()
+
+		var sep: HSeparator = HSeparator.new()
 		legacy_list.add_child(h_box)
 		legacy_list.add_child(sep)
 

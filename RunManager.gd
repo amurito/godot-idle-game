@@ -60,6 +60,7 @@ func close_run(route: String, reason: String):
 
 	LegacyManager.last_run_ending = route
 	LegacyManager.mark_ending_achieved(route) # Tracking persistente para gate de Trascendencia
+	LegacyManager.on_run_ended(main.cached_mu)  # Notificar μ final para desbloqueos
 	LegacyManager.save_legacy()
 
 	# Logros — notificar cierre de run (antes de resetear contadores)
@@ -143,9 +144,8 @@ func check_homeostasis_final(delta: float):
 			and delta_real > 200.0
 		if ok:
 			homeostasis_tier_reached = 2
-			if not LegacyManager.unlocked_legacies.get("legado_alostasis", false):
-				LegacyManager.unlocked_legacies["legado_alostasis"] = true
-				LegacyManager.save_legacy()
+			if not LegacyManager.get_buff_value("legado_alostasis"):
+				LegacyManager.grant_buff("legado_alostasis")
 			main.add_lap("💜 Tier 2 desbloqueado: ALLOSTASIS — podés cerrar o seguir por HOMEORHESIS")
 			main.show_system_toast("ALLOSTASIS alcanzada — aguantá 30min + shock extremo para HOMEORHESIS")
 
@@ -157,9 +157,8 @@ func check_homeostasis_final(delta: float):
 			and delta_real > 300.0 and main.run_time >= 1200.0
 		if ok:
 			homeostasis_tier_reached = 3
-			if not LegacyManager.unlocked_legacies.get("legado_homeorresis", false):
-				LegacyManager.unlocked_legacies["legado_homeorresis"] = true
-				LegacyManager.save_legacy()
+			if not LegacyManager.get_buff_value("legado_homeorresis"):
+				LegacyManager.grant_buff("legado_homeorresis")
 			main.add_lap("💎 Tier 3 desbloqueado: HOMEORHESIS — el sistema trasciende la regulación basal")
 			main.show_system_toast("HOMEORHESIS alcanzada — cerrá la run para sellarlo")
 

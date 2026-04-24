@@ -23,7 +23,12 @@ var micelio: float = 0.0   # 0.0 → 100.0 (solo activo en Rama Red Micelial)
 var epsilon_effective: float = 0.0
 
 func reset() -> void:
-	biomasa = 0.0
+	# Biomasa inicial: base 0 + hifas_persistentes (0.5) + eco_panspermico (1.0 solo si ruta PANSPERMIA)
+	biomasa = LegacyManager.get_effect_value("start_biomasa")
+	# Banco Cósmico: Resonancia Biótica suma 1.5
+	if LegacyManager.has_cosmic_buff("resonancia_biotica"):
+		biomasa += 1.5
+	biomasa = max(0.0, biomasa)
 	nutrientes = 0.0
 	hifas = 0.0
 	micelio = 0.0
@@ -139,7 +144,11 @@ func _update_nutrients(delta: float, epsilon_runtime: float) -> void:
 # =====================================================
 
 func get_biomass_beta() -> float:
-	return 1.0 + log(1.0 + biomasa) * efficiency
+	var beta: float = 1.0 + log(1.0 + biomasa) * efficiency
+	# Micelio Resiliente: β nunca baja de 1.0
+	if LegacyManager.get_buff_value("micelio_resiliente"):
+		beta = max(beta, LegacyManager.get_effect_value("beta_floor"))
+	return beta
 
 func get_mu_fungi_multiplier(is_hyperassimilation: bool, is_homeostasis: bool) -> float:
 	var p = plasticity
