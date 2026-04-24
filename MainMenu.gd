@@ -38,6 +38,9 @@ func _ready():
 	# --- TRASCENDENCIA UI ---
 	_setup_trascendencia_ui()
 
+	# --- BADGES de notificación ---
+	_refresh_nav_badges()
+
 func _on_continue_pressed():
 	# Cargar la escena principal. SaveManager.load_game se llamará en el _ready de main.gd
 	get_tree().change_scene_to_file("res://main.tscn")
@@ -101,9 +104,18 @@ func _hard_reset() -> void:
 
 	get_tree().change_scene_to_file("res://main.tscn")
 
+func _refresh_nav_badges() -> void:
+	var has_new_ach: bool = AchievementManager.has_unseen()
+	btn_achievements.text = ("★ LOGROS" if has_new_ach else "Logros")
+
+	var has_new_buff: bool = LegacyManager.has_unseen_buff()
+	btn_legacy.text = ("★ BANCO GENÉTICO" if has_new_buff else "Banco Genético")
+
 func _on_achievements_pressed():
 	achievements_panel.visible = true
 	_update_achievements_view()
+	# Los logros se marcan como vistos dentro de _update_achievements_view;
+	# refrescamos el badge al volver.
 
 func _on_legacy_pressed():
 	legacy_panel.visible = true
@@ -112,6 +124,8 @@ func _on_legacy_pressed():
 func _on_back_pressed():
 	achievements_panel.visible = false
 	legacy_panel.visible = false
+	# Actualizar badges al cerrar (ya se marcaron como vistos adentro)
+	_refresh_nav_badges()
 
 func _update_legacy_view():
 	pl_counter.text = "Legado acumulado: %d PL\nCiclos Bióticos completados: %d" % [LegacyManager.legacy_points, LegacyManager.total_runs]
