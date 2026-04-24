@@ -116,6 +116,9 @@ func buy(id: String, money: float) -> bool:
 		if other.unlock_requires == id:
 			states[other.id].unlocked = true
 
+	# Notificar logros
+	AchievementManager.on_upgrade_bought(id)
+
 	return true
 
 ## Costo actual del upgrade (para mostrar en botón)

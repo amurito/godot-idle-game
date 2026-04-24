@@ -25,6 +25,10 @@ var unlocked_legacies: Dictionary = {
 var total_runs: int = 0
 var last_run_ending: String = ""
 
+# --- LOGROS (persistentes entre runs y entre trascendencias) ---
+# Se setean desde AchievementManager. Persisten en legacy_bank.json.
+var achievement_data: Dictionary = {}
+
 # =====================================================
 #  TRASCENDENCIA — Meta-prestige (v0.9.2)
 # =====================================================
@@ -108,7 +112,8 @@ func save_legacy():
 		"trascendencia_count": trascendencia_count,
 		"first_trascendencia_shown": first_trascendencia_shown,
 		"endings_achieved": endings_achieved,
-		"cosmic_unlocked": cosmic_unlocked
+		"cosmic_unlocked": cosmic_unlocked,
+		"achievement_data": achievement_data
 	}
 	var file = FileAccess.open(LEGACY_PATH, FileAccess.WRITE)
 	if file:
@@ -140,6 +145,10 @@ func load_legacy():
 			first_trascendencia_shown = data.get("first_trascendencia_shown", false)
 			endings_achieved = data.get("endings_achieved", {})
 			cosmic_unlocked = data.get("cosmic_unlocked", {})
+			achievement_data = data.get("achievement_data", {})
+			# Propagar logros cargados al AchievementManager
+			if AchievementManager:
+				AchievementManager.load_data(achievement_data)
 
 			# Migración retroactiva para saves pre-v0.9.2:
 			# inferir rutas ya completadas desde buffs legacy y last_run_ending
@@ -218,6 +227,12 @@ func increment_run():
 	total_runs += 1
 	save_legacy()
 	print("📈 Ciclo Biótico completado. Total: ", total_runs)
+
+# --- LOGROS ---
+# Guarda el dict completo de logros desbloqueados. Invocado por AchievementManager.unlock()
+func save_achievement_data(data: Dictionary) -> void:
+	achievement_data = data.duplicate()
+	save_legacy()
 
 # =====================================================
 #  TRASCENDENCIA — API pública (v0.9.2)

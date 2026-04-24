@@ -385,18 +385,21 @@ func activate_allostasis():
 	LogManager.add("🔬 ALOSTASIS ALCANZADA: El sistema ha aprendido a recalibrar su setpoint estructural tras la crisis.", main)
 	mutation_allostasis = true
 	mutation_activated.emit("allostasis", "Resiliencia Alostática")
+	AchievementManager.on_mutation_activated("allostasis")
 	
 func activate_homeorhesis():
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
 	LogManager.add("✨ HOMEORRESIS ALCANZADA: Evolución irreversible. El metabolismo trasciende la regulación basal.", main)
 	mutation_homeorhesis = true
 	mutation_activated.emit("homeorhesis", "Trascendencia Cristalina")
+	AchievementManager.on_mutation_activated("homeorhesis")
 
 func activate_depredador():
 	if mutation_homeostasis or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
 	LogManager.add("⚠️ ALERTA: EL CÓDIGO FUENTE HA SIDO VULNERADO. EL HONGO SE ALIMENTA DE LA REALIDAD.", main)
 	mutation_depredador = true
 	mutation_activated.emit("depredador", "Depredador de Realidades")
+	AchievementManager.on_depredador_activated()
 
 	if not LegacyManager.unlocked_legacies.has("metabolismo_glitch") or not LegacyManager.unlocked_legacies["metabolismo_glitch"]:
 		LegacyManager.unlocked_legacies["metabolismo_glitch"] = true
@@ -419,6 +422,7 @@ func activate_hyperassimilation():
 	mutation_hyperassimilation = true
 	LogManager.add("⚡⚡⚡ EFECTOS ACTIVOS: Click PUSH ×10 | Pasivo ×0.25 (-75%) | Fragilidad Ω total ⚡⚡⚡", main)
 	mutation_activated.emit("hiperasimilacion", "HIPERASIMILACIÓN")
+	AchievementManager.on_mutation_activated("hiperasimilacion")
 	# Si venimos de PARASITISMO, NO cerramos — esperamos que ε > 0.95 active DEPREDADOR
 	if LegacyManager.last_run_ending != "PARASITISMO":
 		run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema prioriza absorción total sobre estabilidad")
@@ -428,20 +432,23 @@ func activate_homeostasis():
 	mutation_homeostasis = true
 	mutation_hyperassimilation = false # bloqueo cruzado
 	mutation_activated.emit("homeostasis", "HOMEOSTASIS")
+	AchievementManager.on_mutation_activated("homeostasis")
 
 func activate_red_micelial():
 	if mutation_homeostasis or mutation_hyperassimilation or mutation_symbiosis: return
 	mutation_red_micelial = true
 	# red_micelial_phase = 1 // This is now handled by check_red_micelial_transition
 	mutation_activated.emit("red_micelial", "RED MICELIAL (Fase A)")
+	AchievementManager.on_red_micelial_activated()
 
 func activate_sporulation():
 	if mutation_sporulation: return
 	if not mutation_red_micelial or red_micelial_phase != 2: return
 	if mutation_homeostasis or mutation_hyperassimilation: return
-	
+
 	mutation_sporulation = true
 	mutation_activated.emit("esporulacion", "ESPORULACIÓN")
+	AchievementManager.on_mutation_activated("esporulacion")
 	run_ended_by_mutation.emit("ESPORULACION", "El sistema abandona la coherencia local y se dispersa en esporas")
 
 func activate_parasitism():
@@ -450,6 +457,7 @@ func activate_parasitism():
 	mutation_hyperassimilation = false
 	BiosphereEngine.apply_parasitism_buffs()
 	mutation_activated.emit("parasitismo", "PARASITISMO")
+	AchievementManager.on_mutation_activated("parasitismo")
 	# El parasitismo no cierra la run inmediatamente, requiere un hito de drenaje o colapso.
 
 func check_parasitism_final(_main: Control):
@@ -568,6 +576,7 @@ func _complete_primordio() -> void:
 	seta_formada = true
 	red_micelial_phase = 2  # Fase C: Seta formada, esporulación disponible
 	seta_formada_signal.emit()
+	AchievementManager.on_seta_formed()
 
 # =============================================================
 # COLOR DEL REACTOR — Fuente Única de Verdad (v0.8.27)

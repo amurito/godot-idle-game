@@ -83,12 +83,8 @@ const UI_TICK := 0.1      # 10 Hz — labels & buttons
 const AUTOSAVE_INTERVAL := 30.0
 
 # =====================================================
-#  ACHIEVEMENTS / LOGROS WIP
-
-var unlocked_tree := false
-var unlocked_click_dominance := false
-var unlocked_delta_100 := false
-# Achievements moved to AchievementManager.gd
+#  ACHIEVEMENTS / LOGROS (migrados a AchievementManager.gd)
+# Los flags legacy (unlocked_tree, etc.) se migran automáticamente al cargar un save viejo.
 
 
 # === GENES FÚNGICOS ===
@@ -159,15 +155,6 @@ func update_genome():
 # === FUNCIONES DE LOGROS Y CICLO DE VIDA (Restauradas) ===
 func close_run(route: String, reason: String):
 	RunManager.close_run(route, reason)
-
-func unlock_hyperassimilation_achievement():
-	AchievementManager.unlock_hyperassimilation_achievement()
-
-func unlock_sporulation_achievement():
-	AchievementManager.unlock_sporulation_achievement()
-
-func unlock_red_micelial_achievement():
-	AchievementManager.unlock_red_micelial_achievement()
 
 func enter_post_homeostasis():
 	RunManager.enter_post_homeostasis()
@@ -752,7 +739,7 @@ func _build_run_json(meta: Dictionary) -> Dictionary:
 		"resilience_score": RunManager.resilience_score,
 		"legacy_homeostasis": RunManager.legacy_homeostasis
 	},
-	"achievements": AchievementManager.get_achievements_dict(),
+	"achievements": AchievementManager.get_data(),
 	"legacy": {
 	"type": "ESPORULATION",
 	"spores": BiosphereEngine.biomasa,
@@ -798,50 +785,40 @@ func _on_ExportRunButton_pressed():
 
 
 func check_achievements():
-	# Árbol completo
-	if not unlocked_tree:
-		var enough_upgrades = StructuralModel.unlocked_d and StructuralModel.unlocked_md and UpgradeManager.level("specialization") > 0 and StructuralModel.unlocked_e and StructuralModel.unlocked_me
-		if enough_upgrades:
-			unlocked_tree = true
-			add_lap("🏁 Logro — Árbol productivo completo")
-			show_system_toast("LOGRO ESTRUCTURAL — Sistema productivo completo")
-	# Dominancia click (Solo si hay algo contra qué competir)
-	if not unlocked_click_dominance and (StructuralModel.unlocked_d or StructuralModel.unlocked_e):
-		var d := get_dominant_term()
-		if d == "CLICK domina el sistema":
-			unlocked_click_dominance = true
-			add_lap("🏁 Logro — Dominancia CLICK alcanzada")
-			show_system_toast("LOGRO — Dominancia CLICK alcanzada")
-	# Δ$ 100 / s
-	if not unlocked_delta_100:
-		var delta := get_delta_total()
-		if delta >= 100.0:
-			unlocked_delta_100 = true
-			add_lap("🏁 Logro — Δ$ 100 / s alcanzado")
-			show_system_toast("LOGRO — Δ$ 100 / s alcanzado")
-
-	# Logros movidos a AchievementManager
-	AchievementManager.check_achievements()
+	# Empujar snapshot del estado del mundo antes del tick de evaluación.
+	AchievementManager.push_snapshot({
+		"epsilon":         StructuralModel.epsilon_effective,
+		"biomasa":         BiosphereEngine.biomasa,
+		"k_eff":           get_k_eff(),
+		"delta_total":     get_delta_total(),
+		"money":           EconomyManager.money,
+		"total_money":     EconomyManager.total_money_generated,
+		"resilience_score":RunManager.resilience_score,
+		"dominant_term":   get_dominant_term(),
+		"parasitism":      EvoManager.mutation_parasitism,
+	})
+	AchievementManager.check_tick(LOGIC_TICK)
 func show_system_toast(message: String) -> void:
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = message
 
 func update_achievements_label():
-	var t := "--- Logros estructurales ---\n"
-	if unlocked_tree: t += "✓ Árbol productivo completo\n"
-	if unlocked_click_dominance: t += "✓ CLICK domina el sistema\n"
-	if unlocked_delta_100: t += "✓ Δ$ ≥ 100 alcanzado\n"
-	if AchievementManager.achievement_millionaire: t += "✓ Millonario de Esporas\n"
-	if AchievementManager.achievement_fragile_balance: t += "✓ Equilibrio Frágil\n"
-	t += "\n--- Logros evolutivos ---\n"
-	if AchievementManager.achievement_homeostasis: t += "✓ HOMEOSTASIS\n"
-	if AchievementManager.achievement_homeostasis_perfect: t += "✓ HOMEOSTASIS PERFECTA\n"
-	if AchievementManager.achievement_symbiosis: t += "✓ SIMBIOSIS ESTRUCTURAL\n"
-	if AchievementManager.achievement_hyperassimilation: t += "✓ HIPERASIMILACIÓN\n"
-	if AchievementManager.achievement_red_micelial: t += "✓ RED MICELIAL\n"
-	if AchievementManager.achievement_sporulation: t += "✓ ESPORULACIÓN\n"
-	if AchievementManager.achievement_parasitism: t += "✓ PARASITISMO\n"
-	if AchievementManager.achievement_insatiable_parasite: t += "✓ PARÁSITO INSACIABLE\n"
+	# Vista resumida en el HUD. Detalles completos se ven en el menú principal.
+	var total := AchievementManager.total_count()
+	var got := AchievementManager.unlocked_count()
+	var t := "--- Logros (%d / %d) ---\n" % [got, total]
+	# Recorrer por tier
+	for tier in [AchievementManager.Tier.MICELIO, AchievementManager.Tier.ESPORA, AchievementManager.Tier.FRUTO, AchievementManager.Tier.ANCESTRAL]:
+		var ids: Array = AchievementManager.get_by_tier(tier)
+		var ok := 0
+		for id in ids:
+			if AchievementManager.is_unlocked(id): ok += 1
+		t += "%s %s: %d/%d\n" % [
+			AchievementManager.TIER_ICONS[tier],
+			AchievementManager.TIER_NAMES[tier],
+			ok,
+			ids.size()
+		]
 
 	if UIManager.system_achievements_label:
 		UIManager.system_achievements_label.text = t
@@ -855,19 +832,9 @@ func reset_local_state():
 	StructuralModel.reset()
 	delta_per_sec = 0.0
 	run_time = 0.0
-	unlocked_tree = false
-	unlocked_click_dominance = false
-	unlocked_delta_100 = false
-	AchievementManager.achievement_homeostasis = false
-	AchievementManager.achievement_homeostasis_perfect = false
-	AchievementManager.achievement_hyperassimilation = false
-	AchievementManager.achievement_symbiosis = false
-	AchievementManager.achievement_red_micelial = false
-	AchievementManager.achievement_sporulation = false
-	AchievementManager.achievement_parasitism = false
-	AchievementManager.achievement_millionaire = false
-	AchievementManager.achievement_fragile_balance = false
-	AchievementManager.achievement_insatiable_parasite = false
+	# Los logros persisten entre runs (vivían en main.gd como flags, ahora en AchievementManager).
+	# Sólo borramos el estado efímero (timers, contadores de click, etc.)
+	AchievementManager.reset_run_state()
 	_parasitism_status_timer = 0.0
 	depredador_tick = 0.0
 	_depredador_status_timer = 0.0
@@ -1019,6 +986,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
 	var power := get_click_power()
 	EconomyManager.money += power
+	AchievementManager.on_click()
 
 	# El click ahora genera un pequeño pico de estrés runtime (v0.8.2)
 	StructuralModel.epsilon_runtime += epsilon_delta
@@ -1208,6 +1176,7 @@ func _on_logic_tick():
 		RunManager.disturbances_survived += 1
 		RunManager.is_recovering_from_shock = false
 		add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(RunManager.disturbances_survived))
+		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
 	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
 	if EvoManager.mutation_homeostasis:
@@ -2347,12 +2316,7 @@ func get_save_data() -> Dictionary:
 			"unlocked_md": StructuralModel.unlocked_md,
 			"unlocked_e": StructuralModel.unlocked_e,
 			"unlocked_me": StructuralModel.unlocked_me,
-			"unlocked_tree": unlocked_tree,
-			"unlocked_click_dominance": unlocked_click_dominance,
-			"unlocked_delta_100": unlocked_delta_100,
-			"achievement_millionaire": AchievementManager.achievement_millionaire,
-			"achievement_fragile_balance": AchievementManager.achievement_fragile_balance,
-			"achievement_insatiable_parasite": AchievementManager.achievement_insatiable_parasite,
+			# Logros viven ahora en legacy_bank.json (AchievementManager).
 			"run_closed": RunManager.run_closed,
 			"final_route": RunManager.final_route,
 			"final_reason": RunManager.final_reason
@@ -2430,15 +2394,15 @@ func _apply_save_data(data: Dictionary):
 		StructuralModel.unlocked_md = f.get("unlocked_md", StructuralModel.unlocked_md)
 		StructuralModel.unlocked_e = f.get("unlocked_e", StructuralModel.unlocked_e)
 		StructuralModel.unlocked_me = f.get("unlocked_me", StructuralModel.unlocked_me)
-		unlocked_tree = f.get("unlocked_tree", unlocked_tree)
-		unlocked_click_dominance = f.get("unlocked_click_dominance", unlocked_click_dominance)
-		unlocked_delta_100 = f.get("unlocked_delta_100", unlocked_delta_100)
-		AchievementManager.achievement_millionaire = f.get("achievement_millionaire", AchievementManager.achievement_millionaire)
-		AchievementManager.achievement_fragile_balance = f.get("achievement_fragile_balance", AchievementManager.achievement_fragile_balance)
-		AchievementManager.achievement_insatiable_parasite = f.get("achievement_insatiable_parasite", AchievementManager.achievement_insatiable_parasite)
 		RunManager.run_closed = f.get("run_closed", RunManager.run_closed)
 		RunManager.final_route = f.get("final_route", RunManager.final_route)
 		RunManager.final_reason = f.get("final_reason", RunManager.final_reason)
+		# MIGRACIÓN v0.9.3: importar logros viejos del savegame al nuevo sistema.
+		# Si f tiene flags legacy (unlocked_tree, achievement_*), los pasamos al AchievementManager.
+		var has_legacy_flags :bool = f.has("unlocked_tree") or f.has("achievement_millionaire")
+		var old_achievements: Dictionary = data.get("achievements", {})
+		if has_legacy_flags or not old_achievements.is_empty():
+			AchievementManager.migrate_from_legacy_save(f, old_achievements)
 
 	if data.has("evolution"):
 		var ev = data.evolution
@@ -2478,9 +2442,8 @@ func _apply_save_data(data: Dictionary):
 		RunManager.homeostasis_timer = h.get("homeostasis_timer", RunManager.homeostasis_timer)
 		RunManager.legacy_homeostasis = h.get("legacy_homeostasis", RunManager.legacy_homeostasis)
 
-	# Cargar achievements
-	if data.has("achievements"):
-		AchievementManager.load_achievements(data["achievements"])
+	# Los logros ahora viven en legacy_bank.json y se cargan desde LegacyManager.load_legacy().
+	# Si el save viejo tenía data["achievements"], ya se migró en el bloque de flags de arriba.
 
 	# Bitácora de eventos
 	if data.has("laps"):

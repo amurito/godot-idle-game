@@ -66,6 +66,7 @@ func _start_new_run() -> void:
 	BiosphereEngine.reset()
 	EvoManager.reset()
 	LogManager.reset()
+	AchievementManager.reset_run_state() # Borra timers/contadores per-run (no toca unlocked)
 
 	# 3. Incrementar contador de ciclos en legacy
 	LegacyManager.increment_run()
@@ -95,6 +96,8 @@ func _hard_reset() -> void:
 	LegacyManager.first_trascendencia_shown = false
 	LegacyManager.endings_achieved = {}
 	LegacyManager.cosmic_unlocked = {}
+	LegacyManager.achievement_data = {}
+	AchievementManager.hard_reset()
 
 	get_tree().change_scene_to_file("res://main.tscn")
 
@@ -161,56 +164,85 @@ func _on_buy_legacy(id: String):
 		_update_legacy_view()
 
 func _update_achievements_view():
-	# Cargamos datos temporales para ver logros sin iniciar partida completa
-	if not FileAccess.file_exists(SaveManager.SAVE_PATH):
-		achievements_label.text = "[center]No hay datos de guardado detectados.\n[color=gray]Juega una partida para desbloquear logros.[/color][/center]"
-		return
-	
-	var file = FileAccess.open(SaveManager.SAVE_PATH, FileAccess.READ)
-	if file:
-		var json = JSON.new()
-		json.parse(file.get_as_text())
-		file.close()
-		var data = json.data
-		
-		# Extraer flags de logros (basado en la estructura de main.gd.get_save_data)
-		var flags = data.get("flags", {})
-		var t := "[center][b]--- HISTORIAL DE LOGROS ---[/b][/center]\n\n"
-		
-		var struct = [
-			["unlocked_tree", "✓ Árbol productivo completo"],
-			["unlocked_click_dominance", "✓ CLICK domina el sistema"],
-			["unlocked_delta_100", "✓ Δ$ ≥ 100 alcanzado"],
-			["achievement_millionaire", "✓ Millonario de Esporas"],
-			["achievement_fragile_balance", "✓ Equilibrio Frágil"]
-		]
-		
-		var evo = [
-			["achievement_homeostasis", "✓ Rutas: HOMEOSTASIS"],
-			["achievement_homeostasis_perfect", "✓ HOMEOSTASIS PERFECTA"],
-			["achievement_symbiosis", "✓ SIMBIOSIS ESTRUCTURAL"],
-			["achievement_hyperassimilation", "✓ HIPERASIMILACIÓN"],
-			["achievement_red_micelial", "✓ RED MICELIAL"],
-			["achievement_sporulation", "✓ ESPORULACIÓN"],
-			["achievement_parasitism", "✓ PARASITISMO"],
-			["achievement_insatiable_parasite", "✓ PARÁSITO INSACIABLE"]
-		]
-		
-		t += "[color=cyan][b]Estructurales:[/b][/color]\n"
-		for pair in struct:
-			if flags.get(pair[0], false):
-				t += "[color=green]" + pair[1] + "[/color]\n"
+	# v0.9.4: panel de logros con progreso, badge NUEVO y toast por tier.
+	var total: int = AchievementManager.total_count()
+	var got: int = AchievementManager.unlocked_count()
+
+	var t: String = "[center][b]─── HISTORIAL DE LOGROS ───[/b]\n"
+	t += "[color=#ffcc00]%d / %d desbloqueados[/color][/center]\n\n" % [got, total]
+
+	var tier_order := [
+		AchievementManager.Tier.MICELIO,
+		AchievementManager.Tier.ESPORA,
+		AchievementManager.Tier.FRUTO,
+		AchievementManager.Tier.ANCESTRAL,
+	]
+	var tier_colors := {
+		AchievementManager.Tier.MICELIO:   "#b77841",
+		AchievementManager.Tier.ESPORA:    "#e0e0e5",
+		AchievementManager.Tier.FRUTO:     "#ffcc40",
+		AchievementManager.Tier.ANCESTRAL: "#d93a4d",
+	}
+
+	for tier in tier_order:
+		var ids: Array = AchievementManager.get_by_tier(tier)
+		var tier_name: String = AchievementManager.TIER_NAMES[tier]
+		var tier_icon: String = AchievementManager.TIER_ICONS[tier]
+		var color: String = tier_colors[tier]
+		var ok: int = 0
+		for id in ids:
+			if AchievementManager.is_unlocked(id): ok += 1
+
+		t += "[color=%s][b]%s %s[/b][/color]  [color=#aaaaaa]%d / %d[/color]\n" \
+			% [color, tier_icon, tier_name, ok, ids.size()]
+
+		for id in ids:
+			var def: Dictionary = AchievementManager.DEFS[id]
+			var unlocked_one: bool = AchievementManager.is_unlocked(id)
+			var is_secret: bool = def.get("secret", false)
+			var name_str: String = def.get("name", id)
+			var desc_str: String = def.get("desc", "")
+
+			if unlocked_one:
+				# Badge NUEVO si todavía no fue visto
+				var entry: Dictionary = AchievementManager.unlocked.get(id, {})
+				var is_new: bool = not entry.get("seen", true)
+				var new_badge: String = " [color=#ffdd00][b]★ NUEVO[/b][/color]" if is_new else ""
+				t += "  [color=#00ff88]✓ %s[/color]%s\n" % [name_str, new_badge]
+				t += "    [color=#777777]%s[/color]\n" % desc_str
+				# Marcar como visto
+				if is_new:
+					AchievementManager.mark_seen(id)
+			elif is_secret:
+				t += "  [color=#444444]? ??? [i](logro oculto)[/i][/color]\n"
 			else:
-				t += "[color=gray][ ] " + pair[1].substr(2) + "[/color]\n"
-				
-		t += "\n[color=magenta][b]Evolutivos:[/b][/color]\n"
-		for pair in evo:
-			if flags.get(pair[0], false):
-				t += "[color=green]" + pair[1] + "[/color]\n"
-			else:
-				t += "[color=gray][ ] " + pair[1].substr(2) + "[/color]\n"
-		
-		achievements_label.text = t
+				# Progreso si el logro lo trackea
+				var progress_str: String = _build_progress_str(id, def)
+				t += "  [color=#666666][ ] %s[/color]%s\n" % [name_str, progress_str]
+				t += "    [color=#444444]%s[/color]\n" % desc_str
+
+		t += "\n"
+
+	achievements_label.text = t
+
+func _build_progress_str(id: String, def: Dictionary) -> String:
+	var trigger: String = def.get("trigger", "")
+	# Solo mostrar progreso en logros que tienen target trackeable
+	if trigger not in ["event_count"] and not def.has("progress_format"):
+		return ""
+	var prog: Dictionary = AchievementManager.get_progress(id)
+	var current: float = prog.get("current", 0.0)
+	var target: float = prog.get("target", 1.0)
+	if current <= 0.0:
+		return ""
+	var ratio: float = prog.get("ratio", 0.0)
+	# Barra de texto (8 segmentos)
+	var filled: int = int(ratio * 8.0)
+	var bar: String = "▓".repeat(filled) + "░".repeat(8 - filled)
+	# Label con formato si existe
+	var fmt: String = def.get("progress_format", "{current} / {target}")
+	var label: String = fmt.replace("{current}", str(int(current))).replace("{target}", str(int(target)))
+	return "  [color=#888888][%s] %s[/color]" % [bar, label]
 
 # =====================================================
 #  TRASCENDENCIA — UI (v0.9.2)

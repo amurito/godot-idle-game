@@ -20,6 +20,7 @@ const DISTURBANCE_INTERVAL := 20.0
 
 var legacy_homeostasis := false
 var disturbances_survived: int = 0
+var disturbances_without_reset: int = 0  # Racha de perturbaciones sin reset de timer (para logro)
 var is_recovering_from_shock: bool = false
 var extreme_shock_survived: bool = false
 
@@ -40,6 +41,7 @@ func reset():
 	homeostasis_timer = 0.0
 	homeostasis_tier_reached = 0
 	disturbances_survived = 0
+	disturbances_without_reset = 0
 	is_recovering_from_shock = false
 	extreme_shock_survived = false
 	legacy_homeostasis = false
@@ -59,6 +61,9 @@ func close_run(route: String, reason: String):
 	LegacyManager.last_run_ending = route
 	LegacyManager.mark_ending_achieved(route) # Tracking persistente para gate de Trascendencia
 	LegacyManager.save_legacy()
+
+	# Logros — notificar cierre de run (antes de resetear contadores)
+	AchievementManager.on_run_closed(route)
 
 	var pl_to_add := 0
 	match route:
@@ -83,6 +88,7 @@ func close_run(route: String, reason: String):
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
+	disturbances_without_reset = 0
 	is_recovering_from_shock = false
 	extreme_shock_survived = false
 	homeostasis_tier_reached = 0
@@ -118,6 +124,7 @@ func check_homeostasis_final(delta: float):
 	else:
 		if StructuralModel.epsilon_effective > 0.35:
 			homeostasis_timer = 0.0
+			disturbances_without_reset = 0 # Rompe la racha de "arquitecto_caos"
 		else:
 			homeostasis_timer = max(homeostasis_timer - delta, 0.0)
 
@@ -271,6 +278,8 @@ func trigger_disturbance():
 
 	StructuralModel.epsilon_runtime += shock
 	is_recovering_from_shock = true
+	disturbances_without_reset += 1
+	AchievementManager.on_disturbance_streak(disturbances_without_reset)
 
 	# Shocks extremos tienen consecuencias: drenan omega_min y dinero
 	if is_extreme:
@@ -281,13 +290,12 @@ func trigger_disturbance():
 		main.add_lap("💸 Shock drenó Ω_min (-%s) y $%.0f" % [snapped(penalty_omega, 0.01), money_drain])
 
 func check_perfect_homeostasis():
-	if not post_homeostasis or AchievementManager.achievement_homeostasis_perfect:
+	if not post_homeostasis or AchievementManager.is_unlocked("homeostasis_perfecta"):
 		return
 
 	if resilience_score >= 300.0:
-		AchievementManager.achievement_homeostasis_perfect = true
-		main.add_lap("🏆 LOGRO — HOMEOSTASIS PERFECTA")
-		main.show_system_toast("LOGRO — HOMEOSTASIS PERFECTA: resiliencia máxima")
+		# El unlock dispara el toast y el add_lap automáticamente vía AchievementManager
+		AchievementManager.unlock("homeostasis_perfecta")
 		legacy_homeostasis = true
 		post_homeostasis = false
 
