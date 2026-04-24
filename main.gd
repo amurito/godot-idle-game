@@ -628,11 +628,6 @@ func get_hyperassimilation_tooltip() -> String:
 
 	return t
 # =====================================================
-#  FLAGS VISUALES EPSILON helper
-# =====================================================
-func epsilon_flag(v: float, limit: float) -> String:
-	return UIManager.epsilon_flag(v, limit)
-# =====================================================
 #  LAP MARKERS
 # =====================================================
 
@@ -2022,35 +2017,6 @@ func update_core_labels():
 	
 	update_click_stats_panel()
 
-func build_institution_panel_text() -> String:
-	var t := "--- Contabilidad Básica ---\n"
-
-	t += "\n--- ε desglosado (Homeostasis) ---\n"
-	t += "%s ε activo = %s\n" % [epsilon_flag(StructuralModel.epsilon_active, 0.15), snapped(StructuralModel.epsilon_active, 0.01)]
-	t += "%s ε pasivo = %s\n" % [epsilon_flag(StructuralModel.epsilon_passive, 0.12), snapped(StructuralModel.epsilon_passive, 0.01)]
-	t += "%s ε complejidad = %s\n" % [epsilon_flag(StructuralModel.epsilon_complex, 0.08), snapped(StructuralModel.epsilon_complex, 0.01)]
-	
-	t += "Ω_min = %s\n" % snapped(StructuralModel.omega_min, 0.01)
-	t += "Contabilidad = nivel %d\n" % UpgradeManager.level("accounting")
-	t += "Amortiguación = %d%%\n" % int(get_accounting_effect() * 100.0)
-
-	t += "\nε_peak = %s\n" % snapped(StructuralModel.epsilon_peak, 0.01)
-	
-
-	t += build_genome_text()
-	t += build_mutation_status_text()
-
-	if RunManager.homeostasis_mode:
-		t += "\n\n⚖️ HOMEOSTASIS MODE"
-		t += "\nResiliencia = %s" % snapped(RunManager.resilience_score, 1)
-		t += "\nPerturbaciones cada %ds" % RunManager.DISTURBANCE_INTERVAL
-
-	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
-		t += "\n⚠️ La red no puede estabilizarse localmente"
-
-	t += UIManager.build_evo_checklist(self)
-
-	return t
 
 func update_lab_metrics():
 	var contrib := get_contribution_breakdown()
@@ -2131,7 +2097,7 @@ func update_ui():
 	if institutions_unlocked or UpgradeManager.level("accounting") >= 1:
 		if UIManager.institution_panel_label:
 			UIManager.institution_panel_label.visible = true
-			UIManager.institution_panel_label.text = build_institution_panel_text()
+			UIManager.institution_panel_label.text = UIManager.build_institution_panel_text(self)
 
 	if StructuralModel.institution_accounting_unlocked:
 		pass # Los botones genéricos se encargan de visibilidad
@@ -2166,150 +2132,6 @@ func update_ui():
 		UIManager.export_run_button.disabled = false
 		UIManager.export_run_button.text = "📤 Export run"
 
-func build_genome_text() -> String:
-	var t := "🧬 GENOMA FÚNGICO\n"
-	# --- Estado genómico ---
-	t += "Hiperasimilación: " + EvoManager.genome.hiperasimilacion + "\n"
-	t += "Parasitismo: " + EvoManager.genome.parasitismo + "\n"
-	t += "Red micelial: " + EvoManager.genome.red_micelial + "\n"
-	t += "Esporulación: " + EvoManager.genome.esporulacion + "\n"
-	t += "Simbiosis: " + EvoManager.genome.simbiosis + "\n"
-	# NG+ secretos visibles solo si aplican
-	var dep_state: String = EvoManager.genome.get("depredador", "dormido")
-	if dep_state != "dormido" or EvoManager.mutation_depredador:
-		t += "Depredador: " + dep_state + "\n"
-	var mo_state: String = EvoManager.genome.get("met_oscuro", "dormido")
-	if mo_state != "dormido" or EvoManager.mutation_met_oscuro:
-		t += "Met.Oscuro: " + mo_state + "\n"
-
-	# --- Ruta evolutiva activa ---
-	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO (Post-Depredador):[/color][/b]\n"
-		t += "[color=#00ff00]+ Pasivo = Bio × 0.8/s · Click ×3 · Biomasa autoalimentada[/color]\n"
-		t += "[color=#ff4444]- Upgrades bloqueados · Ω 0.10 · Devorar detenido[/color]\n"
-	elif EvoManager.mutation_depredador:
-		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
-		t += "[color=#00ff00]+ Devora upgrade cada 1.5s (+15 biomasa)[/color]\n"
-		t += "[color=#ff4444]- Agotar upgrades cierra la run[/color]\n"
-	elif EvoManager.mutation_hyperassimilation:
-		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (Active Rush):[/color][/b]\n"
-		t += "[color=#00ff00]+ Sobrecarga Click PUSH x10.0[/color]\n"
-		t += "[color=#ff4444]- Producción pasiva atrofiada (-75%)[/color]\n"
-		t += "[color=#ff4444]- Colapso persistencia inminente[/color]\n"
-	elif EvoManager.genome.hiperasimilacion == "latente":
-		t += "\n[color=gray]• Hiperasimilación (LATENTE)[/color]"
-
-	if EvoManager.mutation_met_oscuro:
-		t += "\n🌑 Ruta evolutiva: METABOLISMO OSCURO"
-	elif EvoManager.mutation_depredador:
-		t += "\n☠️ Ruta evolutiva: DEPREDADOR DE REALIDADES"
-	elif EvoManager.mutation_homeostasis:
-		t += "\n⚖️ Ruta evolutiva: HOMEOSTASIS"
-	elif EvoManager.mutation_hyperassimilation:
-		t += "\n⚠️ Ruta evolutiva: HIPERASIMILACIÓN"
-	elif EvoManager.mutation_symbiosis:
-		t += "\n🌱 Ruta evolutiva: SIMBIOSIS"
-	elif EvoManager.mutation_parasitism:
-		t += "\n🦠 Ruta evolutiva: PARASITISMO"
-
-	# --- Final de run ---
-	if RunManager.run_closed:
-		t += "\n\n🏁 FINAL ALCANZADO: " + RunManager.final_route
-
-	return t
-func build_mutation_status_text() -> String:
-	var t := "\n[color=#aaaaaa]--- Efectos mutacionales activos ---[/color]\n"
-	var buff := "[color=#00ff00]+"
-	var nerf := "[color=#ff4444]-"
-	var _end_c := "[/color]"
-
-	# HIPERASIMILACIÓN
-	if EvoManager.mutation_hyperassimilation:
-		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (RUSH):[/color][/b]\n"
-		t += buff + " Sobrecarga Click PUSH x10.0[/color]\n"
-		t += nerf + " Pasivo -75% / Fragilidad Ω[/color]\n"
-
-	elif EvoManager.genome.hiperasimilacion == "latente":
-		t += "[color=gray]• Hiperasimilación (LATENTE)[/color]\n"
-
-	# HOMEOSTASIS
-	if EvoManager.mutation_homeostasis:
-		t += "[b][color=cyan]⚖️ HOMEOSTASIS:[/color][/b]\n"
-		t += buff + " Producción total +50% (Orden Administrativo)[/color]\n"
-		t += buff + " Estabilidad ε (runtime reducido)[/color]\n"
-		t += buff + " Ω_min 0.35 (Seguridad estructural)[/color]\n"
-		t += nerf + " Limitación Biomasa (crecimiento controlado)[/color]\n"
-
-	# SIMBIOSIS
-	if EvoManager.mutation_symbiosis:
-		t += "[b][color=green]🌱 SIMBIOSIS ESTRUCTURAL:[/color][/b]\n"
-		t += buff + " Potencia Click PUSH ×2.5 (Domino Activo)[/color]\n"
-		t += nerf + " Producción Pasiva -50% (Atrofia Autómata)[/color]\n"
-
-	# RED MICELIAL
-	if EvoManager.mutation_red_micelial:
-		t += "[b][color=#9955ff]🕸️ RED MICELIAL:[/color][/b]\n"
-		t += buff + " Producción Pasiva TOTAL ×2.5 (Heptasíntesis)[/color]\n"
-		t += nerf + " Potencia Click PUSH -50% (Desconexión Motora)[/color]\n"
-	
-	# MET.OSCURO (post-Depredador)
-	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO:[/color][/b]\n"
-		t += buff + " Pasivo = Biomasa × 0.8 /s (bioquímica oscura)[/color]\n"
-		t += buff + " Click PUSH ×3 (energía alternativa)[/color]\n"
-		t += buff + " Biomasa autoalimentada +0.1/s[/color]\n"
-		t += buff + " ε_runtime decae -0.05/s (autorregulación)[/color]\n"
-		t += nerf + " Devorar DETENIDO (estabilización)[/color]\n"
-		t += nerf + " Upgrades bloqueados (no se pueden comprar)[/color]\n"
-		t += nerf + " Ω forzado a 0.10 (fragilidad permanente)[/color]\n"
-		t += nerf + " Pasivo estructural anulado[/color]\n"
-		t += "\n[color=#aa66cc]◈ CIERRE:[/color]\n"
-		t += "  • Voluntario (+4 PL) · Saturación Bio≥100 (+6 PL) · $≥1M (+4 PL)\n"
-	elif EvoManager.mutation_depredador:
-		# Mostrar progreso hacia MET.OSCURO durante Depredador
-		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
-		t += buff + " Devora upgrade cada 1.5s (+15 biomasa cada uno)[/color]\n"
-		t += nerf + " Agotar upgrades cierra la run[/color]\n"
-		var dev := EvoManager.met_oscuro_devoured_count
-		var bio := BiosphereEngine.biomasa
-		var money_now := EconomyManager.money
-		var d_ok: bool = dev >= 3
-		var b_ok: bool = bio >= 25.0
-		var r_ok: bool = money_now < 1000.0
-		t += "\n[color=#aa66cc]◈ RUTA ALTERNATIVA — MET.OSCURO (Depredación + Recursos críticos):[/color]\n"
-		t += "  [color=%s]Devorados ≥ 3 → %d[/color]\n" % ["#00ff88" if d_ok else "#ff5555", dev]
-		t += "  [color=%s]Biomasa ≥ 25 → %.1f[/color]\n" % ["#00ff88" if b_ok else "#ff5555", bio]
-		t += "  [color=%s]$ crítico < 1000 → $%.0f[/color]\n" % ["#00ff88" if r_ok else "#ff5555", money_now]
-		t += "  [color=#aaaaaa]Sostener 15s para activar bioquímica oscura[/color]\n"
-
-	# PARASITISMO
-	if EvoManager.mutation_parasitism:
-		t += "[b][color=#ff4400]🦠 PARASITISMO:[/color][/b]\n"
-		t += buff + " Biomasa ×2 (crecimiento descontrolado)[/color]\n"
-		t += buff + " Pasivo +20%[/color]\n"
-		t += nerf + " Drenaje de dinero = Biomasa × 0.25 / s[/color]\n"
-		t += nerf + " Corrosión de infraestructura (irreversible)[/color]\n"
-		t += nerf + " Contabilidad -10% / Ω máx 0.25[/color]\n"
-		# Condiciones de cierre con valores en vivo
-		var bio := BiosphereEngine.biomasa
-		var omg := StructuralModel.omega
-		var eps := StructuralModel.epsilon_effective
-		var money := EconomyManager.money
-		t += "\n[color=#ffaa00]◈ CIERRE (opción A):[/color]\n"
-		var a1 := bio >= 18.0
-		var a2 := omg < 0.22
-		var a3 := eps > 0.45
-		t += "  [color=%s]Bio ≥ 18 → %.1f[/color]\n" % ["#00ff88" if a1 else "#ff5555", bio]
-		t += "  [color=%s]Ω < 0.22 → %.2f[/color]\n" % ["#00ff88" if a2 else "#ff5555", omg]
-		t += "  [color=%s]ε > 0.45 → %.2f[/color]\n" % ["#00ff88" if a3 else "#ff5555", eps]
-		t += "[color=#ffaa00]◈ CIERRE (opción B):[/color]\n"
-		var b1 := bio >= 15.0
-		var b2 := money < 1000.0
-		var b3 := bio >= 25.0
-		t += "  [color=%s]Bio ≥ 15 + $ < 1000 → %.0f / $%.0f[/color]\n" % ["#00ff88" if (b1 and b2) else "#ff5555", bio, money]
-		t += "  [color=%s]  ó Bio ≥ 25 → %.1f[/color]\n" % ["#00ff88" if b3 else "#ff5555", bio]
-
-	return t
 
 # =====================================================
 #  PERSISTENCIA DE DATOS (Save/Load)
