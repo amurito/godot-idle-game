@@ -4,6 +4,7 @@ extends Node
 # Encargado de la actualización visual y gestión de referencias de UI.
 
 var root: Control
+var scene: Node  # Scene root (UIRoot), parent of UIRootContainer — needed for header nodes
 
 # Referencias de Labels (Sin tipo fijo para soportar Label y RichTextLabel)
 var money_label
@@ -43,8 +44,30 @@ var export_run_button
 var big_click_button
 var toggle_lap_button
 
+# ========== HEADER BAR (Phase 2) ==========
+var header_money_value
+var header_money_delta
+var header_epsilon_bar
+var header_omega_bar
+var header_biomasa_bar
+var header_epsilon_value
+var header_omega_value
+var header_biomasa_value
+
+# ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
+var genome_scroll            # GenomeScroll ScrollContainer (togglable)
+
+# ========== RIGHT PANEL COLLAPSIBLES (Phase 4) ==========
+var economy_content          # EconomyContent VBoxContainer (togglable)
+var structural_content       # StructuralContent GridContainer (togglable)
+var structural_eps_value     # EpsValue label
+var structural_omg_value     # OmgValue label
+var structural_pers_value    # PersValue label
+var structural_acc_value     # AccValue label
+
 func setup(ui_root: Control):
 	root = ui_root
+	scene = ui_root.get_parent()  # UIRoot (scene root) — contains HeaderBar as sibling
 	
 	# Labels
 	money_label = _find("MoneyLabel")
@@ -82,10 +105,54 @@ func setup(ui_root: Control):
 	export_run_button = _find("ExportRunButton")
 	big_click_button = _find("BigClickButton")
 	toggle_lap_button = _find("ToggleLapViewButton")
-	
-	print("🎨 [UIManager] Todos los nodos vinculados.")
+
+	# Header Bar nodes (search from scene root, NOT ui_root — header is a sibling of UIRootContainer)
+	header_money_value = _find_scene("MoneyValue")
+	header_money_delta = _find_scene("MoneyDelta")
+	header_epsilon_bar = _find_scene("EpsilonBar")
+	header_omega_bar = _find_scene("OmegaBar")
+	header_biomasa_bar = _find_scene("BiomasaBar")
+	header_epsilon_value = _find_scene("EpsilonValue")
+	header_omega_value = _find_scene("OmegaValue")
+	header_biomasa_value = _find_scene("BiomasaValue")
+
+	# Center panel collapsible — Genoma Fúngico
+	genome_scroll = _find("GenomeScroll")
+	var mutation_toggle_btn = _find("MutationToggleBtn")
+	if mutation_toggle_btn and genome_scroll:
+		mutation_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(genome_scroll, mutation_toggle_btn, pressed, "Genoma Fúngico + Próxima Mutación")
+		)
+
+	# Right panel collapsibles (Phase 4)
+	economy_content = _find("EconomyContent")
+	structural_content = _find("StructuralContent")
+	structural_eps_value = _find("EpsValue")
+	structural_omg_value = _find("OmgValue")
+	structural_pers_value = _find("PersValue")
+	structural_acc_value = _find("AccValue")
+
+	# Wire toggle buttons for collapsible sections (Phase 6 — Smooth Transitions)
+	var economy_btn = _find("EconomyToggleBtn")
+	if economy_btn:
+		economy_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(economy_content, economy_btn, pressed, "Economía")
+		)
+
+	var structural_btn = _find("StructuralToggleBtn")
+	if structural_btn:
+		structural_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(structural_content, structural_btn, pressed, "Estructura")
+		)
+
+	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
 
 func _find(node_name: String):
+	return root.find_child(node_name, true, false)
+
+func _find_scene(node_name: String):
+	if scene:
+		return scene.find_child(node_name, true, false)
 	return root.find_child(node_name, true, false)
 
 # --- Métodos de actualización ---
@@ -95,6 +162,102 @@ func update_money(amount: float):
 
 func update_timer(t: float):
 	if session_time_label: session_time_label.text = "Tiempo de sesión: " + format_time(t)
+
+# ===== HEADER BAR UPDATES (NEW) =====
+func update_header_money(amount: float, delta_per_sec: float):
+	if header_money_value:
+		if amount >= 1e12:
+			header_money_value.text = "$%.2fT" % (amount / 1e12)
+		elif amount >= 1e9:
+			header_money_value.text = "$%.2fB" % (amount / 1e9)
+		elif amount >= 1e6:
+			header_money_value.text = "$%.2fM" % (amount / 1e6)
+		elif amount >= 1e3:
+			header_money_value.text = "$%.1fK" % (amount / 1e3)
+		else:
+			header_money_value.text = "$" + str(round(amount))
+
+	if header_money_delta:
+		var delta_text = ""
+		if delta_per_sec >= 0:
+			delta_text = "+"
+		if abs(delta_per_sec) >= 1e9:
+			delta_text += "%.2fB" % (delta_per_sec / 1e9)
+		elif abs(delta_per_sec) >= 1e6:
+			delta_text += "%.2fM" % (delta_per_sec / 1e6)
+		elif abs(delta_per_sec) >= 1e3:
+			delta_text += "%.1fK" % (delta_per_sec / 1e3)
+		else:
+			delta_text += str(round(delta_per_sec))
+		delta_text += "/s"
+		header_money_delta.text = delta_text
+
+func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa_max: float = 10.0):
+	if header_epsilon_bar:
+		header_epsilon_bar.value = clamp(epsilon, 0.0, 1.0)
+	if header_omega_bar:
+		header_omega_bar.value = clamp(omega, 0.0, 1.0)
+	if header_biomasa_bar:
+		header_biomasa_bar.value = clamp(biomasa / biomasa_max, 0.0, 1.0)
+	if header_epsilon_value:
+		header_epsilon_value.text = "%.2f" % epsilon
+	if header_omega_value:
+		header_omega_value.text = "%.2f" % omega
+	if header_biomasa_value:
+		header_biomasa_value.text = "%.1f/%.0f" % [biomasa, biomasa_max]
+
+func update_structural_metrics(epsilon: float, omega: float, persistence: float, accounting: int):
+	if structural_eps_value:
+		var eps_col: Color
+		if epsilon < 0.30:
+			eps_col = Color(0.4, 1.0, 0.5)   # verde — ok
+		elif epsilon < 0.55:
+			eps_col = Color(1.0, 0.85, 0.2)  # amarillo — precaución
+		else:
+			eps_col = Color(1.0, 0.35, 0.35) # rojo — peligro
+		structural_eps_value.text = "%.3f" % epsilon
+		structural_eps_value.add_theme_color_override("font_color", eps_col)
+
+	if structural_omg_value:
+		var omg_col: Color
+		if omega > 0.50:
+			omg_col = Color(0.4, 0.9, 1.0)   # cyan — estable
+		elif omega > 0.25:
+			omg_col = Color(1.0, 0.75, 0.2)  # naranja — precario
+		else:
+			omg_col = Color(1.0, 0.3, 0.3)   # rojo — colapso
+		structural_omg_value.text = "%.2f" % omega
+		structural_omg_value.add_theme_color_override("font_color", omg_col)
+
+	if structural_pers_value:
+		structural_pers_value.text = "%.2f" % persistence
+	if structural_acc_value:
+		structural_acc_value.text = "Nv. %d" % accounting
+
+## Anima la transición de paneles colapsables con tweens suaves (Phase 6)
+func _toggle_collapsible_panel(panel: Control, btn: Button, pressed: bool, label: String) -> void:
+	if not panel: return
+
+	# Actualizar texto del botón con flecha
+	btn.text = ("▼ " + label if pressed else "▶ " + label)
+
+	# Animar visibilidad + modulate (para fade suave)
+	if pressed:
+		# Abrir: fade in
+		panel.visible = true
+		panel.modulate.a = 0.3
+		var tween = create_tween()
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.tween_property(panel, "modulate:a", 1.0, 0.3)
+	else:
+		# Cerrar: fade out
+		var tween = create_tween()
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.set_ease(Tween.EASE_IN)
+		tween.tween_property(panel, "modulate:a", 0.0, 0.2)
+		await tween.finished
+		panel.visible = false
 
 # --- Generación de Textos de HUD ---
 
@@ -255,6 +418,17 @@ func format_time(t: float) -> String:
 	var secs = int(fmod(t, 60))
 	return "%02d:%02d:%02d" % [hours, mins, secs]
 
+## Formato compacto de número con sufijo K/M/B
+func format_compact(v: float) -> String:
+	if v >= 1_000_000_000.0:
+		return "%.2fB" % (v / 1_000_000_000.0)
+	elif v >= 1_000_000.0:
+		return "%.2fM" % (v / 1_000_000.0)
+	elif v >= 1_000.0:
+		return "%.1fK" % (v / 1_000.0)
+	else:
+		return "%.2f" % v
+
 func epsilon_flag(v: float, limit: float) -> String:
 	return "⚠️" if v > limit else "✅"
 
@@ -326,7 +500,7 @@ func build_evo_checklist(main: Node) -> String:
 		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
 		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
 
-		# Hito 2: Sincronización
+		# Hito 2: Sincronización (Primordio normal O Mente Colmena NG+)
 		if EvoManager.primordio_active:
 			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / EvoManager.PRIMORDIO_DURATION * 100.0))
 		elif EvoManager.nucleo_conciencia:
@@ -339,6 +513,30 @@ func build_evo_checklist(main: Node) -> String:
 		# Hito 3: Núcleo
 		ch = ok_color + "[x] " if EvoManager.nucleo_conciencia else fail_color + "[ ] "
 		t += ch + "Singularidad Biomecánica lista[/color]\n"
+
+		# NG+ MENTE COLMENA — ruta alternativa cuando last_run == "SINGULARIDAD"
+		if LegacyManager.last_run_ending == "SINGULARIDAD" or LegacyManager.last_run_ending == "MENTE COLMENA DISTRIBUIDA":
+			t += "\n[color=magenta][b]🧠 Ruta NG+: MENTE COLMENA[/b][/color]\n"
+			var mc_timer: float = main.mente_colmena_timer if main else 0.0
+			var mc_active: bool = main.mente_colmena_active if main else false
+			if mc_active:
+				t += ok_color + "[x] MENTE COLMENA DISTRIBUIDA — IA activa[/color]\n"
+			elif mc_timer > 0.0:
+				var mc_pct := int(mc_timer / 180.0 * 100.0)
+				var filled := int(mc_pct / 5)   # 20 bloques = 100%
+				var bar := ""
+				for i in range(20):
+					bar += "█" if i < filled else "░"
+				t += "[color=cyan]>>> Sincronía 50/50: [%s] %d%% (%.0f/180s)[/color]\n" % [bar, mc_pct, mc_timer]
+				# Mostrar ratio actual
+				var ap :Dictionary = main.get_active_passive_breakdown()
+				var r_act := int(ap.activo)
+				var r_pas := int(ap.pasivo)
+				var ratio_color := "[color=cyan]" if abs(r_act - 50) <= 2 else "[color=yellow]"
+				t += ratio_color + "    Ratio: %d%% Activo / %d%% Pasivo[/color]\n" % [r_act, r_pas]
+			else:
+				t += "[color=#aaaaaa]Mantené ratio 50%% Activo / 50%% Pasivo durante 180s[/color]\n"
+				t += "[color=#aaaaaa](requiere ε ≤ 0.50)[/color]\n"
 
 	elif EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		t += "[b]Objetivo: Ciclo de Vida Biológico[/b]\n"
@@ -377,9 +575,17 @@ func build_evo_checklist(main: Node) -> String:
 		ch = ok_color + "[x] " if main.run_time > 200.0 else fail_color + "[ ] "
 		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(main.run_time)
 
+	elif EvoManager.mutation_symbiosis and not EvoManager.mutation_red_micelial:
+		t += "[b][color=green]🌱 Simbiosis activa:[/color][/b]\n"
+		t += "[color=gray]Sellá la run con el botón SELLAR SIMBIOSIS\no avanzá a Red Micelial para continuar.[/color]\n"
+
 	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
-		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism:
-		t += "[b]Red Micelial (Fase A):[/b]\n"
+		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism \
+		and not EvoManager.mutation_symbiosis:
+		var ap_snap = main.get_active_passive_breakdown()
+		var pasivo_domina = ap_snap.pasivo > ap_snap.activo
+		var activo_domina = ap_snap.activo > ap_snap.pasivo
+		t += "[b]🕸️ Red Micelial (Fase A):[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 11.5 else fail_color + "[ ] "
 		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
@@ -388,11 +594,23 @@ func build_evo_checklist(main: Node) -> String:
 		t += ch + "ε_runtime < 0.65  (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
+		ch = ok_color + "[x] " if pasivo_domina else fail_color + "[ ] "
+		t += ch + "Pasivos > Activos  (" + str(int(ap_snap.pasivo)) + "% vs " + str(int(ap_snap.activo)) + "%)[/color]\n"
+		t += "\n[b]🌱 Simbiosis:[/b]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 5.0 else fail_color + "[ ] "
+		t += ch + "Hifas >= 5  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
+		ch = ok_color + "[x] " if StructuralModel.omega >= 0.40 else fail_color + "[ ] "
+		t += ch + "Ω >= 0.40  (" + str(snapped(StructuralModel.omega, 0.01)) + ")[/color]\n"
+		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
+		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
+		ch = ok_color + "[x] " if activo_domina else fail_color + "[ ] "
+		t += ch + "Activos > Pasivos  (" + str(int(ap_snap.activo)) + "% vs " + str(int(ap_snap.pasivo)) + "%)[/color]\n"
 
 	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
-		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial:
+		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial \
+		and not EvoManager.mutation_symbiosis:
 		t += "\n[color=gray]Homeostasis (Tier 1):[/color]\n"
-		ch = ok_color + "[x] " if main.get_en_banda_homeostatica() else fail_color + "[ ] "
+		ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
 		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
 		ch = ok_color + "[x] " if StructuralModel.omega > 0.25 else fail_color + "[ ] "
 		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(StructuralModel.omega, 0.01)
@@ -581,8 +799,6 @@ func build_mutation_status_text() -> String:
 		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (RUSH):[/color][/b]\n"
 		t += buff + " Sobrecarga Click PUSH x10.0[/color]\n"
 		t += nerf + " Pasivo -75% / Fragilidad Ω[/color]\n"
-	elif EvoManager.genome.hiperasimilacion == "latente":
-		t += "[color=gray]• Hiperasimilación (LATENTE)[/color]\n"
 
 	if EvoManager.mutation_homeostasis:
 		t += "[b][color=cyan]⚖️ HOMEOSTASIS:[/color][/b]\n"
@@ -665,7 +881,15 @@ func build_institution_panel_text(main: Node) -> String:
 	t += "Contabilidad = nivel %d\n" % UpgradeManager.level("accounting")
 	t += "Amortiguación = %d%%\n" % int(StructuralModel.get_accounting_effect() * 100.0)
 	t += "\nε_peak = %s\n" % snapped(StructuralModel.epsilon_peak, 0.01)
-	t += build_genome_text()
+	return t
+
+## Actualiza el panel de mutación en la columna central (genoma + ruta + efectos + checklist)
+func update_mutation_center_panel(main: Node = null) -> void:
+	if not is_instance_valid(genome_summary_label):
+		genome_summary_label = _find("GenomeSummaryLabel")
+		if not is_instance_valid(genome_summary_label):
+			return
+	var t := build_genome_text()
 	t += build_mutation_status_text()
 	if RunManager.homeostasis_mode:
 		t += "\n\n⚖️ HOMEOSTASIS MODE"
@@ -673,5 +897,170 @@ func build_institution_panel_text(main: Node) -> String:
 		t += "\nPerturbaciones cada %ds" % RunManager.DISTURBANCE_INTERVAL
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
 		t += "\n⚠️ La red no puede estabilizarse localmente"
-	t += build_evo_checklist(main)
+	if main != null:
+		t += build_evo_checklist(main)
+	genome_summary_label.visible = true
+	genome_summary_label.clear()
+	genome_summary_label.append_text(t)
+
+# =====================================================
+# BIFURCATION PANEL DATA BUILDER
+# =====================================================
+func build_bifurcation_data(main: Control) -> Dictionary:
+	var hifas = BiosphereEngine.hifas
+	var acc_lvl = UpgradeManager.level("accounting")
+	var act_domina = main.get_active_passive_breakdown().activo > main.get_active_passive_breakdown().pasivo
+
+	var data := {
+		# Simbiosis sin Red Micelial → sigue siendo tier1 (no tiene sub-ramas propias)
+		"tier_mode": "tier1" if not (EvoManager.mutation_red_micelial or EvoManager.mutation_homeostasis) else ("tier2_homeostasis" if EvoManager.mutation_homeostasis else "tier2_branches")
+	}
+
+	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_homeostasis):
+		data["header"] = "MUTACIÓN DETECTADA (TIER 1)"
+
+		var h_ok_eps = RunManager.get_en_banda_homeostatica()
+		var h_ok_omega = StructuralModel.omega > 0.25
+		var h_ok_delta = main.delta_per_sec > 30.0
+		var h_ok_bio = BiosphereEngine.biomasa < 12.0
+		var h_ok_acc = acc_lvl >= 1
+		var h_ok_red = StructuralModel.unlocked_d and StructuralModel.unlocked_e
+
+		var h_txt = "[center]HOMEOSTASIS\nOrden administrativo.\n\n"
+		h_txt += "[color=%s]%s 0.03 < ε < 0.30[/color]\n" % ["#00ff00" if h_ok_eps else "#ff4444", "[x]" if h_ok_eps else "[ ]"]
+		h_txt += "[color=%s]%s Flexibilidad Ω > 0.25[/color]\n" % ["#00ff00" if h_ok_omega else "#ff4444", "[x]" if h_ok_omega else "[ ]"]
+		h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % ["#00ff00" if h_ok_delta else "#ff4444", "[x]" if h_ok_delta else "[ ]"]
+		h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % ["#00ff00" if h_ok_bio else "#ff4444", "[x]" if h_ok_bio else "[ ]"]
+		h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if h_ok_acc else "#ff4444", "[x]" if h_ok_acc else "[ ]"]
+		h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
+
+		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
+			var ratio = min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
+			h_txt += "\n[color=#ffff00]Estabilizando... %d%%[/color][/center]" % int(ratio)
+		else:
+			h_txt += "\n[color=#555555]Requiere sostenerse por 18s tras activarse.[/color][/center]"
+
+		data["homeostasis_text"] = h_txt
+		data["homeostasis_ready"] = EvoManager.is_homeostasis_ready()
+
+		var r_ok_hifas = hifas >= 11.5
+		var r_ok_bio = BiosphereEngine.biomasa >= 5.0
+		var r_ok_eps = StructuralModel.epsilon_runtime < 0.65
+		var r_ok_acc = acc_lvl >= 1
+		var r_ok_dom = not act_domina
+
+		var r_txt = "[center]RED MICELIAL\nExpansión pasiva.\n\n"
+		r_txt += "[color=%s]%s Hifas >= 11.5[/color]\n" % ["#00ff00" if r_ok_hifas else "#ff4444", "[x]" if r_ok_hifas else "[ ]"]
+		r_txt += "[color=%s]%s Biomasa >= 5.0[/color]\n" % ["#00ff00" if r_ok_bio else "#ff4444", "[x]" if r_ok_bio else "[ ]"]
+		r_txt += "[color=%s]%s ε < 0.65[/color]\n" % ["#00ff00" if r_ok_eps else "#ff4444", "[x]" if r_ok_eps else "[ ]"]
+		r_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if r_ok_acc else "#ff4444", "[x]" if r_ok_acc else "[ ]"]
+		r_txt += "[color=%s]%s Dominio Pasivo[/color][/center]" % ["#00ff00" if r_ok_dom else "#ff4444", "[x]" if r_ok_dom else "[ ]"]
+
+		data["red_micelial_text"] = r_txt
+		data["red_micelial_ready"] = EvoManager.is_red_micelial_ready()
+
+		var s_ok_hifas = hifas >= 5.0
+		var s_ok_eps = StructuralModel.epsilon_runtime >= 0.15 and StructuralModel.epsilon_runtime <= 0.45
+		var s_ok_acc = acc_lvl >= 1
+		var s_ok_dom = act_domina
+
+		var s_txt = "[center]SIMBIOSIS\nFusión activa.\n\n"
+		s_txt += "[color=%s]%s Hifas >= 5.0[/color]\n" % ["#00ff00" if s_ok_hifas else "#ff4444", "[x]" if s_ok_hifas else "[ ]"]
+		s_txt += "[color=%s]%s ε (0.15 - 0.45)[/color]\n" % ["#00ff00" if s_ok_eps else "#ff4444", "[x]" if s_ok_eps else "[ ]"]
+		s_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if s_ok_acc else "#ff4444", "[x]" if s_ok_acc else "[ ]"]
+		s_txt += "[color=%s]%s Dominio Click[/color][/center]" % ["#00ff00" if s_ok_dom else "#ff4444", "[x]" if s_ok_dom else "[ ]"]
+
+		data["simbiosis_text"] = s_txt
+		data["simbiosis_ready"] = EvoManager.is_simbiosis_ready()
+
+	elif EvoManager.mutation_homeostasis:
+		data["header"] = "TRANSICIÓN ALOSTÁTICA (TIER 2)"
+		var works = EvoManager.is_allostasis_ready(main)
+
+		var h_txt = "[center]ALLOSTASIS\nRegulación Dinámica del Sistema.\n\n"
+		h_txt += "[color=#00ff00]+ Ingresos Globales x3.0[/color]\n"
+		h_txt += "[color=#00ff00]+ Estabilidad Adaptativa (Ω buffer)[/color]\n"
+		h_txt += "[color=#ff4444]- Exige Metabolismo > 200/s[/color]\n"
+		h_txt += "[color=#ff4444]- Fragilidad por Complejidad[/color][/center]"
+
+		data["allostasis_text"] = h_txt
+		data["allostasis_ready"] = works
+
+	else:
+		data["header"] = "BIFURCACIÓN DEL GENOMA"
+
+		var col_txt = "[center]COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
+			"[color=#00ff00]+ Automatización ×1.5[/color]\n" + \
+			"[color=#00ff00]+ Ciclo Primordio → Seta → Esporulación[/color]\n" + \
+			"[color=#ffaa00]Sin requisitos extra[/color][/center]"
+		data["colonization_text"] = col_txt
+		data["colonization_ready"] = true
+
+		var has_mechanics = UpgradeManager.level("accounting") >= 2
+		var mec_txt = "[center]SIMBIOSIS MECÁNICA\nRama hardware.\n\n" + \
+			"[color=#00ff00]+ Ω_min 0.50 (estabilidad)[/color]\n" + \
+			"[color=#00ff00]+ Núcleo de Conciencia → SINGULARIDAD[/color]\n" + \
+			("[color=#00ff00]✓ Contabilidad ≥ 2[/color]" if has_mechanics else "[color=#ff4444]✗ Requiere Contabilidad nvl 2[/color]") + \
+			"[/center]"
+		data["symbiosis_text"] = mec_txt
+		data["symbiosis_ready"] = has_mechanics
+
+	return data
+
+# =====================================================
+# EPSILON STICKY LABEL BUILDER
+# =====================================================
+func build_epsilon_sticky_text(main: Control) -> String:
+	var t := ""
+	t += "%s ε runtime = %s\n" % [epsilon_flag(StructuralModel.epsilon_runtime, 0.30), snapped(StructuralModel.epsilon_runtime, 0.01)]
+	t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
+	t += "Presión = %s" % snapped(main.get_structural_pressure(), 1)
+
+	# DEPREDADOR — siempre visible si venís de PARASITISMO con hiperasimilación
+	var hiper_genome: String = EvoManager.genome.get("hiperasimilacion", "")
+	var depredador_eligible: bool = LegacyManager.last_run_ending == "PARASITISMO" \
+		and (EvoManager.mutation_hyperassimilation or hiper_genome == "activo" or hiper_genome == "latente")
+	if depredador_eligible and not EvoManager.mutation_depredador:
+		if EvoManager.depredador_timer > 0.0:
+			var pct := EvoManager.depredador_timer / 30.0
+			var filled := int(pct * 16)
+			var bar := "█".repeat(filled) + "░".repeat(16 - filled)
+			t += "\n\n☠️ DEPREDADOR [%s] %d%%" % [bar, int(pct * 100)]
+			t += "\nε %.2f · %.0f/30s" % [StructuralModel.epsilon_runtime, EvoManager.depredador_timer]
+		else:
+			var eps_ok: bool = StructuralModel.epsilon_runtime > 0.95
+			t += "\n\n☠️ DEPREDADOR DISPONIBLE"
+			t += "\nHIPER: %s · ε %.2f%s" % [
+				hiper_genome.to_upper(),
+				StructuralModel.epsilon_runtime,
+				" ✓" if eps_ok else " → necesita > 0.95"
+			]
+
+	# MET.OSCURO — evaluable durante Depredador activo
+	if EvoManager.mutation_depredador and not EvoManager.mutation_met_oscuro:
+		var bio := BiosphereEngine.biomasa
+		var dev := EvoManager.met_oscuro_devoured_count
+		var mt := EvoManager.met_oscuro_timer
+		var req := EvoManager.MET_OSCURO_REQUIRED_TIME
+		if mt > 0.0:
+			var pct := mt / req
+			var filled := int(pct * 16)
+			var bar := "█".repeat(filled) + "░".repeat(16 - filled)
+			t += "\n\n🌑 MET.OSCURO [%s] %d%%" % [bar, int(pct * 100)]
+			t += "\nEstabilizando %.1f/%ds" % [mt, int(req)]
+		else:
+			var d_ok: bool = dev >= 3
+			var b_ok: bool = bio >= 25.0
+			var r_ok: bool = EconomyManager.money < 1000.0
+			t += "\n\n🌑 MET.OSCURO DISPONIBLE"
+			t += "\nDev:%d/3%s · Bio:%.0f/25%s · $:%.0f<1k%s" % [
+				dev, " ✓" if d_ok else "",
+				bio, " ✓" if b_ok else "",
+				EconomyManager.money, " ✓" if r_ok else ""
+			]
+	elif EvoManager.mutation_met_oscuro:
+		t += "\n\n🌑 MET.OSCURO ACTIVO"
+		t += "\nBio %.1f · Pasivo %.1f/s" % [BiosphereEngine.biomasa, BiosphereEngine.biomasa * 0.8]
+		t += "\nCierre auto: Bio≥100 o $≥1M"
+
 	return t
