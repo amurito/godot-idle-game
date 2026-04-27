@@ -3,6 +3,8 @@ extends Node
 # RunManager.gd — Autoload
 # Gestiona el ciclo de vida de la run: cierres, chequeos finales, homeostasis, perturbaciones.
 
+signal disturbance_triggered(shock: float, is_extreme: bool)
+
 var main: Node = null
 
 # ==================== ESTADO DE RUN ====================
@@ -27,6 +29,22 @@ var extreme_shock_survived: bool = false
 var evolution_button: Button = null
 var target_evolution: String = ""
 
+# ==================== POST-TRASCENDENCIA (v0.9.8) ====================
+# VACÍO HAMBRIENTO
+var vacio_hambriento_active: bool = false
+var vacio_hambriento_mult: float = 1.0   # ×100 si activo
+
+# REENCARNACIÓN HEREDADA
+var reencarnacion_active: bool = false
+
+# CARNAVAL DE MUTACIONES
+var carnaval_active: bool = false
+var carnaval_mutations: Array = []        # 3 ids de mutación seleccionados al azar
+var carnaval_index: int = 0
+var carnaval_timer: float = 0.0
+const CARNAVAL_INTERVAL := 60.0
+const CARNAVAL_POOL := ["homeostasis", "simbiosis", "red_micelial", "parasitismo", "hiperasimilacion"]
+
 # ==================== INICIALIZACIÓN ====================
 func set_main(m: Node):
 	main = m
@@ -45,6 +63,13 @@ func reset():
 	is_recovering_from_shock = false
 	extreme_shock_survived = false
 	legacy_homeostasis = false
+	vacio_hambriento_active = false
+	vacio_hambriento_mult = 1.0
+	reencarnacion_active = false
+	carnaval_active = false
+	carnaval_mutations = []
+	carnaval_index = 0
+	carnaval_timer = 0.0
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
@@ -86,6 +111,14 @@ func close_run(route: String, reason: String):
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		main.show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
+
+	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
+	if LegacyManager.get_buff_value("colapso_controlado"):
+		var eps_bonus: float = LegacyManager.get_effect_value("epsilon_peak_pl_bonus")
+		var extra_pl: int = int(floor(StructuralModel.epsilon_peak * eps_bonus))
+		if extra_pl > 0:
+			LegacyManager.add_pl(extra_pl)
+			main.add_lap("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -253,16 +286,35 @@ func update_homeostasis_mode(delta: float):
 	var stability: float = clamp(1.0 - StructuralModel.epsilon_effective, 0.0, 1.0)
 	resilience_score += stability * delta
 
-	disturbance_timer += delta
-	if disturbance_timer >= DISTURBANCE_INTERVAL:
-		disturbance_timer = 0.0
-		trigger_disturbance()
+	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
+	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
+	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_symbiosis \
+		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism
+	if not EvoManager.primordio_active and not en_mutacion_avanzada:
+		disturbance_timer += delta
+		if disturbance_timer >= DISTURBANCE_INTERVAL:
+			disturbance_timer = 0.0
+			trigger_disturbance()
+
+	# UMBRAL ADAPTATIVO (Banco Genético): recuperación más rápida tras perturbaciones
+	var eps_lerp_factor := 0.05
+	if is_recovering_from_shock:
+		var recovery_boost := LegacyManager.get_effect_value("disturbance_recovery_speed")
+		if recovery_boost > 0.0:
+			eps_lerp_factor *= recovery_boost
 
 	StructuralModel.epsilon_runtime = lerp(
 		StructuralModel.epsilon_runtime,
 		StructuralModel.epsilon_effective,
-		0.05 * delta
+		eps_lerp_factor * delta
 	)
+
+	# EQUILIBRIO HEREDADO / SETPOINT ADAPTATIVO: regeneración lenta de Ω_min tras shocks
+	var omega_recovery_mult := LegacyManager.get_effect_value("omega_recovery_speed")
+	if omega_recovery_mult > 0.0:
+		var regen := 0.0015 * delta * omega_recovery_mult
+		var omega_cap := 0.45  # Tope de regeneración natural (no reemplaza plasticidad_adaptativa)
+		StructuralModel.omega_min = min(StructuralModel.omega_min + regen, omega_cap)
 
 func trigger_disturbance():
 	var shock := randf_range(0.1, 0.4)
@@ -283,10 +335,29 @@ func trigger_disturbance():
 	# Shocks extremos tienen consecuencias: drenan omega_min y dinero
 	if is_extreme:
 		var penalty_omega := 0.15 if not LegacyManager.get_buff_value("legado_homeorresis") else 0.05
+		# CRISTALIZACIÓN PERMANENTE (Banco Genético): reduce la penalización de Ω -50%
+		if LegacyManager.get_buff_value("cristalizacion_permanente"):
+			penalty_omega *= (1.0 - LegacyManager.get_effect_value("omega_shock_reduction"))
 		StructuralModel.omega_min = max(0.0, StructuralModel.omega_min - penalty_omega)
 		var money_drain := EconomyManager.money * 0.20
 		EconomyManager.money = max(0.0, EconomyManager.money - money_drain)
 		main.add_lap("💸 Shock drenó Ω_min (-%s) y $%.0f" % [snapped(penalty_omega, 0.01), money_drain])
+
+	disturbance_triggered.emit(shock, is_extreme)
+
+# ==================== SHOCK TRACKING ====================
+# Llamado cada tick desde main.gd (_on_logic_tick).
+# Detecta spike extremo (epsilon_runtime > 0.8) y recovery al volver a banda homeostática.
+func check_shock_tracking():
+	# Usar epsilon_runtime (spike directo del shock) no epsilon_effective (ya absorbido por biosfera)
+	if StructuralModel.epsilon_runtime > 0.8:
+		extreme_shock_survived = true
+
+	if is_recovering_from_shock and get_en_banda_homeostatica():
+		disturbances_survived += 1
+		is_recovering_from_shock = false
+		main.add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
+		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
 func check_perfect_homeostasis():
 	if not post_homeostasis or AchievementManager.is_unlocked("homeostasis_perfecta"):
@@ -297,6 +368,75 @@ func check_perfect_homeostasis():
 		AchievementManager.unlock("homeostasis_perfecta")
 		legacy_homeostasis = true
 		post_homeostasis = false
+
+# ==================== POST-TRASCENDENCIA: ACTIVACIÓN ====================
+
+## Llamado desde main.gd en _ready(), después de que los sistemas están inicializados
+func activate_post_tras_route() -> void:
+	var route := LegacyManager.post_tras_route
+	if route == "":
+		return
+
+	match route:
+		"vacio":
+			_activate_vacio_hambriento()
+		"carnaval":
+			_activate_carnaval()
+		"reencarnacion":
+			_activate_reencarnacion()
+
+	# La ruta se consume: se borra para no re-aplicarla en reinicios sin trascendencia
+	LegacyManager.post_tras_route = ""
+	LegacyManager.save_legacy()
+
+func _activate_vacio_hambriento() -> void:
+	# Contar y consumir todos los buffs cósmicos activos
+	var consumed := 0
+	for id in LegacyManager.cosmic_unlocked.keys():
+		if LegacyManager.cosmic_unlocked[id]:
+			LegacyManager.cosmic_unlocked[id] = false
+			consumed += 1
+
+	vacio_hambriento_active = true
+	vacio_hambriento_mult = 100.0
+	LegacyManager.save_legacy()
+	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
+	if main:
+		main.add_lap("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
+
+func _activate_carnaval() -> void:
+	# Seleccionar 3 mutaciones aleatorias sin repetición del pool
+	var pool := CARNAVAL_POOL.duplicate()
+	pool.shuffle()
+	carnaval_mutations = pool.slice(0, 3)
+	carnaval_index = 0
+	carnaval_timer = 0.0
+	carnaval_active = true
+	# Aplicar la primera inmediatamente
+	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
+	print("🎭 [CARNAVAL] Mutaciones: %s" % str(carnaval_mutations))
+	if main:
+		main.add_lap("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
+
+func _activate_reencarnacion() -> void:
+	reencarnacion_active = true
+	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
+	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
+	if main:
+		main.add_lap("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
+
+## Tick del Carnaval: rotar mutación cada CARNAVAL_INTERVAL segundos
+func update_carnaval(delta: float) -> void:
+	if not carnaval_active or carnaval_mutations.is_empty():
+		return
+	carnaval_timer += delta
+	if carnaval_timer >= CARNAVAL_INTERVAL:
+		carnaval_timer = 0.0
+		carnaval_index = (carnaval_index + 1) % carnaval_mutations.size()
+		var next_mut := carnaval_mutations[carnaval_index]
+		EvoManager.carnaval_set_mutation(next_mut)
+		if main:
+			main.add_lap("🎭 CARNAVAL — rotación → %s" % next_mut)
 
 # ==================== UI EVOLUCIÓN ====================
 func _show_evolution_button(target: String):

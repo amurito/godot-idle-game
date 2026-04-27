@@ -70,10 +70,8 @@ func can_buy(id: String, money: float) -> bool:
 	if EvoManager.mutation_met_oscuro:
 		return false
 
-	# LEGADO: Memoria de Recurso (Costo 0 en nivel 0)
-	var real_cost = s.current_cost
-	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
-		real_cost = 0.0
+	# Usa cost() que aplica todos los descuentos (memoria_recurso, memoria_estructural, presión_rentable)
+	var real_cost := cost(id)
 
 	return money >= real_cost and s.unlocked
 
@@ -109,6 +107,10 @@ func buy(id: String, money: float) -> bool:
 	if LegacyManager.has_cosmic_buff("deflacion_cosmica"):
 		effective_cost_scale = 1.0 + (effective_cost_scale - 1.0) * 0.92
 
+	# REENCARNACIÓN HEREDADA: deuda del ciclo anterior encarece el escalado ×1.5
+	if RunManager.reencarnacion_active:
+		effective_cost_scale *= 1.5
+
 	s.current_cost *= effective_cost_scale
 
 	# Desbloquear dependientes
@@ -121,16 +123,34 @@ func buy(id: String, money: float) -> bool:
 
 	return true
 
-## Costo actual del upgrade (para mostrar en botón)
+## Costo actual del upgrade (para mostrar en botón y validar compra)
 func cost(id: String) -> float:
 	var s = states.get(id, {})
 	if s.is_empty(): return 0.0
-	
+
 	# LEGADO: Visualizar costo 0 en nivel 0 si aplica
 	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
 		return 0.0
-		
-	return s.get("current_cost", 0.0)
+
+	var base_cost :float = s.get("current_cost", 0.0)
+
+	# MEMORIA ESTRUCTURAL: -5% por nivel para upgrades estructurales
+	const STRUCTURAL_IDS := ["auto", "auto_mult", "trueque", "trueque_net", "trueque_allo",
+							 "cognitive", "accounting", "specialization"]
+	if id in STRUCTURAL_IDS:
+		var cost_reduction := LegacyManager.get_effect_value("structural_cost_reduction")
+		if cost_reduction > 0.0:
+			base_cost *= (1.0 - cost_reduction)
+
+	# PRESIÓN RENTABLE: -20% para upgrades de click cuando ε > 0.50
+	const CLICK_IDS := ["click", "click_mult"]
+	if id in CLICK_IDS and LegacyManager.get_buff_value("presion_rentable"):
+		if StructuralModel.epsilon_runtime > 0.50:
+			var discount := LegacyManager.get_effect_value("click_upgrade_discount_when_epsilon")
+			if discount > 0.0:
+				base_cost *= discount  # 0.80 = paga solo el 80%
+
+	return base_cost
 
 ## Valor actual (click_value, income_per_second, etc.)
 func value(id: String) -> float:
@@ -161,6 +181,34 @@ func deserialize(d: Dictionary) -> void:
 			states[id].current_cost = s.get("current_cost", states[id].current_cost)
 			states[id].current_value = s.get("current_value", states[id].current_value)
 			states[id].unlocked = s.get("unlocked", states[id].unlocked)
+
+## Reencarnación Heredada: aplica los niveles del ciclo anterior.
+## El costo actual se escala ×1.5^level como "deuda" por el avance heredado.
+func apply_reencarnacion_snapshot(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	for id in snapshot:
+		if not states.has(id):
+			continue
+		var snap = snapshot[id]
+		var lvl: int = snap.get("level", 0)
+		if lvl <= 0:
+			continue
+		var def = get_def(id)
+		if def == null:
+			continue
+		var s = states[id]
+		s.level = lvl
+		s.unlocked = true
+		# Recalcular valor desde base
+		s.current_value = def.base_value
+		if def.is_multiplicative:
+			for i in range(lvl): s.current_value *= def.gain
+		else:
+			s.current_value = def.base_value + def.gain * lvl
+		# Costo escalado con deuda de reencarnación (×1.5^lvl extra sobre base)
+		s.current_cost = def.base_cost * pow(def.cost_scale, lvl) * pow(1.5, lvl)
+	print("⚱️ [UpgradeManager] Snapshot de reencarnación aplicado")
 
 func devour_random_upgrade() -> bool:
 	var valid_keys = []

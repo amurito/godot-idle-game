@@ -74,9 +74,32 @@ func get_click_power() -> float:
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		power *= 2.0 # Semilla Cósmica (Bonus permanente)
 
+	# METABOLISMO GLITCH: El parásito extrae más cuando el sistema está estresado
+	if LegacyManager.get_buff_value("metabolismo_glitch") and StructuralModel.epsilon_runtime > 0.40:
+		power *= 1.50
+
 	# Corrosión Parasitaria (Converge a 0)
 	if EvoManager.mutation_parasitism:
 		power *= parasitism_corrosion
+
+	# RESONANCIA SIMBIONTE: +20% click si la simbiosis fue completada
+	if LegacyManager.get_buff_value("resonancia_simbionte"):
+		power *= 1.20
+
+	# SIMBIOSIS AGRESIVA: ×1.15 si se completaron SIMBIOSIS y PARASITISMO
+	if LegacyManager.get_buff_value("simbiosis_agresiva"):
+		if LegacyManager.endings_achieved.get("SIMBIOSIS", false) and \
+		   LegacyManager.endings_achieved.get("PARASITISMO", false):
+			power *= 1.15
+
+	# ECO PRIMORDIAL: +10% a todos los ingresos
+	var eco_primordial_mult: float = LegacyManager.get_effect_value("all_income_mult")
+	if eco_primordial_mult > 0.0:
+		power *= (1.0 + eco_primordial_mult)
+
+	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción a cambio de buffs cósmicos
+	if RunManager.vacio_hambriento_active:
+		power *= RunManager.vacio_hambriento_mult
 
 	return power
 
@@ -108,13 +131,20 @@ func get_trueque_raw() -> float:
 
 func get_trueque_income_effective() -> float:
 	var allo_mult = UpgradeManager.value("trueque_allo") if UpgradeManager.level("trueque_allo") > 0 else 1.0
-	return EcoModel.get_trueque_income_effective(
+	var base := EcoModel.get_trueque_income_effective(
 		get_trueque_raw(),
 		UpgradeManager.value("trueque_net") * mutation_trueque_factor * allo_mult,
 		main.cached_mu,
 		BiosphereEngine.get_biomass_beta(),
 		UpgradeManager.level("accounting")
 	)
+
+	# RED DE CONFIANZA: +10% eficiencia de trueque por nivel
+	var trueque_bonus: float = LegacyManager.get_effect_value("trueque_efficiency_add")
+	if trueque_bonus > 0.0:
+		base *= (1.0 + trueque_bonus)
+
+	return base
 
 func get_passive_total() -> float:
 	var total := get_auto_income_effective() + get_trueque_income_effective()
@@ -149,6 +179,11 @@ func get_passive_total() -> float:
 	if LegacyManager.get_buff_value("mente_colmena"):
 		total *= 3.0 # IA Automática (Bonus permanente)
 
+	# METABOLISMO GLITCH: El parásito prospera en el caos — +80% pasivo cuando ε > 0.40
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		if StructuralModel.epsilon_runtime > 0.40:
+			total *= 1.80
+
 	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% pasivo por trascendencia acumulada
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
 		total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
@@ -158,6 +193,26 @@ func get_passive_total() -> float:
 		total *= 2.5
 	elif EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		pass
+
+	# GLITCH PERSISTENTE: +15% pasivo cuando se juega en ruta Singularidad/Mente Colmena
+	if LegacyManager.get_buff_value("glitch_persistente"):
+		if EvoManager.mutation_red_micelial or EvoManager.nucleo_conciencia:
+			total *= 1.15
+
+	# SIMBIOSIS AGRESIVA: ×1.15 pasivo si ambas rutas completadas
+	if LegacyManager.get_buff_value("simbiosis_agresiva"):
+		if LegacyManager.endings_achieved.get("SIMBIOSIS", false) and \
+		   LegacyManager.endings_achieved.get("PARASITISMO", false):
+			total *= 1.15
+
+	# ECO PRIMORDIAL: +10% a todos los ingresos (pasivo)
+	var eco_primordial_mult: float = LegacyManager.get_effect_value("all_income_mult")
+	if eco_primordial_mult > 0.0:
+		total *= (1.0 + eco_primordial_mult)
+
+	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción
+	if RunManager.vacio_hambriento_active:
+		total *= RunManager.vacio_hambriento_mult
 
 	return total
 

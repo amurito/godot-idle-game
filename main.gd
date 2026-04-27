@@ -715,6 +715,11 @@ func _ready():
 	# =====================================================
 	_apply_cosmic_buffs()
 
+	# =====================================================
+	#  RUTAS POST-TRASCENDENCIA — Activar si corresponde
+	# =====================================================
+	RunManager.activate_post_tras_route()
+
 	update_ui()
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
@@ -1026,6 +1031,10 @@ func _on_logic_tick():
 
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
+
+	# --- CARNAVAL DE MUTACIONES (Post-Trascendencia) ---
+	if RunManager.carnaval_active:
+		RunManager.update_carnaval(dt)
 
 	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
 	if EvoManager.mutation_homeostasis:
@@ -1709,9 +1718,9 @@ func _input(event):
 		# Atajos de teclado 1-9 para comprar upgrades
 		const HOTKEY_UPGRADES := ["click", "auto", "trueque", "click_mult", "auto_mult",
 								  "trueque_net", "specialization", "cognitive", "accounting"]
-		var kc := event.keycode
+		var kc :int= event.keycode
 		if kc >= KEY_1 and kc <= KEY_9:
-			var idx := kc - KEY_1  # 0-based
+			var idx :int= kc - KEY_1  # 0-based
 			if idx < HOTKEY_UPGRADES.size():
 				purchase_upgrade(HOTKEY_UPGRADES[idx])
 

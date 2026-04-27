@@ -616,3 +616,33 @@ func get_reactor_color() -> Color:
 
 	# Prioridad 4: Base (sin mutaciones)
 	return Color(0.15, 0.65, 1.0)         # Azul Tecnológico
+
+# ==================== CARNAVAL DE MUTACIONES ====================
+## Aplica una mutación del carnaval: limpia todas las flags y activa solo la indicada
+func carnaval_set_mutation(id: String) -> void:
+	# Limpiar todas las flags de mutación de primer nivel
+	mutation_hyperassimilation = false
+	mutation_symbiosis = false
+	mutation_homeostasis = false
+	mutation_red_micelial = false
+	mutation_parasitism = false
+	red_micelial_phase = 0
+	# Las flags de segundo nivel (allostasis, homeorhesis, etc.) no se tocan — son sub-rutas
+	match id:
+		"homeostasis":
+			mutation_homeostasis = true
+			genome["homeostasis"] = "activo"
+		"simbiosis":
+			mutation_symbiosis = true
+			genome["simbiosis"] = "activo"
+		"red_micelial":
+			mutation_red_micelial = true
+			red_micelial_phase = 1
+			genome["red_micelial"] = "activo"
+		"parasitismo":
+			mutation_parasitism = true
+			genome["parasitismo"] = "activo"
+		"hiperasimilacion":
+			mutation_hyperassimilation = true
+			genome["hiperasimilacion"] = "activo"
+	print("🎭 [CARNAVAL] Mutación activa → %s" % id)

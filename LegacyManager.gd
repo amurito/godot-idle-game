@@ -384,6 +384,11 @@ const CAT_NAMES: Dictionary = {
 # Reemplaza el antiguo unlocked_legacies: { id: bool }
 var buffs: Dictionary = {}
 
+# Estados de activación manual — { id: bool }
+# Si no está en este dict, el buff se considera ACTIVADO por defecto.
+# Solo los buffs ya comprados (level > 0) pueden togglearse.
+var buff_enabled: Dictionary = {}
+
 var legacy_points: int = 0
 var total_runs: int = 0
 var last_run_ending: String = ""
@@ -403,6 +408,12 @@ var trascendencia_count: int = 0
 var first_trascendencia_shown: bool = false
 var endings_achieved: Dictionary = {}
 var cosmic_unlocked: Dictionary = {}
+
+# =====================================================
+#  RUTAS POST-TRASCENDENCIA (v0.9.8)
+# =====================================================
+var post_tras_route: String = ""  # "vacio" | "carnaval" | "reencarnacion" | ""
+var reencarnacion_snapshot: Dictionary = {}  # Serializado de UpgradeManager al momento de trascender
 
 const ENDING_FAMILIES := {
 	"HOMEOSTASIS": "orden", "ALLOSTASIS": "orden",
@@ -504,6 +515,9 @@ func save_legacy():
 		"endings_achieved": endings_achieved,
 		"cosmic_unlocked": cosmic_unlocked,
 		"achievement_data": achievement_data,
+		"buff_enabled": buff_enabled,
+		"post_tras_route": post_tras_route,
+		"reencarnacion_snapshot": reencarnacion_snapshot,
 	}
 	var file := FileAccess.open(LEGACY_PATH, FileAccess.WRITE)
 	if file:
@@ -535,6 +549,9 @@ func load_legacy():
 	endings_achieved = data.get("endings_achieved", {})
 	cosmic_unlocked = data.get("cosmic_unlocked", {})
 	achievement_data = data.get("achievement_data", {})
+	buff_enabled = data.get("buff_enabled", {})
+	post_tras_route = data.get("post_tras_route", "")
+	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 
 	# Cargar buffs — con migración desde formato antiguo (unlocked_legacies: { id: bool })
 	if data.has("buffs"):
@@ -597,9 +614,27 @@ func _migrate_retroactive_endings() -> void:
 #  API DE BUFFS — LECTURA
 # =====================================================
 
-## Retrocompat: devuelve true si el buff tiene level >= 1
+## Retrocompat: devuelve true si el buff tiene level >= 1 Y está activado
 func get_buff_value(id: String) -> bool:
-	return get_buff_level(id) > 0
+	if get_buff_level(id) <= 0:
+		return false
+	# Respeta el toggle manual: false en buff_enabled = desactivado explícitamente
+	return buff_enabled.get(id, true)
+
+## Activa o desactiva el efecto de un buff ya comprado.
+## Devuelve el nuevo estado (true = activo).
+func toggle_buff_enabled(id: String) -> bool:
+	if get_buff_level(id) <= 0:
+		return false  # No se puede togglear un buff no comprado
+	var current: bool = buff_enabled.get(id, true)
+	buff_enabled[id] = not current
+	save_legacy()
+	print("🔄 [Legacy] Buff %s → %s" % [id, "ACTIVO" if buff_enabled[id] else "INACTIVO"])
+	return buff_enabled[id]
+
+## Devuelve true si el buff está activo (comprado y no desactivado manualmente)
+func is_buff_active(id: String) -> bool:
+	return get_buff_value(id)
 
 ## Nivel actual del buff (0 si no fue comprado)
 func get_buff_level(id: String) -> int:
@@ -852,16 +887,22 @@ func transcend() -> int:
 	esencia += esencia_gain
 	trascendencia_count += 1
 
+	# Capturar snapshot de upgrades para la ruta Reencarnación Heredada
+	reencarnacion_snapshot = UpgradeManager.serialize()
+	print("📸 [Post-Tras] Snapshot de upgrades capturado (%d keys)" % reencarnacion_snapshot.size())
+
 	# Reset de estado entre runs (PL, buffs legacy, esporas)
 	legacy_points = 0
 	internal_spores_total = 0.0
 	buffs.clear()
+	buff_enabled.clear()  # Los buffs desaparecen, los toggles también
 	total_runs = 0
 	last_run_ending = ""
 	mu_peak_achieved = false
+	post_tras_route = ""  # El jugador elige la ruta en el picker del MainMenu
 
 	# Se preservan: esencia, trascendencia_count, first_trascendencia_shown,
-	# endings_achieved, cosmic_unlocked, achievement_data
+	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot
 
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])

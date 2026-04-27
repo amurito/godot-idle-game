@@ -21,12 +21,24 @@ var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
 
 func _ready():
-	# Solo habilitar 'Continuar' si hay un archivo de guardado
-	if not FileAccess.file_exists(SaveManager.SAVE_PATH):
+	var has_save := FileAccess.file_exists(SaveManager.SAVE_PATH)
+	var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
+
+	if has_save:
+		# Run activa: "Continuar" carga el guardado normalmente
+		btn_continue.text = "Continuar"
+		btn_continue.pressed.connect(_on_continue_pressed)
+	elif post_transcendence:
+		# Sin run activa pero con trascendencias: "Continuar" inicia nueva run con buffs cósmicos
+		btn_continue.text = "▶ Nueva Run (buffs cósmicos activos)"
+		btn_continue.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		btn_continue.pressed.connect(_start_new_run)
+	else:
+		# Sin nada: deshabilitar
 		btn_continue.disabled = true
 		btn_continue.modulate = Color(1, 1, 1, 0.4)
+		btn_continue.pressed.connect(_on_continue_pressed)
 
-	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
 	btn_legacy.pressed.connect(_on_legacy_pressed)
@@ -46,35 +58,154 @@ func _on_continue_pressed():
 	get_tree().change_scene_to_file("res://main.tscn")
 
 func _on_new_game_pressed():
-	# Si el jugador tiene progreso meta (legacy o trascendencias), hacer Nueva Run
-	# (preserva Banco Genético y Cósmico). Hard Reset solo si no hay nada.
 	var has_meta_progress := LegacyManager.legacy_points > 0 \
 		or LegacyManager.trascendencia_count > 0 \
 		or LegacyManager.total_runs > 0
 
 	if has_meta_progress:
-		_start_new_run()
+		# Mostrar confirmación que aclara qué se preserva
+		var dialog := ConfirmationDialog.new()
+		dialog.title = "Iniciar Nueva Run"
+		dialog.dialog_text = (
+			"¿Iniciás un nuevo ciclo biótico?\n\n"
+			+ "✦ Se PRESERVAN:\n  · Banco Cósmico (%d Ξ)\n  · Banco Genético (PL: %d)\n  · Rutas completadas\n\n"
+			+ "⚠ Se RESETEAN:\n  · Upgrades, dinero, mutaciones\n  · Progreso de la run actual"
+		) % [LegacyManager.esencia, LegacyManager.legacy_points]
+		dialog.get_ok_button().text = "▶ Iniciar"
+		dialog.get_cancel_button().text = "Volver"
+		add_child(dialog)
+		dialog.popup_centered(Vector2(420, 280))
+		dialog.confirmed.connect(_start_new_run)
+		dialog.canceled.connect(dialog.queue_free)
 	else:
 		_hard_reset()
 
 ## Nueva Run: resetea solo la partida actual. Preserva legacy y trascendencia.
 func _start_new_run() -> void:
+	# Si ya trascendió al menos una vez, mostrar picker de ruta post-trascendencia
+	if LegacyManager.trascendencia_count > 0:
+		_show_post_tras_picker()
+		return
+	_do_start_new_run("")
+
+func _show_post_tras_picker() -> void:
+	var overlay := ColorRect.new()
+	overlay.anchor_right = 1.0
+	overlay.anchor_bottom = 1.0
+	overlay.color = Color(0.02, 0.01, 0.06, 0.97)
+	add_child(overlay)
+
+	var center := CenterContainer.new()
+	center.anchor_right = 1.0
+	center.anchor_bottom = 1.0
+	overlay.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.custom_minimum_size = Vector2(720, 0)
+	vbox.add_theme_constant_override("separation", 18)
+	center.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "⚡ CICLO #%d — ELIGE TU RUTA" % (LegacyManager.trascendencia_count + 1)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	vbox.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "Cada ruta altera las reglas de esta run. La elección es permanente."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 13)
+	subtitle.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
+	vbox.add_child(subtitle)
+
+	vbox.add_child(HSeparator.new())
+
+	const ROUTES := [
+		{
+			"id": "", "icon": "▶",
+			"name": "CICLO ESTÁNDAR",
+			"color": Color(0.7, 0.7, 0.7),
+			"desc": "Sin modificadores. Mecánicas normales, Banco Genético y Cósmico activos.",
+		},
+		{
+			"id": "vacio", "icon": "🕳️",
+			"name": "VACÍO HAMBRIENTO",
+			"color": Color(0.55, 0.0, 0.8),
+			"desc": "Consume TODOS tus buffs cósmicos activos permanentemente.\nA cambio: producción ×100 durante toda la run.",
+		},
+		{
+			"id": "carnaval", "icon": "🎭",
+			"name": "CARNAVAL DE MUTACIONES",
+			"color": Color(1.0, 0.4, 0.1),
+			"desc": "Al iniciar, 3 mutaciones aleatorias son elegidas.\nRotan automáticamente cada 60 segundos. Sin control manual.",
+		},
+		{
+			"id": "reencarnacion", "icon": "⚱️",
+			"name": "REENCARNACIÓN HEREDADA",
+			"color": Color(0.3, 0.9, 0.6),
+			"desc": "Empezás con todos los upgrades al nivel del ciclo anterior.\nPero cada compra futura escala ×1.5 más caro (deuda kármica).",
+		},
+	]
+
+	for route in ROUTES:
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(0, 70)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(route.color.r * 0.12, route.color.g * 0.12, route.color.b * 0.12, 0.95)
+		s.set_border_width_all(2)
+		s.border_color = route.color
+		s.set_corner_radius_all(6)
+		s.set_content_margin_all(12)
+		btn.add_theme_stylebox_override("normal", s)
+		var s_hover := s.duplicate()
+		s_hover.bg_color = Color(route.color.r * 0.22, route.color.g * 0.22, route.color.b * 0.22, 0.98)
+		btn.add_theme_stylebox_override("hover", s_hover)
+
+		btn.text = "%s  %s\n%s" % [route.icon, route.name, route.desc]
+		btn.add_theme_color_override("font_color", route.color)
+		btn.add_theme_font_size_override("font_size", 13)
+		btn.autowrap_mode = TextServer.AUTOWRAP_WORD
+
+		var route_id: String = route.id
+		btn.pressed.connect(func():
+			overlay.queue_free()
+			_do_start_new_run(route_id)
+		)
+		vbox.add_child(btn)
+
+	var btn_cancel := Button.new()
+	btn_cancel.text = "← Volver"
+	btn_cancel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn_cancel.pressed.connect(overlay.queue_free)
+	vbox.add_child(btn_cancel)
+
+func _do_start_new_run(route: String) -> void:
 	# 1. Borrar save de run
 	if FileAccess.file_exists(SaveManager.SAVE_PATH):
 		DirAccess.remove_absolute(SaveManager.SAVE_PATH)
 		print("🗑️ Run anterior borrada. Legacy y Trascendencia preservados.")
 
-	# 2. Resetear solo los sistemas de run
+	# 2. Guardar ruta elegida en legacy (se aplica en main._ready)
+	LegacyManager.post_tras_route = route
+	if route != "":
+		LegacyManager.save_legacy()
+		print("🗺️ Ruta post-trascendencia seleccionada: %s" % route)
+
+	# 3. Resetear solo los sistemas de run
 	UpgradeManager.reset()
 	BiosphereEngine.reset()
 	EvoManager.reset()
 	LogManager.reset()
-	AchievementManager.reset_run_state() # Borra timers/contadores per-run (no toca unlocked)
+	RunManager.reset()                     # run_closed, disturbances, homeostasis_tier, etc.
+	AchievementManager.reset_run_state()   # Borra timers/contadores per-run (no toca unlocked)
 
-	# 3. Incrementar contador de ciclos en legacy
+	# 4. Incrementar contador de ciclos en legacy
 	LegacyManager.increment_run()
 
-	# 4. Ir al juego (los buffs cósmicos se aplican en _ready de main.gd)
+	# 5. Ir al juego (los buffs cósmicos y la ruta se aplican en _ready de main.gd)
 	get_tree().change_scene_to_file("res://main.tscn")
 
 ## Hard Reset absoluto: borra TODO (legacy, trascendencia, upgrades). Sin vuelta atrás.
