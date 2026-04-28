@@ -189,7 +189,8 @@ func update_genome(main_node: Control):
 	# === NG+ DEPREDADOR DE REALIDADES (Glitch Survival) ===
 	if mutation_depredador:
 		_set_genome_state("depredador", "activo")
-	elif LegacyManager.last_run_ending == "PARASITISMO" and (mutation_hyperassimilation or genome.hiperasimilacion == "activo"):
+	elif (LegacyManager.last_run_ending == "PARASITISMO" or LegacyManager.trascendencia_count > 1) \
+		and (mutation_hyperassimilation or genome.hiperasimilacion == "activo"):
 		if epsilon_runtime > 0.95:
 			var prev_timer := depredador_timer
 			depredador_timer += main.LOGIC_TICK
