@@ -1724,6 +1724,22 @@ func _input(event):
 			if idx < HOTKEY_UPGRADES.size():
 				purchase_upgrade(HOTKEY_UPGRADES[idx])
 
+		# DEBUG — Activar rutas post-trascendencia al vuelo (solo en debug build)
+		if OS.is_debug_build():
+			match kc:
+				KEY_F3:
+					LegacyManager.post_tras_route = "vacio"
+					RunManager.activate_post_tras_route()
+					show_system_toast("🐛 DEBUG: Vacío Hambriento activado")
+				KEY_F4:
+					LegacyManager.post_tras_route = "carnaval"
+					RunManager.activate_post_tras_route()
+					show_system_toast("🐛 DEBUG: Carnaval activado — %s" % str(RunManager.carnaval_mutations))
+				KEY_F5:
+					LegacyManager.post_tras_route = "reencarnacion"
+					RunManager.activate_post_tras_route()
+					show_system_toast("🐛 DEBUG: Reencarnación Heredada activada")
+
 
 func check_institution_unlock():
 	if StructuralModel.institution_accounting_unlocked:

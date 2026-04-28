@@ -53,6 +53,19 @@ func _ready():
 	# --- BADGES de notificación ---
 	_refresh_nav_badges()
 
+# =====================================================
+#  DEBUG — Teclas de testeo rápido (solo en DEBUG build)
+# =====================================================
+func _input(event: InputEvent) -> void:
+	if not OS.is_debug_build(): return
+	if not (event is InputEventKey and event.pressed and not event.echo): return
+	match event.keycode:
+		KEY_F2:
+			# Forzar picker de rutas sin trascender
+			LegacyManager.trascendencia_count = max(LegacyManager.trascendencia_count, 1)
+			_show_post_tras_picker()
+			print("🐛 DEBUG: picker de rutas forzado")
+
 func _on_continue_pressed():
 	# Cargar la escena principal. SaveManager.load_game se llamará en el _ready de main.gd
 	get_tree().change_scene_to_file("res://main.tscn")
