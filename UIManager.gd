@@ -56,6 +56,7 @@ var header_biomasa_value
 
 # ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
 var genome_scroll            # GenomeScroll ScrollContainer (togglable)
+var route_badge_label        # Label en el header mostrando la ruta activa
 
 # ========== RIGHT PANEL COLLAPSIBLES (Phase 4) ==========
 var economy_content          # EconomyContent VBoxContainer (togglable)
@@ -145,6 +146,16 @@ func setup(ui_root: Control):
 			_toggle_collapsible_panel(structural_content, structural_btn, pressed, "Estructura")
 		)
 
+	# Route badge — label dinámico en el header para ruta post-trascendencia
+	var header_content = _find_scene("HeaderContent")
+	if header_content:
+		route_badge_label = Label.new()
+		route_badge_label.add_theme_font_size_override("font_size", 13)
+		route_badge_label.visible = false
+		# Insertar antes del spacer derecho (último hijo)
+		header_content.add_child(route_badge_label)
+		header_content.move_child(route_badge_label, header_content.get_child_count() - 2)
+
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
 
 func _find(node_name: String):
@@ -156,6 +167,29 @@ func _find_scene(node_name: String):
 	return root.find_child(node_name, true, false)
 
 # --- Métodos de actualización ---
+
+## Muestra la ruta post-trascendencia activa en el header. Llamar una vez al inicio de run.
+func update_route_badge() -> void:
+	if not is_instance_valid(route_badge_label):
+		return
+	var text := ""
+	var color := Color.WHITE
+	if RunManager.vacio_hambriento_active:
+		text = "🕳️  VACÍO HAMBRIENTO  ×100"
+		color = Color(0.75, 0.2, 1.0)
+	elif RunManager.carnaval_active:
+		var mut := RunManager.carnaval_mutations[RunManager.carnaval_index] if not RunManager.carnaval_mutations.is_empty() else "?"
+		text = "🎭  CARNAVAL  [%s]" % mut
+		color = Color(1.0, 0.5, 0.1)
+	elif RunManager.reencarnacion_active:
+		text = "⚱️  REENCARNACIÓN HEREDADA"
+		color = Color(0.3, 0.95, 0.6)
+	if text == "":
+		route_badge_label.visible = false
+		return
+	route_badge_label.text = text
+	route_badge_label.add_theme_color_override("font_color", color)
+	route_badge_label.visible = true
 
 func update_money(amount: float):
 	if money_label: money_label.text = "Dinero: $" + str(round(amount))
@@ -744,7 +778,22 @@ func _build_run_end_lore(route: String) -> String:
 # =====================================================
 
 func build_genome_text() -> String:
-	var t := "🧬 GENOMA FÚNGICO\n"
+	var t := ""
+	# Ruta post-trascendencia activa
+	if RunManager.vacio_hambriento_active:
+		t += "[b][color=#bb44ff]🕳️ VACÍO HAMBRIENTO — producción ×100[/color][/b]\n"
+		t += "[color=#888888]Buffs cósmicos consumidos permanentemente.[/color]\n\n"
+	elif RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
+		var idx := RunManager.carnaval_index
+		var muts := RunManager.carnaval_mutations
+		t += "[b][color=#ff8833]🎭 CARNAVAL DE MUTACIONES[/color][/b]\n"
+		t += "Rotación: [color=#ffaa55]%s[/color] → %s → %s\n" % [muts[idx], muts[(idx+1)%3], muts[(idx+2)%3]]
+		var secs_left := int(RunManager.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
+		t += "[color=#888888]Próxima rotación en %ds[/color]\n\n" % secs_left
+	elif RunManager.reencarnacion_active:
+		t += "[b][color=#44ee99]⚱️ REENCARNACIÓN HEREDADA[/color][/b]\n"
+		t += "[color=#888888]Upgrades heredados del ciclo anterior. Costos escalan ×1.5 extra.[/color]\n\n"
+	t += "🧬 GENOMA FÚNGICO\n"
 	t += "Hiperasimilación: " + EvoManager.genome.hiperasimilacion + "\n"
 	t += "Parasitismo: " + EvoManager.genome.parasitismo + "\n"
 	t += "Red micelial: " + EvoManager.genome.red_micelial + "\n"

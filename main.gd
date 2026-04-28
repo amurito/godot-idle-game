@@ -719,6 +719,7 @@ func _ready():
 	#  RUTAS POST-TRASCENDENCIA — Activar si corresponde
 	# =====================================================
 	RunManager.activate_post_tras_route()
+	UIManager.update_route_badge()
 
 	update_ui()
 
@@ -1082,6 +1083,10 @@ func _on_ui_tick():
 	# === 10 Hz — actualizar labels y botones ===
 	update_ui()
 	_update_evolution_progress_bar()
+
+	# Route badge (se actualiza para reflejar mutación actual en Carnaval)
+	if RunManager.carnaval_active:
+		UIManager.update_route_badge()
 
 	# Update header bar (Phase 2)
 	var delta_real = EconomyManager.get_contribution_breakdown().total
