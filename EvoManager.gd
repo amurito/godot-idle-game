@@ -191,26 +191,25 @@ func update_genome(main_node: Control):
 		_set_genome_state("depredador", "activo")
 	elif (LegacyManager.last_run_ending == "PARASITISMO" or LegacyManager.trascendencia_count > 1) \
 		and (mutation_hyperassimilation or genome.hiperasimilacion == "activo"):
-		if epsilon_runtime > 0.95:
-			var prev_timer := depredador_timer
-			depredador_timer += main.LOGIC_TICK
-			# Notificar al iniciar la carga
-			if prev_timer == 0.0 and depredador_timer > 0.0:
-				LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." % epsilon_runtime, main)
-			# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
-			var depredador_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
-			if depredador_timer >= depredador_threshold:
-				_set_genome_state("depredador", "activo")
-			else:
-				_set_genome_state("depredador", "latente")
+			if epsilon_runtime > 0.95:
+				var prev_timer := depredador_timer
+				depredador_timer += main.LOGIC_TICK
+				# Notificar al iniciar la carga
+				if prev_timer == 0.0 and depredador_timer > 0.0:
+					LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." % epsilon_runtime, main)
+				# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
+				var depredador_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+				if depredador_timer >= depredador_threshold:
+					_set_genome_state("depredador", "activo")
+				else:
+					_set_genome_state("depredador", "latente")
 		else:
 			depredador_timer = max(0.0, depredador_timer - main.LOGIC_TICK * 2.0)
 			if depredador_timer == 0.0:
 				_set_genome_state("depredador", "dormido")
 			else:
 				_set_genome_state("depredador", "latente")
-	else:
-		_set_genome_state("depredador", "dormido")
+
 
 	# SIMBIOSIS (v0.8.5 - El Camino del Hardware)
 	# Árbol: "Estabilidad del ecosistema > 40%" → Ω ≥ 0.40
