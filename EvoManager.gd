@@ -103,198 +103,249 @@ func update_genome(main_node: Control):
 	if RunManager.run_closed:
 		return
 
-	# --- BLOQUEO POR RED MICELIAL O PARASITISMO (Rutas Finales/Tier 1 bloqueado) ---
-	if mutation_red_micelial or mutation_parasitism:
-		if genome.hiperasimilacion != "activo": _set_genome_state("hiperasimilacion", "bloqueado")
-		if genome.homeostasis != "activo": _set_genome_state("homeostasis", "bloqueado")
-		if genome.parasitismo != "activo" and not mutation_parasitism: _set_genome_state("parasitismo", "bloqueado")
-		if genome.simbiosis != "activo" and not mutation_symbiosis: _set_genome_state("simbiosis", "bloqueado")
-		
-		# Forzamos estado activo en el genoma para que no se vea como "latente" en el HUD
-		if mutation_red_micelial: _set_genome_state("red_micelial", "activo")
-		if mutation_parasitism: _set_genome_state("parasitismo", "activo")
-		
-		# No bloqueamos esporulación ya que es el final de la rama roja (solo si aplica)
-		_check_automatic_activations()
+	# Bloqueo temprano: rutas finales (Red Micelial / Parasitismo) congelan Tier 1
+	if _handle_terminal_mutations():
 		return
 
-	var epsilon_runtime = StructuralModel.epsilon_runtime
-	var accounting_level = UpgradeManager.level("accounting")
-	var run_time = main.run_time
-	var bio_pressure = main.get_structural_pressure()
-	
-	var biomasa = BiosphereEngine.biomasa
-	var hifas = BiosphereEngine.hifas
-	var ap = main.get_active_passive_breakdown()
-	var act_domina = ap.activo > ap.pasivo
+	# Construir contexto compartido: todos los valores derivados que usan las sub-evaluaciones
+	var ctx := _build_eval_context()
 
-	# HIPERASIMILACIÓN (Exceso)
+	# Evaluar cada mutación. Orden importa: las flags activas de unas bloquean a otras.
+	_update_hiperasimilacion(ctx)
+	_update_parasitismo(ctx)
+	_update_met_oscuro(ctx)
+	_update_depredador(ctx)
+	_update_simbiosis(ctx)
+	_update_homeostasis(ctx)
+	_update_allostasis(ctx)
+	_update_homeorhesis(ctx)
+	_update_red_micelial(ctx)
+	_update_esporulacion(ctx)
+
+	_check_automatic_activations()
+
+
+# ─────────────────────────────────────────────────────────────
+# update_genome — Helpers de evaluación
+# ─────────────────────────────────────────────────────────────
+
+## Maneja el caso especial de Red Micelial / Parasitismo activos (Tier 1 congelado).
+## Returns: true si manejó el caso (caller debe retornar), false en caso contrario.
+func _handle_terminal_mutations() -> bool:
+	if not (mutation_red_micelial or mutation_parasitism):
+		return false
+
+	if genome.hiperasimilacion != "activo": _set_genome_state("hiperasimilacion", "bloqueado")
+	if genome.homeostasis != "activo": _set_genome_state("homeostasis", "bloqueado")
+	if genome.parasitismo != "activo" and not mutation_parasitism: _set_genome_state("parasitismo", "bloqueado")
+	if genome.simbiosis != "activo" and not mutation_symbiosis: _set_genome_state("simbiosis", "bloqueado")
+
+	# Forzamos estado activo en el genoma para que no se vea como "latente" en el HUD
+	if mutation_red_micelial: _set_genome_state("red_micelial", "activo")
+	if mutation_parasitism: _set_genome_state("parasitismo", "activo")
+
+	# No bloqueamos esporulación: es el final de la rama roja
+	_check_automatic_activations()
+	return true
+
+
+## Calcula el contexto de evaluación: valores derivados que comparten todas las sub-funciones.
+func _build_eval_context() -> Dictionary:
+	var ap = main.get_active_passive_breakdown()
+	return {
+		"epsilon": StructuralModel.epsilon_runtime,
+		"accounting": UpgradeManager.level("accounting"),
+		"run_time": main.run_time,
+		"bio_pressure": main.get_structural_pressure(),
+		"biomasa": BiosphereEngine.biomasa,
+		"hifas": BiosphereEngine.hifas,
+		"ap": ap,
+		"act_domina": ap.activo > ap.pasivo,
+	}
+
+
+# ─────────────────────────────────────────────────────────────
+# update_genome — Sub-evaluaciones por mutación
+# ─────────────────────────────────────────────────────────────
+
+## HIPERASIMILACIÓN (Exceso): activo > 80, ε > 0.4, biomasa > 4, sin contabilidad, run > 180s
+func _update_hiperasimilacion(ctx: Dictionary) -> void:
 	if mutation_homeostasis or mutation_symbiosis or mutation_parasitism or mutation_red_micelial:
 		_set_genome_state("hiperasimilacion", "bloqueado")
-	elif ap.activo > 80.0 and epsilon_runtime > 0.4 and biomasa > 4.0 and accounting_level == 0 and run_time > 180.0:
+	elif ctx.ap.activo > 80.0 and ctx.epsilon > 0.4 and ctx.biomasa > 4.0 \
+			and ctx.accounting == 0 and ctx.run_time > 180.0:
 		_set_genome_state("hiperasimilacion", "activo")
-	elif ap.activo > 60.0 or epsilon_runtime > 0.4:
+	elif ctx.ap.activo > 60.0 or ctx.epsilon > 0.4:
 		_set_genome_state("hiperasimilacion", "latente")
 	else:
 		_set_genome_state("hiperasimilacion", "dormido")
 
-	# PARASITISMO (Degeneración)
-	# Inactividad: no clickear por 2min + biomasa suficiente. NO requiere epsilon alto
-	# porque dejar de clickear colapsa epsilon por diseño (decay_factor en update_epsilon_runtime)
-	var inactivity_trigger = EconomyManager.time_since_last_click > 120.0 and biomasa > 3.0
-	var stagnation_trigger = run_time > 1800.0 and biomasa > 5.0 and LegacyManager.last_run_ending != "HOMEOSTASIS"
-	
+
+## PARASITISMO (Degeneración): inactividad prolongada o estancamiento.
+## NO requiere ε alto porque dejar de clickear ya colapsa ε por diseño.
+func _update_parasitismo(ctx: Dictionary) -> void:
+	var inactivity_trigger: bool = EconomyManager.time_since_last_click > 120.0 and ctx.biomasa > 3.0
+	var stagnation_trigger: bool = ctx.run_time > 1800.0 and ctx.biomasa > 5.0 \
+		and LegacyManager.last_run_ending != "HOMEOSTASIS"
+
 	if mutation_parasitism:
 		_set_genome_state("parasitismo", "activo")
 	elif mutation_homeostasis or mutation_symbiosis or mutation_hyperassimilation or mutation_red_micelial:
 		_set_genome_state("parasitismo", "bloqueado")
-	elif (biomasa > 6.0 and epsilon_runtime > 0.35 and accounting_level == 0 and run_time > 420.0) \
-		or inactivity_trigger or stagnation_trigger:
+	elif (ctx.biomasa > 6.0 and ctx.epsilon > 0.35 and ctx.accounting == 0 and ctx.run_time > 420.0) \
+			or inactivity_trigger or stagnation_trigger:
 		_set_genome_state("parasitismo", "activo")
-	elif biomasa > 2.0 or EconomyManager.time_since_last_click > 60.0:
+	elif ctx.biomasa > 2.0 or EconomyManager.time_since_last_click > 60.0:
 		_set_genome_state("parasitismo", "latente")
 	else:
 		_set_genome_state("parasitismo", "dormido")
 
-	# === NG++ METABOLISMO OSCURO (Post-Depredador: bioquímica oscura) ===
-	# Solo evaluable si Depredador está activo Y no estamos ya en MET.OSCURO
+
+## METABOLISMO OSCURO (Post-Depredador): bioquímica oscura tras recursos críticos.
+## Requiere: Depredador activo, dinero < $1000, ≥3 devours, biomasa ≥ 25.
+func _update_met_oscuro(ctx: Dictionary) -> void:
 	if mutation_met_oscuro:
 		_set_genome_state("met_oscuro", "activo")
-	elif mutation_depredador:
-		# Árbol HTML: "Depredación activa" + "Recursos críticos (< 20%)"
-		# → Dinero crítico (< $1000), al menos 3 devours, y biomasa acumulada ≥ 25
-		var devoured_ok: bool = met_oscuro_devoured_count >= 3
-		var recursos_criticos: bool = EconomyManager.money < 1000.0
-		var bio_ok: bool = biomasa >= 25.0
-		if devoured_ok and recursos_criticos and bio_ok:
-			var prev_mt := met_oscuro_timer
-			met_oscuro_timer += main.LOGIC_TICK
-			if prev_mt == 0.0 and met_oscuro_timer > 0.0:
-				LogManager.add("🌑 BIOQUÍMICA OSCURA — Recursos críticos detectados ($%.0f). Estabilizando en %ds… (devours: %d, bio %.1f)" % [EconomyManager.money, int(MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, biomasa], main)
-			# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
-			var met_oscuro_threshold := MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
-			if met_oscuro_timer >= met_oscuro_threshold:
-				_set_genome_state("met_oscuro", "activo")
-			else:
-				_set_genome_state("met_oscuro", "latente")
-		else:
-			met_oscuro_timer = max(0.0, met_oscuro_timer - main.LOGIC_TICK * 1.5)
-			if met_oscuro_timer == 0.0:
-				_set_genome_state("met_oscuro", "dormido")
-			else:
-				_set_genome_state("met_oscuro", "latente")
-	else:
+		return
+	if not mutation_depredador:
 		_set_genome_state("met_oscuro", "dormido")
+		return
 
-	# === NG+ DEPREDADOR DE REALIDADES (Glitch Survival) ===
+	var devoured_ok: bool = met_oscuro_devoured_count >= 3
+	var recursos_criticos: bool = EconomyManager.money < 1000.0
+	var bio_ok: bool = ctx.biomasa >= 25.0
+
+	if devoured_ok and recursos_criticos and bio_ok:
+		var prev_mt := met_oscuro_timer
+		met_oscuro_timer += main.LOGIC_TICK
+		if prev_mt == 0.0 and met_oscuro_timer > 0.0:
+			LogManager.add("🌑 BIOQUÍMICA OSCURA — Recursos críticos detectados ($%.0f). Estabilizando en %ds… (devours: %d, bio %.1f)" \
+				% [EconomyManager.money, int(MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa], main)
+		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
+		var threshold := MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		_set_genome_state("met_oscuro", "activo" if met_oscuro_timer >= threshold else "latente")
+	else:
+		met_oscuro_timer = max(0.0, met_oscuro_timer - main.LOGIC_TICK * 1.5)
+		_set_genome_state("met_oscuro", "dormido" if met_oscuro_timer == 0.0 else "latente")
+
+
+## DEPREDADOR DE REALIDADES (Glitch Survival): post-Parasitismo o post-2ª Trascendencia.
+## Carga durante 30s (o 18s con Árbol Acelerado) cuando ε > 0.95 con Hiperasimilación activa.
+func _update_depredador(ctx: Dictionary) -> void:
 	if mutation_depredador:
 		_set_genome_state("depredador", "activo")
-	elif (LegacyManager.last_run_ending == "PARASITISMO" or LegacyManager.trascendencia_count > 1) \
-		and (mutation_hyperassimilation or genome.hiperasimilacion == "activo"):
-			if epsilon_runtime > 0.95:
-				var prev_timer := depredador_timer
-				depredador_timer += main.LOGIC_TICK
-				# Notificar al iniciar la carga
-				if prev_timer == 0.0 and depredador_timer > 0.0:
-					LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." % epsilon_runtime, main)
-				# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
-				var depredador_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
-				if depredador_timer >= depredador_threshold:
-					_set_genome_state("depredador", "activo")
-				else:
-					_set_genome_state("depredador", "latente")
-		else:
-			depredador_timer = max(0.0, depredador_timer - main.LOGIC_TICK * 2.0)
-			if depredador_timer == 0.0:
-				_set_genome_state("depredador", "dormido")
-			else:
-				_set_genome_state("depredador", "latente")
+		return
+
+	var unlock_gate: bool = LegacyManager.last_run_ending == "PARASITISMO" \
+		or LegacyManager.trascendencia_count > 1
+	var hyper_active: bool = mutation_hyperassimilation or genome.hiperasimilacion == "activo"
+
+	if not (unlock_gate and hyper_active):
+		_set_genome_state("depredador", "dormido")
+		return
+
+	if ctx.epsilon > 0.95:
+		var prev_timer := depredador_timer
+		depredador_timer += main.LOGIC_TICK
+		# Notificar al iniciar la carga
+		if prev_timer == 0.0 and depredador_timer > 0.0:
+			LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." \
+				% ctx.epsilon, main)
+		# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
+		var threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		_set_genome_state("depredador", "activo" if depredador_timer >= threshold else "latente")
+	else:
+		depredador_timer = max(0.0, depredador_timer - main.LOGIC_TICK * 2.0)
+		_set_genome_state("depredador", "dormido" if depredador_timer == 0.0 else "latente")
 
 
-	# SIMBIOSIS (v0.8.5 - El Camino del Hardware)
-	# Árbol: "Estabilidad del ecosistema > 40%" → Ω ≥ 0.40
+## SIMBIOSIS (v0.8.5 — Camino del Hardware): Ω ≥ 0.40 con clic dominante.
+func _update_simbiosis(ctx: Dictionary) -> void:
 	if mutation_symbiosis:
 		_set_genome_state("simbiosis", "activo")
 	elif mutation_homeostasis or mutation_hyperassimilation or mutation_red_micelial or mutation_parasitism:
 		_set_genome_state("simbiosis", "bloqueado")
-	elif accounting_level >= 1 and hifas >= 5.0 and StructuralModel.omega >= 0.40 and act_domina:
+	elif ctx.accounting >= 1 and ctx.hifas >= 5.0 and StructuralModel.omega >= 0.40 and ctx.act_domina:
 		_set_genome_state("simbiosis", "latente")
-	elif accounting_level >= 1 and hifas >= 3.0:
+	elif ctx.accounting >= 1 and ctx.hifas >= 3.0:
 		_set_genome_state("simbiosis", "latente")
 	else:
 		_set_genome_state("simbiosis", "dormido")
 
-	# HOMEOSTASIS (v0.8.10 - La Ruta del Orden)
-	# Árbol: "Al menos 2 sistemas activos + Sin colapso en run actual"
-	# → accounting_level >= 1 (institución activa) + biomasa > 0 (biología activa) + ε < 0.50
-	var dos_sistemas_activos: bool = accounting_level >= 1 and (biomasa > 1.0 or hifas > 2.0)
-	var sin_colapso: bool = epsilon_runtime < 0.50
-	var low_fungal_noise: bool = hifas < 8.0
-	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or mutation_allostasis or mutation_homeorhesis:
+
+## HOMEOSTASIS (v0.8.10 — Ruta del Orden): 2 sistemas activos + sin colapso (ε < 0.50).
+func _update_homeostasis(ctx: Dictionary) -> void:
+	var dos_sistemas_activos: bool = ctx.accounting >= 1 and (ctx.biomasa > 1.0 or ctx.hifas > 2.0)
+	var sin_colapso: bool = ctx.epsilon < 0.50
+	var low_fungal_noise: bool = ctx.hifas < 8.0
+
+	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism \
+			or mutation_symbiosis or mutation_allostasis or mutation_homeorhesis:
 		_set_genome_state("homeostasis", "bloqueado")
 	elif mutation_homeostasis:
 		_set_genome_state("homeostasis", "activo")
 	elif main.is_homeostasis_candidate(main.LOGIC_TICK) and low_fungal_noise and sin_colapso:
 		_set_genome_state("homeostasis", "latente")
-	elif dos_sistemas_activos and run_time > 120.0:
+	elif dos_sistemas_activos and ctx.run_time > 120.0:
 		_set_genome_state("homeostasis", "latente")
 	else:
 		_set_genome_state("homeostasis", "dormido")
 
-	# === NG+ ALOSTASIS ===
-	# Árbol: "Homeostasis activa + Haber sobrevivido al menos 1 perturbación"
+
+## ALOSTASIS (NG+): Homeostasis activa + ≥1 perturbación sobrevivida.
+func _update_allostasis(_ctx: Dictionary) -> void:
 	if mutation_allostasis:
 		_set_genome_state("allostasis", "activo")
-	elif mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or not mutation_homeostasis:
+	elif mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism \
+			or mutation_symbiosis or not mutation_homeostasis:
 		_set_genome_state("allostasis", "bloqueado")
 	elif LegacyManager.last_run_ending == "HOMEOSTASIS":
 		# Latente desde la primera perturbación sobrevivida (fiel al árbol)
-		if RunManager.disturbances_survived >= 1:
-			_set_genome_state("allostasis", "latente")
-		else:
-			_set_genome_state("allostasis", "dormido")
+		_set_genome_state("allostasis", "latente" if RunManager.disturbances_survived >= 1 else "dormido")
 	else:
 		_set_genome_state("allostasis", "dormido")
-		
-	# === NG+ HOMEORRESIS ===
-	# Árbol: "Allostasis activa + Más de 5 ciclos sin colapso"
-	# → disturbances_survived >= 5 + shock extremo sobrevivido
+
+
+## HOMEORRESIS (NG+): Allostasis activa + ≥5 perturbaciones (o shock extremo sobrevivido).
+func _update_homeorhesis(_ctx: Dictionary) -> void:
 	if mutation_homeorhesis:
 		_set_genome_state("homeorhesis", "activo")
-	elif mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or not mutation_allostasis:
+	elif mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism \
+			or mutation_symbiosis or not mutation_allostasis:
 		_set_genome_state("homeorhesis", "bloqueado")
 	elif LegacyManager.last_run_ending == "ALLOSTASIS":
 		# Latente cuando se cumplen "5 ciclos sin colapso"
-		if RunManager.disturbances_survived >= 5 or RunManager.extreme_shock_survived:
-			_set_genome_state("homeorhesis", "latente")
-		else:
-			_set_genome_state("homeorhesis", "dormido")
+		var ready: bool = RunManager.disturbances_survived >= 5 or RunManager.extreme_shock_survived
+		_set_genome_state("homeorhesis", "latente" if ready else "dormido")
 	else:
 		_set_genome_state("homeorhesis", "dormido")
 
-	# RED MICELIAL (v0.8.10 - La Ruta de la Expansión)
+
+## RED MICELIAL (v0.8.10 — Ruta de la Expansión): hifas altas, ε bajo, pasivo dominante.
+func _update_red_micelial(ctx: Dictionary) -> void:
 	if mutation_red_micelial:
 		_set_genome_state("red_micelial", "activo")
 	elif mutation_homeostasis or mutation_hyperassimilation or mutation_symbiosis:
 		_set_genome_state("red_micelial", "bloqueado")
-	elif hifas >= 11.5 and biomasa >= 5.0 and StructuralModel.epsilon_runtime < 0.65 and accounting_level >= 1 and not act_domina:
+	elif ctx.hifas >= 11.5 and ctx.biomasa >= 5.0 and ctx.epsilon < 0.65 \
+			and ctx.accounting >= 1 and not ctx.act_domina:
 		_set_genome_state("red_micelial", "latente")
-	elif hifas >= 5.0:
+	elif ctx.hifas >= 5.0:
 		_set_genome_state("red_micelial", "latente")
 	else:
 		_set_genome_state("red_micelial", "dormido")
 
-	# ESPORULACIÓN (Si ya está en fase 2)
+
+## ESPORULACIÓN (Fase 2 de Red Micelial): determinada por presión biológica.
+func _update_esporulacion(ctx: Dictionary) -> void:
 	if mutation_homeostasis or mutation_hyperassimilation:
 		_set_genome_state("esporulacion", "bloqueado")
-	elif bio_pressure > 20.0:
+	elif ctx.bio_pressure > 20.0:
 		_set_genome_state("esporulacion", "activo")
-	elif bio_pressure > 8.0:
+	elif ctx.bio_pressure > 8.0:
 		_set_genome_state("esporulacion", "latente")
 	else:
 		_set_genome_state("esporulacion", "dormido")
-
-	_check_automatic_activations()
 
 
 func _check_automatic_activations():
