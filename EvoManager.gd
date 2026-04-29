@@ -315,8 +315,8 @@ func _update_homeorhesis(_ctx: Dictionary) -> void:
 		_set_genome_state("homeorhesis", "bloqueado")
 	elif LegacyManager.last_run_ending == "ALLOSTASIS":
 		# Latente cuando se cumplen "5 ciclos sin colapso"
-		var ready: bool = RunManager.disturbances_survived >= 5 or RunManager.extreme_shock_survived
-		_set_genome_state("homeorhesis", "latente" if ready else "dormido")
+		var conditions_met: bool = RunManager.disturbances_survived >= 5 or RunManager.extreme_shock_survived
+		_set_genome_state("homeorhesis", "latente" if conditions_met else "dormido")
 	else:
 		_set_genome_state("homeorhesis", "dormido")
 
