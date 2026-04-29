@@ -471,10 +471,10 @@ func _build_progress_str(id: String, def: Dictionary) -> String:
 
 func _setup_trascendencia_ui() -> void:
 	# Actualizar texto del botón Nueva Partida según estado del jugador
-	var has_meta := LegacyManager.legacy_points > 0 \
+	var has_meta_progress := LegacyManager.legacy_points > 0 \
 		or LegacyManager.trascendencia_count > 0 \
 		or LegacyManager.total_runs > 0
-	if has_meta:
+	if has_meta_progress:
 		btn_new_game.text = "Nueva Run"
 		btn_new_game.tooltip_text = "Inicia una nueva run preservando tu Banco Genético y Banco Cósmico."
 	else:
@@ -709,12 +709,12 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	hint.add_theme_color_override("font_color", Color(0.7, 0.6, 0.9))
 	vbox.add_child(hint)
 
-	var btn_continue := Button.new()
-	btn_continue.text = "Continuar"
-	btn_continue.custom_minimum_size = Vector2(200, 50)
-	btn_continue.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn_continue.pressed.connect(_on_first_trascend_continue)
-	vbox.add_child(btn_continue)
+	var continue_button := Button.new()
+	continue_button.text = "Continuar"
+	continue_button.custom_minimum_size = Vector2(200, 50)
+	continue_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	continue_button.pressed.connect(_on_first_trascend_continue)
+	vbox.add_child(continue_button)
 
 	LegacyManager.first_trascendencia_shown = true
 	LegacyManager.save_legacy()
