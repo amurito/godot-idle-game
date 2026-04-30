@@ -360,6 +360,12 @@ const DEFS := {
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "saturacion_total",
 	},
+	"fractura_epistemica": {
+		"name": "Fractura Epistémica",
+		"desc": "Cerrar por COLAPSO DEPREDATORIO: el estrés estructural colapsó bajo presión del Depredador.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "fractura_epistemica",
+	},
 	"tres_vidas_camino": {
 		"name": "Tres Vidas, Un Camino",
 		"desc": "Alcanzar HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS progresivamente.",
@@ -461,6 +467,7 @@ func _ready() -> void:
 		"reino_subterraneo":  _eval_reino_subterraneo,
 		"ultima_espora":      _eval_ultima_espora,
 		"saturacion_total":   _eval_saturacion_total,
+		"fractura_epistemica": _eval_fractura_epistemica,
 	}
 	_init_timers()
 
@@ -752,6 +759,9 @@ func _eval_saturacion_total(_s: Dictionary) -> bool:
 	return RunManager.final_route == "METABOLISMO OSCURO" \
 		and RunManager.final_reason.contains("Saturación Oscura")
 
+func _eval_fractura_epistemica(_s: Dictionary) -> bool:
+	return RunManager.final_route == "COLAPSO DEPREDATORIO"
+
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 
 func _check_meta_achievements() -> void:
@@ -789,6 +799,8 @@ func on_run_closed(route: String) -> void:
 		unlock("tres_vidas_camino")
 	if route == "METABOLISMO OSCURO" and _eval_saturacion_total({}):
 		unlock("saturacion_total")
+	if route == "COLAPSO DEPREDATORIO":
+		unlock("fractura_epistemica")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

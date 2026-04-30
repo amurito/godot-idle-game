@@ -958,6 +958,15 @@ func _on_logic_tick():
 		met_oscuro_tick(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
+		# check_depredador_final: colapso estructural bajo presión depredatoria
+		# Requiere al menos 1 devour para que no dispare en el primer frame
+		if EvoManager.met_oscuro_devoured_count >= 1 \
+				and StructuralModel.epsilon_runtime > 1.0 \
+				and BiosphereEngine.biomasa > 25.0 \
+				and EconomyManager.money < 500.0 \
+				and not RunManager.run_closed:
+			close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: el estrés estructural colapsó bajo presión depredatoria (+8 PL)")
+			return
 		depredador_tick += dt
 		if depredador_tick >= 1.5:
 			depredador_tick = 0.0

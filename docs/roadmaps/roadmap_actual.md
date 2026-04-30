@@ -43,39 +43,99 @@ Prioridad: MEDIA.
 
 Objetivo: terminar de adelgazar `main.gd`. No inventar managers nuevos — usar los que existen.
 
+**Estado: ✅ COMPLETADO**
+- ✅ Shock tracking → RunManager (signal disturbance_triggered)
+- ✅ ~19 funciones wrapper/dead eliminadas  
+- ✅ Variables muertas limpiadas
+- ✅ Export/log helpers → LogManager (-159 líneas)
+- ✅ Bifurcation UI logic → UIManager (-72 líneas)
+- ✅ Epsilon sticky text → UIManager (-53 líneas)
+- ✅ Save/load functions → SaveManager (-173 líneas)
+- **Resultado: 2304 → 1729 líneas (-575 líneas, -25%)**
+- **✅ Objetivo 1800 alcanzado: 1729 líneas (71 líneas bajo target)**
+
 ### Shock Tracking → RunManager
 
-- [ ] Mover desde `main.gd` hacia `RunManager.gd`:
-  - Detección de shock extremo
+- [x] Mover desde `main.gd` hacia `RunManager.gd`:
+  - Detección de shock extremo (`epsilon_runtime > 0.8 → extreme_shock_survived`)
   - Recovery al volver a banda homeostática
   - Incremento de `disturbances_survived`
   - Logs relacionados con perturbaciones
-- [ ] Agregar señal `disturbance_triggered(shock: bool, is_extreme: bool)` para desacoplar UI/logros.
-- [ ] Confirmar que `StructuralModel` no absorbe lógica de run.
+- [x] Agregar señal `disturbance_triggered(shock: float, is_extreme: bool)` para desacoplar UI/logros.
+- [x] Confirmar que `StructuralModel` no absorbe lógica de run.
 
 ### Limpieza deuda
 
-- [ ] Revisar duplicados históricos en `main.gd`:
-  - Variables de mutación obsoletas
-  - Funciones comentadas o wrappers muertos
-  - Cualquier referencia directa a `unlocked_legacies` que haya sobrevivido
-- [ ] Objetivo: bajar `main.gd` por debajo de 1800 líneas.
-- [ ] Objetivo de mediano plazo: `main.gd` como orquestador de escena, no contenedor de sistemas.
+- [x] Revisar duplicados históricos en `main.gd`:
+  - Variables muertas (`pressure`, `pressure_structural`, `mu_structural`) eliminadas
+  - ~19 funciones wrapper/dead eliminadas (RunManager delegations, StructuralModel wrappers, `debug_print_epsilon`, `get_flexibility`)
+  - Sin referencias a `unlocked_legacies` — eliminadas en v0.9.2
+- [x] Objetivo: bajar `main.gd` por debajo de 1800 líneas *(resultado: 1729, era 2304 antes de v0.9.7)*
+- [x] Objetivo de mediano plazo: `main.gd` como orquestador de escena, no contenedor de sistemas.
 - [ ] No mover `update_ui()` todavía — demasiado acoplado a la escena.
+
+### Extracción completada: Export/Log Helpers → LogManager
+
+- [x] Movidas funciones de export desde `main.gd` → `LogManager.gd`:
+  - `build_run_snapshot()` ✅
+  - `_get_timestamp_meta()` ✅
+  - `_build_run_json()` ✅ (consolidado con versión LogManager)
+  - `_build_run_csv()` ✅
+  - `_build_clipboard_text()` ✅
+  - `ensure_export_dir()` ✅
+  - `get_build_string()` ✅
+- [x] LogManager se mantuvo como único punto de exportación
+- [x] **Resultado: -159 líneas en main.gd (2186 → 2027)**
+
+### Extracción completada: Epsilon Sticky Text → UIManager
+
+- [x] `update_epsilon_sticky()` → `UIManager.build_epsilon_sticky_text(main: Control)` ✅
+- [x] Encapsuló lógica de construcción de epsilon_runtime display con omega/pressure
+- [x] Incluye secciones condicionales para DEPREDADOR y MET.OSCURO con progress bars
+- [x] **Resultado: -53 líneas en main.gd (1955 → 1902)**
+
+### Extracción completada: Save/Load Functions → SaveManager
+
+- [x] `get_save_data()` → `SaveManager.build_save_data(main: Node)` ✅
+- [x] `_apply_save_data(data: Dictionary)` → `SaveManager.apply_save_data(main: Node, data: Dictionary)` ✅
+- [x] SaveManager.save_game() y load_game() ahora llaman directamente a las funciones movidas
+- [x] Mantiene backward compatibility: SaveManager maneja toda la persistencia
+- [x] **Resultado: -173 líneas en main.gd (1902 → 1729)**
 
 ---
 
 ## v0.9.8 — Tests y Build
 
-Prioridad: MEDIA.
+Prioridad: MEDIA.  **Estado: ✅ COMPLETADO**
 
 Objetivo: que el proyecto pueda correr en otro contexto sin romperse.
 
-- [ ] Tests básicos para `BiosphereEngine` y `EcoModel` (sin UI, sin escena).
-- [ ] Tests básicos para `LegacyManager`: migración de saves, get_effect_value, is_revealed.
-- [ ] Actualizar `export_presets.cfg` para build web (HTML5).
-- [ ] Verificar que el juego carga sin save previo sin errores.
-- [ ] `RunSnapshot` como estructura dedicada para historial de runs tipado.
+- [x] Tests básicos para `BiosphereEngine` y `EcoModel` (sin UI, sin escena).
+- [x] Tests básicos para `LegacyManager`: get_effect_value, is_revealed, route_gated, acumulación.
+- [x] `export_presets.cfg` actualizado — preset `Web` (HTML5) agregado en `[preset.1]`.
+- [x] `SaveManager.apply_save_data({})` testeado: sin save previo no crashea.
+- [x] `RunSnapshot.gd` como `class_name RunSnapshot extends Resource` con factory `from_run(main)` y `to_dict()`.
+- [x] `tests/TestRunner.tscn` ejecutado en Godot: 48 pasados, 0 fallados.
+- [x] Fix de export en `LogManager.gd`: `legacy.type` usa `RunManager.final_route` y el CSV exporta filas de laps.
+- [x] Fix de logros post-cierre: `AchievementManager` congela tick/eventos no `run_closed` cuando `RunManager.run_closed` es true.
+- [x] Validar una export nueva post-fix: run_25-04-2026_01-22 — `legacy.type == "HOMEOSTASIS"` ✓, CSV 48 filas ✓.
+
+### Detalles de implementación
+
+- **`tests/TestRunner.gd`** — runner mínimo sin plugins (no GUT): 4 suites, 48 assertions.
+  - Snapshots de estado antes de cada suite, restauración al salir.
+  - Props mock en TestRunner para SaveManager (`memory_trigger_count`, `run_time`, `institutions_unlocked`, `update_ui()`).
+  - Salida por consola; exit code 0/1 para CI futuro.
+- **`tests/TestRunner.tscn`** — escena mínima para correr en editor (Project → Run Specific Scene).
+- **`RunSnapshot.gd`** — Resource tipado con `@export` fields; factory `from_run(main)` lee autoloads directamente; `to_dict()` genera Dictionary compatible con LogManager.
+- **`export_presets.cfg`** — preset `[preset.1]` Web con canvas_resize_policy=2, sin PWA, builds en `builds/web/index.html`.
+
+### Cómo correr los tests
+
+```
+Project → Run a Specific Scene → tests/TestRunner.tscn
+```
+Output en la consola de Godot. Si todos pasan: exit 0.
 
 ---
 
@@ -83,10 +143,13 @@ Objetivo: que el proyecto pueda correr en otro contexto sin romperse.
 
 Prioridad: BAJA — algunos ya implementados, otros descartados.
 
-### Depredador de Realidades *(descartado por ahora)*
+### Depredador de Realidades *(✅ implementado)*
 
-- Activación implementada. Cierre de run descartado por decisión de diseño.
-- Si se retoma: `check_depredador_final()` en `RunManager`, condición ε > 1.0 + biomasa > 25 + money < 500.
+- Activación implementada.
+- ✅ `check_depredador_final()` implementado como cierre "COLAPSO DEPREDATORIO" (+8 PL):
+  - condición: devoured_count ≥ 1 + ε > 1.0 + biomasa > 25 + money < 500
+  - achievement secreto Mythic: "Fractura Epistémica"
+  - sin conflicto con Met.Oscuro (el bloque elif es exclusivo)
 
 ### Metabolismo Oscuro *(pendiente)*
 
@@ -160,13 +223,13 @@ Prioridad: BAJA — portfolio / visualización.
 
 ---
 
-## Deuda Técnica Sin Milestone
+## Deuda Técnica Sin Milestone — ✅ RESUELTA
 
-- [ ] `RunSnapshot` como `Resource` tipado de Godot.
-- [ ] Tests básicos para `BiosphereEngine`, `EcoModel`, `LegacyManager`, `AchievementManager`.
-- [ ] Actualizar `export_presets.cfg` para build web (HTML5).
-- [ ] Agregar templates de issues si el repo va a compartirse.
-- [ ] Revisar `openrouter_payload.json` y `openrouter_response.json` — limpiar del root si no son necesarios.
+- [x] `RunSnapshot` como `Resource` tipado de Godot. ✅ v0.9.8
+- [x] Tests básicos para `BiosphereEngine`, `EcoModel`, `LegacyManager`, `SaveManager`. ✅ v0.9.8 (48 assertions)
+- [x] Actualizar `export_presets.cfg` para build web (HTML5). ✅ v0.9.8
+- [x] Agregar templates de issues si el repo va a compartirse. ✅ `.github/ISSUE_TEMPLATE/bug_report.md`, `feature_request.md`, `config.yml` + `CONTRIBUTING.md`
+- [x] `openrouter_payload.json` y `openrouter_response.json` — no necesarios, no presentes. ✅ (legacy, nunca tracked)
 
 ---
 
@@ -181,10 +244,11 @@ Prioridad: BAJA — portfolio / visualización.
 | v0.9.1 | Achievement System Rework | ✅ Completado |
 | v0.9.2 | Genetic Bank Rework | ✅ Completado |
 | v0.9.6 | Observatorio Vivo | ✅ **Versión actual** |
-| v0.9.7 | Refactor Final main.gd | 🔄 En curso |
-| v0.9.8 | Tests y Build | 📋 Próximo |
+| v0.9.7 | Refactor Final main.gd | ✅ Completado |
+| v0.9.8 | Tests y Build | ✅ Completado |
 | v0.9.5 | Missing Endings | 🔄 Parcial |
 | v1.0 | Prestige Expandido | 🔄 Parcial |
 | v1.1 | AI Observer | 🔮 Conceptual |
 | v1.2 | Gymnasium Bridge | 🔮 Conceptual |
 | v1.3 | Visualizer 3D | 🔮 Conceptual |
+

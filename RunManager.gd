@@ -105,6 +105,7 @@ func close_run(route: String, reason: String):
 		"MUTACION_FINAL", "METABOLISMO OSCURO": pl_to_add = 4
 		"MENTE COLMENA DISTRIBUIDA": pl_to_add = 8
 		"DEPREDADOR DE REALIDADES": pl_to_add = 12
+		"COLAPSO DEPREDATORIO": pl_to_add = 8
 		"PANSPERMIA NEGRA": pl_to_add = 0 # PL ya otorgado explícitamente en main.gd
 		"COLAPSO CONTROLADO": pl_to_add = 6 # Fractura Epistémica (Banco Cósmico T3)
 
@@ -433,7 +434,7 @@ func update_carnaval(delta: float) -> void:
 	if carnaval_timer >= CARNAVAL_INTERVAL:
 		carnaval_timer = 0.0
 		carnaval_index = (carnaval_index + 1) % carnaval_mutations.size()
-		var next_mut := carnaval_mutations[carnaval_index]
+		var next_mut :String= carnaval_mutations[carnaval_index]
 		EvoManager.carnaval_set_mutation(next_mut)
 		if main:
 			main.add_lap("🎭 CARNAVAL — rotación → %s" % next_mut)
