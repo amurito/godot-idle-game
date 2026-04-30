@@ -183,15 +183,15 @@ func met_oscuro_tick(dt: float):
 	BiosphereEngine.biomasa += 0.1 * dt
 	# 3) ε_runtime decae (autorregulación emergente)
 	StructuralModel.epsilon_runtime = max(0.0, StructuralModel.epsilon_runtime - 0.05 * dt)
-	# 4) Ω forzado bajo (fragilidad permanente)
-	StructuralModel.omega = 0.10
+	# 4) Ω se mantiene ≤ 0.10 vía cap en update_epsilon_runtime / _on_logic_tick
 	# 5) Status periódico
 	_met_oscuro_status_timer += dt
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
 		add_lap("🌑 MET.OSCURO — Bio %.1f / 100 · Pasivo %.1f/s · $ %.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	# 6) Cierre automático por saturación de biomasa (+6 PL total: 4 base + 2 bonus)
-	if BiosphereEngine.biomasa >= 100.0 and not RunManager.run_closed:
+	# Guarda de 30s: evita cierre inmediato si biomasa ya era ≥100 al activar
+	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 		LegacyManager.add_pl(2)  # +2 bonus; RunManager agrega +4 base al hacer close_run
 		close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
 		return
@@ -1055,6 +1055,11 @@ func _on_logic_tick():
 		StructuralModel.omega = min(StructuralModel.omega, 0.25)
 		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.25)
 
+	# METABOLISMO OSCURO: Techo duro de Ω 0.10 (fragilidad extrema — debe ir último)
+	if EvoManager.mutation_met_oscuro:
+		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
+		StructuralModel.omega = min(StructuralModel.omega, 0.10)
+
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
 
@@ -1719,6 +1724,11 @@ func update_epsilon_runtime():
 		StructuralModel.omega = min(StructuralModel.omega, 0.75) # Cap de fragilidad
 		# Decaimiento de persistencia (Inercia negativa)
 		StructuralModel.persistence_dynamic = lerp(StructuralModel.persistence_dynamic, 1.0, 0.001)
+
+	# METABOLISMO OSCURO: Techo duro de Ω 0.10 (fragilidad extrema — debe ir último)
+	if EvoManager.mutation_met_oscuro:
+		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
+		StructuralModel.omega = min(StructuralModel.omega, 0.10)
 
 	# ====================================================
 	#  6) DEBUG EPSILON OUTPUT v0.8.2
