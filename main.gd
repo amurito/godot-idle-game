@@ -42,7 +42,9 @@ const PARASITISM_STATUS_INTERVAL := 45.0
 # NG++ Metabolismo Oscuro
 var _met_oscuro_income_accum := 0.0  # Acumulador fraccional para ingreso pasivo
 var _met_oscuro_status_timer := 0.0
+var _met_oscuro_active_time := 0.0   # Tiempo transcurrido desde activación (para cooldown de sellado)
 const MET_OSCURO_STATUS_INTERVAL := 12.0
+const MET_OSCURO_SEAL_COOLDOWN := 120.0  # Mínimo 2min antes de poder sellar
 var _met_oscuro_seal_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 
@@ -168,11 +170,13 @@ func activate_homeostasis():
 # MET.OSCURO — ciclo post-Depredador (bioquímica oscura)
 # =====================================================
 func met_oscuro_tick(dt: float):
+	_met_oscuro_active_time += dt
+
 	# 1) Ingreso pasivo = biomasa × 0.8 /s
 	var income_rate := BiosphereEngine.biomasa * 0.8
 	_met_oscuro_income_accum += income_rate * dt
 	if _met_oscuro_income_accum >= 1.0:
-		var gain :float = floor(_met_oscuro_income_accum)
+		var gain: float = floor(_met_oscuro_income_accum)
 		EconomyManager.money += gain
 		_met_oscuro_income_accum -= gain
 	# 2) Biomasa se autoalimenta suavemente
@@ -185,25 +189,33 @@ func met_oscuro_tick(dt: float):
 	_met_oscuro_status_timer += dt
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
-		add_lap("🌑 MET.OSCURO — Bio %.1f · Pasivo %.1f/s · $ %.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	# 6) Cierre automático por saturación de biomasa
+		add_lap("🌑 MET.OSCURO — Bio %.1f / 100 · Pasivo %.1f/s · $ %.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
+	# 6) Cierre automático por saturación de biomasa (+6 PL total: 4 base + 2 bonus)
 	if BiosphereEngine.biomasa >= 100.0 and not RunManager.run_closed:
-		LegacyManager.add_pl(2)  # +2 bonus (+4 base = 6 total)
-		close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+2 PL bonus)")
+		LegacyManager.add_pl(2)  # +2 bonus; RunManager agrega +4 base al hacer close_run
+		close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
 		return
-	# 7) Cierre automático por economía millonaria oscura
+	# 7) Cierre automático por economía millonaria oscura (+4 PL base)
 	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-		close_run("METABOLISMO OSCURO", "Millonario Oscuro: la bioquímica sostenida generó $1M sin infraestructura")
+		close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")
 		return
-	# 8) Mostrar botón voluntario de sellado
+	# 8) Mostrar botón voluntario de sellado (solo tras cooldown)
 	_update_met_oscuro_seal_button()
 
 func _update_met_oscuro_seal_button():
 	if RunManager.run_closed:
 		return
+	# Cooldown: no mostrar hasta haber pasado 2 minutos en Met.Oscuro
+	if _met_oscuro_active_time < MET_OSCURO_SEAL_COOLDOWN:
+		return
+
+	# PL escalonado según biomasa al momento del sellado
+	var bio := BiosphereEngine.biomasa
+	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
+	var seal_label := "🌑 SELLAR MET.OSCURO (+%d PL)" % pl_seal
+
 	if _met_oscuro_seal_btn == null or not is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn = Button.new()
-		_met_oscuro_seal_btn.text = "🌑 SELLAR METABOLISMO OSCURO (+4 PL)"
 		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", 20)
 		_met_oscuro_seal_btn.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
 		_met_oscuro_seal_btn.custom_minimum_size = Vector2(0, 70)
@@ -212,12 +224,24 @@ func _update_met_oscuro_seal_button():
 		if panel:
 			panel.add_child(_met_oscuro_seal_btn)
 			panel.move_child(_met_oscuro_seal_btn, 0)
+	_met_oscuro_seal_btn.text = seal_label
 	_met_oscuro_seal_btn.visible = true
 
 func _on_met_oscuro_seal_pressed():
+	if RunManager.run_closed:
+		return
+	var bio := BiosphereEngine.biomasa
+	var pl_bonus := 0 if bio < 50.0 else (-2 if bio < 100.0 else 2)
+	# RunManager asigna +4 PL base. Ajustamos: bio<50→+2 (penalidad -2), bio 50-99→+4 (sin bonus), bio≥100→+6 (+2 bonus)
+	if pl_bonus < 0:
+		# Penalidad: restar 2 al base luego del close_run (pre-otorgamos -2)
+		LegacyManager.add_pl(-2)
+	elif pl_bonus > 0:
+		LegacyManager.add_pl(2)
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.visible = false
-	close_run("METABOLISMO OSCURO", "Sellado voluntario: la bioquímica oscura queda registrada como ruta alternativa")
+	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
+	close_run("METABOLISMO OSCURO", "Sellado voluntario (Bio %.0f) — bioquímica oscura cristalizada (+%d PL)" % [bio, pl_total])
 
 func _update_simbiosis_seal_button():
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
@@ -667,6 +691,7 @@ func reset_local_state():
 	_depredador_status_timer = 0.0
 	_met_oscuro_income_accum = 0.0
 	_met_oscuro_status_timer = 0.0
+	_met_oscuro_active_time = 0.0
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.queue_free()
 		_met_oscuro_seal_btn = null

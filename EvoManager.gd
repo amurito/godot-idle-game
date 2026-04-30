@@ -462,7 +462,9 @@ func activate_met_oscuro():
 	mutation_met_oscuro = true
 	LogManager.add("🌑 METABOLISMO OSCURO ACTIVADO — La bioquímica no documentada reemplaza la economía estructural.", main)
 	LogManager.add("🌑 EFECTOS: Devorar DETENIDO · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω bloqueado 0.10", main)
+	LogManager.add("🌑 CIERRES: Voluntario (2min cooldown, PL escalonado) · Saturación Bio≥100 (+6PL) · $1M (+4PL)", main)
 	mutation_activated.emit("met_oscuro", "METABOLISMO OSCURO")
+	AchievementManager.on_met_oscuro_activated()
 	# Recalcular estrés/omega tras aplicar los nerfs permanentes
 	StructuralModel.omega = 0.10
 	StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)

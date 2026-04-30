@@ -348,6 +348,18 @@ const DEFS := {
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "event", "event_name": "depredador_activated",
 	},
+	"bioquimica_oscura": {
+		"name": "Bioquímica Oscura",
+		"desc": "Activar el Metabolismo Oscuro (post-Depredador).",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "met_oscuro_activated",
+	},
+	"saturacion_total": {
+		"name": "Saturación Total",
+		"desc": "Cerrar METABOLISMO OSCURO por saturación de biomasa (≥ 100).",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "saturacion_total",
+	},
 	"tres_vidas_camino": {
 		"name": "Tres Vidas, Un Camino",
 		"desc": "Alcanzar HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS progresivamente.",
@@ -448,6 +460,7 @@ func _ready() -> void:
 		"organismo_total":    _eval_organismo_total,
 		"reino_subterraneo":  _eval_reino_subterraneo,
 		"ultima_espora":      _eval_ultima_espora,
+		"saturacion_total":   _eval_saturacion_total,
 	}
 	_init_timers()
 
@@ -467,6 +480,8 @@ func push_snapshot(data: Dictionary) -> void:
 	_snapshot = data
 
 func push_event(event_name: String, payload: Dictionary = {}) -> void:
+	if RunManager.run_closed and event_name != "run_closed":
+		return
 	for id in DEFS:
 		if is_unlocked(id): continue
 		var def: Dictionary = DEFS[id]
@@ -559,7 +574,7 @@ func has_unseen() -> bool:
 # ──────────────────────── TICK ────────────────────────
 
 func check_tick(delta: float) -> void:
-	if not main:
+	if not main or RunManager.run_closed:
 		return
 	_run_time += delta
 	_update_dominant_switch()
@@ -732,6 +747,11 @@ func _eval_reino_subterraneo(_s: Dictionary) -> bool:
 func _eval_ultima_espora(_s: Dictionary) -> bool:
 	return unlocked.size() >= DEFS.size()
 
+func _eval_saturacion_total(_s: Dictionary) -> bool:
+	# Evaluado solo cuando se cierra METABOLISMO OSCURO por saturación
+	return RunManager.final_route == "METABOLISMO OSCURO" \
+		and RunManager.final_reason.contains("Saturación Oscura")
+
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 
 func _check_meta_achievements() -> void:
@@ -767,6 +787,8 @@ func on_run_closed(route: String) -> void:
 		unlock("ciclo_completo")
 	if route == "HOMEORHESIS" and _eval_tres_vidas_camino({}):
 		unlock("tres_vidas_camino")
+	if route == "METABOLISMO OSCURO" and _eval_saturacion_total({}):
+		unlock("saturacion_total")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1
@@ -796,6 +818,9 @@ func on_mutation_activated(mutation_id: String) -> void:
 
 func on_depredador_activated() -> void:
 	push_event("depredador_activated", {})
+
+func on_met_oscuro_activated() -> void:
+	push_event("met_oscuro_activated", {})
 
 func on_red_micelial_activated() -> void:
 	push_event("red_micelial_activated", {})

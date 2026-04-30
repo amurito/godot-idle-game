@@ -178,7 +178,7 @@ func update_route_badge() -> void:
 		text = "🕳️  VACÍO HAMBRIENTO  ×100"
 		color = Color(0.75, 0.2, 1.0)
 	elif RunManager.carnaval_active:
-		var mut := RunManager.carnaval_mutations[RunManager.carnaval_index] if not RunManager.carnaval_mutations.is_empty() else "?"
+		var mut :String= RunManager.carnaval_mutations[RunManager.carnaval_index] if not RunManager.carnaval_mutations.is_empty() else "?"
 		text = "🎭  CARNAVAL  [%s]" % mut
 		color = Color(1.0, 0.5, 0.1)
 	elif RunManager.reencarnacion_active:
@@ -876,8 +876,15 @@ func build_mutation_status_text() -> String:
 		t += nerf + " Upgrades bloqueados (no se pueden comprar)[/color]\n"
 		t += nerf + " Ω forzado a 0.10 (fragilidad permanente)[/color]\n"
 		t += nerf + " Pasivo estructural anulado[/color]\n"
-		t += "\n[color=#aa66cc]◈ CIERRE:[/color]\n"
-		t += "  • Voluntario (+4 PL) · Saturación Bio≥100 (+6 PL) · $≥1M (+4 PL)\n"
+		# Progress bar de saturación hacia el cierre automático (+6 PL)
+		var bio_now: float = BiosphereEngine.biomasa
+		var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
+		var bar_filled: int = int(bio_pct / 5)  # 20 segmentos
+		var bio_bar: String = "█".repeat(bar_filled) + "░".repeat(20 - bar_filled)
+		var pl_label: String = "+6 PL" if bio_now >= 100.0 else ("+4 PL" if bio_now >= 50.0 else "+2 PL")
+		t += "\n[color=#aa66cc]◈ SATURACIÓN (sellado manual: %s):[/color]\n" % pl_label
+		t += "[color=#8844aa][%s][/color] [color=white]%.0f / 100[/color]\n" % [bio_bar, bio_now]
+		t += "[color=#666688]  Sellado manual disponible tras 2min · Saturación auto (+6PL) · $1M auto (+4PL)[/color]\n"
 	elif EvoManager.mutation_depredador:
 		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
 		t += buff + " Devora upgrade cada 1.5s (+15 biomasa cada uno)[/color]\n"
