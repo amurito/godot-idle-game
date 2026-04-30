@@ -12,25 +12,28 @@ extends Node
 signal achievement_unlocked(id: String, def: Dictionary)
 
 # ──────────────────────── TIERS ────────────────────────
-enum Tier { MICELIO, ESPORA, FRUTO, ANCESTRAL }
+enum Tier { MICELIO, ESPORA, FRUTO, ANCESTRAL, MYTHIC }
 
 const TIER_NAMES := {
 	Tier.MICELIO:   "MICELIO",
 	Tier.ESPORA:    "ESPORA",
 	Tier.FRUTO:     "FRUTO",
 	Tier.ANCESTRAL: "ANCESTRAL",
+	Tier.MYTHIC:    "MYTHIC",
 }
 const TIER_COLORS := {
 	Tier.MICELIO:   Color(0.72, 0.48, 0.25),
 	Tier.ESPORA:    Color(0.90, 0.90, 0.92),
 	Tier.FRUTO:     Color(1.00, 0.80, 0.25),
 	Tier.ANCESTRAL: Color(0.85, 0.20, 0.30),
+	Tier.MYTHIC:    Color(0.55, 0.10, 0.85),
 }
 const TIER_ICONS := {
 	Tier.MICELIO:   "🟤",
 	Tier.ESPORA:    "⚪",
 	Tier.FRUTO:     "🟡",
 	Tier.ANCESTRAL: "🔴",
+	Tier.MYTHIC:    "🟣",
 }
 
 # TOAST LEVELS
@@ -747,7 +750,7 @@ func _eval_organismo_total(s: Dictionary) -> bool:
 func _eval_reino_subterraneo(_s: Dictionary) -> bool:
 	for id in DEFS:
 		var def: Dictionary = DEFS[id]
-		if def["tier"] == Tier.ANCESTRAL: continue
+		if def["tier"] == Tier.ANCESTRAL or def["tier"] == Tier.MYTHIC: continue
 		if not is_unlocked(id): return false
 	return true
 

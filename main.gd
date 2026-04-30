@@ -1764,6 +1764,19 @@ func _input(event):
 			if click_scroll: click_scroll.visible = lab_mode
 			print("🔬 Lab Mode: %s" % ("ON" if lab_mode else "OFF"))
 
+		# ── DEBUG TIME SKIP (solo en lab_mode) ──────────────────────
+		if lab_mode:
+			match event.keycode:
+				KEY_F7:
+					run_time += 300.0   # +5 min
+					add_lap("⏩ DEBUG +5min → run_time %.0fs (%.1fmin)" % [run_time, run_time / 60.0])
+				KEY_F12:
+					run_time += 1800.0  # +30 min
+					add_lap("⏩ DEBUG +30min → run_time %.0fs (%.1fmin)" % [run_time, run_time / 60.0])
+				KEY_BACKSPACE:
+					run_time = 0.0      # reset a 0
+					add_lap("⏩ DEBUG run_time → 0s")
+
 		# Atajos de teclado 1-9 para comprar upgrades
 		const HOTKEY_UPGRADES := ["click", "auto", "trueque", "click_mult", "auto_mult",
 								  "trueque_net", "specialization", "cognitive", "accounting"]

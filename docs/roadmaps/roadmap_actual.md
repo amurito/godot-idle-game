@@ -8,32 +8,37 @@ Este roadmap prioriza dependencias y decisiones de arquitectura. No intenta list
 
 ---
 
-## Estado Actual — v0.9.6 "Observatorio Vivo"
+## Estado Actual — v0.9.9 "Post-Biológico"
+
+*Última actualización: 2026-04-30*
 
 Lo que existe y funciona hoy:
 
 - Motor económico con `EconomyManager.gd` (click, pasivo, trueque, β, μ, κ_eff).
 - Modelo estructural con `StructuralModel.gd` — ε, ω, fⁿ, persistence_dynamic.
 - Ciclo de run y finales en `RunManager.gd` — homeostasis, allostasis, homeorhesis, perturbaciones, resilience_score.
-- Mutaciones y genoma fúngico en `EvoManager.gd` — 9 mutaciones con FSM de 4 estados.
+- Mutaciones y genoma fúngico en `EvoManager.gd` — 10 mutaciones con FSM de 4 estados (refactorizado a sub-funciones).
 - Biosfera en `BiosphereEngine.gd` — biomasa, hifas, micelio, nutrientes, β.
-- UI helpers y builders centralizados en `UIManager.gd` — build_genome_text, build_mutation_status_text, build_institution_panel_text, build_formula_text, build_evo_checklist, build_marginal_contribution.
-- Sistema de logros en `AchievementManager.gd` — 50 logros, tiers, push_snapshot/push_event, CUSTOM_EVALUATORS, badge NUEVO, toast por tier, progress tracking.
-- Banco Genético en `LegacyManager.gd` — 40 buffs con LEGACY_DEFS, reveal/unlock separados, multi-level, route-gated, grant_buff para NG+.
-- Banco Cósmico en `LegacyManager.gd` — 10 upgrades con Esencia (Ξ), 3 capas de tiempo (run / Genético / Cósmico).
-- Save/load JSON via `SaveManager.gd`.
+- UI helpers y builders centralizados en `UIManager.gd`.
+- Sistema de logros en `AchievementManager.gd` — 50+ logros, tiers Mythic/Ancestral/Rare/Common, custom evaluators.
+- Banco Genético en `LegacyManager.gd` — 40 buffs.
+- Banco Cósmico en `LegacyManager.gd` — 10 upgrades con Esencia (Ξ).
+- Save/load JSON via `SaveManager.gd`. Tests: 48 assertions, exit 0.
 - Log/export de runs via `LogManager.gd`.
 - Red Micelial bifurcada: Colonización / Simbiosis Mecánica.
 - Ciclo biológico: Primordio → Seta Formada.
-- Trascendencia implementada: reset + Ξ gain + Banco Cósmico, gate de 3 familias.
-- Singularidad implementada como cierre de run.
-- Repo organizado: `/docs`, `/docs/changelogs`, `/docs/roadmaps`.
+- Trascendencia: reset + Ξ + Banco Cósmico, gate de 3 familias.
+- NG+ completo: Depredador de Realidades → Metabolismo Oscuro (ambos con cierres múltiples).
+- Depredador accesible en Tier I con trascendencia_count > 1.
+- Metabolismo Oscuro: sellado escalonado por PL, barra de progreso, Ω forzado 0.10, logros Mythic.
+- COLAPSO DEPREDATORIO: cierre alternativo por fractura epistémica (+8 PL), logro Mythic secreto.
+- Carnaval de Mutaciones implementado (post-trascendencia).
+- `main.gd`: 1750 líneas aprox (era 2304 pre-refactor).
 
 Riesgo actual:
 
-- `main.gd` sigue siendo ~2250 líneas — mezcla glue code de escena, save/load, algunos chequeos de run y UI update.
-- El tracking de shocks extremos todavía tiene bordes en `main.gd` que deberían vivir en `RunManager`.
-- `update_ui()` toca demasiados nodos directamente — difícil de extraer sin mover la escena.
+- `update_ui()` sigue acoplada a la escena — no se mueve sin tocar `.tscn`.
+- El roadmap de rutas post-trascendencia (4 rutas planeadas) está solo parcialmente implementado.
 
 ---
 
@@ -151,12 +156,14 @@ Prioridad: BAJA — algunos ya implementados, otros descartados.
   - achievement secreto Mythic: "Fractura Epistémica"
   - sin conflicto con Met.Oscuro (el bloque elif es exclusivo)
 
-### Metabolismo Oscuro *(pendiente)*
+### Metabolismo Oscuro *(✅ implementado)*
 
-- [ ] Definir como rama secreta post-Depredador.
-- [ ] Condición tentativa: `parasitism_corrosion > 0.7`, ε en banda media, run ≥ 40 min.
-- [ ] Requiere haber cerrado PARASITISMO y HOMEOSTASIS en runs anteriores.
-- [ ] Evitar que sea solo "Parasitismo más fuerte" — debe tener identidad propia.
+- ✅ Rama secreta post-Depredador (requiere ≥3 devours + bio≥25 + money<$1000 por 15s).
+- ✅ Efectos: pasivo bio×0.8/s, ε decae, Ω forzado 0.10 (cap en update_epsilon_runtime), upgrades bloqueadas.
+- ✅ 3 cierres: saturación biomasa≥100 (+6 PL), economía $1M (+4 PL), sellado voluntario escalonado (+2/4/6 PL).
+- ✅ Guarda 30s mínimo antes de cierre por saturación (evita close inmediato si biomasa ya era alta).
+- ✅ Logros Mythic: "Bioquímica Oscura", "Saturación Total".
+- ✅ Barra de progreso en UI + sellado con cooldown 120s.
 
 ---
 
