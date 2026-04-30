@@ -475,8 +475,10 @@ func activate_hyperassimilation():
 	LogManager.add("⚡⚡⚡ EFECTOS ACTIVOS: Click PUSH ×10 | Pasivo ×0.25 (-75%) | Fragilidad Ω total ⚡⚡⚡", main)
 	mutation_activated.emit("hiperasimilacion", "HIPERASIMILACIÓN")
 	AchievementManager.on_mutation_activated("hiperasimilacion")
-	# Si venimos de PARASITISMO, NO cerramos — esperamos que ε > 0.95 active DEPREDADOR
-	if LegacyManager.last_run_ending != "PARASITISMO":
+	# No cerrar si Depredador puede cargarse: venimos de PARASITISMO O trascendencia_count > 1
+	var depredador_gate: bool = LegacyManager.last_run_ending == "PARASITISMO" \
+		or LegacyManager.trascendencia_count > 1
+	if not depredador_gate:
 		run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema prioriza absorción total sobre estabilidad")
 
 func activate_homeostasis():
