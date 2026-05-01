@@ -306,7 +306,10 @@ func build_formula_text(main: Node) -> String:
 	
 	if LegacyManager.get_buff_value("impulso_manual"):
 		active_term = "( " + active_term + " · [color=#ffcc00]im[/color] )"
-	
+
+	if RunManager.vacio_hambriento_active:
+		active_term += " · [color=#bb44ff]vh[/color]"
+
 	var formula_main = active_term
 	
 	# --- TÉRMINOS PASIVOS (D y E) ---
@@ -392,6 +395,8 @@ func update_click_stats_panel(main: Node) -> String:
 		t += "b = %.2f   Multiplicador\n" % b
 	if StructuralModel.persistence_upgrade_unlocked:
 		t += "c_n(actual) = %.2f\n" % c_n
+	if RunManager.vacio_hambriento_active:
+		t += "vh = %.0f\n" % RunManager.vacio_hambriento_mult
 	if LegacyManager.get_buff_value("impulso_manual"):
 		t += "im = 2.00   Impulso Manual (Legado)\n"
 	t += "\n"
@@ -782,14 +787,36 @@ func build_genome_text() -> String:
 	# Ruta post-trascendencia activa
 	if RunManager.vacio_hambriento_active:
 		t += "[b][color=#bb44ff]🕳️ VACÍO HAMBRIENTO — producción ×100[/color][/b]\n"
-		t += "[color=#888888]Buffs cósmicos consumidos permanentemente.[/color]\n\n"
+		t += "[color=#888888]Buffs cósmicos consumidos permanentemente.[/color]\n"
+		var _gen: float = EconomyManager.money
+		var _run_t: float = RunManager.main.run_time if RunManager.main else 0.0
+		t += "[color=#9955dd]--- ASCESIS PROFUNDA ---[/color]\n"
+		if _gen < 1000000.0:
+			t += "[color=#666666]Acumulá $1M (%.0f/1000000)[/color]\n\n" % _gen
+		elif _run_t < 900.0:
+			t += "[color=#666666]Aguantá 15min de run (%.0fs/900s)[/color]\n\n" % _run_t
+		else:
+			var bio_ok: bool = BiosphereEngine.biomasa < 0.5
+			var sin_p: bool = UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
+			var eps_ok: bool = StructuralModel.epsilon_runtime < 0.25
+			var bio_s: String = "[color=#44ff88]OK[/color]" if bio_ok else "[color=#ff4444]FALLA[/color]"
+			var pas_s: String = "[color=#44ff88]OK[/color]" if sin_p else "[color=#ff4444]FALLA[/color]"
+			var eps_s: String = "[color=#44ff88]OK[/color]" if eps_ok else "[color=#ff4444]FALLA[/color]"
+			t += "Bio: " + bio_s + "  Pasivo: " + pas_s + "  e: " + eps_s + "\n"
+			var prog: float = clamp(RunManager.ascesis_timer / float(RunManager.ASCESIS_DURATION), 0.0, 1.0)
+			var filled: int = int(prog * 20)
+			var bar: String = "[" + "X".repeat(filled) + ".".repeat(20 - filled) + "]"
+			t += bar + " %ds/%ds\n\n" % [int(RunManager.ascesis_timer), RunManager.ASCESIS_DURATION]
 	elif RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
 		var idx := RunManager.carnaval_index
 		var muts := RunManager.carnaval_mutations
 		t += "[b][color=#ff8833]🎭 CARNAVAL DE MUTACIONES[/color][/b]\n"
 		t += "Rotación: [color=#ffaa55]%s[/color] → %s → %s\n" % [muts[idx], muts[(idx+1)%3], muts[(idx+2)%3]]
 		var secs_left := int(RunManager.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
-		t += "[color=#888888]Próxima rotación en %ds[/color]\n\n" % secs_left
+		t += "[color=#888888]Próxima rotación en %ds[/color]\n" % secs_left
+		var rot := RunManager.carnaval_total_rotations
+		var peak := RunManager.carnaval_peak_money
+		t += "[color=#ffdd44]Rotaciones: %d/12 (Polimorfía) | Dinero pico: $%.0fK (Domador)[/color]\n\n" % [rot, peak/1000.0]
 	elif RunManager.reencarnacion_active:
 		t += "[b][color=#44ee99]⚱️ REENCARNACIÓN HEREDADA[/color][/b]\n"
 		t += "[color=#888888]Upgrades heredados del ciclo anterior. Costos escalan ×1.5 extra.[/color]\n\n"

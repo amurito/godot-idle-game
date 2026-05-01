@@ -34,6 +34,8 @@ var target_evolution: String = ""
 # VACÍO HAMBRIENTO
 var vacio_hambriento_active: bool = false
 var vacio_hambriento_mult: float = 1.0   # ×100 si activo
+var ascesis_timer: float = 0.0
+const ASCESIS_DURATION := 300.0
 
 # REENCARNACIÓN HEREDADA
 var reencarnacion_active: bool = false
@@ -43,6 +45,8 @@ var carnaval_active: bool = false
 var carnaval_mutations: Array = []        # 3 ids de mutación seleccionados al azar
 var carnaval_index: int = 0
 var carnaval_timer: float = 0.0
+var carnaval_total_rotations: int = 0    # Cuenta rotaciones para POLIMORFÍA TOTAL
+var carnaval_peak_money: float = 0.0     # Pico de dinero alcanzado en carnaval
 const CARNAVAL_INTERVAL := 60.0
 const CARNAVAL_POOL := ["homeostasis", "simbiosis", "red_micelial", "parasitismo", "hiperasimilacion"]
 
@@ -67,11 +71,14 @@ func reset():
 	legacy_homeostasis = false
 	vacio_hambriento_active = false
 	vacio_hambriento_mult = 1.0
+	ascesis_timer = 0.0
 	reencarnacion_active = false
 	carnaval_active = false
 	carnaval_mutations = []
 	carnaval_index = 0
 	carnaval_timer = 0.0
+	carnaval_total_rotations = 0
+	carnaval_peak_money = 0.0
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
@@ -110,6 +117,9 @@ func close_run(route: String, reason: String):
 		"COLAPSO DEPREDATORIO": pl_to_add = 8
 		"PANSPERMIA NEGRA": pl_to_add = 0 # PL ya otorgado explícitamente en main.gd
 		"COLAPSO CONTROLADO": pl_to_add = 6 # Fractura Epistémica (Banco Cósmico T3)
+		"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL": pl_to_add = 9
+		"DOMADOR DEL CAOS": pl_to_add = 11
+		"ASCESIS_PROFUNDA": pl_to_add = 7
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
@@ -144,7 +154,7 @@ func enter_post_homeostasis():
 var homeostasis_tier_reached := 0  # 0=ninguno, 1=homeostasis, 2=allostasis, 3=homeorhesis
 
 func check_homeostasis_final(delta: float):
-	if run_closed or not EvoManager.mutation_homeostasis:
+	if carnaval_active or run_closed or not EvoManager.mutation_homeostasis:
 		if not EvoManager.mutation_homeostasis:
 			homeostasis_timer = max(homeostasis_timer - delta * 2.0, 0.0)
 		return
@@ -214,7 +224,7 @@ func check_homeorhesis_final(_delta: float):
 	pass # Integrado en check_homeostasis_final como tiers progresivos
 
 func check_symbiosis_final(_delta: float):
-	if run_closed or not EvoManager.mutation_symbiosis:
+	if carnaval_active or run_closed or not EvoManager.mutation_symbiosis:
 		return
 
 	var stable_band: bool = (
@@ -237,14 +247,14 @@ func check_symbiosis_final(_delta: float):
 
 func check_fractura_epistemica(_delta: float):
 	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
-	if run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
+	if carnaval_active or run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
 		return
 	# Condición: ε_effective > 0.90 Y Ω > 0.30 (colapso controlado)
 	if StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30:
 		close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
 
 func check_parasitism_final(_delta: float):
-	if run_closed or not EvoManager.mutation_parasitism:
+	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:
 		return
 
 	# Opción A: Colapso estructural clásico
@@ -262,7 +272,7 @@ func check_parasitism_final(_delta: float):
 		close_run("PARASITISMO", "Colapso por Masa Crítica: la biosfera reemplazó la infraestructura")
 
 func check_sporulation_trigger(_delta: float):
-	if run_closed or EvoManager.mutation_sporulation:
+	if carnaval_active or run_closed or EvoManager.mutation_sporulation:
 		return
 
 	if not EvoManager.mutation_red_micelial or EvoManager.red_micelial_phase != 2:
@@ -415,6 +425,8 @@ func _activate_carnaval() -> void:
 	carnaval_mutations = pool.slice(0, 3)
 	carnaval_index = 0
 	carnaval_timer = 0.0
+	carnaval_total_rotations = 0
+	carnaval_peak_money = 0.0
 	carnaval_active = true
 	# Aplicar la primera inmediatamente
 	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
@@ -431,16 +443,54 @@ func _activate_reencarnacion() -> void:
 
 ## Tick del Carnaval: rotar mutación cada CARNAVAL_INTERVAL segundos
 func update_carnaval(delta: float) -> void:
-	if not carnaval_active or carnaval_mutations.is_empty():
+	if run_closed or not carnaval_active or carnaval_mutations.is_empty():
 		return
 	carnaval_timer += delta
+
+	# Actualizar pico de dinero alcanzado en carnaval
+	carnaval_peak_money = max(carnaval_peak_money, EconomyManager.money)
+
 	if carnaval_timer >= CARNAVAL_INTERVAL:
 		carnaval_timer = 0.0
 		carnaval_index = (carnaval_index + 1) % carnaval_mutations.size()
+		carnaval_total_rotations += 1
 		var next_mut :String= carnaval_mutations[carnaval_index]
 		EvoManager.carnaval_set_mutation(next_mut)
 		if main:
-			main.add_lap("🎭 CARNAVAL — rotación → %s" % next_mut)
+			main.add_lap("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
+
+		# CHEQUEO: POLIMORFÍA TOTAL
+		if carnaval_total_rotations >= 12:
+			var biomasa := BiosphereEngine.biomasa
+			var omega := StructuralModel.omega
+			var dinero := EconomyManager.money
+			if biomasa >= 8.0 and omega >= 0.35 and dinero >= 300000.0:
+				close_run("POLIMORFÍA TOTAL", "El hongo ha absorbido 12 ciclos mutacionales — su identidad trasciende toda clasificación (Bio %.1f, Ω %.2f, $%.0fK)" % [biomasa, omega, dinero/1000.0])
+				return
+
+		# CHEQUEO: DOMADOR DEL CAOS
+		if carnaval_total_rotations >= 3 and carnaval_peak_money >= 1000000.0:
+			close_run("DOMADOR DEL CAOS", "Domó el caos mutacional acumulando $%.1fM de poder económico (+11 PL)" % [carnaval_peak_money / 1000000.0])
+			return
+
+# ==================== ASCESIS PROFUNDA (sub-ruta VACÍO HAMBRIENTO) ====================
+func check_ascesis_profunda(delta: float) -> void:
+	if run_closed:
+		return
+	# Requisitos previos: run madura y dinero generado suficiente (clicks, no pasivo)
+	if main.run_time < 900.0 or EconomyManager.money < 1000000.0:
+		ascesis_timer = 0.0
+		return
+	# Condiciones simultáneas: sin biósfera, sin pasivo comprado, sistema calmo
+	var biomasa_ok := BiosphereEngine.biomasa < 0.5
+	var sin_pasivo := UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
+	var epsilon_ok := StructuralModel.epsilon_runtime < 0.25
+	if biomasa_ok and sin_pasivo and epsilon_ok:
+		ascesis_timer += delta
+		if ascesis_timer >= ASCESIS_DURATION:
+			AchievementManager.unlock("vacio_absoluto")
+			close_run("ASCESIS_PROFUNDA", "La renuncia absoluta genera más estabilidad que cualquier acumulación")
+	# Si fallan las condiciones el timer se pausa (no se resetea)
 
 # ==================== UI EVOLUCIÓN ====================
 func _show_evolution_button(target: String):

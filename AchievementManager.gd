@@ -369,6 +369,24 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "fractura_epistemica",
 	},
+	"polimorfia_total": {
+		"name": "Polimorfía Total",
+		"desc": "Cerrar CARNAVAL DE MUTACIONES tras 12 rotaciones con Bio ≥ 8.0, Ω ≥ 0.35, $ ≥ 300K.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "polimorfia_total",
+	},
+	"domador_del_caos": {
+		"name": "Domador del Caos",
+		"desc": "Cerrar CARNAVAL DE MUTACIONES tras 3+ rotaciones habiendo acumulado $ ≥ 1M.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "domador_del_caos",
+	},
+	"vacio_absoluto": {
+		"name": "Vacío Absoluto",
+		"desc": "Mantener la renuncia durante 5 minutos perfectos en VACÍO HAMBRIENTO.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom",
+	},
 	"tres_vidas_camino": {
 		"name": "Tres Vidas, Un Camino",
 		"desc": "Alcanzar HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS progresivamente.",
@@ -471,6 +489,8 @@ func _ready() -> void:
 		"ultima_espora":      _eval_ultima_espora,
 		"saturacion_total":   _eval_saturacion_total,
 		"fractura_epistemica": _eval_fractura_epistemica,
+		"polimorfia_total": _eval_polimorfia_total,
+		"domador_del_caos": _eval_domador_del_caos,
 	}
 	_init_timers()
 
@@ -764,6 +784,12 @@ func _eval_saturacion_total(_s: Dictionary) -> bool:
 
 func _eval_fractura_epistemica(_s: Dictionary) -> bool:
 	return RunManager.final_route == "COLAPSO DEPREDATORIO"
+
+func _eval_polimorfia_total(_s: Dictionary) -> bool:
+	return RunManager.final_route == "POLIMORFÍA TOTAL" or RunManager.final_route == "POLIMORFIA TOTAL"
+
+func _eval_domador_del_caos(_s: Dictionary) -> bool:
+	return RunManager.final_route == "DOMADOR DEL CAOS"
 
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 
