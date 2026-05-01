@@ -513,8 +513,8 @@ func build_evo_checklist(main: Node) -> String:
 			t += ch + "Sobrevivir SHOCK EXTREMO (ε > 0.8)[/color]\n"
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 400.0 else fail_color + "[ ] "
 			t += ch + "Resiliencia >= 400 (%d)[/color]\n" % int(RunManager.resilience_score)
-			ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.50 else fail_color + "[ ] "
-			t += ch + "Ω_min >= 0.50 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
+			ch = ok_color + "[x] " if RunManager.omega_min_peak >= 0.50 else fail_color + "[ ] "
+			t += ch + "Ω_min pico >= 0.50 (%s)[/color]\n" % snapped(RunManager.omega_min_peak, 0.01)
 			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 5 else fail_color + "[ ] "
 			t += ch + "Perturbaciones (%d/5)[/color]\n" % RunManager.disturbances_survived
 			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total

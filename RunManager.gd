@@ -25,6 +25,7 @@ var disturbances_survived: int = 0
 var disturbances_without_reset: int = 0  # Racha de perturbaciones sin reset de timer (para logro)
 var is_recovering_from_shock: bool = false
 var extreme_shock_survived: bool = false
+var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 
 var evolution_button: Button = null
 var target_evolution: String = ""
@@ -62,6 +63,7 @@ func reset():
 	disturbances_without_reset = 0
 	is_recovering_from_shock = false
 	extreme_shock_survived = false
+	omega_min_peak = 0.0
 	legacy_homeostasis = false
 	vacio_hambriento_active = false
 	vacio_hambriento_mult = 1.0
@@ -185,9 +187,10 @@ func check_homeostasis_final(delta: float):
 
 	# Tier 3: HOMEORHESIS — shock extremo + larga duración
 	if homeostasis_tier_reached >= 2 and homeostasis_tier_reached < 3:
+		omega_min_peak = max(omega_min_peak, StructuralModel.omega_min)
 		var delta_real :float = EconomyManager.get_contribution_breakdown().total
 		var ok = extreme_shock_survived and resilience_score >= 400.0 \
-			and StructuralModel.omega_min >= 0.50 and disturbances_survived >= 5 \
+			and omega_min_peak >= 0.50 and disturbances_survived >= 5 \
 			and delta_real > 300.0 and main.run_time >= 1200.0
 		if ok:
 			homeostasis_tier_reached = 3
@@ -314,8 +317,8 @@ func update_homeostasis_mode(delta: float):
 	var omega_recovery_mult := LegacyManager.get_effect_value("omega_recovery_speed")
 	if omega_recovery_mult > 0.0:
 		var regen := 0.0015 * delta * omega_recovery_mult
-		var omega_cap := 0.45  # Tope de regeneración natural (no reemplaza plasticidad_adaptativa)
-		StructuralModel.omega_min = min(StructuralModel.omega_min + regen, omega_cap)
+		# Cap dinámico: no superar el omega actual (el movimiento natural lo limita arriba)
+		StructuralModel.omega_min = min(StructuralModel.omega_min + regen, StructuralModel.omega)
 
 func trigger_disturbance():
 	var shock := randf_range(0.1, 0.4)
