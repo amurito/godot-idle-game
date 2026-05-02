@@ -263,6 +263,8 @@ func _on_achievements_pressed():
 
 func _on_legacy_pressed():
 	legacy_panel.visible = true
+	var vp := get_viewport_rect()
+	legacy_panel.custom_minimum_size = Vector2(min(980, vp.size.x * 0.92), min(640, vp.size.y * 0.88))
 	_update_legacy_view()
 
 func _on_back_pressed():
@@ -278,107 +280,121 @@ func _update_legacy_view():
 	call_deferred("_populate_legacy_items")
 
 func _populate_legacy_items():
+	var col_groups: Array = [
+		["economia"],
+		["estructura"],
+		["biologia", "conocimiento"],
+		["ruta"],
+		["ng_plus", "secreto"],
+	]
 	var cat_colors: Dictionary = {
-		"economia":     Color(0.9,  0.85, 0.4),
-		"estructura":   Color(0.5,  0.8,  1.0),
-		"biologia":     Color(0.4,  0.9,  0.5),
-		"conocimiento": Color(0.8,  0.6,  1.0),
-		"ruta":         Color(1.0,  0.65, 0.2),
-		"ng_plus":      Color(0.9,  0.3,  0.9),
-		"secreto":      Color(0.5,  0.5,  0.5),
+		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
+		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
+		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
+		"secreto": Color(0.5, 0.5, 0.5),
 	}
 
-	for cat in LegacyManager.CAT_ORDER:
-		var cat_header_added: bool = false
+	var h_cols: HBoxContainer = HBoxContainer.new()
+	h_cols.add_theme_constant_override("separation", 10)
+	h_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	legacy_list.add_child(h_cols)
 
-		for id in LegacyManager.LEGACY_DEFS:
-			var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
-			if def.get("cat", "") != cat:
+	for group in col_groups:
+		var col: VBoxContainer = VBoxContainer.new()
+		col.custom_minimum_size.x = 180
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 3)
+		var col_has_items: bool = false
+
+		for cat in group:
+			var cat_ids: Array = []
+			for id in LegacyManager.LEGACY_DEFS:
+				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+				if def.get("cat", "") == cat and LegacyManager.is_revealed(id):
+					cat_ids.append(id)
+			if cat_ids.is_empty():
 				continue
-			if not LegacyManager.is_revealed(id):
-				continue
+			if col_has_items:
+				col.add_child(HSeparator.new())
+			var hdr: Label = Label.new()
+			hdr.text = "── %s ──" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.add_theme_font_size_override("font_size", 12)
+			hdr.modulate = cat_colors.get(cat, Color.WHITE)
+			hdr.custom_minimum_size.y = 26
+			col.add_child(hdr)
 
-			# Header de categoría (solo la primera vez)
-			if not cat_header_added:
-				cat_header_added = true
-				var hdr: Label = Label.new()
-				hdr.text = "── %s ──" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
-				hdr.add_theme_font_size_override("font_size", 12)
-				hdr.modulate = cat_colors.get(cat, Color.WHITE)
-				hdr.custom_minimum_size.y = 28
-				legacy_list.add_child(hdr)
+			for id in cat_ids:
+				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+				var lvl: int = LegacyManager.get_buff_level(id)
+				var max_lvl: int = int(def.get("max_level", 1))
+				var is_maxed: bool = lvl >= max_lvl
+				var unlockable: bool = LegacyManager.is_unlockable(id)
+				var cost: int = LegacyManager.get_current_cost(id)
+				var affordable: bool = LegacyManager.legacy_points >= cost
+				var is_new: bool = lvl > 0 and not (LegacyManager.buffs.get(id, {}) as Dictionary).get("seen", true)
 
-			var lvl: int = LegacyManager.get_buff_level(id)
-			var max_lvl: int = int(def.get("max_level", 1))
-			var is_maxed: bool = lvl >= max_lvl
-			var unlockable: bool = LegacyManager.is_unlockable(id)
-			var cost: int = LegacyManager.get_current_cost(id)
-			var affordable: bool = LegacyManager.legacy_points >= cost
-			var is_new: bool = lvl > 0 and not (LegacyManager.buffs.get(id, {}) as Dictionary).get("seen", true)
+				var container: VBoxContainer = VBoxContainer.new()
+				container.add_theme_constant_override("separation", 1)
 
-			var container: HBoxContainer = HBoxContainer.new()
-			container.custom_minimum_size.y = 58
+				var name_str: String = def.get("name", id)
+				if max_lvl > 1:
+					name_str += "  [%d/%d]" % [lvl, max_lvl]
+				if is_new:
+					name_str += "  NUEVO"
 
-			# Info column
-			var info: VBoxContainer = VBoxContainer.new()
-			info.size_flags_horizontal = SIZE_EXPAND_FILL
+				var name_lbl: Label = Label.new()
+				name_lbl.text = name_str
+				name_lbl.add_theme_font_size_override("font_size", 11)
+				name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				if is_maxed:
+					name_lbl.modulate = Color(0.3, 1.0, 0.5)
+				elif lvl > 0:
+					name_lbl.modulate = Color(0.6, 1.0, 0.7)
+				elif unlockable and affordable:
+					name_lbl.modulate = Color(1.0, 1.0, 0.6)
+				elif not unlockable:
+					name_lbl.modulate = Color(0.45, 0.45, 0.45)
+				else:
+					name_lbl.modulate = Color(0.65, 0.65, 0.65)
 
-			# Nombre + badge de nivel
-			var name_str: String = def.get("name", id)
-			if max_lvl > 1:
-				name_str += "  [%d/%d]" % [lvl, max_lvl]
-			if is_new:
-				name_str += "  ★ NUEVO"
+				var flavor_lbl: Label = Label.new()
+				flavor_lbl.text = def.get("flavor", "")
+				flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				flavor_lbl.add_theme_font_size_override("font_size", 9)
+				flavor_lbl.modulate = Color(0.55, 0.55, 0.55)
 
-			var name_lbl: Label = Label.new()
-			name_lbl.text = name_str
-			if is_maxed:
-				name_lbl.modulate = Color(0.3, 1.0, 0.5)
-			elif lvl > 0:
-				name_lbl.modulate = Color(0.6, 1.0, 0.7)
-			elif unlockable and affordable:
-				name_lbl.modulate = Color(1.0, 1.0, 0.6)
-			elif not unlockable:
-				name_lbl.modulate = Color(0.45, 0.45, 0.45)
-			else:
-				name_lbl.modulate = Color(0.65, 0.65, 0.65)
+				container.add_child(name_lbl)
+				container.add_child(flavor_lbl)
 
-			# Flavor text (cursiva pequeña)
-			var flavor_lbl: Label = Label.new()
-			flavor_lbl.text = def.get("flavor", "")
-			flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-			flavor_lbl.add_theme_font_size_override("font_size", 10)
-			flavor_lbl.modulate = Color(0.55, 0.55, 0.55)
+				var buy_btn: Button = Button.new()
+				buy_btn.custom_minimum_size.y = 22
+				if is_maxed:
+					buy_btn.text = "MAXIMO"
+					buy_btn.disabled = true
+				elif not unlockable:
+					buy_btn.text = "BLOQUEADO"
+					buy_btn.disabled = true
+				elif lvl == 0:
+					buy_btn.text = "ADQUIRIR" if def.get("cost", 0) == 0 else "%d PL" % cost
+					buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)
+				else:
+					buy_btn.text = "Nv%d  %d PL" % [lvl + 1, cost]
+					buy_btn.disabled = not affordable
+				buy_btn.pressed.connect(_on_buy_legacy.bind(id))
 
-			info.add_child(name_lbl)
-			info.add_child(flavor_lbl)
+				container.add_child(buy_btn)
+				container.add_child(HSeparator.new())
+				col.add_child(container)
 
-			# Botón
-			var buy_btn: Button = Button.new()
-			buy_btn.custom_minimum_size.x = 110
-			if is_maxed:
-				buy_btn.text = "MÁXIMO"
-				buy_btn.disabled = true
-			elif not unlockable:
-				buy_btn.text = "BLOQUEADO"
-				buy_btn.disabled = true
-			elif lvl == 0:
-				var btn_cost: int = cost if def.get("cost", 0) > 0 else 0
-				buy_btn.text = "ADQUIRIR" if btn_cost == 0 else "ADQUIRIR  %d PL" % btn_cost
-				buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)
-			else:
-				buy_btn.text = "NIVEL %d  %d PL" % [lvl + 1, cost]
-				buy_btn.disabled = not affordable
+				if is_new:
+					LegacyManager.mark_buff_seen(id)
 
-			buy_btn.pressed.connect(_on_buy_legacy.bind(id))
+			col_has_items = true
 
-			container.add_child(info)
-			container.add_child(buy_btn)
-			legacy_list.add_child(container)
-
-			# Marcar como visto al mostrarse
-			if is_new:
-				LegacyManager.mark_buff_seen(id)
+		if col_has_items:
+			h_cols.add_child(col)
+		else:
+			col.queue_free()
 
 func _on_buy_legacy(id: String):
 	if LegacyManager.purchase_legacy(id):

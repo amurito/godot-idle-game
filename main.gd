@@ -1534,6 +1534,8 @@ func _mente_colmena_auto_buy() -> void:
 func _on_legacy_pressed():
 	legacy_panel.visible = true
 	$DimmerBackground.visible = true
+	var vp := get_viewport_rect()
+	legacy_panel.custom_minimum_size = Vector2(min(980, vp.size.x * 0.92), min(640, vp.size.y * 0.88))
 	_refresh_legacy_store()
 
 func _on_close_legacy_pressed():
@@ -1543,84 +1545,132 @@ func _on_close_legacy_pressed():
 func _refresh_legacy_store():
 	var pl := LegacyManager.legacy_points
 	var buffer := LegacyManager.internal_spores_total
-	pl_label.text = "PL Disponibles: %d\nReserva biótica: %.1f / 50 esporas" % [pl, buffer]
-	
+	pl_label.text = "PL Disponibles: %d    Reserva biótica: %.1f / 50 esporas" % [pl, buffer]
 	for child in legacy_list.get_children():
 		child.queue_free()
-		
-	# Iterar sobre las mejoras disponibles (solo reveladas)
-	for id in LegacyManager.LEGACY_DEFS:
-		if not LegacyManager.is_revealed(id):
-			continue
-		var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
-		var lvl: int = LegacyManager.get_buff_level(id)
-		var max_lvl: int = int(def.get("max_level", 1))
-		var is_maxed: bool = lvl >= max_lvl
-		var cost: int = LegacyManager.get_current_cost(id)
 
-		var h_box: HBoxContainer = HBoxContainer.new()
-		h_box.custom_minimum_size = Vector2(0, 50)
+	var col_groups: Array = [
+		["economia"],
+		["estructura"],
+		["biologia", "conocimiento"],
+		["ruta"],
+		["ng_plus", "secreto"],
+	]
+	var cat_colors: Dictionary = {
+		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
+		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
+		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
+		"secreto": Color(0.5, 0.5, 0.5),
+	}
 
-		var v_info: VBoxContainer = VBoxContainer.new()
-		v_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var h_cols: HBoxContainer = HBoxContainer.new()
+	h_cols.add_theme_constant_override("separation", 10)
+	h_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	legacy_list.add_child(h_cols)
 
-		var l_title: Label = Label.new()
-		var lvl_str: String = (" [%d/%d]" % [lvl, max_lvl]) if max_lvl > 1 else ""
-		l_title.text = def.get("name", id) + lvl_str + (" [MÁXIMO]" if is_maxed else " (%d PL)" % cost if def.get("cost", 0) > 0 else " [GRATIS]")
-		l_title.add_theme_font_size_override("font_size", 13)
-		var is_enabled: bool = LegacyManager.buff_enabled.get(id, true)
-		if lvl > 0 and not is_enabled:
-			l_title.modulate = Color(0.45, 0.45, 0.45)  # Desactivado → gris
-		elif is_maxed:
-			l_title.modulate = Color.GREEN
-		elif lvl > 0:
-			l_title.modulate = Color(0.5, 0.9, 0.6)
+	for group in col_groups:
+		var col: VBoxContainer = VBoxContainer.new()
+		col.custom_minimum_size.x = 180
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 3)
+		var col_has_items: bool = false
 
-		var l_desc: Label = Label.new()
-		l_desc.text = def.get("flavor", "")
-		l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l_desc.add_theme_font_size_override("font_size", 10)
-		l_desc.modulate = Color(0.7, 0.7, 0.7)
+		for cat in group:
+			var cat_ids: Array = []
+			for id in LegacyManager.LEGACY_DEFS:
+				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+				if def.get("cat", "") == cat and LegacyManager.is_revealed(id):
+					cat_ids.append(id)
+			if cat_ids.is_empty():
+				continue
+			if col_has_items:
+				col.add_child(HSeparator.new())
+			var hdr: Label = Label.new()
+			hdr.text = "── %s ──" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.add_theme_font_size_override("font_size", 11)
+			hdr.modulate = cat_colors.get(cat, Color.WHITE)
+			hdr.custom_minimum_size.y = 22
+			col.add_child(hdr)
+			for id in cat_ids:
+				col.add_child(_build_legacy_item(id))
+			col_has_items = true
 
-		v_info.add_child(l_title)
-		v_info.add_child(l_desc)
-
-		if lvl > 0:
-			# Buff ya comprado → mostrar toggle ACTIVO / INACTIVO
-			var is_on: bool = LegacyManager.buff_enabled.get(id, true)
-			var toggle_btn: Button = Button.new()
-			toggle_btn.custom_minimum_size = Vector2(100, 30)
-			toggle_btn.text = "✓ ACTIVO" if is_on else "✗ INACTIVO"
-			toggle_btn.modulate = Color(0.4, 1.0, 0.5) if is_on else Color(0.6, 0.6, 0.6)
-			toggle_btn.pressed.connect(func():
-				var new_state: bool = LegacyManager.toggle_buff_enabled(id)
-				# Mente Colmena: sincronizar el flag de IA en tiempo real
-				if id == "mente_colmena" and not RunManager.run_closed:
-					mente_colmena_active = new_state
-					add_lap("🧠 Mente Colmena — IA %s manualmente" % ("activada" if new_state else "desactivada"))
-				_refresh_legacy_store()
-				show_system_toast(def.get("name", id) + (": ACTIVADO ✓" if new_state else ": DESACTIVADO ✗"))
-				update_ui()
-			)
-			h_box.add_child(v_info)
-			h_box.add_child(toggle_btn)
+		if col_has_items:
+			h_cols.add_child(col)
 		else:
-			# Buff no comprado → botón de compra normal
-			var btn: Button = Button.new()
-			btn.text = "COMPRAR"
-			btn.custom_minimum_size = Vector2(100, 30)
-			btn.disabled = not LegacyManager.can_afford(id)
-			btn.pressed.connect(func():
-				if LegacyManager.purchase_legacy(id):
-					_refresh_legacy_store()
-					show_system_toast("Banco: Compraste " + def.get("name", id))
-			)
-			h_box.add_child(v_info)
-			h_box.add_child(btn)
+			col.queue_free()
 
-		var sep: HSeparator = HSeparator.new()
-		legacy_list.add_child(h_box)
-		legacy_list.add_child(sep)
+
+func _build_legacy_item(id: String) -> Control:
+	var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+	var lvl: int = LegacyManager.get_buff_level(id)
+	var max_lvl: int = int(def.get("max_level", 1))
+	var is_maxed: bool = lvl >= max_lvl
+	var cost: int = LegacyManager.get_current_cost(id)
+
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 1)
+
+	var name_str: String = def.get("name", id)
+	if max_lvl > 1:
+		name_str += "  [%d/%d]" % [lvl, max_lvl]
+	var l_title: Label = Label.new()
+	l_title.text = name_str
+	l_title.add_theme_font_size_override("font_size", 11)
+	l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var is_enabled: bool = LegacyManager.buff_enabled.get(id, true)
+	if lvl > 0 and not is_enabled:
+		l_title.modulate = Color(0.45, 0.45, 0.45)
+	elif is_maxed:
+		l_title.modulate = Color.GREEN
+	elif lvl > 0:
+		l_title.modulate = Color(0.5, 0.9, 0.6)
+
+	var l_desc: Label = Label.new()
+	l_desc.text = def.get("flavor", "")
+	l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l_desc.add_theme_font_size_override("font_size", 9)
+	l_desc.modulate = Color(0.6, 0.6, 0.6)
+
+	v.add_child(l_title)
+	v.add_child(l_desc)
+
+	if lvl > 0:
+		var is_on: bool = LegacyManager.buff_enabled.get(id, true)
+		var toggle_btn: Button = Button.new()
+		toggle_btn.custom_minimum_size.y = 22
+		toggle_btn.text = "OK ACTIVO" if is_on else "X INACTIVO"
+		toggle_btn.modulate = Color(0.4, 1.0, 0.5) if is_on else Color(0.6, 0.6, 0.6)
+		toggle_btn.pressed.connect(func():
+			var new_state: bool = LegacyManager.toggle_buff_enabled(id)
+			if id == "mente_colmena" and not RunManager.run_closed:
+				mente_colmena_active = new_state
+				add_lap("Mente Colmena — IA %s manualmente" % ("activada" if new_state else "desactivada"))
+			_refresh_legacy_store()
+			show_system_toast(def.get("name", id) + (": ACTIVADO" if new_state else ": DESACTIVADO"))
+			update_ui()
+		)
+		v.add_child(toggle_btn)
+	else:
+		var btn: Button = Button.new()
+		btn.custom_minimum_size.y = 22
+		if not LegacyManager.is_unlockable(id):
+			btn.text = "BLOQUEADO"
+			btn.disabled = true
+		elif def.get("cost", 0) == 0:
+			btn.text = "GRATIS"
+		else:
+			btn.text = "%d PL" % cost
+			btn.disabled = not LegacyManager.can_afford(id)
+		btn.pressed.connect(func():
+			if LegacyManager.purchase_legacy(id):
+				_refresh_legacy_store()
+				show_system_toast("Banco: Compraste " + def.get("name", id))
+		)
+		v.add_child(btn)
+
+	v.add_child(HSeparator.new())
+	return v
 
 
 
