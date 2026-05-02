@@ -263,12 +263,6 @@ func _on_achievements_pressed():
 
 func _on_legacy_pressed():
 	legacy_panel.visible = true
-	var vp := get_viewport_rect()
-	var margin := 24.0
-	var ps := Vector2(vp.size.x - margin * 2, vp.size.y - margin * 2)
-	legacy_panel.custom_minimum_size = ps
-	legacy_panel.size = ps
-	legacy_panel.position = Vector2(margin, margin)
 	_update_legacy_view()
 
 func _on_back_pressed():
