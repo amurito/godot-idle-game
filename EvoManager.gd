@@ -698,6 +698,8 @@ func carnaval_set_mutation(id: String) -> void:
 	genome["parasitismo"] = "dormido"
 	genome["depredador"] = "dormido"
 	genome["met_oscuro"] = "dormido"
+	# Resetear efectos persistentes de parasitismo que de otro modo matan la producción
+	EconomyManager.parasitism_corrosion = 1.0
 	# Las flags de segundo nivel (allostasis, homeorhesis, etc.) no se tocan — son sub-rutas
 	match id:
 		"homeostasis":
