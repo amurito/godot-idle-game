@@ -264,7 +264,7 @@ func _on_achievements_pressed():
 func _on_legacy_pressed():
 	legacy_panel.visible = true
 	var vp := get_viewport_rect()
-	legacy_panel.custom_minimum_size = Vector2(min(980, vp.size.x * 0.92), min(640, vp.size.y * 0.88))
+	legacy_panel.custom_minimum_size = Vector2(min(1200, vp.size.x * 0.95), min(750, vp.size.y * 0.92))
 	_update_legacy_view()
 
 func _on_back_pressed():
@@ -301,7 +301,7 @@ func _populate_legacy_items():
 
 	for group in col_groups:
 		var col: VBoxContainer = VBoxContainer.new()
-		col.custom_minimum_size.x = 180
+		col.custom_minimum_size.x = 220
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_theme_constant_override("separation", 3)
 		var col_has_items: bool = false
