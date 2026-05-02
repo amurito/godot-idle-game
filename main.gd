@@ -659,7 +659,7 @@ func update_achievements_label():
 	var got := AchievementManager.unlocked_count()
 	var t := "--- Logros (%d / %d) ---\n" % [got, total]
 	# Recorrer por tier
-	for tier in [AchievementManager.Tier.MICELIO, AchievementManager.Tier.ESPORA, AchievementManager.Tier.FRUTO, AchievementManager.Tier.ANCESTRAL]:
+	for tier in [AchievementManager.Tier.MICELIO, AchievementManager.Tier.ESPORA, AchievementManager.Tier.FRUTO, AchievementManager.Tier.ANCESTRAL, AchievementManager.Tier.MYTHIC]:
 		var ids: Array = AchievementManager.get_by_tier(tier)
 		var ok := 0
 		for id in ids:
@@ -837,7 +837,9 @@ func _ready():
 
 	# --- RECUPERACIÓN DE ESTADO PENDIENTE (v0.8.8) ---
 	# Si cargamos una partida donde la mutación está activa pero no se eligió rama
-	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE:
+	# CARNAVAL: no mostrar panel — red_micelial es temporal, sin bifurcación
+	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE \
+		and not RunManager.carnaval_active:
 		if is_instance_valid(evo_choice_panel) and not RunManager.run_closed:
 			dimmer.visible = true
 			evo_choice_panel.visible = true
@@ -1075,6 +1077,9 @@ func _on_logic_tick():
 	# --- CARNAVAL DE MUTACIONES (Post-Trascendencia) ---
 	if RunManager.carnaval_active:
 		RunManager.update_carnaval(dt)
+	# --- ASCESIS PROFUNDA (sub-ruta VACÍO HAMBRIENTO) ---
+	if RunManager.vacio_hambriento_active:
+		RunManager.check_ascesis_profunda(dt)
 
 	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
 	if EvoManager.mutation_homeostasis:
@@ -1209,8 +1214,9 @@ func _on_mutation_activated(id: String, display_name: String):
 			LogManager.add("🌑 EFECTOS: Devorar detenido · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω 0.10", self)
 			show_system_toast("🌑 METABOLISMO OSCURO — Bioquímica alternativa estabilizada")
 
-	if id == "red_micelial":
+	if id == "red_micelial" and not RunManager.carnaval_active:
 		# Activar el popup de elección (v0.8.32 - Modular)
+		# CARNAVAL: no mostrar panel — red_micelial rota temporalmente, sin bifurcación
 		dimmer.visible = true
 		evo_choice_panel.visible = true
 		update_bifurcation_panel()

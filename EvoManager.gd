@@ -643,6 +643,9 @@ func get_reactor_color() -> Color:
 	# Prioridad 0B: Depredador de Realidades
 	if mutation_depredador:
 		return Color(1.0, 0.0, 0.33)      # Rojo Glitch
+	# Prioridad 0C: Vacío Hambriento (post-trascendencia)
+	if RunManager.vacio_hambriento_active:
+		return Color(0.75, 0.2, 1.0)      # Violeta Vacío
 	# Prioridad 0: Seta Formada (v0.8.42 - Brillo máximo)
 	if seta_formada:
 		return Color(0.65, 1.2, 0.2)      # Verde Incandescente (sobrepasamos 1.0 para bloom)
@@ -675,13 +678,19 @@ func get_reactor_color() -> Color:
 # ==================== CARNAVAL DE MUTACIONES ====================
 ## Aplica una mutación del carnaval: limpia todas las flags y activa solo la indicada
 func carnaval_set_mutation(id: String) -> void:
-	# Limpiar todas las flags de mutación de primer nivel
+	# Limpiar flags Y genome states de las mutaciones rotativas para evitar
+	# que _check_automatic_activations las re-active en el siguiente tick
 	mutation_hyperassimilation = false
 	mutation_symbiosis = false
 	mutation_homeostasis = false
 	mutation_red_micelial = false
 	mutation_parasitism = false
 	red_micelial_phase = 0
+	genome["hiperasimilacion"] = "dormido"
+	genome["simbiosis"] = "dormido"
+	genome["homeostasis"] = "dormido"
+	genome["red_micelial"] = "dormido"
+	genome["parasitismo"] = "dormido"
 	# Las flags de segundo nivel (allostasis, homeorhesis, etc.) no se tocan — son sub-rutas
 	match id:
 		"homeostasis":
@@ -692,7 +701,7 @@ func carnaval_set_mutation(id: String) -> void:
 			genome["simbiosis"] = "activo"
 		"red_micelial":
 			mutation_red_micelial = true
-			red_micelial_phase = 1
+			# phase = 0 en carnaval: efectos básicos sin primordio ni bifurcación
 			genome["red_micelial"] = "activo"
 		"parasitismo":
 			mutation_parasitism = true
