@@ -349,6 +349,10 @@ func _update_esporulacion(ctx: Dictionary) -> void:
 
 
 func _check_automatic_activations():
+	# CARNAVAL: bloquear activaciones automáticas de segundo nivel — solo rotan las mutaciones del pool
+	if RunManager.carnaval_active:
+		return
+
 	# MET.OSCURO tiene prioridad sobre Depredador (congela el devorar)
 	if genome.met_oscuro == "activo" and not mutation_met_oscuro:
 		activate_met_oscuro()
@@ -678,19 +682,22 @@ func get_reactor_color() -> Color:
 # ==================== CARNAVAL DE MUTACIONES ====================
 ## Aplica una mutación del carnaval: limpia todas las flags y activa solo la indicada
 func carnaval_set_mutation(id: String) -> void:
-	# Limpiar flags Y genome states de las mutaciones rotativas para evitar
-	# que _check_automatic_activations las re-active en el siguiente tick
+	# Limpiar flags Y genome states de las mutaciones rotativas + segundo nivel disruptivo
 	mutation_hyperassimilation = false
 	mutation_symbiosis = false
 	mutation_homeostasis = false
 	mutation_red_micelial = false
 	mutation_parasitism = false
+	mutation_depredador = false
+	mutation_met_oscuro = false
 	red_micelial_phase = 0
 	genome["hiperasimilacion"] = "dormido"
 	genome["simbiosis"] = "dormido"
 	genome["homeostasis"] = "dormido"
 	genome["red_micelial"] = "dormido"
 	genome["parasitismo"] = "dormido"
+	genome["depredador"] = "dormido"
+	genome["met_oscuro"] = "dormido"
 	# Las flags de segundo nivel (allostasis, homeorhesis, etc.) no se tocan — son sub-rutas
 	match id:
 		"homeostasis":
