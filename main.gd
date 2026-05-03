@@ -71,6 +71,7 @@ const PASSIVE_RATIO_START := 0.60
 
 var run_time: float = 0.0
 var lab_mode := false  # Oculto por defecto — tecla L para toggle
+var _debug_panel: Panel = null
 
 # RunManager.final_reason movido a RunManager.gd
 var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
@@ -835,6 +836,13 @@ func _ready():
 		RunManager.final_reason = ""
 		print("🛠️ Recuperando run cerrada por bug")
 
+	if OS.is_debug_build():
+		var dp := preload("res://DebugPanel.gd").new()
+		dp.visible = false
+		add_child(dp)
+		dp.init(self)
+		_debug_panel = dp
+
 	# --- RECUPERACIÓN DE ESTADO PENDIENTE (v0.8.8) ---
 	# Si cargamos una partida donde la mutación está activa pero no se eligió rama
 	# CARNAVAL: no mostrar panel — red_micelial es temporal, sin bifurcación
@@ -1125,6 +1133,8 @@ func _on_logic_tick():
 
 func _on_ui_tick():
 	# === 10 Hz — actualizar labels y botones ===
+	if is_instance_valid(_debug_panel) and _debug_panel.visible:
+		_debug_panel.refresh_info()
 	update_ui()
 	_update_evolution_progress_bar()
 
@@ -1838,6 +1848,9 @@ func _input(event):
 				UIManager.genome_scroll.visible = lab_mode
 			if LogManager.show_all_laps != lab_mode:
 				toggle_lap_view()
+
+		if OS.is_debug_build() and event.keycode == KEY_F1 and is_instance_valid(_debug_panel):
+			_debug_panel.visible = not _debug_panel.visible
 
 		# ── DEBUG TIME SKIP (solo en lab_mode) ──────────────────────
 		if lab_mode:
