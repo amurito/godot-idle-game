@@ -1655,6 +1655,17 @@ func _build_legacy_item(id: String) -> Control:
 			update_ui()
 		)
 		v.add_child(toggle_btn)
+		if not is_maxed:
+			var lvl_btn: Button = Button.new()
+			lvl_btn.custom_minimum_size.y = 22
+			lvl_btn.text = "Nv.%d  %d PL" % [lvl + 1, cost]
+			lvl_btn.disabled = not LegacyManager.can_afford(id)
+			lvl_btn.pressed.connect(func():
+				if LegacyManager.purchase_legacy(id):
+					_refresh_legacy_store()
+					show_system_toast("Banco: Compraste " + def.get("name", id))
+			)
+			v.add_child(lvl_btn)
 	else:
 		var btn: Button = Button.new()
 		btn.custom_minimum_size.y = 22
