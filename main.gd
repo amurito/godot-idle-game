@@ -1535,7 +1535,11 @@ func _on_legacy_pressed():
 	legacy_panel.visible = true
 	$DimmerBackground.visible = true
 	var vp := get_viewport_rect()
-	legacy_panel.custom_minimum_size = Vector2(min(980, vp.size.x * 0.92), min(640, vp.size.y * 0.88))
+	var margin := 24.0
+	var ps := Vector2(vp.size.x - margin * 2, vp.size.y - margin * 2)
+	legacy_panel.custom_minimum_size = ps
+	legacy_panel.size = ps
+	legacy_panel.position = Vector2(margin, margin)
 	_refresh_legacy_store()
 
 func _on_close_legacy_pressed():
@@ -1570,7 +1574,7 @@ func _refresh_legacy_store():
 
 	for group in col_groups:
 		var col: VBoxContainer = VBoxContainer.new()
-		col.custom_minimum_size.x = 180
+		col.custom_minimum_size.x = 300
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_theme_constant_override("separation", 3)
 		var col_has_items: bool = false
