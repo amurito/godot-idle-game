@@ -1125,10 +1125,6 @@ func _on_logic_tick():
 
 func _on_ui_tick():
 	# === 10 Hz — actualizar labels y botones ===
-	if lab_mode:
-		var genome_lbl = get_node_or_null("UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/GenomeLabel")
-		if genome_lbl:
-			genome_lbl.text = _build_genome_text()
 	update_ui()
 	_update_evolution_progress_bar()
 
@@ -1692,25 +1688,6 @@ func _build_legacy_item(id: String) -> Control:
 	return v
 
 
-func _build_genome_text() -> String:
-	const STATE_COLOR := {"dormido": "gray", "latente": "yellow", "activa": "lime", "maximizada": "cyan"}
-	const STATE_TAG   := {"dormido": "·", "latente": "LATENTE", "activa": "ACTIVA", "maximizada": "MAXIMA"}
-	const MUT_NAMES   := {
-		"hiperasimilacion": "Hiperasimilación", "parasitismo": "Parasitismo",
-		"red_micelial": "Red Micelial",         "esporulacion": "Esporulación",
-		"simbiosis": "Simbiosis",                "homeostasis": "Homeostasis",
-		"trascendencia": "Trascendencia",        "allostasis": "Allostasis",
-		"homeorhesis": "Homeorhesis",            "depredador": "Depredador",
-		"met_oscuro": "Met. Oscuro"
-	}
-	var t := "[b]— GENOMA —[/b]\n"
-	for k in EvoManager.genome:
-		var s: String = EvoManager.genome[k]
-		var col: String = STATE_COLOR.get(s, "white")
-		var tag: String = STATE_TAG.get(s, s)
-		var nm: String = MUT_NAMES.get(k, k)
-		t += "[color=%s]%s  %s[/color]\n" % [col, nm, tag]
-	return t
 
 
 # ESTRUCTURALES v0.7.3
@@ -1855,13 +1832,10 @@ func _input(event):
 			lab_mode = not lab_mode
 			var formula = get_node_or_null("%FormulaLabel")
 			var click_scroll = get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll")
-			var genome_lbl = get_node_or_null("UIRootContainer/RightPanel/ScrollContainer/VBoxContainer/GenomeLabel")
 			if formula: formula.visible = lab_mode
 			if click_scroll: click_scroll.visible = lab_mode
-			if genome_lbl:
-				genome_lbl.visible = lab_mode
-				if lab_mode:
-					genome_lbl.text = _build_genome_text()
+			if UIManager.genome_scroll:
+				UIManager.genome_scroll.visible = lab_mode
 			if LogManager.show_all_laps != lab_mode:
 				toggle_lap_view()
 
