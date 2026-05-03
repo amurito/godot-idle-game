@@ -631,6 +631,14 @@ text = "
 layout_mode = 2
 size_flags_vertical = 1
 
+[node name="GenomeLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+theme_override_font_sizes/normal_font_size = 11
+
 [node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
