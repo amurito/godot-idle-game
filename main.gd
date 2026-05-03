@@ -71,6 +71,8 @@ const PASSIVE_RATIO_START := 0.60
 
 var run_time: float = 0.0
 var lab_mode := false  # Oculto por defecto — tecla L para toggle
+var _lab_overlay: Panel = null
+var _lab_text_lbl: RichTextLabel = null
 
 # RunManager.final_reason movido a RunManager.gd
 var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
@@ -1125,6 +1127,8 @@ func _on_logic_tick():
 
 func _on_ui_tick():
 	# === 10 Hz — actualizar labels y botones ===
+	if lab_mode and is_instance_valid(_lab_text_lbl):
+		_lab_text_lbl.text = _build_lab_text()
 	update_ui()
 	_update_evolution_progress_bar()
 
@@ -1688,6 +1692,56 @@ func _build_legacy_item(id: String) -> Control:
 	return v
 
 
+func _show_lab_overlay():
+	if is_instance_valid(_lab_overlay):
+		_lab_overlay.queue_free()
+	var vp := get_viewport_rect()
+	_lab_overlay = Panel.new()
+	_lab_overlay.position = Vector2(vp.size.x * 0.62, 0)
+	_lab_overlay.size = Vector2(vp.size.x * 0.38, vp.size.y)
+	_lab_overlay.modulate = Color(1, 1, 1, 0.93)
+	add_child(_lab_overlay)
+
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 8)
+	_lab_overlay.add_child(scroll)
+
+	_lab_text_lbl = RichTextLabel.new()
+	_lab_text_lbl.bbcode_enabled = true
+	_lab_text_lbl.fit_content = true
+	_lab_text_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_lab_text_lbl.add_theme_font_size_override("normal_font_size", 11)
+	_lab_text_lbl.text = _build_lab_text()
+	scroll.add_child(_lab_text_lbl)
+
+
+func _build_lab_text() -> String:
+	const STATE_COLOR := {"dormido": "gray", "latente": "yellow", "activa": "lime", "maximizada": "cyan"}
+	const STATE_TAG   := {"dormido": "·", "latente": "LATENTE", "activa": "ACTIVA", "maximizada": "MAXIMA"}
+	const MUT_NAMES   := {
+		"hiperasimilacion": "Hiperasimilación", "parasitismo": "Parasitismo",
+		"red_micelial": "Red Micelial",         "esporulacion": "Esporulación",
+		"simbiosis": "Simbiosis",                "homeostasis": "Homeostasis",
+		"trascendencia": "Trascendencia",        "allostasis": "Allostasis",
+		"homeorhesis": "Homeorhesis",            "depredador": "Depredador",
+		"met_oscuro": "Met. Oscuro"
+	}
+	var t := "[b]GENOMA[/b]\n"
+	for k in EvoManager.genome:
+		var s: String = EvoManager.genome[k]
+		var col: String = STATE_COLOR.get(s, "white")
+		var tag: String = STATE_TAG.get(s, s)
+		var nm: String = MUT_NAMES.get(k, k)
+		t += "[color=%s]%-20s %s[/color]\n" % [col, nm, tag]
+
+	t += "\n[b]EVENTOS  [color=gray](%d total)[/color][/b]\n" % LogManager.lap_events.size()
+	var events: Array = LogManager.lap_events
+	var start: int = max(0, events.size() - 30)
+	for i in range(events.size() - 1, start - 1, -1):
+		var e: Dictionary = events[i]
+		t += "[color=gray]%s[/color] %s\n" % [e.get("time", ""), e.get("event", "")]
+	return t
+
 
 # ESTRUCTURALES v0.7.3
 func update_epsilon_runtime():
@@ -1833,7 +1887,13 @@ func _input(event):
 			var click_scroll = get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll")
 			if formula: formula.visible = lab_mode
 			if click_scroll: click_scroll.visible = lab_mode
-			print("🔬 Lab Mode: %s" % ("ON" if lab_mode else "OFF"))
+			if lab_mode:
+				_show_lab_overlay()
+			else:
+				if is_instance_valid(_lab_overlay):
+					_lab_overlay.queue_free()
+					_lab_overlay = null
+					_lab_text_lbl = null
 
 		# ── DEBUG TIME SKIP (solo en lab_mode) ──────────────────────
 		if lab_mode:
