@@ -2126,12 +2126,19 @@ func update_ui():
 			btn_evolve.modulate = Color(1.0, 0.4, 0.2) # Naranja parásito
 		else:
 			var any_tier1 = EvoManager.is_any_latent_tier1()
-			var any_tier2 = EvoManager.mutation_homeostasis and EvoManager.is_allostasis_ready(self)
+			var any_tier2 = false
+			if not EvoManager.mutation_allostasis:
+				any_tier2 = EvoManager.mutation_homeostasis and EvoManager.is_allostasis_ready(self)
+			else:
+				any_tier2 = EvoManager.is_homeorhesis_ready(self)
 
 			btn_evolve.visible = any_tier1 or any_tier2
 			btn_evolve.disabled = false
 			btn_evolve.text = "🧬 INICIAR MUTACIÓN"
-			if any_tier2:
+			
+			if EvoManager.mutation_allostasis and any_tier2:
+				btn_evolve.modulate = Color(0.8, 0.4, 1.0) # Violeta para Homeorresis
+			elif any_tier2:
 				btn_evolve.modulate = Color(0, 1, 1) # Cyan para Allostasis
 			else:
 				btn_evolve.modulate = Color(1, 1, 1)

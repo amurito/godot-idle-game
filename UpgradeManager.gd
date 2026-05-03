@@ -15,19 +15,28 @@ func _ready() -> void:
 
 func _load_defs() -> void:
 	_defs.clear()
-	var dir := DirAccess.open("res://upgrades")
-	if dir == null:
-		push_error("UpgradeManager: no se pudo abrir res://upgrades/")
-		return
-	dir.list_dir_begin()
-	var fname := dir.get_next()
-	while fname != "":
-		if fname.ends_with(".tres"):
-			var res = ResourceLoader.load("res://upgrades/" + fname)
+	var upgrades_to_load = [
+		"accounting.tres",
+		"auto.tres",
+		"auto_mult.tres",
+		"click.tres",
+		"click_mult.tres",
+		"cognitive.tres",
+		"persistence.tres",
+		"specialization.tres",
+		"trueque.tres",
+		"trueque_allo.tres",
+		"trueque_net.tres"
+	]
+	
+	for fname in upgrades_to_load:
+		var path = "res://upgrades/" + fname
+		if ResourceLoader.exists(path):
+			var res = ResourceLoader.load(path)
 			if res and res is UpgradeDef:
 				_defs.append(res)
-		fname = dir.get_next()
-	dir.list_dir_end()
+		else:
+			push_error("UpgradeManager: No se encontró " + path)
 
 # =====================================================
 #  ESTADO RUNTIME
