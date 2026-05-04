@@ -94,6 +94,7 @@ const AUTOSAVE_INTERVAL := 30.0
 
 # ================= REFERENCIAS UI ===================
 @onready var ui_root = $UIRootContainer
+@onready var _legacy_indicators := $HeaderBar/HeaderContent/LegacyIndicators
 @onready var evolution_bar = $UIRootContainer/LeftPanel/CenterPanel/EvolutionProgressBar
 @onready var bottom_left_panel = $BottomLeftControls
 @onready var evo_choice_panel = $EvoChoicePanel
@@ -827,6 +828,7 @@ func _ready():
 
 	# Restaurar juego vía Autoload
 	SaveManager.load_game(self)
+	call_deferred("_update_legacy_indicators")
 
 	# --- EMERGENCY RE-OPEN (v0.8.43) ---
 	# Si la run se cerró por el bug del Legado, la reabrimos
@@ -1551,12 +1553,14 @@ func _on_legacy_pressed():
 	legacy_panel.size = ps
 	legacy_panel.position = Vector2(margin, margin)
 	_refresh_legacy_store()
+	_update_legacy_indicators()
 
 func _on_close_legacy_pressed():
 	legacy_panel.visible = false
 	$DimmerBackground.visible = false
 
 func _refresh_legacy_store():
+	_update_legacy_indicators()
 	var pl := LegacyManager.legacy_points
 	var buffer := LegacyManager.internal_spores_total
 	pl_label.text = "PL Disponibles: %d    Reserva biótica: %.1f / 50 esporas" % [pl, buffer]
@@ -1697,6 +1701,41 @@ func _build_legacy_item(id: String) -> Control:
 	v.add_child(HSeparator.new())
 	return v
 
+
+func _update_legacy_indicators() -> void:
+	if not is_instance_valid(_legacy_indicators):
+		return
+	for c in _legacy_indicators.get_children():
+		c.queue_free()
+
+	# Buffs con efecto directo en ingresos o mecánicas importantes
+	# formato: id -> [etiqueta_corta, tooltip, color]
+	const INDICATORS: Dictionary = {
+		"plasticidad_adaptativa": ["Plast.", "Plasticidad Adaptiva\nω_min = 0.30", Color(0.5, 0.8, 1.0)],
+		"resonancia_simbionte":   ["Res.S", "Resonancia Simbionte\nClick +20%", Color(0.4, 0.9, 0.5)],
+		"sangre_negra":           ["S.Neg", "Sangre Negra\nBiomasa inicio ×1.30", Color(0.8, 0.2, 0.2)],
+		"deriva_esporada":        ["Deriva", "Deriva Esporada\nPL ganados ×1.25", Color(0.9, 0.85, 0.4)],
+		"aura_dorada":            ["Aura", "Aura Dorada\nPasivo ×1.5", Color(1.0, 0.85, 0.2)],
+		"semilla_cosmica":        ["Semilla", "Semilla Cósmica\nClick ×2.0 · Pasivo ×2.0", Color(0.5, 0.5, 0.9)],
+		"mente_colmena":          ["Colmena", "Mente Colmena\nPasivo ×3.0 + IA Auto", Color(0.9, 0.3, 0.9)],
+		"metabolismo_glitch":     ["Met.Osc", "Metabolismo Oscuro\nModo activo en esta run", Color(0.6, 0.1, 0.8)],
+		"legado_alostasis":       ["Alost.", "Resiliencia Alostática\nSistema recalibra tras caos", Color(0.5, 0.8, 1.0)],
+		"legado_homeorresis":     ["Crist.", "Trascendencia Cristalina\nDirectamente trasciende el estrés", Color(0.3, 1.0, 0.9)],
+		"glitch_persistente":     ["Glitch", "Glitch Persistente\nPasivo +15%", Color(0.7, 0.7, 0.7)],
+		"setpoint_adaptativo":    ["Set.", "Setpoint Adaptativo\nVelocidad recuperación Ω ×1.5", Color(0.5, 0.8, 1.0)],
+		"eco_primordial":         ["Eco", "Eco Primordial\nTodos los ingresos +10%", Color(0.4, 1.0, 0.6)],
+	}
+
+	for id in INDICATORS:
+		if LegacyManager.get_buff_level(id) > 0 and LegacyManager.buff_enabled.get(id, true):
+			var data: Array = INDICATORS[id]
+			var chip := Label.new()
+			chip.text = data[0]
+			chip.tooltip_text = data[1]
+			chip.add_theme_font_size_override("font_size", 10)
+			chip.modulate = data[2]
+			chip.mouse_filter = Control.MOUSE_FILTER_STOP
+			_legacy_indicators.add_child(chip)
 
 
 
