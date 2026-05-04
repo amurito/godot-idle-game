@@ -242,6 +242,12 @@ const DEFS := {
 		"trigger": "sustained_between", "metric": "biomasa",
 		"min": 4.0, "max": 6.0, "duration": 90.0,
 	},
+	"bioma_despierto": {
+		"name": "Bioma Despierto",
+		"desc": "Las hifas emergen — alcanzar Hifas ≥ 0.5 por primera vez.",
+		"tier": Tier.ESPORA, "secret": false, "toast": "full",
+		"trigger": "threshold", "metric": "hifas", "target": 0.5,
+	},
 
 	# ═══════════════ FRUTO (14) ═══════════════
 
@@ -342,6 +348,19 @@ const DEFS := {
 		"trigger": "custom", "evaluator": "latido_cosmico",
 		"duration": 90.0,
 	},
+	"ruta_allostasis": {
+		"name": "Alostasis Estructural",
+		"desc": "Cerrar una run por la ruta de Allostasis.",
+		"tier": Tier.FRUTO, "secret": false, "toast": "full",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "ALLOSTASIS"}],
+	},
+	"cinco_legados": {
+		"name": "Cinco Legados",
+		"desc": "Tener 5 o más mejoras del Banco Genético desbloqueadas.",
+		"tier": Tier.FRUTO, "secret": false, "toast": "full",
+		"trigger": "custom", "evaluator": "cinco_legados",
+	},
 
 	# ═══════════════ ANCESTRAL (8, todos secretos) ═══════════════
 
@@ -381,11 +400,31 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "domador_del_caos",
 	},
-	"vacio_absoluto": {
-		"name": "Vacío Absoluto",
-		"desc": "Mantener la renuncia durante 5 minutos perfectos en VACÍO HAMBRIENTO.",
+	"ruta_ascesis": {
+		"name": "Ascesis Profunda",
+		"desc": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
-		"trigger": "custom",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "ASCESIS_PROFUNDA"}],
+	},
+	"ruta_reencarnacion": {
+		"name": "Reencarnación Consumada",
+		"desc": "Cerrar una run con la mutación Reencarnación Heredada activa.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "reencarnacion_active", "op": "==", "value": true}],
+	},
+	"metabolismo_oscuro_pico": {
+		"name": "Pico Metabólico Oscuro",
+		"desc": "Alcanzar Δ$ ≥ 500.000/s con Metabolismo Oscuro activo durante 30 segundos.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "metabolismo_oscuro_pico", "duration": 30.0,
+	},
+	"legado_absoluto": {
+		"name": "Legado Absoluto",
+		"desc": "Desbloquear todas las mejoras del Banco Genético.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "legado_absoluto",
 	},
 	"tres_vidas_camino": {
 		"name": "Tres Vidas, Un Camino",
@@ -405,6 +444,19 @@ const DEFS := {
 		"desc": "Biomasa > 10, κμ > 1.6 y ε < 0.15 simultáneamente.",
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "organismo_total",
+	},
+	"ruta_homeorhesis": {
+		"name": "Homeorhesis",
+		"desc": "Cerrar una run por la ruta de Homeorhesis — evolución irreversible.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "HOMEORHESIS"}],
+	},
+	"omega_inviolable": {
+		"name": "Omega Inviolable",
+		"desc": "Sostener Ω ≥ ω_min ≥ 0.55 durante 120 segundos sin caer.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "omega_inviolable", "duration": 120.0,
 	},
 	"sin_dioses_ni_clicks": {
 		"name": "Sin Dioses ni Clicks",
@@ -432,7 +484,7 @@ const DEFS := {
 	},
 	"ultima_espora": {
 		"name": "Última Espora",
-		"desc": "Desbloquear los 50 logros.",
+		"desc": "Desbloquear todos los logros del juego.",
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "ultima_espora",
 	},
@@ -464,7 +516,8 @@ var _seta_formed_this_run: bool = false
 
 # IDs de logros con timers custom (duration en DEFS)
 const CUSTOM_TIMER_IDS := [
-	"hambre_elegante", "latido_cosmico", "entropia_cero"
+	"hambre_elegante", "latido_cosmico", "entropia_cero",
+	"omega_inviolable", "metabolismo_oscuro_pico",
 ]
 
 # ──────────────────────── INIT ────────────────────────
@@ -489,8 +542,12 @@ func _ready() -> void:
 		"ultima_espora":      _eval_ultima_espora,
 		"saturacion_total":   _eval_saturacion_total,
 		"fractura_epistemica": _eval_fractura_epistemica,
-		"polimorfia_total": _eval_polimorfia_total,
-		"domador_del_caos": _eval_domador_del_caos,
+		"polimorfia_total":       _eval_polimorfia_total,
+		"domador_del_caos":       _eval_domador_del_caos,
+		"cinco_legados":          _eval_cinco_legados,
+		"omega_inviolable":       _eval_omega_inviolable_cond,
+		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
+		"legado_absoluto":        _eval_legado_absoluto,
 	}
 	_init_timers()
 
@@ -791,9 +848,33 @@ func _eval_polimorfia_total(_s: Dictionary) -> bool:
 func _eval_domador_del_caos(_s: Dictionary) -> bool:
 	return RunManager.final_route == "DOMADOR DEL CAOS"
 
+func _eval_cinco_legados(_s: Dictionary) -> bool:
+	var count := 0
+	for id in LegacyManager.LEGACY_DEFS:
+		if LegacyManager.get_buff_level(id) > 0:
+			count += 1
+	return count >= 5
+
+func _eval_omega_inviolable_cond(_s: Dictionary) -> bool:
+	return StructuralModel.omega_min >= 0.55 \
+		and StructuralModel.omega >= StructuralModel.omega_min
+
+func _eval_met_oscuro_pico_cond(s: Dictionary) -> bool:
+	return EvoManager.mutation_met_oscuro and s.get("delta_total", 0.0) >= 500000.0
+
+func _eval_legado_absoluto(_s: Dictionary) -> bool:
+	for id in LegacyManager.LEGACY_DEFS:
+		if LegacyManager.get_buff_level(id) == 0:
+			return false
+	return true
+
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 
 func _check_meta_achievements() -> void:
+	if not is_unlocked("cinco_legados") and _eval_cinco_legados({}):
+		unlock("cinco_legados")
+	if not is_unlocked("legado_absoluto") and _eval_legado_absoluto({}):
+		unlock("legado_absoluto")
 	if not is_unlocked("reino_subterraneo") and _eval_reino_subterraneo({}):
 		unlock("reino_subterraneo")
 	if not is_unlocked("ultima_espora") and _eval_ultima_espora({}):
@@ -817,6 +898,7 @@ func on_run_closed(route: String) -> void:
 		"mutations_active_count": active_count,
 		"seta_formed":            _seta_formed_this_run,
 		"bought_accounting":      _bought_accounting_this_run,
+		"reencarnacion_active":   RunManager.reencarnacion_active,
 	}
 	push_event("run_closed", payload)
 	# Logros especiales que dependen de estado interno cruzado
@@ -830,6 +912,10 @@ func on_run_closed(route: String) -> void:
 		unlock("saturacion_total")
 	if route == "COLAPSO DEPREDATORIO":
 		unlock("fractura_epistemica")
+	if route in ["POLIMORFÍA TOTAL", "POLIMORFIA TOTAL"] and _eval_polimorfia_total({}):
+		unlock("polimorfia_total")
+	if route == "DOMADOR DEL CAOS" and _eval_domador_del_caos({}):
+		unlock("domador_del_caos")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

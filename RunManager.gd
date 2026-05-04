@@ -488,7 +488,6 @@ func check_ascesis_profunda(delta: float) -> void:
 	if biomasa_ok and sin_pasivo and epsilon_ok:
 		ascesis_timer += delta
 		if ascesis_timer >= ASCESIS_DURATION:
-			AchievementManager.unlock("vacio_absoluto")
 			close_run("ASCESIS_PROFUNDA", "La renuncia absoluta genera más estabilidad que cualquier acumulación")
 	# Si fallan las condiciones el timer se pausa (no se resetea)
 

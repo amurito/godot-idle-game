@@ -649,6 +649,7 @@ func check_achievements():
 		"resilience_score":RunManager.resilience_score,
 		"dominant_term":   get_dominant_term(),
 		"parasitism":      EvoManager.mutation_parasitism,
+		"hifas":           BiosphereEngine.hifas,
 	})
 	AchievementManager.check_tick(LOGIC_TICK)
 func show_system_toast(message: String) -> void:

@@ -5,7 +5,7 @@ extends Control
 @onready var btn_achievements = $CenterContainer/VBoxContainer/BtnAchievements
 @onready var btn_legacy = $CenterContainer/VBoxContainer/BtnLegacy
 @onready var achievements_panel = $AchievementsPanel
-@onready var achievements_label = $AchievementsPanel/VBoxContainer/RichTextLabel
+@onready var achievements_label = $AchievementsPanel/VBoxContainer/ScrollContainer/RichTextLabel
 
 @onready var legacy_panel = $GeneticBankPanel
 @onready var pl_counter = $GeneticBankPanel/VBoxContainer/PLCounter
@@ -411,12 +411,14 @@ func _update_achievements_view():
 		AchievementManager.Tier.ESPORA,
 		AchievementManager.Tier.FRUTO,
 		AchievementManager.Tier.ANCESTRAL,
+		AchievementManager.Tier.MYTHIC,
 	]
 	var tier_colors := {
 		AchievementManager.Tier.MICELIO:   "#b77841",
 		AchievementManager.Tier.ESPORA:    "#e0e0e5",
 		AchievementManager.Tier.FRUTO:     "#ffcc40",
 		AchievementManager.Tier.ANCESTRAL: "#d93a4d",
+		AchievementManager.Tier.MYTHIC:    "#8c1ad9",
 	}
 
 	for tier in tier_order:
