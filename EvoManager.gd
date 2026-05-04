@@ -422,6 +422,7 @@ func activate_mutation(id: String) -> void:
 		"simbiosis": activate_symbiosis()
 		"allostasis": activate_allostasis()
 		"depredador": activate_depredador()
+		"homeorhesis": activate_homeorhesis()
 		"met_oscuro": activate_met_oscuro()
 
 func _set_genome_state(mutation: String, new_state: String):
