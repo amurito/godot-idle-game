@@ -1711,18 +1711,18 @@ func _update_legacy_indicators() -> void:
 	# Buffs con efecto directo en ingresos o mecánicas importantes
 	# formato: id -> [etiqueta_corta, tooltip, color]
 	const INDICATORS: Dictionary = {
-		"plasticidad_adaptativa": ["Plast.", "Plasticidad Adaptiva\nω_min = 0.30", Color(0.5, 0.8, 1.0)],
-		"resonancia_simbionte":   ["Res.S", "Resonancia Simbionte\nClick +20%", Color(0.4, 0.9, 0.5)],
-		"sangre_negra":           ["S.Neg", "Sangre Negra\nBiomasa inicio ×1.30", Color(0.8, 0.2, 0.2)],
+		"plasticidad_adaptativa": ["Plast.", "Plasticidad Adaptativa\nω_min = 0.30 garantizado", Color(0.5, 0.8, 1.0)],
+		"resonancia_simbionte":   ["Res.S", "Resonancia Simbionte\nClick ×1.20", Color(0.4, 0.9, 0.5)],
+		"sangre_negra":           ["S.Neg", "Sangre Negra\nBiomasa al inicio ×1.30", Color(0.8, 0.2, 0.2)],
 		"deriva_esporada":        ["Deriva", "Deriva Esporada\nPL ganados ×1.25", Color(0.9, 0.85, 0.4)],
-		"aura_dorada":            ["Aura", "Aura Dorada\nPasivo ×1.5", Color(1.0, 0.85, 0.2)],
+		"aura_dorada":            ["Aura", "Aura Dorada\nClick ×1.5 · Pasivo ×1.5", Color(1.0, 0.85, 0.2)],
 		"semilla_cosmica":        ["Semilla", "Semilla Cósmica\nClick ×2.0 · Pasivo ×2.0", Color(0.5, 0.5, 0.9)],
-		"mente_colmena":          ["Colmena", "Mente Colmena\nPasivo ×3.0 + IA Auto", Color(0.9, 0.3, 0.9)],
-		"metabolismo_glitch":     ["Met.Osc", "Metabolismo Oscuro\nModo activo en esta run", Color(0.6, 0.1, 0.8)],
-		"legado_alostasis":       ["Alost.", "Resiliencia Alostática\nSistema recalibra tras caos", Color(0.5, 0.8, 1.0)],
-		"legado_homeorresis":     ["Crist.", "Trascendencia Cristalina\nDirectamente trasciende el estrés", Color(0.3, 1.0, 0.9)],
+		"mente_colmena":          ["Colmena", "Mente Colmena\nPasivo ×3.0 · Auto-click ×10", Color(0.9, 0.3, 0.9)],
+		"metabolismo_glitch":     ["Met.Osc", "Metabolismo Oscuro\nClick ×1.5 · Pasivo ×1.8 (si ε > 0.40)", Color(0.6, 0.1, 0.8)],
+		"legado_alostasis":       ["Alost.", "Resiliencia Alostática\nω_min ≥ 0.45 garantizado", Color(0.5, 0.8, 1.0)],
+		"legado_homeorresis":     ["Crist.", "Trascendencia Cristalina\nω_min ≥ 0.55 garantizado", Color(0.3, 1.0, 0.9)],
 		"glitch_persistente":     ["Glitch", "Glitch Persistente\nPasivo +15%", Color(0.7, 0.7, 0.7)],
-		"setpoint_adaptativo":    ["Set.", "Setpoint Adaptativo\nVelocidad recuperación Ω ×1.5", Color(0.5, 0.8, 1.0)],
+		"setpoint_adaptativo":    ["Set.", "Setpoint Adaptativo\nRecuperación de Ω ×1.5", Color(0.5, 0.8, 1.0)],
 		"eco_primordial":         ["Eco", "Eco Primordial\nTodos los ingresos +10%", Color(0.4, 1.0, 0.6)],
 	}
 
