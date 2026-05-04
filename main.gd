@@ -704,7 +704,9 @@ func reset_local_state():
 	_mente_colmena_buy_timer = 0.0
 	_glitch_was_active = false
 	RunManager.reset()
-	
+	if is_instance_valid(fungi_ui):
+		fungi_ui.reset_run()
+
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = ""
 

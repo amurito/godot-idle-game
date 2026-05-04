@@ -23,6 +23,8 @@ func _propagate_mouse_ignore(node: Node):
 
 var hifas_unlocked := false
 var pulse := 0.0
+var _hifas_establish_timer := 0.0
+const HIFAS_ESTABLISH_TIME := 40.0  # segundos con hifas > 1.0 para desbloquear por pasivo
 
 # --- Salidas físicas hacia el sistema ---
 var metabolism := 0.0
@@ -77,11 +79,15 @@ func _process(delta):
 			update_ui()
 			return
 
-		# Hifas activas por ingreso pasivo alto (NG+ con ε bajo no llega al umbral de ε)
+		# Hifas activas por ingreso pasivo alto — requiere 40s sostenidos (NG+ con ε bajo)
 		if BiosphereEngine.hifas > 1.0:
-			hifas_unlocked = true
-			update_ui()
-			return
+			_hifas_establish_timer += delta
+			if _hifas_establish_timer >= HIFAS_ESTABLISH_TIME:
+				hifas_unlocked = true
+				update_ui()
+				return
+		else:
+			_hifas_establish_timer = 0.0
 
 		if StructuralModel.epsilon_runtime > 0.38 \
 		and main.get_delta_total() > 5.0:
@@ -112,6 +118,14 @@ func _process(delta):
 		if l:
 			l.modulate.a = 0.8 + sin(pulse * 1.5) * 0.2
 
+	update_ui()
+
+
+func reset_run():
+	hifas_unlocked = false
+	_hifas_establish_timer = 0.0
+	pulse = 0.0
+	metabolism = 0.0
 	update_ui()
 
 
