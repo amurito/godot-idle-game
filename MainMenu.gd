@@ -5,7 +5,7 @@ extends Control
 @onready var btn_achievements = $CenterContainer/VBoxContainer/BtnAchievements
 @onready var btn_legacy = $CenterContainer/VBoxContainer/BtnLegacy
 @onready var achievements_panel = $AchievementsPanel
-@onready var achievements_label = $AchievementsPanel/VBoxContainer/RichTextLabel
+@onready var achievements_label = $AchievementsPanel/VBoxContainer/ScrollContainer/RichTextLabel
 
 @onready var legacy_panel = $GeneticBankPanel
 @onready var pl_counter = $GeneticBankPanel/VBoxContainer/PLCounter
@@ -399,24 +399,25 @@ func _on_buy_legacy(id: String):
 		_update_legacy_view()
 
 func _update_achievements_view():
-	# v0.9.4: panel de logros con progreso, badge NUEVO y toast por tier.
 	var total: int = AchievementManager.total_count()
 	var got: int = AchievementManager.unlocked_count()
 
-	var t: String = "[center][b]─── HISTORIAL DE LOGROS ───[/b]\n"
-	t += "[color=#ffcc00]%d / %d desbloqueados[/color][/center]\n\n" % [got, total]
+	var t: String = "[center][color=#ffcc00][b]═══ HISTORIAL DE LOGROS ═══[/b][/color]\n"
+	t += "[color=#888888]%d / %d desbloqueados[/color][/center]\n\n" % [got, total]
 
 	var tier_order := [
 		AchievementManager.Tier.MICELIO,
 		AchievementManager.Tier.ESPORA,
 		AchievementManager.Tier.FRUTO,
 		AchievementManager.Tier.ANCESTRAL,
+		AchievementManager.Tier.MYTHIC,
 	]
 	var tier_colors := {
 		AchievementManager.Tier.MICELIO:   "#b77841",
 		AchievementManager.Tier.ESPORA:    "#e0e0e5",
 		AchievementManager.Tier.FRUTO:     "#ffcc40",
 		AchievementManager.Tier.ANCESTRAL: "#d93a4d",
+		AchievementManager.Tier.MYTHIC:    "#8c1ad9",
 	}
 
 	for tier in tier_order:
@@ -428,7 +429,7 @@ func _update_achievements_view():
 		for id in ids:
 			if AchievementManager.is_unlocked(id): ok += 1
 
-		t += "[color=%s][b]%s %s[/b][/color]  [color=#aaaaaa]%d / %d[/color]\n" \
+		t += "[color=%s][b]%s %s[/b][/color]  [color=#555555]%d / %d[/color]\n\n" \
 			% [color, tier_icon, tier_name, ok, ids.size()]
 
 		for id in ids:
@@ -438,23 +439,51 @@ func _update_achievements_view():
 			var name_str: String = def.get("name", id)
 			var desc_str: String = def.get("desc", "")
 
+			var icon_char: String
+			var title_color: String
+			var desc_color: String
+			var card_bg: String
+			var icon_bg: String
+
 			if unlocked_one:
-				# Badge NUEVO si todavía no fue visto
+				icon_char = tier_icon
+				title_color = "#ffcc44"
+				desc_color = "#aaaaaa"
+				card_bg = "#111a2e"
+				icon_bg = "#1e3050"
+			elif is_secret:
+				icon_char = "?"
+				title_color = "#3a3a3a"
+				desc_color = "#2a2a2a"
+				card_bg = "#090d15"
+				icon_bg = "#0d1220"
+			else:
+				icon_char = tier_icon
+				title_color = "#666666"
+				desc_color = "#444444"
+				card_bg = "#0c1422"
+				icon_bg = "#101828"
+
+			t += "[table=2]"
+			t += "[cell bgcolor=%s][center][font_size=30]%s[/font_size][/center][/cell]" % [icon_bg, icon_char]
+
+			if unlocked_one:
 				var entry: Dictionary = AchievementManager.unlocked.get(id, {})
 				var is_new: bool = not entry.get("seen", true)
-				var new_badge: String = " [color=#ffdd00][b]★ NUEVO[/b][/color]" if is_new else ""
-				t += "  [color=#00ff88]✓ %s[/color]%s\n" % [name_str, new_badge]
-				t += "    [color=#777777]%s[/color]\n" % desc_str
-				# Marcar como visto
+				var new_badge: String = "  [color=#ffdd00][b]★ NUEVO[/b][/color]" if is_new else ""
+				t += "[cell bgcolor=%s][b][color=%s]%s[/color]%s[/b]\n[color=%s][i]%s[/i][/color][/cell]" % \
+					[card_bg, title_color, name_str, new_badge, desc_color, desc_str]
 				if is_new:
 					AchievementManager.mark_seen(id)
 			elif is_secret:
-				t += "  [color=#444444]? ??? [i](logro oculto)[/i][/color]\n"
+				t += "[cell bgcolor=%s][b][color=%s]??? [i](logro oculto)[/i][/color][/b][/cell]" % \
+					[card_bg, title_color]
 			else:
-				# Progreso si el logro lo trackea
 				var progress_str: String = _build_progress_str(id, def)
-				t += "  [color=#666666][ ] %s[/color]%s\n" % [name_str, progress_str]
-				t += "    [color=#444444]%s[/color]\n" % desc_str
+				t += "[cell bgcolor=%s][b][color=%s]%s[/color][/b]%s\n[color=%s][i]%s[/i][/color][/cell]" % \
+					[card_bg, title_color, name_str, progress_str, desc_color, desc_str]
+
+			t += "[/table]\n\n"
 
 		t += "\n"
 

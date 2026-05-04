@@ -411,14 +411,6 @@ func is_allostasis_ready(main_node: Node) -> bool:
 	var ok_acc = UpgradeManager.level("accounting") >= 2
 	return ok_dist and ok_resil and ok_omega and ok_delta and ok_acc
 
-func is_homeorhesis_ready(main_node: Node) -> bool:
-	var ok_time = main_node.run_time >= 1800.0
-	var ok_resil = main_node.resilience_score >= 400.0
-	var ok_omega = main_node.omega_min >= 0.55
-	var ok_hifas = BiosphereEngine.hifas >= 15.0
-	var ok_shock = main_node.extreme_shock_survived
-	return ok_time and ok_resil and ok_omega and ok_hifas and ok_shock
-
 
 func activate_mutation(id: String) -> void:
 	match id:
@@ -429,8 +421,8 @@ func activate_mutation(id: String) -> void:
 		"parasitismo": activate_parasitism()
 		"simbiosis": activate_symbiosis()
 		"allostasis": activate_allostasis()
-		"homeorhesis": activate_homeorhesis()
 		"depredador": activate_depredador()
+		"homeorhesis": activate_homeorhesis()
 		"met_oscuro": activate_met_oscuro()
 
 func _set_genome_state(mutation: String, new_state: String):

@@ -87,21 +87,34 @@ grow_vertical = 2
 color = Color(0.05, 0.05, 0.07, 0.95)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="AchievementsPanel"]
-custom_minimum_size = Vector2(500, 0)
 layout_mode = 1
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
-alignment = 1
+theme_override_constants/separation = 15
 
-[node name="RichTextLabel" type="RichTextLabel" parent="AchievementsPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 400)
+[node name="Title" type="Label" parent="AchievementsPanel/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.8, 0.25, 1)
+theme_override_font_sizes/font_size = 32
+text = "HISTORIAL DE LOGROS"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="AchievementsPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="AchievementsPanel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 bbcode_enabled = true
+fit_content = true
 text = "[center][b]--- LOGROS ---[/b][/center]"
 
 [node name="BtnBack" type="Button" parent="AchievementsPanel/VBoxContainer"]
