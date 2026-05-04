@@ -1083,6 +1083,17 @@ func _on_logic_tick():
 		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
 		StructuralModel.omega = min(StructuralModel.omega, 0.10)
 
+	# FLOORS DE LEGADO — re-aplicados aquí porque el cálculo de omega con ε_effective
+	# (paso 8) sobreescribe los floors aplicados en update_epsilon_runtime()
+	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
+		StructuralModel.omega = max(StructuralModel.omega, StructuralModel.omega_min)
+		if EvoManager.mutation_allostasis:
+			StructuralModel.omega = max(StructuralModel.omega, 0.60)
+		elif LegacyManager.get_buff_value("legado_homeorresis"):
+			StructuralModel.omega = max(StructuralModel.omega, 0.55)
+		elif LegacyManager.get_buff_value("legado_alostasis"):
+			StructuralModel.omega = max(StructuralModel.omega, 0.45)
+
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
 
