@@ -77,6 +77,12 @@ func _process(delta):
 			update_ui()
 			return
 
+		# Hifas activas por ingreso pasivo alto (NG+ con ε bajo no llega al umbral de ε)
+		if BiosphereEngine.hifas > 1.0:
+			hifas_unlocked = true
+			update_ui()
+			return
+
 		if StructuralModel.epsilon_runtime > 0.38 \
 		and main.get_delta_total() > 5.0:
 			hifas_unlocked = true
