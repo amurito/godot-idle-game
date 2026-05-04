@@ -404,6 +404,7 @@ func activate_post_tras_route() -> void:
 	LegacyManager.save_legacy()
 
 func _activate_vacio_hambriento() -> void:
+	AchievementManager.push_event("post_tras_route", {"route": "vacio"})
 	# Contar y consumir todos los buffs cósmicos activos
 	var consumed := 0
 	for id in LegacyManager.cosmic_unlocked.keys():
@@ -419,6 +420,7 @@ func _activate_vacio_hambriento() -> void:
 		main.add_lap("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
 
 func _activate_carnaval() -> void:
+	AchievementManager.push_event("post_tras_route", {"route": "carnaval"})
 	# Seleccionar 3 mutaciones aleatorias sin repetición del pool
 	var pool := CARNAVAL_POOL.duplicate()
 	pool.shuffle()
@@ -435,6 +437,7 @@ func _activate_carnaval() -> void:
 		main.add_lap("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
 
 func _activate_reencarnacion() -> void:
+	AchievementManager.push_event("post_tras_route", {"route": "reencarnacion"})
 	reencarnacion_active = true
 	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
 	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")

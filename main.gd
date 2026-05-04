@@ -647,9 +647,10 @@ func check_achievements():
 		"money":           EconomyManager.money,
 		"total_money":     EconomyManager.total_money_generated,
 		"resilience_score":RunManager.resilience_score,
-		"dominant_term":   get_dominant_term(),
-		"parasitism":      EvoManager.mutation_parasitism,
-		"hifas":           BiosphereEngine.hifas,
+		"dominant_term":      get_dominant_term(),
+		"parasitism":         EvoManager.mutation_parasitism,
+		"hifas":              BiosphereEngine.hifas,
+		"trascendencia_count":LegacyManager.trascendencia_count,
 	})
 	AchievementManager.check_tick(LOGIC_TICK)
 func show_system_toast(message: String) -> void:
@@ -863,6 +864,8 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	var power := get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
+	if power >= 10000.0:
+		AchievementManager.push_event("big_click", {"power": power})
 
 	# El click ahora genera un pequeño pico de estrés runtime (v0.8.2)
 	StructuralModel.epsilon_runtime += epsilon_delta
@@ -989,6 +992,7 @@ func _on_logic_tick():
 			if devoured:
 				BiosphereEngine.biomasa += 15.0 # Massive biomassa growth
 				EvoManager.met_oscuro_devoured_count += 1
+				AchievementManager.push_event("depredador_devour", {})
 				show_system_toast("⚠️ GLITCH: El hongo ha digerido memoria estructural (%d)." % EvoManager.met_oscuro_devoured_count)
 				if is_instance_valid(UIManager.big_click_button):
 					UIManager.big_click_button.modulate = Color(randf(), randf(), randf())

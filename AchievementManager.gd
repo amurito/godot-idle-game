@@ -141,6 +141,13 @@ const DEFS := {
 		"trigger": "event", "event_name": "run_closed",
 		"conditions": [{"key": "click_count", "op": "<", "value": 50}],
 	},
+	"primer_click_letal": {
+		"name": "Primer Click Letal",
+		"desc": "Hacer un click que genere más de $10.000 de una vez.",
+		"tier": Tier.MICELIO, "secret": false, "toast": "small",
+		"trigger": "event", "event_name": "big_click",
+		"conditions": [{"key": "power", "op": ">=", "value": 10000.0}],
+	},
 
 	# ═══════════════ ESPORA (14) ═══════════════
 
@@ -247,6 +254,27 @@ const DEFS := {
 		"desc": "Las hifas emergen — alcanzar Hifas ≥ 0.5 por primera vez.",
 		"tier": Tier.ESPORA, "secret": false, "toast": "full",
 		"trigger": "threshold", "metric": "hifas", "target": 0.5,
+	},
+	"carnaval_iniciado": {
+		"name": "¡Que Comience el Carnaval!",
+		"desc": "Activar la ruta CARNAVAL DE MUTACIONES.",
+		"tier": Tier.ESPORA, "secret": false, "toast": "full",
+		"trigger": "event", "event_name": "post_tras_route",
+		"conditions": [{"key": "route", "op": "==", "value": "carnaval"}],
+	},
+	"reencarnado": {
+		"name": "El Eterno Retorno",
+		"desc": "Activar la ruta REENCARNACIÓN HEREDADA.",
+		"tier": Tier.ESPORA, "secret": false, "toast": "full",
+		"trigger": "event", "event_name": "post_tras_route",
+		"conditions": [{"key": "route", "op": "==", "value": "reencarnacion"}],
+	},
+	"vacio_iniciado": {
+		"name": "Hambre Cósmica",
+		"desc": "Activar la ruta VACÍO HAMBRIENTO.",
+		"tier": Tier.ESPORA, "secret": false, "toast": "full",
+		"trigger": "event", "event_name": "post_tras_route",
+		"conditions": [{"key": "route", "op": "==", "value": "vacio"}],
 	},
 
 	# ═══════════════ FRUTO (14) ═══════════════
@@ -445,6 +473,25 @@ const DEFS := {
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "organismo_total",
 	},
+	"depredador_total": {
+		"name": "Depredador Absoluto",
+		"desc": "Devorar 50 upgrades en una sola run de DEPREDADOR.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event_count", "event_name": "depredador_devour", "target": 50,
+		"progress_format": "{current} / {target} upgrades devorados",
+	},
+	"ascension_total": {
+		"name": "Ascensión Total",
+		"desc": "Trascender 5 veces.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "threshold", "metric": "trascendencia_count", "target": 5.0,
+	},
+	"dios_de_las_moscas": {
+		"name": "El Dios de las Moscas",
+		"desc": "Cerrar todos los finales posibles del juego.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "dios_de_las_moscas",
+	},
 	"ruta_homeorhesis": {
 		"name": "Homeorhesis",
 		"desc": "Cerrar una run por la ruta de Homeorhesis — evolución irreversible.",
@@ -548,6 +595,7 @@ func _ready() -> void:
 		"omega_inviolable":       _eval_omega_inviolable_cond,
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
 		"legado_absoluto":        _eval_legado_absoluto,
+		"dios_de_las_moscas":     _eval_dios_de_las_moscas,
 	}
 	_init_timers()
 
@@ -868,6 +916,20 @@ func _eval_legado_absoluto(_s: Dictionary) -> bool:
 			return false
 	return true
 
+const ALL_ENDINGS := [
+	"HOMEOSTASIS", "ALLOSTASIS", "HOMEORHESIS",
+	"HIPERASIMILACION", "ESPORULACION", "PARASITISMO", "SIMBIOSIS",
+	"METABOLISMO OSCURO", "COLAPSO DEPREDATORIO", "DEPREDADOR DE REALIDADES",
+	"POLIMORFÍA TOTAL", "DOMADOR DEL CAOS", "ASCESIS_PROFUNDA",
+	"SINGULARIDAD", "PANSPERMIA NEGRA", "MENTE COLMENA DISTRIBUIDA",
+]
+
+func _eval_dios_de_las_moscas(_s: Dictionary) -> bool:
+	for route in ALL_ENDINGS:
+		if not LegacyManager.endings_achieved.get(route, false):
+			return false
+	return true
+
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 
 func _check_meta_achievements() -> void:
@@ -875,6 +937,8 @@ func _check_meta_achievements() -> void:
 		unlock("cinco_legados")
 	if not is_unlocked("legado_absoluto") and _eval_legado_absoluto({}):
 		unlock("legado_absoluto")
+	if not is_unlocked("dios_de_las_moscas") and _eval_dios_de_las_moscas({}):
+		unlock("dios_de_las_moscas")
 	if not is_unlocked("reino_subterraneo") and _eval_reino_subterraneo({}):
 		unlock("reino_subterraneo")
 	if not is_unlocked("ultima_espora") and _eval_ultima_espora({}):
