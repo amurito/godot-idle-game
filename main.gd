@@ -8,6 +8,8 @@ const FUNGI_UI_SCENE = preload("res://fungi.tscn")
 var fungi_ui: Control
 
 var reactor_visual: Node = null
+var _use_3d_reactor: bool = true
+var reactor_3d: Node = null
 
 # NG+ Mente Colmena
 var mente_colmena_active := false
@@ -859,6 +861,9 @@ func _ready():
 			evo_choice_panel.visible = true
 			print("🚨 Recuperando elección de rama pendiente")
 
+	if _use_3d_reactor:
+		_init_reactor_3d()
+
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
 	var power := get_click_power()
@@ -872,12 +877,33 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.set_active_delta(power)
+	if _use_3d_reactor and is_instance_valid(reactor_3d):
+		reactor_3d.set_active_delta(power)
 
 	update_ui()
 	
 func register_reactor(rv: Node):
 	reactor_visual = rv
 	print("🧪 Reactor registrado:", rv)
+
+func _init_reactor_3d() -> void:
+	var viewport := get_node_or_null(
+		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer/Reactor3DViewport"
+	)
+	if not viewport:
+		push_warning("Reactor3D: SubViewport no encontrado, usando reactor 2D")
+		_use_3d_reactor = false
+		return
+	var ReactorScript := preload("res://Reactor3D.gd")
+	reactor_3d = ReactorScript.new()
+	viewport.add_child(reactor_3d)
+	$UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer.visible = true
+	# Ocultar el reactor 2D
+	var rv := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual")
+	if is_instance_valid(rv):
+		rv.visible = false
+		reactor_visual = rv
+	print("✅ Reactor3D inicializado")
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame
@@ -2111,6 +2137,8 @@ func _sync_reactor_color() -> void:
 		reactor_visual = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual
 		return
 	reactor_visual.set_tint(EvoManager.get_reactor_color())
+	if _use_3d_reactor and is_instance_valid(reactor_3d):
+		reactor_3d.set_tint(EvoManager.get_reactor_color())
 func update_buttons():
 	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):
 		if btn.has_method("update_appearance"):
