@@ -30,7 +30,7 @@ func _ready():
 		btn_continue.pressed.connect(_on_continue_pressed)
 	elif post_transcendence:
 		# Sin run activa pero con trascendencias: "Continuar" inicia nueva run con buffs cósmicos
-		btn_continue.text = "▶ Nueva Run (buffs cósmicos activos)"
+		btn_continue.text = EmojiToRichText.strip("▶ Nueva Run (buffs cósmicos activos)")
 		btn_continue.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		btn_continue.pressed.connect(_start_new_run)
 	else:
@@ -84,7 +84,7 @@ func _on_new_game_pressed():
 			+ "✦ Se PRESERVAN:\n  · Banco Cósmico (%d Ξ)\n  · Banco Genético (PL: %d)\n  · Rutas completadas\n\n"
 			+ "⚠ Se RESETEAN:\n  · Upgrades, dinero, mutaciones\n  · Progreso de la run actual"
 		) % [LegacyManager.esencia, LegacyManager.legacy_points]
-		dialog.get_ok_button().text = "▶ Iniciar"
+		dialog.get_ok_button().text = EmojiToRichText.strip("▶ Iniciar")
 		dialog.get_cancel_button().text = "Volver"
 		add_child(dialog)
 		dialog.popup_centered(Vector2(420, 280))
@@ -119,7 +119,7 @@ func _show_post_tras_picker() -> void:
 	center.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "⚡ CICLO #%d — ELIGE TU RUTA" % (LegacyManager.trascendencia_count + 1)
+	title.text = EmojiToRichText.strip("⚡ CICLO #%d -- ELIGE TU RUTA" % (LegacyManager.trascendencia_count + 1))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
@@ -177,7 +177,7 @@ func _show_post_tras_picker() -> void:
 		s_hover.bg_color = Color(route.color.r * 0.22, route.color.g * 0.22, route.color.b * 0.22, 0.98)
 		btn.add_theme_stylebox_override("hover", s_hover)
 
-		btn.text = "%s  %s\n%s" % [route.icon, route.name, route.desc]
+		btn.text = EmojiToRichText.strip("%s  %s\n%s" % [route.icon, route.name, route.desc])
 		btn.add_theme_color_override("font_color", route.color)
 		btn.add_theme_font_size_override("font_size", 13)
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -250,10 +250,10 @@ func _hard_reset() -> void:
 
 func _refresh_nav_badges() -> void:
 	var has_new_ach: bool = AchievementManager.has_unseen()
-	btn_achievements.text = ("★ LOGROS" if has_new_ach else "Logros")
+	btn_achievements.text = EmojiToRichText.strip("★ LOGROS" if has_new_ach else "Logros")
 
 	var has_new_buff: bool = LegacyManager.has_unseen_buff()
-	btn_legacy.text = ("★ BANCO GENÉTICO" if has_new_buff else "Banco Genético")
+	btn_legacy.text = EmojiToRichText.strip("★ BANCO GENÉTICO" if has_new_buff else "Banco Genético")
 
 func _on_achievements_pressed():
 	achievements_panel.visible = true
@@ -315,7 +315,7 @@ func _populate_legacy_items():
 			if col_has_items:
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
-			hdr.text = "── %s ──" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
 			hdr.add_theme_font_size_override("font_size", 12)
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 26
@@ -487,7 +487,8 @@ func _update_achievements_view():
 
 		t += "\n"
 
-	achievements_label.text = t
+	achievements_label.clear()
+	achievements_label.append_text(EmojiToRichText.rich(t))
 
 func _build_progress_str(id: String, def: Dictionary) -> String:
 	var trigger: String = def.get("trigger", "")
@@ -545,7 +546,7 @@ func _setup_trascendencia_ui() -> void:
 	# 3. Botón TRASCENDER (entre Legacy y Quit)
 	btn_trascendencia = Button.new()
 	btn_trascendencia.custom_minimum_size = Vector2(0, 45)
-	btn_trascendencia.text = "⚡ TRASCENDER"
+	btn_trascendencia.text = EmojiToRichText.strip("⚡ TRASCENDER")
 	btn_trascendencia.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	btn_trascendencia.add_theme_font_size_override("font_size", 16)
 	btn_trascendencia.pressed.connect(_on_trascender_pressed)
@@ -595,7 +596,7 @@ func _show_trascend_confirm_panel() -> void:
 	margin.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "⚡ TRASCENDENCIA ⚡"
+	title.text = EmojiToRichText.strip("⚡ TRASCENDENCIA ⚡")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 36)
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
@@ -617,7 +618,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(gate_title)
 
 	var gate_status := Label.new()
-	gate_status.text = LegacyManager.get_transcend_gate_status()
+	gate_status.text = EmojiToRichText.strip(LegacyManager.get_transcend_gate_status())
 	gate_status.add_theme_font_size_override("font_size", 13)
 	vbox.add_child(gate_status)
 
@@ -634,7 +635,7 @@ func _show_trascend_confirm_panel() -> void:
 
 	var reward := Label.new()
 	if can:
-		reward.text = "Ganás +%d Ξ (Esencia)\nPL actual: %d → convertido\nRutas únicas: %d × 5 Ξ\nTier bonus: +%d Ξ" % [
+		reward.text = "Ganás +%d Ξ (Esencia)\nPL actual: %d -> convertido\nRutas únicas: %d × 5 Ξ\nTier bonus: +%d Ξ" % [
 			esencia_gain,
 			LegacyManager.legacy_points,
 			LegacyManager.unique_endings_count(),
@@ -650,7 +651,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var warn := Label.new()
-	warn.text = "⚠ Al trascender se RESETEAN: upgrades, mutaciones, PL, buffs del Banco Genético.\n✦ Se PRESERVAN: Esencia (Ξ), Banco Cósmico, rutas ya completadas."
+	warn.text = EmojiToRichText.strip("[!] Al trascender se RESETEAN: upgrades, mutaciones, PL, buffs del Banco Genético.\n* Se PRESERVAN: Esencia (Ξ), Banco Cósmico, rutas ya completadas.")
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD
 	warn.add_theme_font_size_override("font_size", 12)
 	warn.add_theme_color_override("font_color", Color(0.85, 0.7, 0.5))
@@ -670,7 +671,7 @@ func _show_trascend_confirm_panel() -> void:
 	btn_row.add_child(btn_cancel)
 
 	var btn_confirm := Button.new()
-	btn_confirm.text = "⚡ CONFIRMAR TRASCENDENCIA ⚡" if can else "REQUISITOS NO CUMPLIDOS"
+	btn_confirm.text = EmojiToRichText.strip("⚡ CONFIRMAR TRASCENDENCIA ⚡" if can else "REQUISITOS NO CUMPLIDOS")
 	btn_confirm.custom_minimum_size = Vector2(280, 45)
 	btn_confirm.disabled = not can
 	btn_confirm.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))

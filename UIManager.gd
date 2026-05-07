@@ -66,6 +66,9 @@ var structural_omg_value     # OmgValue label
 var structural_pers_value    # PersValue label
 var structural_acc_value     # AccValue label
 
+
+
+
 func setup(ui_root: Control):
 	root = ui_root
 	scene = ui_root.get_parent()  # UIRoot (scene root) — contains HeaderBar as sibling
@@ -273,7 +276,7 @@ func _toggle_collapsible_panel(panel: Control, btn: Button, pressed: bool, label
 	if not panel: return
 
 	# Actualizar texto del botón con flecha
-	btn.text = ("▼ " + label if pressed else "▶ " + label)
+	btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + label)
 
 	# Animar visibilidad + modulate (para fade suave)
 	if pressed:
@@ -486,7 +489,7 @@ func build_evo_checklist(main: Node) -> String:
 		var tier := RunManager.homeostasis_tier_reached
 		# Tier 1 — HOMEOSTASIS
 		if tier == 0:
-			t += "[b][color=cyan]── Tier 1: HOMEOSTASIS ──[/color][/b]\n"
+			t += "[b][color=cyan]-- Tier 1: HOMEOSTASIS --[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
 			t += ch + "En banda ε (0.03–0.30)[/color]\n"
 			ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
@@ -498,7 +501,7 @@ func build_evo_checklist(main: Node) -> String:
 		# Tier 2 — ALLOSTASIS
 		elif tier == 1:
 			t += ok_color + "[x] Tier 1 HOMEOSTASIS completado[/color]\n"
-			t += "[b][color=aquamarine]── Tier 2: ALLOSTASIS ──[/color][/b]\n"
+			t += "[b][color=aquamarine]-- Tier 2: ALLOSTASIS --[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 3 else fail_color + "[ ] "
 			t += ch + "Perturbaciones (%d/3)[/color]\n" % RunManager.disturbances_survived
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 150.0 else fail_color + "[ ] "
@@ -513,7 +516,7 @@ func build_evo_checklist(main: Node) -> String:
 		# Tier 3 — HOMEORHESIS
 		elif tier == 2:
 			t += ok_color + "[x] Tier 1 + 2 completados[/color]\n"
-			t += "[b][color=gold]── Tier 3: HOMEORHESIS ──[/color][/b]\n"
+			t += "[b][color=gold]-- Tier 3: HOMEORHESIS --[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.extreme_shock_survived else fail_color + "[ ] "
 			t += ch + "Sobrevivir SHOCK EXTREMO (ε > 0.8)[/color]\n"
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 400.0 else fail_color + "[ ] "
@@ -984,7 +987,7 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		t += build_evo_checklist(main)
 	genome_summary_label.visible = true
 	genome_summary_label.clear()
-	genome_summary_label.append_text(t)
+	genome_summary_label.append_text(EmojiToRichText.rich(t))
 
 # =====================================================
 # BIFURCATION PANEL DATA BUILDER

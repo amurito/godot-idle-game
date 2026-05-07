@@ -214,7 +214,7 @@ func _update_met_oscuro_seal_button():
 	# PL escalonado según biomasa al momento del sellado
 	var bio := BiosphereEngine.biomasa
 	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
-	var seal_label := "🌑 SELLAR MET.OSCURO (+%d PL)" % pl_seal
+	var seal_label := EmojiToRichText.strip("🌑 SELLAR MET.OSCURO (+%d PL)" % pl_seal)
 
 	if _met_oscuro_seal_btn == null or not is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn = Button.new()
@@ -260,7 +260,7 @@ func _update_simbiosis_seal_button():
 		return
 	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn = Button.new()
-		_simbiosis_seal_btn.text = "🌱 SELLAR SIMBIOSIS (+4 PL)"
+		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 SELLAR SIMBIOSIS (+4 PL)")
 		_simbiosis_seal_btn.add_theme_font_size_override("font_size", 20)
 		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
@@ -418,7 +418,8 @@ func build_formula_values() -> String:
 # ===============================
 func update_click_stats_panel() -> void:
 	if UIManager.click_stats_label:
-		UIManager.click_stats_label.text = UIManager.update_click_stats_panel(self)
+		UIManager.click_stats_label.clear()
+		UIManager.click_stats_label.append_text(EmojiToRichText.rich(UIManager.update_click_stats_panel(self)))
 
 
 # =====================================================
@@ -527,7 +528,7 @@ func _on_upgrade_bought_actions(id: String) -> void:
 		"cognitive":
 			pass
 		"persistence":
-			StructuralModel.persistence_base = UpgradeManager.value("persistence") 
+			StructuralModel.persistence_base = UpgradeManager.value("persistence")
 			if not StructuralModel.persistence_upgrade_unlocked:
 				StructuralModel.persistence_upgrade_unlocked = true
 				add_lap("💾 Memoria Operativa: c₀ incrementado un 25% (1.75)")
@@ -676,7 +677,8 @@ func update_achievements_label():
 		]
 
 	if UIManager.system_achievements_label:
-		UIManager.system_achievements_label.text = t
+		UIManager.system_achievements_label.clear()
+		UIManager.system_achievements_label.append_text(EmojiToRichText.rich(t))
 
 
 # =====================================================
@@ -728,7 +730,7 @@ func _ready():
 	update_lap_toggle_button()
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
-		UIManager.export_run_button.text = "📤 Export run (disponible al cerrar run)"
+		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run (disponible al cerrar run)")
 
 	# Inicializar managers con referencia a main ANTES de update_ui()
 	RunManager.set_main(self)
@@ -770,7 +772,7 @@ func _ready():
 
 	# === CONTROLES MINIMALISTAS (SUPERIOR IZQUIERDA) ===
 	var menu_btn := Button.new()
-	menu_btn.text = "🏠 Menú"
+	menu_btn.text = EmojiToRichText.strip("🏠 Menú")
 	menu_btn.add_theme_font_size_override("font_size", 12)
 	menu_btn.pressed.connect(func():
 		print("💾 Guardando y volviendo al menú...")
@@ -780,7 +782,7 @@ func _ready():
 	bottom_left_panel.add_child(menu_btn)
 
 	var bios_btn := Button.new()
-	bios_btn.text = "🌱 Biosfera"
+	bios_btn.text = EmojiToRichText.strip("🌱 Biosfera")
 	bios_btn.toggle_mode = true
 	bios_btn.button_pressed = true
 	bios_btn.add_theme_font_size_override("font_size", 12)
@@ -792,14 +794,14 @@ func _ready():
 	bottom_left_panel.add_child(bios_btn)
 
 	var reset_btn := Button.new()
-	reset_btn.text = "⚠️ Reset"
+	reset_btn.text = EmojiToRichText.strip("⚠️ Reset")
 	reset_btn.modulate = Color(0.8, 0.4, 0.4)
 	reset_btn.add_theme_font_size_override("font_size", 10)
 	reset_btn.pressed.connect(SaveManager.delete_save_and_restart)
 	bottom_left_panel.add_child(reset_btn)
 	
 	var legacy_btn := Button.new()
-	legacy_btn.text = "🧬 Banco Genético"
+	legacy_btn.text = EmojiToRichText.strip("🧬 Banco Genético")
 	legacy_btn.add_theme_font_size_override("font_size", 11)
 	legacy_btn.pressed.connect(_on_legacy_pressed)
 	bottom_left_panel.add_child(legacy_btn)
@@ -858,6 +860,61 @@ func _ready():
 			dimmer.visible = true
 			evo_choice_panel.visible = true
 			print("🚨 Recuperando elección de rama pendiente")
+	if OS.get_name() == "HTML5":
+		print("🔄 HTML5 detectado - Reemplazando emojis...")
+		call_deferred("_replace_emojis_for_html5")
+		
+func _replace_emojis_for_html5():
+	print("✅ INICIANDO reemplazo de emojis...")
+	
+	# Reemplazar en todos los labels y botones
+	_replace_emojis_in_node(self)
+	print("✅ Reemplazo completado")
+
+func _replace_emojis_in_node(node: Node):
+	var replacements = {
+		"🍄": "[Hongo]",
+		"🔥": "[Fuego]",
+		"☣️": "[Peligro]",
+		"🕸️": "[Red]",
+		"🤝": "[Simb]",
+		"⚖️": "[Homeo]",
+		"🌱": "[Planta]",
+		"⚡": "[Rayo]",
+		"💜": "[Alo]",
+		"💎": "[HomeoR]",
+		"🌑": "[Oscuro]",
+		"☠️": "[Muerte]",
+		"💾": "[Disco]",
+		"🌿": "[Hoja]",
+		"🎭": "[Carnaval]",
+		"🌀": "[Tras]",
+		"⚱️": "[Reenc]",
+		"🕳️": "[Vacio]",
+		"🧠": "[Mente]",
+		"🚀": "[Cohete]",
+		"⚠️": "[!]",
+		"✅": "[OK]",
+		"✨": "[*]",
+		"🏁": "[Fin]",
+		"📤": "[Exp]",
+		"🔒": "[Bloq]",
+		"▶": "[>]",
+		"▼": "[v]",
+		"▲": "[^]",
+		"✓": "[v]",
+		"✗": "[x]",
+		"→": "[->]",
+		"↓": "[down]",
+		"↑": "[up]",
+	}
+	if node is Label or node is Button or node is RichTextLabel:
+		var text_property = node.text if node.has_method("get_text") else ""
+		for emoji in replacements:
+			if emoji in text_property:
+				node.text = text_property.replace(emoji, replacements[emoji])
+		for child in node.get_children():
+			_replace_emojis_in_node(child)
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
@@ -979,10 +1036,10 @@ func _on_logic_tick():
 		# check_depredador_final: colapso estructural bajo presión depredatoria
 		# Requiere al menos 1 devour para que no dispare en el primer frame
 		if EvoManager.met_oscuro_devoured_count >= 1 \
-				and StructuralModel.epsilon_runtime > 1.0 \
-				and BiosphereEngine.biomasa > 25.0 \
-				and EconomyManager.money < 500.0 \
-				and not RunManager.run_closed:
+			and StructuralModel.epsilon_runtime > 1.0 \
+			and BiosphereEngine.biomasa > 25.0 \
+			and EconomyManager.money < 500.0 \
+			and not RunManager.run_closed:
 			close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: el estrés estructural colapsó bajo presión depredatoria (+8 PL)")
 			return
 		depredador_tick += dt
@@ -1051,7 +1108,7 @@ func _on_logic_tick():
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.set_display_delta(power)
 		if mente_colmena_timer > 0.0 and not mente_colmena_active:
-			UIManager.big_click_button.text = "🧠 %d%%" % int(mente_colmena_timer / 180.0 * 100.0)
+			UIManager.big_click_button.text = EmojiToRichText.strip("🧠 %d%%" % int(mente_colmena_timer / 180.0 * 100.0))
 		else:
 			UIManager.big_click_button.text = "+%.1f" % power
 
@@ -1268,17 +1325,21 @@ func update_bifurcation_panel():
 		opt_colonization.visible = true
 		opt_symbiosis.visible = true
 
-		opt_homeostasis.find_child("Desc").text = data["homeostasis_text"]
+		opt_homeostasis.find_child("Icon").text = EmojiToRichText.strip("⚖️")
+		var _hd = opt_homeostasis.find_child("Desc")
+		_hd.clear(); _hd.append_text(EmojiToRichText.rich(data["homeostasis_text"]))
 		btn_homeostasis.text = "Equilibrar"
 		btn_homeostasis.disabled = not data["homeostasis_ready"]
 
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = "🕸️"
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["red_micelial_text"]
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = EmojiToRichText.strip("🕸️")
+		var _cd1 = evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc")
+		_cd1.clear(); _cd1.append_text(EmojiToRichText.rich(data["red_micelial_text"]))
 		btn_colonization.text = "Ramificar"
 		btn_colonization.disabled = not data["red_micelial_ready"]
 
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = "🌱"
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["simbiosis_text"]
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = EmojiToRichText.strip("🌱")
+		var _sd1 = evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc")
+		_sd1.clear(); _sd1.append_text(EmojiToRichText.rich(data["simbiosis_text"]))
 		btn_symbiosis.text = "Fusionar"
 		btn_symbiosis.disabled = not data["simbiosis_ready"]
 
@@ -1288,7 +1349,9 @@ func update_bifurcation_panel():
 		opt_colonization.visible = false
 		opt_symbiosis.visible = false
 
-		opt_homeostasis.find_child("Desc").text = data["allostasis_text"]
+		opt_homeostasis.find_child("Icon").text = EmojiToRichText.strip("💎")
+		var _ad = opt_homeostasis.find_child("Desc")
+		_ad.clear(); _ad.append_text(EmojiToRichText.rich(data["allostasis_text"]))
 		btn_homeostasis.text = "¡EVOLUCIONAR!" if data["allostasis_ready"] else "[REQUISITOS NO MET]"
 		btn_homeostasis.disabled = not data["allostasis_ready"]
 		btn_homeostasis.modulate = Color(0, 1, 1)  # Cyan
@@ -1299,13 +1362,15 @@ func update_bifurcation_panel():
 		opt_colonization.visible = true
 		opt_symbiosis.visible = true
 
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = "🌿"
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["colonization_text"]
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = EmojiToRichText.strip("🌿")
+		var _cd2 = evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc")
+		_cd2.clear(); _cd2.append_text(EmojiToRichText.rich(data["colonization_text"]))
 		btn_colonization.text = "Colonizar"
 		btn_colonization.disabled = not data["colonization_ready"]
 
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = "💾"
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["symbiosis_text"]
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = EmojiToRichText.strip("💾")
+		var _sd2 = evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc")
+		_sd2.clear(); _sd2.append_text(EmojiToRichText.rich(data["symbiosis_text"]))
 		btn_symbiosis.disabled = not data["symbiosis_ready"]
 		btn_symbiosis.text = "Integrar Hardware [req. Cont. 2]" if not data["symbiosis_ready"] else "Integrar Hardware"
 
@@ -1337,34 +1402,34 @@ func update_fungal_cycle_bar() -> void:
 				btn_p.disabled = not puede_iniciar
 				if EvoManager.primordio_active:
 					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					btn_p.text = "🟡 Primordio activo — %.0fs" % t_left
+					btn_p.text = EmojiToRichText.strip("🟡 Primordio activo — %.0fs" % t_left)
 					btn_p.disabled = true
 				elif puede_iniciar:
 					var costo := 20.0 * (1.0 + EvoManager.primordio_abort_count * 0.2)
-					btn_p.text = "🟡 Iniciar Primordio (%.0f%% micelio)" % costo
+					btn_p.text = EmojiToRichText.strip("🟡 Iniciar Primordio (%.0f%% micelio)" % costo)
 				else:
-					btn_p.text = "🟡 Iniciar Primordio (micelio < 60%%)"
+					btn_p.text = EmojiToRichText.strip("🟡 Iniciar Primordio (micelio < 60%%)")
 			else:
 				btn_p.visible = false
 		
 		# --- Botón Final (Seta o Núcleo o Panspermia) ---
-		if is_instance_valid(btn_f): 
+		if is_instance_valid(btn_f):
 			var show_panspermia = LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION and EvoManager.primordio_active
 			btn_f.visible = EvoManager.seta_formada or EvoManager.nucleo_conciencia or show_panspermia
 			btn_f.disabled = false
 			
 			if EvoManager.nucleo_conciencia:
-				btn_f.text = "⚡ CONECTAR SINGULARIDAD (Final)"
+				btn_f.text = EmojiToRichText.strip("⚡ CONECTAR SINGULARIDAD (Final)")
 				btn_f.modulate = Color(0.1, 1.0, 1.0) # Cian neón
 			elif EvoManager.seta_formada:
-				btn_f.text = "🔵 DISPERSAR ESPORAS (Final)"
+				btn_f.text = EmojiToRichText.strip("🔵 DISPERSAR ESPORAS (Final)")
 				btn_f.modulate = Color(0.4, 1.0, 0.2) # Verde neón
 			elif show_panspermia:
 				if EconomyManager.money >= 100000.0:
-					btn_f.text = "🚀 PANSPERMIA NEGRA ($100k) (Final)"
+					btn_f.text = EmojiToRichText.strip("🚀 PANSPERMIA NEGRA ($100k) (Final)")
 					btn_f.modulate = Color(0.8, 0.2, 1.0) # Magenta brillante
 				else:
-					btn_f.text = "🚀 REQUIERE $100k PARA PANSPERMIA"
+					btn_f.text = EmojiToRichText.strip("🚀 REQUIERE $100k PARA PANSPERMIA")
 					btn_f.disabled = true
 					btn_f.modulate = Color(0.4, 0.1, 0.5)
 			
@@ -1435,16 +1500,16 @@ func _on_btn_symbiosis_pressed() -> void:
 func _on_branch_selected(branch: int):
 	print("🟢 SELECCIÓN DE RAMA DETECTADA: ", branch)
 	EvoManager.red_branch_selected = branch
-	if is_instance_valid(dimmer): 
+	if is_instance_valid(dimmer):
 		dimmer.visible = false
 		dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if is_instance_valid(evo_choice_panel): 
+	if is_instance_valid(evo_choice_panel):
 		evo_choice_panel.visible = false
 		evo_choice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	if branch == EvoManager.RedBranch.COLONIZATION:
 		LogManager.add("🟢 RAMA ELEGIDA: COLONIZACIÓN INVASIVA", self)
-		EconomyManager.mutation_auto_factor *= 1.5 
+		EconomyManager.mutation_auto_factor *= 1.5
 	elif branch == EvoManager.RedBranch.SYMBIOSIS:
 		LogManager.add("🔵 RAMA ELEGIDA: SIMBIOSIS MECÁNICA", self)
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
@@ -1507,7 +1572,7 @@ func activate_mente_colmena():
 	mente_colmena_active = true
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.disabled = true
-		UIManager.big_click_button.text = "🧠 AUTO-OVERRIDE"
+		UIManager.big_click_button.text = EmojiToRichText.strip("🧠 AUTO-OVERRIDE")
 		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
 
 	if not LegacyManager.get_buff_value("mente_colmena"):
@@ -1562,6 +1627,10 @@ func _mente_colmena_auto_buy() -> void:
 		update_ui()
 
 func _on_legacy_pressed():
+	var lp_title = legacy_panel.find_child("Title")
+	if lp_title is RichTextLabel:
+		lp_title.clear()
+		lp_title.append_text(EmojiToRichText.rich("[center]🧬 Banco Genético (Plásmidos)[/center]"))
 	legacy_panel.visible = true
 	$DimmerBackground.visible = true
 	var vp := get_viewport_rect()
@@ -1622,7 +1691,7 @@ func _refresh_legacy_store():
 			if col_has_items:
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
-			hdr.text = "── %s ──" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
 			hdr.add_theme_font_size_override("font_size", 11)
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 22
@@ -1924,7 +1993,7 @@ func _input(event):
 
 		# Atajos de teclado 1-9 para comprar upgrades
 		const HOTKEY_UPGRADES := ["click", "auto", "trueque", "click_mult", "auto_mult",
-								  "trueque_net", "specialization", "cognitive", "accounting"]
+			"trueque_net", "specialization", "cognitive", "accounting"]
 		var kc :int= event.keycode
 		if kc >= KEY_1 and kc <= KEY_9:
 			var idx :int= kc - KEY_1  # 0-based
@@ -1970,7 +2039,7 @@ func unlock_accounting():
 	add_lap("🏛️ Institución desbloqueada — Contabilidad Básica")
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
-	on_institutions_unlocked()	
+	on_institutions_unlocked()
 
 # Handled via UpgradeManager now
 
@@ -1987,7 +2056,7 @@ func format_time(t: float) -> String:
 func update_epsilon_sticky():
 	if not UIManager.epsilon_sticky_label:
 		return
-	UIManager.epsilon_sticky_label.text = UIManager.build_epsilon_sticky_text(self)
+	UIManager.epsilon_sticky_label.text = EmojiToRichText.strip(UIManager.build_epsilon_sticky_text(self))
 
 func get_system_phase() -> String:
 	return UIManager.get_system_phase(StructuralModel.omega)
@@ -2027,7 +2096,8 @@ func on_institutions_unlocked():
 func update_core_labels():
 	UIManager.update_money(EconomyManager.money)
 	if UIManager.formula_label:
-		UIManager.formula_label.text = build_formula_text()
+		UIManager.formula_label.clear()
+		UIManager.formula_label.append_text(EmojiToRichText.rich(build_formula_text()))
 	
 	update_click_stats_panel()
 
@@ -2074,7 +2144,8 @@ func update_lab_metrics():
 		var txt := act_col + "▲ ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
 		txt += pas_col + "▼ PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
 		txt += "[color=#555555][%s][/color]" % bar
-		UIManager.sys_active_passive_label.text = txt
+		UIManager.sys_active_passive_label.clear()
+		UIManager.sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
 
 	# Distribución por fuente — colored bar
 	if UIManager.sys_breakdown_label:
@@ -2095,7 +2166,8 @@ func update_lab_metrics():
 		txt += "[color=#44aaff]● Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
 		txt += "[color=#00ffcc]● Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
 		txt += "[color=#555555][%s][/color]" % bar
-		UIManager.sys_breakdown_label.text = txt
+		UIManager.sys_breakdown_label.clear()
+		UIManager.sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
 
 func _sync_reactor_color() -> void:
 	# Especial: Bloqueo de Escalado Alostático si no viene de Homeostasis
@@ -2163,7 +2235,8 @@ func update_ui():
 	if institutions_unlocked or UpgradeManager.level("accounting") >= 1:
 		if UIManager.institution_panel_label:
 			UIManager.institution_panel_label.visible = true
-			UIManager.institution_panel_label.text = UIManager.build_institution_panel_text(self)
+			UIManager.institution_panel_label.clear()
+			UIManager.institution_panel_label.append_text(EmojiToRichText.rich(UIManager.build_institution_panel_text(self)))
 
 	if StructuralModel.institution_accounting_unlocked:
 		pass # Los botones genéricos se encargan de visibilidad
@@ -2179,7 +2252,7 @@ func update_ui():
 		elif EvoManager.mutation_parasitism:
 			btn_evolve.visible = true
 			btn_evolve.disabled = true
-			btn_evolve.text = "🔒 MUTACIÓN BLOQUEADA"
+			btn_evolve.text = EmojiToRichText.strip("🔒 MUTACIÓN BLOQUEADA")
 			btn_evolve.modulate = Color(1.0, 0.4, 0.2) # Naranja parásito
 		else:
 			var any_tier1 = EvoManager.is_any_latent_tier1()
@@ -2187,7 +2260,7 @@ func update_ui():
 
 			btn_evolve.visible = any_tier1 or any_tier2
 			btn_evolve.disabled = false
-			btn_evolve.text = "🧬 INICIAR MUTACIÓN"
+			btn_evolve.text = EmojiToRichText.strip("🧬 INICIAR MUTACIÓN")
 			if any_tier2:
 				btn_evolve.modulate = Color(0, 1, 1) # Cyan para Allostasis
 			else:
@@ -2196,7 +2269,7 @@ func update_ui():
 	# Habilitar Export Run al cerrar la run
 	if RunManager.run_closed and UIManager.export_run_button:
 		UIManager.export_run_button.disabled = false
-		UIManager.export_run_button.text = "📤 Export run"
+		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run")
 
 
 # =====================================================

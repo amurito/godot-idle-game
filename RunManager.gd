@@ -508,7 +508,7 @@ func _show_evolution_button(target: String):
 		main.get_node("UIRootContainer/RightPanel").add_child(evolution_button)
 		main.get_node("UIRootContainer/RightPanel").move_child(evolution_button, 0)
 
-	evolution_button.text = "🧬 SELLAR FINAL (" + target + ")"
+	evolution_button.text = EmojiToRichText.strip("🧬 SELLAR FINAL (" + target + ")")
 	match target:
 		"HOMEOSTASIS":
 			evolution_button.add_theme_color_override("font_color", Color.CYAN)

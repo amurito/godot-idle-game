@@ -63,7 +63,7 @@ func update_appearance(current_money: float) -> void:
 	visible = state.unlocked
 	
 	if def.one_shot and state.level > 0:
-		text = def.label + "\n✓ ADQUIRIDO"
+		text = EmojiToRichText.strip(def.label + "\n✓ ADQUIRIDO")
 		disabled = true
 		_apply_acquired_style()
 		return

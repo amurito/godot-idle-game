@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://c875qgxc4e6rx"]
+[gd_scene load_steps=11 format=3 uid="uid://rqldeufooy01"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://c3i7d0q3n8d5e" path="res://fungi_theme.tres" id="2_0xm2m"]
@@ -76,7 +76,7 @@ theme_override_constants/separation = 8
 [node name="MoneyIcon" type="Label" parent="HeaderBar/HeaderContent/MoneyDisplay"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "💰"
+text = "$"
 
 [node name="MoneyValue" type="Label" parent="HeaderBar/HeaderContent/MoneyDisplay"]
 unique_name_in_owner = true
@@ -362,7 +362,7 @@ script = ExtResource("7_upgrade")
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Memoria Operativa (única)
-Persistencia → 1.6
+Persistencia -> 1.6
 Costo: $500"
 script = ExtResource("7_upgrade")
 
@@ -435,7 +435,7 @@ custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 toggle_mode = true
-text = "▶ Genoma Fúngico + Próxima Mutación"
+text = "> Genoma Fúngico + Próxima Mutación"
 
 [node name="GenomeScroll" type="ScrollContainer" parent="UIRootContainer/CenterColumn/MutationPanel"]
 visible = false
@@ -497,7 +497,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 11
 toggle_mode = true
 button_pressed = true
-text = "▼ Economía"
+text = "v Economía"
 flat = true
 alignment = 0
 
@@ -538,7 +538,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 11
 toggle_mode = true
 button_pressed = true
-text = "▼ Estructura"
+text = "v Estructura"
 flat = true
 alignment = 0
 
@@ -572,7 +572,7 @@ theme_override_font_sizes/font_size = 11
 [node name="PersKey" type="Label" parent="UIRootContainer/RightPanel/StructuralMetricsPanel/StructuralContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
-text = "c₀ persist.:"
+text = "c0 persist.:"
 
 [node name="PersValue" type="Label" parent="UIRootContainer/RightPanel/StructuralMetricsPanel/StructuralContent"]
 unique_name_in_owner = true
@@ -634,12 +634,13 @@ text = "
 layout_mode = 2
 size_flags_vertical = 1
 
-[node name="LapLogLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+[node name="LapLogLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 1
-theme_override_font_sizes/font_size = 11
-autowrap_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="LapMarkersLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
@@ -658,9 +659,11 @@ size_flags_vertical = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="SystemAchievementsLabel" type="Label" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
+[node name="SystemAchievementsLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 1
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="InstitutionPanelLabel" type="RichTextLabel" parent="UIRootContainer/RightPanel/ScrollContainer/VBoxContainer"]
 visible = false
@@ -758,7 +761,6 @@ theme_override_constants/separation = 12
 [node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "⚖️"
 horizontal_alignment = 1
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
@@ -789,7 +791,6 @@ theme_override_constants/separation = 12
 [node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "🟢"
 horizontal_alignment = 1
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
@@ -820,7 +821,6 @@ theme_override_constants/separation = 12
 [node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "🔵"
 horizontal_alignment = 1
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
@@ -870,11 +870,13 @@ theme_override_constants/margin_bottom = 15
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="LegacyPanel/Margin/VBox"]
+[node name="Title" type="RichTextLabel" parent="LegacyPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "🧬 Banco Genético (Plásmidos)"
-horizontal_alignment = 1
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
 [node name="PLLabel" type="Label" parent="LegacyPanel/Margin/VBox"]
 unique_name_in_owner = true
