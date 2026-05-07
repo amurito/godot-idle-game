@@ -166,7 +166,7 @@ func _process(delta: float) -> void:
 	pulse = max(pulse - delta * PULSE_DECAY, 0.0)
 
 	# Color con estrés (rojo con epsilon alto)
-	var stress := clamp(epsilon * 1.5, 0.0, 1.0)
+	var stress: float = clamp(epsilon * 1.5, 0.0, 1.0)
 	var final_color := target_tint.lerp(Color(1.0, 0.2, 0.2), stress)
 	_apply_color(final_color)
 
@@ -175,7 +175,7 @@ func _process(delta: float) -> void:
 	glow_mat.emission_energy_multiplier = 0.5 + pulse * 1.5 + epsilon * 1.2
 
 	# Partículas escalan con biomasa y epsilon (usando amount_ratio para no reiniciar el sistema)
-	var ratio := clamp((biomasa * 0.08 + epsilon * 0.8 + 0.1), 0.05, 1.0)
+	var ratio: float = clamp((biomasa * 0.08 + epsilon * 0.8 + 0.1), 0.05, 1.0)
 	particles.amount_ratio = ratio
 	particles.speed_scale = 0.6 + epsilon * 1.5 + pulse * 1.0
 
