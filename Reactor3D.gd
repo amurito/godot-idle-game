@@ -1,23 +1,20 @@
 extends Node3D
 
 # ============================================================
-# REACTOR 3D — v3.0  "core"
-# El núcleo ES el reactor — esfera que crece con el poder
-# Core PER_PIXEL (specular 3D) + halo aditivo suave + partículas
+# REACTOR 3D — v3.1  "core"
+# Esfera que crece con el poder — cámara cerca, sin halo (bloom natural)
 # ============================================================
 
-const BASE_SCALE       := 0.10   # empieza muy pequeño → crecimiento visible de 1→1000
-const SCALE_LOG_FACTOR := 0.30   # crecimiento más agresivo que el 2D
+const BASE_SCALE       := 0.10
+const SCALE_LOG_FACTOR := 0.30
 const MAX_SCALE        := 4.0
-const PULSE_DECAY      := 5.0
-const PULSE_STRENGTH   := 0.35
+const PULSE_DECAY      := 4.0
+const PULSE_STRENGTH   := 0.28
 
 var core:      MeshInstance3D
-var glow_halo: MeshInstance3D    # esfera difusa aditiva — el resplandor alrededor
 var particles: GPUParticles3D
 var p_mat:     StandardMaterial3D
 var core_mat:  StandardMaterial3D
-var halo_mat:  StandardMaterial3D
 
 var target_scale:  float = BASE_SCALE
 var current_scale: float = BASE_SCALE
@@ -37,64 +34,53 @@ func _ready() -> void:
 func _build_environment() -> void:
 	var env := Environment.new()
 	env.background_mode  = Environment.BG_COLOR
-	env.background_color = Color(0.0, 0.0, 0.0, 0.0)  # transparente
+	env.background_color = Color(0.0, 0.0, 0.0, 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color  = Color(0.04, 0.04, 0.12)
-	env.ambient_light_energy = 0.25
+	env.ambient_light_color  = Color(0.08, 0.08, 0.18)
+	env.ambient_light_energy = 0.5   # más ambiente → color visible aunque emisión sea baja
 	env.glow_enabled       = true
-	env.glow_bloom         = 0.35
-	env.glow_intensity     = 2.2
-	env.glow_strength      = 1.6
-	env.glow_hdr_threshold = 0.3
+	env.glow_bloom         = 0.30
+	env.glow_intensity     = 1.8
+	env.glow_strength      = 1.4
+	env.glow_hdr_threshold = 0.35
 	env.tonemap_mode       = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white      = 1.3
+	env.tonemap_white      = 1.6     # más headroom → tints no se saturan a blanco
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 
 func _build_camera() -> void:
-	# Cerca y fov amplio → esfera ocupa la mayor parte del viewport cuando crece
+	# Cámara muy cerca + FOV amplio → esfera ocupa casi todo el viewport al crecer
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 1.8, 4.2)
-	cam.fov = 58.0
+	cam.position = Vector3(0.0, 1.2, 2.8)
+	cam.fov = 68.0
 	add_child(cam)
 	cam.look_at(Vector3.ZERO, Vector3.UP)
 
 func _build_lights() -> void:
-	# Luz asimétrica — suficiente para el highlight 3D sin blanquear el color
+	# Key moderada — suficiente para el highlight 3D sin saturar a blanco
 	var key := OmniLight3D.new()
-	key.position       = Vector3(3.5, 2.0, 2.0)
-	key.light_energy   = 3.0
-	key.light_specular = 1.5
-	key.omni_range     = 20.0
+	key.position       = Vector3(3.0, 1.5, 1.5)
+	key.light_energy   = 2.5
+	key.light_specular = 1.2
+	key.omni_range     = 16.0
 	add_child(key)
-	# Contraluz suave — el lado oscuro no es negro puro
+	# Fill suave
 	var fill := OmniLight3D.new()
-	fill.position     = Vector3(-2.0, -1.0, 2.0)
-	fill.light_energy = 0.7
-	fill.omni_range   = 12.0
+	fill.position     = Vector3(-2.0, -1.0, 1.5)
+	fill.light_energy = 0.6
+	fill.omni_range   = 10.0
 	add_child(fill)
-	# Luz inferior tenue — más richeza de color
+	# Rim inferior — evita negro puro en la parte de abajo
 	var rim := OmniLight3D.new()
-	rim.position     = Vector3(0.0, -3.0, 1.0)
-	rim.light_energy = 0.4
-	rim.omni_range   = 10.0
+	rim.position     = Vector3(0.0, -2.5, 0.8)
+	rim.light_energy = 0.35
+	rim.omni_range   = 8.0
 	add_child(rim)
 
 func _build_core() -> void:
-	# Halo difuso — esfera grande aditiva, da el "resplandor de calor"
-	var gs := SphereMesh.new()
-	gs.radius = 1.10
-	gs.height  = 2.20
-	gs.radial_segments = 20
-	gs.rings   = 10
-	glow_halo = MeshInstance3D.new()
-	glow_halo.mesh = gs
-	add_child(glow_halo)
-
-	# Core — esfera alta resolución con highlight especular 3D
 	var sm := SphereMesh.new()
-	sm.radius = 0.85   # radio mayor → llena el área del botón al crecer
+	sm.radius = 0.85
 	sm.height  = 1.70
 	sm.radial_segments = 64
 	sm.rings   = 32
@@ -118,7 +104,7 @@ func _build_particles() -> void:
 
 	var pm := ParticleProcessMaterial.new()
 	pm.emission_shape         = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	pm.emission_sphere_radius = 0.7
+	pm.emission_sphere_radius = 0.9
 	pm.direction              = Vector3(0.0, 1.0, 0.0)
 	pm.spread                 = 65.0
 	pm.initial_velocity_min   = 0.3
@@ -138,24 +124,14 @@ func _build_particles() -> void:
 	add_child(particles)
 
 func _setup_materials() -> void:
-	# Halo: UNSHADED aditivo, muy transparente — solo emisión suave
-	halo_mat = StandardMaterial3D.new()
-	halo_mat.shading_mode              = BaseMaterial3D.SHADING_MODE_UNSHADED
-	halo_mat.emission_enabled          = true
-	halo_mat.emission_energy_multiplier = 0.4
-	halo_mat.transparency              = BaseMaterial3D.TRANSPARENCY_ALPHA
-	halo_mat.blend_mode                = BaseMaterial3D.BLEND_MODE_ADD
-	glow_halo.material_override        = halo_mat
-
-	# Core: PER_PIXEL — metallic bajo para que el tinte de color domine sobre el specular blanco
+	# PER_PIXEL con metallic moderado — highlight 3D visible, tint de color dominante
 	core_mat = StandardMaterial3D.new()
 	core_mat.shading_mode              = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	core_mat.metallic                  = 0.15   # bajo → specular suave, color más saturado
-	core_mat.roughness                 = 0.45   # alto → specular difuso, menos blanco
+	core_mat.metallic                  = 0.25
+	core_mat.roughness                 = 0.40
 	core_mat.emission_enabled          = true
-	core_mat.emission_energy_multiplier = 1.5
+	core_mat.emission_energy_multiplier = 0.9  # bajo → el albedo/diffuse domina el color
 	core.material_override             = core_mat
-
 	_apply_color(target_tint)
 
 # ---- API pública ----
@@ -166,8 +142,6 @@ func set_active_delta(power: float) -> void:
 	target_scale = clamp(target_scale, BASE_SCALE, MAX_SCALE)
 
 func sync_power(power: float) -> void:
-	# Sincroniza el tamaño con el power actual sin disparar el pulso de click.
-	# Llamado cada frame desde main.gd para que el reactor refleje siempre el poder correcto.
 	target_scale = BASE_SCALE + log(1.0 + power) * SCALE_LOG_FACTOR
 	target_scale = clamp(target_scale, BASE_SCALE, MAX_SCALE)
 
@@ -183,15 +157,12 @@ func _process(delta: float) -> void:
 	target_tint = EvoManager.get_reactor_color()
 
 	current_scale = lerp(current_scale, target_scale * seta_bonus, 0.12)
-	var display_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.08
+	var display_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.06
 
-	# Escalar — el core crece, el halo lo rodea siempre 1.3×
-	core.scale      = Vector3(display_s, display_s, display_s)
-	glow_halo.scale = Vector3(display_s * 1.30, display_s * 1.30, display_s * 1.30)
+	core.scale = Vector3(display_s, display_s, display_s)
 
-	# Rotar core — el highlight especular se mueve → se confirma 3D
-	core.rotate_y(delta * 0.6)
-	glow_halo.rotate_y(delta * 0.15)
+	# Rotar → highlight especular se mueve = confirma 3D
+	core.rotate_y(delta * 0.55)
 
 	pulse = max(pulse - delta * PULSE_DECAY, 0.0)
 
@@ -199,16 +170,15 @@ func _process(delta: float) -> void:
 	var final_color := target_tint.lerp(Color(1.0, 0.2, 0.2), stress)
 	_apply_color(final_color)
 
-	# Emisión crece con pulso y estrés
-	core_mat.emission_energy_multiplier = 2.0 + pulse * 8.0  + epsilon * 2.0
-	halo_mat.emission_energy_multiplier = 0.4 + pulse * 2.0  + epsilon * 0.8
+	# Emisión sube POCO con el pulso — así no satura a blanco
+	core_mat.emission_energy_multiplier = 0.9 + pulse * 1.8 + epsilon * 1.2
 
-	# Partículas — escalan el radio de emisión con el core
+	# Partículas orbitan justo fuera de la esfera
 	var pm := particles.process_material as ParticleProcessMaterial
-	pm.emission_sphere_radius = 0.68 * display_s
+	pm.emission_sphere_radius = 0.88 * display_s
 	var ratio: float = clamp(biomasa * 0.1 + epsilon * 0.7 + 0.15, 0.08, 1.0)
 	particles.amount_ratio = ratio
-	particles.speed_scale  = 0.9 + epsilon * 1.2 + pulse * 0.8
+	particles.speed_scale  = 0.9 + epsilon * 1.2 + pulse * 0.6
 
 # ---- Internals ----
 
@@ -216,9 +186,6 @@ func _apply_color(c: Color) -> void:
 	if core_mat:
 		core_mat.albedo_color = c
 		core_mat.emission     = c
-	if halo_mat:
-		halo_mat.albedo_color = Color(c.r, c.g, c.b, 0.08)
-		halo_mat.emission     = c
 	if p_mat:
 		p_mat.emission     = c
 		p_mat.albedo_color = c

@@ -276,7 +276,8 @@ stretch = true
 
 [node name="Reactor3DViewport" type="SubViewport" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer"]
 handle_input_locally = false
-render_target_update_mode = 3
+size = Vector2i(320, 140)
+render_target_update_mode = 0
 
 [node name="SporulationFinalButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
 unique_name_in_owner = true
