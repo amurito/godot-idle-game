@@ -952,6 +952,8 @@ func _init_reactor_3d() -> void:
 		return
 	# Godot resetea render_target_update_mode=0 al guardar la escena — forzarlo en código
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	# Fondo transparente → el reactor flota sin rectángulo azul
+	viewport.transparent_bg = true
 	var ReactorScript := preload("res://Reactor3D.gd")
 	reactor_3d = ReactorScript.new()
 	viewport.add_child(reactor_3d)
