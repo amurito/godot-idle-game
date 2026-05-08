@@ -955,7 +955,11 @@ func _init_reactor_3d() -> void:
 	var ReactorScript := preload("res://Reactor3D.gd")
 	reactor_3d = ReactorScript.new()
 	viewport.add_child(reactor_3d)
-	$UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer.visible = true
+	var container := viewport.get_parent() as SubViewportContainer
+	# stretch=false hace que _input() retorne inmediatamente → los clicks llegan al Button padre
+	container.stretch = false
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.visible = true
 	# Ocultar el reactor 2D
 	var rv := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual")
 	if is_instance_valid(rv):
