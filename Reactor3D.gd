@@ -176,14 +176,12 @@ func _setup_materials() -> void:
 	glow_mat.emission_energy_multiplier = 0.35
 	glow.material_override = glow_mat
 
-	# Anillos: aditivos y brillantes
+	# Anillos: opacos con emisión fuerte — cortan el bloom en lugar de sumarse
 	for ring: MeshInstance3D in rings:
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.emission_enabled = true
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-		mat.emission_energy_multiplier = 2.0
+		mat.emission_energy_multiplier = 3.5
 		ring.material_override = mat
 
 	_apply_color(target_tint)
@@ -204,6 +202,8 @@ func _process(delta: float) -> void:
 	var epsilon: float = StructuralModel.epsilon_runtime
 	var biomasa: float = BiosphereEngine.biomasa
 	var seta_bonus: float = 1.25 if EvoManager.seta_formada else 1.0
+	# Leer color directo de EvoManager — no depende de set_tint() externo
+	target_tint = EvoManager.get_reactor_color()
 
 	# Escala suave
 	current_scale = lerp(current_scale, target_scale * seta_bonus, 0.12)
@@ -255,9 +255,9 @@ func _apply_color(c: Color) -> void:
 	p_mat.emission = c
 	p_mat.albedo_color = c
 	(particles.process_material as ParticleProcessMaterial).color = c
-	# Anillos
+	# Anillos (opacos — albedo + emission sólidos)
 	for ring: MeshInstance3D in rings:
 		var mat := ring.material_override as StandardMaterial3D
 		if mat:
-			mat.albedo_color = Color(c.r, c.g, c.b, 0.7)
+			mat.albedo_color = c
 			mat.emission = c
