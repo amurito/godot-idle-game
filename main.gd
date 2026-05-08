@@ -1145,6 +1145,9 @@ func _on_logic_tick():
 	var power := get_click_power()
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.set_display_delta(power)
+		# Sincronizar tamaño del reactor 3D con el power actual (sin pulso de click)
+		if _use_3d_reactor and is_instance_valid(reactor_3d):
+			reactor_3d.sync_power(power)
 		if mente_colmena_timer > 0.0 and not mente_colmena_active:
 			UIManager.big_click_button.text = EmojiToRichText.strip("🧠 %d%%" % int(mente_colmena_timer / 180.0 * 100.0))
 		elif not _use_3d_reactor:

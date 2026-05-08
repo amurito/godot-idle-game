@@ -61,11 +61,11 @@ func _build_camera() -> void:
 	cam.look_at(Vector3.ZERO, Vector3.UP)
 
 func _build_lights() -> void:
-	# Luz asimétrica fuerte — el highlight especular se mueve al rotar
+	# Luz asimétrica — suficiente para el highlight 3D sin blanquear el color
 	var key := OmniLight3D.new()
 	key.position       = Vector3(3.5, 2.0, 2.0)
-	key.light_energy   = 6.0
-	key.light_specular = 3.5
+	key.light_energy   = 3.0
+	key.light_specular = 1.5
 	key.omni_range     = 20.0
 	add_child(key)
 	# Contraluz suave — el lado oscuro no es negro puro
@@ -84,8 +84,8 @@ func _build_lights() -> void:
 func _build_core() -> void:
 	# Halo difuso — esfera grande aditiva, da el "resplandor de calor"
 	var gs := SphereMesh.new()
-	gs.radius = 0.85
-	gs.height  = 1.70
+	gs.radius = 1.10
+	gs.height  = 2.20
 	gs.radial_segments = 20
 	gs.rings   = 10
 	glow_halo = MeshInstance3D.new()
@@ -94,8 +94,8 @@ func _build_core() -> void:
 
 	# Core — esfera alta resolución con highlight especular 3D
 	var sm := SphereMesh.new()
-	sm.radius = 0.65
-	sm.height  = 1.30
+	sm.radius = 0.85   # radio mayor → llena el área del botón al crecer
+	sm.height  = 1.70
 	sm.radial_segments = 64
 	sm.rings   = 32
 	core = MeshInstance3D.new()
@@ -147,13 +147,13 @@ func _setup_materials() -> void:
 	halo_mat.blend_mode                = BaseMaterial3D.BLEND_MODE_ADD
 	glow_halo.material_override        = halo_mat
 
-	# Core: PER_PIXEL metallic — el highlight especular confirma que es 3D
+	# Core: PER_PIXEL — metallic bajo para que el tinte de color domine sobre el specular blanco
 	core_mat = StandardMaterial3D.new()
 	core_mat.shading_mode              = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	core_mat.metallic                  = 0.65
-	core_mat.roughness                 = 0.15
+	core_mat.metallic                  = 0.15   # bajo → specular suave, color más saturado
+	core_mat.roughness                 = 0.45   # alto → specular difuso, menos blanco
 	core_mat.emission_enabled          = true
-	core_mat.emission_energy_multiplier = 2.0
+	core_mat.emission_energy_multiplier = 1.5
 	core.material_override             = core_mat
 
 	_apply_color(target_tint)
@@ -162,6 +162,12 @@ func _setup_materials() -> void:
 
 func set_active_delta(power: float) -> void:
 	pulse = 1.0
+	target_scale = BASE_SCALE + log(1.0 + power) * SCALE_LOG_FACTOR
+	target_scale = clamp(target_scale, BASE_SCALE, MAX_SCALE)
+
+func sync_power(power: float) -> void:
+	# Sincroniza el tamaño con el power actual sin disparar el pulso de click.
+	# Llamado cada frame desde main.gd para que el reactor refleje siempre el poder correcto.
 	target_scale = BASE_SCALE + log(1.0 + power) * SCALE_LOG_FACTOR
 	target_scale = clamp(target_scale, BASE_SCALE, MAX_SCALE)
 

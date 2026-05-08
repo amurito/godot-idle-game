@@ -39,6 +39,9 @@ func set_display_delta(value: float) -> void:
 	active_delta = max(value, 0.0)
 	if is_instance_valid(value_label):
 		value_label.text = "+%.1f" % active_delta
+		# Tamaño de fuente crece logarítmicamente con el poder (8px→26px de 1→1000+)
+		var sz := int(clamp(log(1.0 + active_delta) * 3.0 + 8.0, 8.0, 26.0))
+		value_label.add_theme_font_size_override("font_size", sz)
 
 func set_tint(c: Color) -> void:
 	target_tint = c
