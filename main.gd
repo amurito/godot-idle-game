@@ -10,6 +10,7 @@ var fungi_ui: Control
 var reactor_visual: Node = null
 var _use_3d_reactor: bool = true
 var reactor_3d: Node = null
+var _3d_power_label: Label = null
 
 # NG+ Mente Colmena
 var mente_colmena_active := false
@@ -962,17 +963,40 @@ func _init_reactor_3d() -> void:
 	container.stretch = false
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.visible = true
-	# Ocultar elementos visuales 2D pero conservar el label_container de ReactorVisual
-	# (ese label muestra el "+5.0" flotante — necesita seguir visible)
+	# Ocultar ReactorVisual por completo (incluyendo Line2D de Tendrils y partículas)
 	var rv := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual")
 	if is_instance_valid(rv):
-		for cname: String in ["Core", "Ring", "Particles", "Tendrils"]:
-			var ch := rv.get_node_or_null(cname)
-			if is_instance_valid(ch):
-				ch.visible = false
+		rv.visible = false
 		reactor_visual = rv
-		# rv permanece visible=true → value_label y textos flotantes siguen activos
+	# Label propio para modo 3D — flota encima de la esfera
+	var btn := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton") as Control
+	if is_instance_valid(btn):
+		_3d_power_label = Label.new()
+		_3d_power_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_3d_power_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_3d_power_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		_3d_power_label.add_theme_font_size_override("font_size", 14)
+		_3d_power_label.add_theme_color_override("font_color", Color.WHITE)
+		_3d_power_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
+		_3d_power_label.add_theme_constant_override("shadow_outline_size", 4)
+		_3d_power_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(_3d_power_label)
+	# Redimensionar viewport al tamaño real del botón tras el layout
+	call_deferred("_resize_reactor_viewport")
 	print("✅ Reactor3D inicializado")
+
+func _resize_reactor_viewport() -> void:
+	# Espera un frame para que el layout termine de calcularse
+	await get_tree().process_frame
+	var btn := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton") as Control
+	var vp  := get_node_or_null(
+		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer/Reactor3DViewport"
+	) as SubViewport
+	if is_instance_valid(btn) and is_instance_valid(vp):
+		var sz := btn.size
+		if sz.x > 10.0 and sz.y > 10.0:
+			vp.size = Vector2i(int(sz.x), int(sz.y))
+			print("🔲 Reactor3D viewport redimensionado a %s" % vp.size)
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame
@@ -1144,14 +1168,19 @@ func _on_logic_tick():
 	# 4) Actualizar valor del reactor
 	var power := get_click_power()
 	if is_instance_valid(UIManager.big_click_button):
-		UIManager.big_click_button.set_display_delta(power)
 		# Sincronizar tamaño del reactor 3D con el power actual (sin pulso de click)
 		if _use_3d_reactor and is_instance_valid(reactor_3d):
 			reactor_3d.sync_power(power)
+		# Label del modo 3D — escala fuente con el poder (8px→26px de 1→1000+)
+		if _use_3d_reactor and is_instance_valid(_3d_power_label):
+			var sz := int(clamp(log(1.0 + power) * 3.0 + 8.0, 8.0, 26.0))
+			_3d_power_label.add_theme_font_size_override("font_size", sz)
+			_3d_power_label.text = "+%.1f" % power
+		else:
+			UIManager.big_click_button.set_display_delta(power)
 		if mente_colmena_timer > 0.0 and not mente_colmena_active:
 			UIManager.big_click_button.text = EmojiToRichText.strip("🧠 %d%%" % int(mente_colmena_timer / 180.0 * 100.0))
 		elif not _use_3d_reactor:
-			# Con reactor 3D, ReactorVisual.value_label ya muestra el texto — no duplicar
 			UIManager.big_click_button.text = "+%.1f" % power
 
 	# 5) Parasitismo: drenaje masivo de ingresos (Corrosión Estructural)
