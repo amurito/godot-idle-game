@@ -13,6 +13,7 @@ const PULSE_STRENGTH   := 0.28
 
 var core:      MeshInstance3D
 var particles: GPUParticles3D
+var cam:       Camera3D
 var p_mat:     StandardMaterial3D
 var core_mat:  StandardMaterial3D
 
@@ -50,9 +51,9 @@ func _build_environment() -> void:
 	add_child(we)
 
 func _build_camera() -> void:
-	# Cámara muy cerca + FOV amplio → esfera ocupa casi todo el viewport al crecer
-	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 1.2, 2.8)
+	# Cámara dinámica — se aleja con la esfera para que nunca sea cortada
+	cam = Camera3D.new()
+	cam.position = Vector3(0.0, 0.6, 2.0)
 	cam.fov = 68.0
 	add_child(cam)
 	cam.look_at(Vector3.ZERO, Vector3.UP)
@@ -161,14 +162,30 @@ func _process(delta: float) -> void:
 
 	core.scale = Vector3(display_s, display_s, display_s)
 
+	# Cámara dinámica: se aleja cuando la esfera crece → nunca se corta
+	# target_z = display_s * 2.5 garantiza que la esfera ocupa ~70% del alto del viewport
+	var target_z := max(display_s * 2.5, 2.0)
+	var new_cam_pos := Vector3(0.0, target_z * 0.30, target_z)
+	cam.position = cam.position.lerp(new_cam_pos, 0.08)
+	cam.look_at(Vector3.ZERO, Vector3.UP)
+
 	# Rotar → highlight especular se mueve = confirma 3D
 	core.rotate_y(delta * 0.55)
 
 	pulse = max(pulse - delta * PULSE_DECAY, 0.0)
 
-	var stress: float  = clamp(epsilon * 1.5, 0.0, 1.0)
-	var final_color := target_tint.lerp(Color(1.0, 0.2, 0.2), stress)
-	_apply_color(final_color)
+	# Núcleo: siempre el color de la mutación, sin influencia del estrés
+	if core_mat:
+		core_mat.albedo_color = target_tint
+		core_mat.emission     = target_tint
+
+	# Partículas: se tiñen de rojo con el estrés (epsilon)
+	var stress: float    = clamp(epsilon * 1.5, 0.0, 1.0)
+	var stress_color     := target_tint.lerp(Color(1.0, 0.2, 0.2), stress)
+	if p_mat:
+		p_mat.emission     = stress_color
+		p_mat.albedo_color = stress_color
+		(particles.process_material as ParticleProcessMaterial).color = stress_color
 
 	# Emisión sube POCO con el pulso — así no satura a blanco
 	core_mat.emission_energy_multiplier = 0.9 + pulse * 1.8 + epsilon * 1.2
@@ -182,6 +199,7 @@ func _process(delta: float) -> void:
 
 # ---- Internals ----
 
+# Solo para setup inicial — en _process se aplican por separado
 func _apply_color(c: Color) -> void:
 	if core_mat:
 		core_mat.albedo_color = c
