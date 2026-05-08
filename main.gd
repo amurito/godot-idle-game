@@ -1147,7 +1147,8 @@ func _on_logic_tick():
 		UIManager.big_click_button.set_display_delta(power)
 		if mente_colmena_timer > 0.0 and not mente_colmena_active:
 			UIManager.big_click_button.text = EmojiToRichText.strip("🧠 %d%%" % int(mente_colmena_timer / 180.0 * 100.0))
-		else:
+		elif not _use_3d_reactor:
+			# Con reactor 3D, ReactorVisual.value_label ya muestra el texto — no duplicar
 			UIManager.big_click_button.text = "+%.1f" % power
 
 	# 5) Parasitismo: drenaje masivo de ingresos (Corrosión Estructural)

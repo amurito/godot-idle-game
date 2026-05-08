@@ -6,9 +6,9 @@ extends Node3D
 # Core PER_PIXEL (specular 3D) + halo aditivo suave + partículas
 # ============================================================
 
-const BASE_SCALE       := 0.35
-const SCALE_LOG_FACTOR := 0.22   # igual que ReactorVisual 2D
-const MAX_SCALE        := 3.5
+const BASE_SCALE       := 0.10   # empieza muy pequeño → crecimiento visible de 1→1000
+const SCALE_LOG_FACTOR := 0.30   # crecimiento más agresivo que el 2D
+const MAX_SCALE        := 4.0
 const PULSE_DECAY      := 5.0
 const PULSE_STRENGTH   := 0.35
 
@@ -53,10 +53,10 @@ func _build_environment() -> void:
 	add_child(we)
 
 func _build_camera() -> void:
-	# Más cerca y más bajo → la esfera llena más el viewport
+	# Cerca y fov amplio → esfera ocupa la mayor parte del viewport cuando crece
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 2.0, 4.8)
-	cam.fov = 54.0
+	cam.position = Vector3(0.0, 1.8, 4.2)
+	cam.fov = 58.0
 	add_child(cam)
 	cam.look_at(Vector3.ZERO, Vector3.UP)
 
