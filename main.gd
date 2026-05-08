@@ -951,6 +951,8 @@ func _init_reactor_3d() -> void:
 		push_warning("Reactor3D: SubViewport no encontrado, usando reactor 2D")
 		_use_3d_reactor = false
 		return
+	# Godot resetea render_target_update_mode=0 al guardar la escena — forzarlo en código
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	var ReactorScript := preload("res://Reactor3D.gd")
 	reactor_3d = ReactorScript.new()
 	viewport.add_child(reactor_3d)
