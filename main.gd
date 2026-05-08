@@ -865,7 +865,9 @@ func _ready():
 	if OS.get_name() == "HTML5":
 		print("🔄 HTML5 detectado - Reemplazando emojis...")
 		call_deferred("_replace_emojis_for_html5")
-		
+	if _use_3d_reactor:
+		_init_reactor_3d()
+
 func _replace_emojis_for_html5():
 	print("✅ INICIANDO reemplazo de emojis...")
 	
@@ -917,9 +919,6 @@ func _replace_emojis_in_node(node: Node):
 				node.text = text_property.replace(emoji, replacements[emoji])
 		for child in node.get_children():
 			_replace_emojis_in_node(child)
-
-	if _use_3d_reactor:
-		_init_reactor_3d()
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
