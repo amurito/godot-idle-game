@@ -7,10 +7,10 @@ extends Node3D
 # ============================================================
 
 const BASE_SCALE       := 0.35
-const SCALE_LOG_FACTOR := 0.07
-const MAX_SCALE        := 1.6
+const SCALE_LOG_FACTOR := 0.22   # igual que ReactorVisual 2D → misma sensación de crecimiento
+const MAX_SCALE        := 3.5    # igual que ReactorVisual 2D → rango completo visible
 const PULSE_DECAY      := 5.0
-const PULSE_STRENGTH   := 0.3
+const PULSE_STRENGTH   := 0.35   # igual que ReactorVisual 2D
 
 var core:         MeshInstance3D
 var core_hot:     MeshInstance3D       # punto caliente central — blanco puro
@@ -210,7 +210,8 @@ func _setup_materials() -> void:
 
 func set_active_delta(power: float) -> void:
 	pulse = 1.0
-	target_scale = BASE_SCALE + log(max(power, 1.0)) * SCALE_LOG_FACTOR
+	# log(1 + power) — misma fórmula que ReactorVisual 2D, crecimiento logarítmico suave
+	target_scale = BASE_SCALE + log(1.0 + power) * SCALE_LOG_FACTOR
 	target_scale = clamp(target_scale, BASE_SCALE, MAX_SCALE)
 
 func set_tint(color: Color) -> void:

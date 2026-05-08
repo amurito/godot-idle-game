@@ -960,11 +960,16 @@ func _init_reactor_3d() -> void:
 	container.stretch = false
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.visible = true
-	# Ocultar el reactor 2D
+	# Ocultar elementos visuales 2D pero conservar el label_container de ReactorVisual
+	# (ese label muestra el "+5.0" flotante — necesita seguir visible)
 	var rv := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual")
 	if is_instance_valid(rv):
-		rv.visible = false
+		for cname: String in ["Core", "Ring", "Particles", "Tendrils"]:
+			var ch := rv.get_node_or_null(cname)
+			if is_instance_valid(ch):
+				ch.visible = false
 		reactor_visual = rv
+		# rv permanece visible=true → value_label y textos flotantes siguen activos
 	print("✅ Reactor3D inicializado")
 
 func _mount_fungi_dlc():
