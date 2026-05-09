@@ -959,8 +959,11 @@ func _init_reactor_3d() -> void:
 	reactor_3d = ReactorScript.new()
 	viewport.add_child(reactor_3d)
 	var container := viewport.get_parent() as SubViewportContainer
-	# stretch=false hace que _input() retorne inmediatamente → los clicks llegan al Button padre
-	container.stretch = false
+	# Aplicar script que bloquea _input() y sincroniza el tamaño del viewport con el contenedor
+	# Esto permite stretch=true (esfera llena el botón completo) sin bloquear los clicks
+	var ContainerScript := preload("res://Reactor3DContainer.gd")
+	container.set_script(ContainerScript)
+	container.stretch = true
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.visible = true
 	# Ocultar ReactorVisual por completo (incluyendo Line2D de Tendrils y partículas)
@@ -982,21 +985,7 @@ func _init_reactor_3d() -> void:
 		_3d_power_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(_3d_power_label)
 	# Redimensionar viewport al tamaño real del botón tras el layout
-	call_deferred("_resize_reactor_viewport")
 	print("✅ Reactor3D inicializado")
-
-func _resize_reactor_viewport() -> void:
-	# Espera un frame para que el layout termine de calcularse
-	await get_tree().process_frame
-	var btn := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton") as Control
-	var vp  := get_node_or_null(
-		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer/Reactor3DViewport"
-	) as SubViewport
-	if is_instance_valid(btn) and is_instance_valid(vp):
-		var sz := btn.size
-		if sz.x > 10.0 and sz.y > 10.0:
-			vp.size = Vector2i(int(sz.x), int(sz.y))
-			print("🔲 Reactor3D viewport redimensionado a %s" % vp.size)
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame
