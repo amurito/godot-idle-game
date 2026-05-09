@@ -4,12 +4,21 @@ extends Control
 @onready var btn_new_game = $CenterContainer/VBoxContainer/BtnNewGame
 @onready var btn_achievements = $CenterContainer/VBoxContainer/BtnAchievements
 @onready var btn_legacy = $CenterContainer/VBoxContainer/BtnLegacy
+@onready var btn_history = $CenterContainer/VBoxContainer/BtnHistory
 @onready var achievements_panel = $AchievementsPanel
 @onready var achievements_label = $AchievementsPanel/VBoxContainer/ScrollContainer/RichTextLabel
 
 @onready var legacy_panel = $GeneticBankPanel
 @onready var pl_counter = $GeneticBankPanel/VBoxContainer/PLCounter
 @onready var legacy_list = $GeneticBankPanel/VBoxContainer/ScrollContainer/ItemList
+
+@onready var history_panel = $HistoryPanel
+@onready var history_label = $HistoryPanel/VBoxContainer/ScrollContainer/RichTextLabel
+@onready var btn_tab_current = $HistoryPanel/VBoxContainer/TabsRow/BtnTabCurrent
+@onready var btn_tab_all = $HistoryPanel/VBoxContainer/TabsRow/BtnTabAll
+
+# Tab actualmente seleccionada en el panel de historial: "current" o "all"
+var _history_tab: String = "current"
 
 # --- TRASCENDENCIA (v0.9.2) ---
 # UI creada dinámicamente
@@ -42,10 +51,17 @@ func _ready():
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
 	btn_legacy.pressed.connect(_on_legacy_pressed)
+	btn_history.pressed.connect(_on_history_pressed)
 
 	$AchievementsPanel/VBoxContainer/BtnBack.pressed.connect(_on_back_pressed)
 	$GeneticBankPanel/VBoxContainer/BtnBackLegacy.pressed.connect(_on_back_pressed)
+	$HistoryPanel/VBoxContainer/BtnBack.pressed.connect(_on_back_pressed)
+	btn_tab_current.pressed.connect(_on_history_tab_current)
+	btn_tab_all.pressed.connect(_on_history_tab_all)
 	$CenterContainer/VBoxContainer/BtnQuit.pressed.connect(get_tree().quit)
+
+	# Gate del historial: visible solo si compraron memoria_de_run en el Banco Genético
+	_refresh_history_gate()
 
 	# --- TRASCENDENCIA UI ---
 	_setup_trascendencia_ui()
@@ -268,8 +284,101 @@ func _on_legacy_pressed():
 func _on_back_pressed():
 	achievements_panel.visible = false
 	legacy_panel.visible = false
-	# Actualizar badges al cerrar (ya se marcaron como vistos adentro)
+	history_panel.visible = false
+	# Actualizar badges + gate al cerrar (puede haberse comprado memoria_de_run)
 	_refresh_nav_badges()
+	_refresh_history_gate()
+
+# ===================== HISTORIAL DE CICLOS =====================
+func _refresh_history_gate() -> void:
+	var unlocked: bool = LegacyManager.has_run_history_unlocked()
+	btn_history.visible = unlocked
+
+func _on_history_pressed() -> void:
+	history_panel.visible = true
+	_history_tab = "current"
+	btn_tab_current.button_pressed = true
+	btn_tab_all.button_pressed = false
+	_update_history_view()
+
+func _on_history_tab_current() -> void:
+	_history_tab = "current"
+	btn_tab_current.button_pressed = true
+	btn_tab_all.button_pressed = false
+	_update_history_view()
+
+func _on_history_tab_all() -> void:
+	_history_tab = "all"
+	btn_tab_current.button_pressed = false
+	btn_tab_all.button_pressed = true
+	_update_history_view()
+
+# Familia de la ruta → color del card. Reusa LegacyManager.ENDING_FAMILIES.
+const _HISTORY_FAMILY_COLORS := {
+	"orden":    {"card": "#0e1a2e", "title": "#7ad6ff"},
+	"biologia": {"card": "#0e2418", "title": "#7affae"},
+	"colapso":  {"card": "#2e0e14", "title": "#ff7a8a"},
+}
+const _HISTORY_DEFAULT_COLORS := {"card": "#1a1a22", "title": "#cccccc"}
+
+func _format_run_time(seconds: float) -> String:
+	var s: int = int(seconds)
+	var h: int = s / 3600
+	var m: int = (s % 3600) / 60
+	var sec: int = s % 60
+	if h > 0:
+		return "%d:%02d:%02d" % [h, m, sec]
+	return "%d:%02d" % [m, sec]
+
+func _update_history_view() -> void:
+	var entries: Array
+	var header_label: String
+	if _history_tab == "current":
+		entries = LegacyManager.current_cycle_history
+		header_label = "Ciclo de trascendencia actual (T%d)" % LegacyManager.trascendencia_count
+	else:
+		entries = LegacyManager.all_time_history
+		header_label = "Histórico completo de ciclos"
+
+	var t: String = "[center][color=#9adfff][b]═══ %s ═══[/b][/color]\n" % header_label
+	t += "[color=#888888]%d ciclo(s) registrado(s)[/color][/center]\n\n" % entries.size()
+
+	if entries.is_empty():
+		t += "[center][color=#666666][i]Todavía no hay ciclos registrados en esta vista.[/i][/color][/center]"
+		history_label.clear()
+		history_label.append_text(EmojiToRichText.rich(t))
+		return
+
+	# Mostrar más reciente arriba
+	for i in range(entries.size() - 1, -1, -1):
+		var e: Dictionary = entries[i]
+		var route: String = e.get("route", "NONE")
+		var reason: String = e.get("reason", "")
+		var run_time: float = e.get("run_time", 0.0)
+		var mu_peak: float = e.get("mu_peak", 0.0)
+		var eps_peak: float = e.get("eps_peak", 0.0)
+		var pl_gained: int = e.get("pl_gained", 0)
+		var cycle_index: int = e.get("cycle_index", 0)
+		var t_tier: int = e.get("trascendencia_tier", 0)
+
+		var family: String = LegacyManager.ENDING_FAMILIES.get(route, "")
+		var colors: Dictionary = _HISTORY_FAMILY_COLORS.get(family, _HISTORY_DEFAULT_COLORS)
+
+		var tier_badge: String = ""
+		if _history_tab == "all":
+			tier_badge = "  [color=#888888][T%d][/color]" % t_tier
+
+		t += "[table=1]"
+		t += "[cell bgcolor=%s][b][color=%s]CICLO BIÓTICO %d: %s[/color][/b]%s\n" % \
+			[colors.card, colors.title, cycle_index, route, tier_badge]
+		if reason != "":
+			t += "[color=#aaaaaa][i]%s[/i][/color]\n" % reason
+		t += "[color=#888888]⏱ %s · μ_peak %.2f · ε_peak %.2f · +%d PL[/color][/cell]" % \
+			[_format_run_time(run_time), mu_peak, eps_peak, pl_gained]
+		t += "[/table]\n\n"
+
+	history_label.clear()
+	history_label.append_text(EmojiToRichText.rich(t))
 
 func _update_legacy_view():
 	pl_counter.text = "Legado acumulado: %d PL\nCiclos Bióticos completados: %d" % [LegacyManager.legacy_points, LegacyManager.total_runs]

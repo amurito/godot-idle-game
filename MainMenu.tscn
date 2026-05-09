@@ -71,6 +71,11 @@ custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
 text = "Banco Genético"
 
+[node name="BtnHistory" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+text = "Historial de Ciclos"
+
 [node name="BtnQuit" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
@@ -118,6 +123,71 @@ fit_content = true
 text = "[center][b]--- LOGROS ---[/b][/center]"
 
 [node name="BtnBack" type="Button" parent="AchievementsPanel/VBoxContainer"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Volver"
+
+[node name="HistoryPanel" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.07, 0.95)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HistoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="HistoryPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.9, 1.0, 1)
+theme_override_font_sizes/font_size = 32
+text = "HISTORIAL DE CICLOS BIÓTICOS"
+horizontal_alignment = 1
+
+[node name="TabsRow" type="HBoxContainer" parent="HistoryPanel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="BtnTabCurrent" type="Button" parent="HistoryPanel/VBoxContainer/TabsRow"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+text = "Ciclo de trascendencia actual"
+
+[node name="BtnTabAll" type="Button" parent="HistoryPanel/VBoxContainer/TabsRow"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+toggle_mode = true
+text = "Histórico completo"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HistoryPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="HistoryPanel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = true
+text = "[center][b]--- HISTORIAL ---[/b][/center]"
+
+[node name="BtnBack" type="Button" parent="HistoryPanel/VBoxContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 size_flags_horizontal = 4
