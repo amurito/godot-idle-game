@@ -984,8 +984,25 @@ func _init_reactor_3d() -> void:
 		_3d_power_label.add_theme_constant_override("shadow_outline_size", 4)
 		_3d_power_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(_3d_power_label)
-	# Redimensionar viewport al tamaño real del botón tras el layout
+	# set_script() no llama a _ready() → sincronizar el viewport manualmente tras el layout
+	call_deferred("_sync_reactor_viewport")
 	print("✅ Reactor3D inicializado")
+
+func _sync_reactor_viewport() -> void:
+	# Espera 2 frames para que el layout esté completamente calculado
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var cont := get_node_or_null(
+		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer"
+	) as Control
+	var vp := get_node_or_null(
+		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer/Reactor3DViewport"
+	) as SubViewport
+	if is_instance_valid(cont) and is_instance_valid(vp):
+		var sz := cont.size
+		if sz.x > 10.0 and sz.y > 10.0:
+			vp.size = Vector2i(int(sz.x), int(sz.y))
+			print("🔲 Viewport sincronizado: %s" % vp.size)
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame
