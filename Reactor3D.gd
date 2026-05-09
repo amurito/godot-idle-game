@@ -164,7 +164,7 @@ func _process(delta: float) -> void:
 
 	# Cámara dinámica: se aleja cuando la esfera crece → nunca se corta
 	# target_z = display_s * 2.5 garantiza que la esfera ocupa ~70% del alto del viewport
-	var target_z: float = max(display_s * 1.65, 1.8)
+	var target_z: float = max(display_s * 1.65, 4.0)
 	var new_cam_pos := Vector3(0.0, target_z * 0.15, target_z)
 	cam.position = cam.position.lerp(new_cam_pos, 0.08)
 	cam.look_at(Vector3.ZERO, Vector3.UP)
