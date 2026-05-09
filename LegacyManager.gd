@@ -394,6 +394,12 @@ var total_runs: int = 0
 var last_run_ending: String = ""
 var internal_spores_total: float = 0.0
 
+# Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
+# current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
+# all_time_history: todos los ciclos desde el primer save (persistente)
+var current_cycle_history: Array = []
+var all_time_history: Array = []
+
 # Estadísticas de run que sirven como condiciones de desbloqueo
 var mu_peak_achieved: bool = false   # true si alguna run terminó con μ ≥ 2.5
 
@@ -518,6 +524,8 @@ func save_legacy():
 		"buff_enabled": buff_enabled,
 		"post_tras_route": post_tras_route,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
+		"current_cycle_history": current_cycle_history,
+		"all_time_history": all_time_history,
 	}
 	var file := FileAccess.open(LEGACY_PATH, FileAccess.WRITE)
 	if file:
@@ -552,6 +560,8 @@ func load_legacy():
 	buff_enabled = data.get("buff_enabled", {})
 	post_tras_route = data.get("post_tras_route", "")
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
+	current_cycle_history = data.get("current_cycle_history", [])
+	all_time_history = data.get("all_time_history", [])
 
 	# Cargar buffs — con migración desde formato antiguo (unlocked_legacies: { id: bool })
 	if data.has("buffs"):
@@ -791,6 +801,29 @@ func on_run_ended(mu_final: float) -> void:
 		print("🧠 [Legacy] mu_peak_achieved desbloqueado (μ = %.2f)" % mu_final)
 		save_legacy()
 
+## Registra una run terminada en current_cycle_history y all_time_history.
+## Llamado desde RunManager.close_run() después de calcular pl_to_add.
+func record_run_end(route: String, reason: String, run_time: float, mu_peak: float, eps_peak: float, pl_gained: int) -> void:
+	var entry := {
+		"cycle_index": total_runs + 1,
+		"trascendencia_tier": trascendencia_count,
+		"route": route,
+		"reason": reason,
+		"run_time": run_time,
+		"mu_peak": mu_peak,
+		"eps_peak": eps_peak,
+		"pl_gained": pl_gained,
+		"timestamp": Time.get_unix_time_from_system(),
+	}
+	current_cycle_history.append(entry)
+	all_time_history.append(entry)
+	save_legacy()
+	print("📜 [Legacy] Run registrada: ciclo #%d → %s" % [entry.cycle_index, route])
+
+## Gate del panel de historial — requiere comprar memoria_de_run en Banco Genético.
+func has_run_history_unlocked() -> bool:
+	return get_buff_value("memoria_de_run")
+
 # =====================================================
 #  CONVERSIÓN DE ESPORAS
 # =====================================================
@@ -900,6 +933,7 @@ func transcend() -> int:
 	last_run_ending = ""
 	mu_peak_achieved = false
 	post_tras_route = ""  # El jugador elige la ruta en el picker del MainMenu
+	current_cycle_history.clear()  # Datos archivados en all_time_history
 
 	# Se preservan: esencia, trascendencia_count, first_trascendencia_shown,
 	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot
