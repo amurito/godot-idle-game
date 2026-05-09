@@ -121,6 +121,7 @@ func close_run(route: String, reason: String):
 		"DOMADOR DEL CAOS": pl_to_add = 11
 		"ASCESIS_PROFUNDA": pl_to_add = 7
 
+	var total_pl_gained: int = pl_to_add
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		main.show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
@@ -131,7 +132,18 @@ func close_run(route: String, reason: String):
 		var extra_pl: int = int(floor(StructuralModel.epsilon_peak * eps_bonus))
 		if extra_pl > 0:
 			LegacyManager.add_pl(extra_pl)
+			total_pl_gained += extra_pl
 			main.add_lap("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
+
+	# Registrar la run en el historial de ciclos (para panel Memoria de Run)
+	LegacyManager.record_run_end(
+		route,
+		reason,
+		main.run_time,
+		main.mu_peak_run,
+		StructuralModel.epsilon_peak,
+		total_pl_gained,
+	)
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
