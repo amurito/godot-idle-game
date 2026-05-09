@@ -59,6 +59,7 @@ const CLICK_RATE := 1.0
 
 # OBSERVADORES DINÁMICOS (Caché por tick)
 var cached_mu: float = 1.0
+var mu_peak_run: float = 0.0  # Pico de μ en la run actual (para historial de ciclos)
 
 var delta_per_sec: float = 0.0
 
@@ -692,6 +693,7 @@ func reset_local_state():
 	StructuralModel.reset()
 	delta_per_sec = 0.0
 	run_time = 0.0
+	mu_peak_run = 0.0
 	# Los logros persisten entre runs (vivían en main.gd como flags, ahora en AchievementManager).
 	# Sólo borramos el estado efímero (timers, contadores de click, etc.)
 	AchievementManager.reset_run_state()
@@ -1048,6 +1050,7 @@ func _on_logic_tick():
 
 	# Cache mu (evita 500+ calls por segundo a get_mu_structural_factor)
 	cached_mu = get_mu_structural_factor()
+	mu_peak_run = max(mu_peak_run, cached_mu)
 
 	# NG+ Mente Colmena (Juego automático por IA fúngica)
 	# Sync estado con el toggle del Banco Genético (solo cuando cambia)
