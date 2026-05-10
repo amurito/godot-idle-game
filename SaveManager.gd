@@ -2,8 +2,14 @@ extends Node
 
 # SaveManager.gd — Autoload
 # Maneja la persistencia del estado del juego en formato JSON.
+# El path del savegame depende del slot activo de SlotManager:
+# user://saves/{active_slot}/savegame.json
 
-const SAVE_PATH := "user://savegame.json"
+# SAVE_PATH se mantiene como propiedad dinámica para retrocompat con consumidores
+# que la leen como SaveManager.SAVE_PATH (MainMenu, TestRunner, etc.)
+var SAVE_PATH: String:
+	get:
+		return SlotManager.get_active_save_path()
 
 # Flag para detectar si se cargó un save existente (vs run nueva sin archivo).
 # Usado por _apply_cosmic_buffs para no duplicar bonuses al recargar.
@@ -101,11 +107,16 @@ func build_save_data(main: Node) -> Dictionary:
 func save_game(main: Node):
 	var data = build_save_data(main)
 	var json_string = JSON.stringify(data)
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var path := SAVE_PATH
+	# Asegurar que el directorio del slot existe antes de escribir
+	var slot_dir := SlotManager.get_slot_dir(SlotManager.active_slot)
+	if not DirAccess.dir_exists_absolute(slot_dir):
+		DirAccess.make_dir_recursive_absolute(slot_dir)
+	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_string(json_string)
 		file.close()
-		print("💾 [SaveManager] Juego guardado en:", SAVE_PATH)
+		print("💾 [SaveManager] Juego guardado en:", path)
 
 func apply_save_data(main: Node, data: Dictionary) -> void:
 	if data.has("upgrades"):
@@ -226,13 +237,14 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 	main.update_ui()
 
 func load_game(main: Node):
-	if not FileAccess.file_exists(SAVE_PATH):
-		print("ℹ️ [SaveManager] No se encontró archivo de guardado.")
+	var path := SAVE_PATH
+	if not FileAccess.file_exists(path):
+		print("ℹ️ [SaveManager] No se encontró archivo de guardado en:", path)
 		_file_existed_on_load = false
 		return
 	_file_existed_on_load = true
 
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
 		return
 
@@ -252,9 +264,10 @@ func load_game(main: Node):
 func delete_save_and_restart():
 	# Incrementar contador de ciclos persistentes antes de borrar la run actual
 	LegacyManager.increment_run()
-	
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
+
+	var path := SAVE_PATH
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
 		print("🗑️ [SaveManager] Archivo de run eliminado. Iniciando nuevo ciclo.")
 	
 	# Resetear Autoloads persistentes (solo los de la sesión actual)
