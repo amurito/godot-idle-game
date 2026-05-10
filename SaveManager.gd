@@ -241,6 +241,8 @@ func load_game(main: Node):
 	if not FileAccess.file_exists(path):
 		print("ℹ️ [SaveManager] No se encontró archivo de guardado en:", path)
 		_file_existed_on_load = false
+		# Slot sin savegame: resetear todos los managers para no heredar estado del slot anterior.
+		_reset_for_new_slot(main)
 		return
 	_file_existed_on_load = true
 
@@ -260,6 +262,15 @@ func load_game(main: Node):
 	var data = json.data
 	apply_save_data(main, data)
 	print("📂 [SaveManager] Juego cargado con éxito.")
+
+## Resetea todos los managers de runtime al estado inicial cuando un slot no tiene savegame.
+## Evita que el slot nuevo herede el estado en memoria del slot anterior.
+func _reset_for_new_slot(main: Node) -> void:
+	EvoManager.reset()
+	BiosphereEngine.reset()
+	UpgradeManager.reset()
+	main.reset_local_state()
+	print("🆕 [SaveManager] Estado reseteado para slot sin savegame.")
 
 func delete_save_and_restart():
 	# Incrementar contador de ciclos persistentes antes de borrar la run actual

@@ -443,7 +443,8 @@ func _on_slot_chosen(slot_id: String) -> void:
 		_show_main_menu()
 		return
 	SlotManager.switch_slot(slot_id)
-	# Recarga el legacy del nuevo slot vía reload de escena (estado limpio)
+	# Recargar Legacy en memoria para el nuevo slot (los autoloads persisten entre reloads)
+	LegacyManager.reload_for_slot()
 	SlotManager.skip_selector_once = true
 	get_tree().reload_current_scene()
 
@@ -470,6 +471,7 @@ func _on_slot_create_pressed() -> void:
 		var new_id: String = SlotManager.create_slot(name)
 		if new_id != "":
 			SlotManager.switch_slot(new_id)
+			LegacyManager.reload_for_slot()
 			SlotManager.skip_selector_once = true
 			dialog.queue_free()
 			get_tree().reload_current_scene()

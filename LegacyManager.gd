@@ -514,6 +514,30 @@ const COSMIC_DATA := {
 func _ready():
 	load_legacy()
 
+## Resetea todo el estado en memoria y recarga desde el slot activo.
+## Debe llamarse desde MainMenu al hacer switch de slot, porque los autoloads
+## persisten entre reload_current_scene() y no reinician su _ready().
+func reload_for_slot() -> void:
+	legacy_points = 0
+	buffs = {}
+	buff_enabled = {}
+	internal_spores_total = 0.0
+	total_runs = 0
+	last_run_ending = ""
+	mu_peak_achieved = false
+	esencia = 0
+	trascendencia_count = 0
+	first_trascendencia_shown = false
+	endings_achieved = {}
+	cosmic_unlocked = {}
+	achievement_data = {}
+	post_tras_route = ""
+	reencarnacion_snapshot = {}
+	current_cycle_history = []
+	all_time_history = []
+	load_legacy()
+	print("🔄 [Legacy] Recargado para slot: ", SlotManager.active_slot)
+
 # =====================================================
 #  PERSISTENCIA
 # =====================================================
