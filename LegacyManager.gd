@@ -186,6 +186,13 @@ const LEGACY_DEFS: Dictionary = {
 		"reveal": {"type": "always"}, "unlock": {"type": "always"},
 		"effect": {"type": "warn_epsilon_threshold", "value": 1.0},
 	},
+	"slot_extra": {
+		"name": "Slot Adicional",
+		"flavor": "Cada slot abre un universo paralelo donde experimentar otro destino.",
+		"cat": "conocimiento", "cost": 5, "cost_growth": 2.0, "max_level": 5,
+		"reveal": {"type": "always"}, "unlock": {"type": "always"},
+		"effect": {"type": "unlock_save_slot", "value": 1.0},
+	},
 
 	# ────────────────────────────────────────────────
 	# RUTAS (12) — se revelan/desbloquean según historial de rutas
@@ -772,7 +779,18 @@ func purchase_legacy(id: String) -> bool:
 	_set_buff_level(id, get_buff_level(id) + 1)
 	save_legacy()
 	print("✨ [Legacy] Comprado: %s (nivel %d) por %d PL" % [id, get_buff_level(id), cost])
+	# Side-effects post-compra para upgrades con efecto fuera del estado del legacy
+	_apply_post_purchase_effects(id)
 	return true
+
+## Side-effects de upgrades cuyos efectos viven fuera del estado del legacy
+## (p.ej. desbloquear un slot global en SlotManager).
+func _apply_post_purchase_effects(id: String) -> void:
+	var entry: Dictionary = BUFF_DATA.get(id, {})
+	var effect: Dictionary = entry.get("effect", {})
+	match effect.get("type", ""):
+		"unlock_save_slot":
+			SlotManager.unlock_extra_slot()
 
 ## Otorga un buff directamente sin costo (para buffs NG+ otorgados por rutas)
 func grant_buff(id: String) -> void:
