@@ -645,6 +645,7 @@ func unlock(id: String) -> void:
 	}
 	var def: Dictionary = DEFS[id]
 	emit_signal("achievement_unlocked", id, def)
+	AudioManager.play_sfx("achievement")
 	_show_toast(id, def)
 	if main:
 		main.add_lap("🏁 Logro — " + def["name"])

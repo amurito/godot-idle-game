@@ -90,6 +90,7 @@ func close_run(route: String, reason: String):
 	run_closed = true
 	final_route = route
 	final_reason = reason
+	AudioManager.play_sfx("run_close")
 	main.add_lap("🚩 RUN CERRADA: " + route)
 
 	LegacyManager.last_run_ending = route

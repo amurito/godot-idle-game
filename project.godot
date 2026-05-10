@@ -30,6 +30,7 @@ AchievementManager="*res://AchievementManager.gd"
 RunManager="*res://RunManager.gd"
 EconomyManager="*res://EconomyManager.gd"
 StructuralModel="*res://StructuralModel.gd"
+AudioManager="*res://AudioManager.gd"
 
 [editor]
 

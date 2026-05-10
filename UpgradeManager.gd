@@ -85,6 +85,7 @@ func buy(id: String, money: float) -> bool:
 	var def = get_def(id)
 
 	s.level += 1
+	AudioManager.play_sfx("upgrade")
 
 	if def.is_multiplicative:
 		s.current_value *= def.gain

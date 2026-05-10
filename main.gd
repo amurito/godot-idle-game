@@ -715,6 +715,7 @@ func reset_local_state():
 func _ready():
 	show()
 	add_to_group("main")
+	AudioManager.play_music("ambient")
 	UIManager.setup(ui_root)
 	LogManager.show_all_laps = false
 	update_lap_toggle_button()
@@ -804,6 +805,12 @@ func _ready():
 	legacy_btn.pressed.connect(_on_legacy_pressed)
 	bottom_left_panel.add_child(legacy_btn)
 
+	var settings_btn := Button.new()
+	settings_btn.text = "⚙ Ajustes"
+	settings_btn.add_theme_font_size_override("font_size", 11)
+	settings_btn.pressed.connect(func(): AudioManager.show_settings_panel(self))
+	bottom_left_panel.add_child(settings_btn)
+
 	# === EVO MANAGER SIGNALS ===
 	EvoManager.mutation_activated.connect(_on_mutation_activated)
 	EvoManager.run_ended_by_mutation.connect(close_run)
@@ -861,6 +868,7 @@ func _ready():
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
+	AudioManager.play_sfx("click")
 	var power := get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
@@ -1217,6 +1225,7 @@ func _notification(what):
 @onready var dimmer = $DimmerBackground
 
 func _on_mutation_activated(id: String, display_name: String):
+	AudioManager.play_sfx("mutation")
 	LogManager.add("🧬 Mutación irreversible — " + display_name, self)
 
 	# Mostrar efectos activos como lap (visible en pantalla final)

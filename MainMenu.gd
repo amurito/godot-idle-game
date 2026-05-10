@@ -21,6 +21,7 @@ var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
 
 func _ready():
+	AudioManager.play_music("ambient")
 	var has_save := FileAccess.file_exists(SaveManager.SAVE_PATH)
 	var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
 
@@ -50,8 +51,20 @@ func _ready():
 	# --- TRASCENDENCIA UI ---
 	_setup_trascendencia_ui()
 
+	# --- BOTÓN AJUSTES (siempre visible, justo antes de Salir) ---
+	var btn_settings := Button.new()
+	btn_settings.custom_minimum_size = Vector2(0, 45)
+	btn_settings.text = "⚙ Ajustes"
+	btn_settings.pressed.connect(_on_settings_pressed)
+	var vbox_settings = $CenterContainer/VBoxContainer
+	vbox_settings.add_child(btn_settings)
+	vbox_settings.move_child(btn_settings, vbox_settings.get_child_count() - 2)
+
 	# --- BADGES de notificación ---
 	_refresh_nav_badges()
+
+func _on_settings_pressed() -> void:
+	AudioManager.show_settings_panel(self)
 
 # =====================================================
 #  DEBUG — Teclas de testeo rápido (solo en DEBUG build)
@@ -693,6 +706,7 @@ func _execute_trascendencia() -> void:
 
 	var is_first := LegacyManager.trascendencia_count == 0
 	var gain := LegacyManager.transcend()
+	AudioManager.play_sfx("transcend")
 
 	_close_trascend_confirm_panel()
 
