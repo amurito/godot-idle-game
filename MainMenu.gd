@@ -17,6 +17,11 @@ extends Control
 @onready var btn_tab_current = $HistoryPanel/VBoxContainer/TabsRow/BtnTabCurrent
 @onready var btn_tab_all = $HistoryPanel/VBoxContainer/TabsRow/BtnTabAll
 
+@onready var slot_selector_panel = $SlotSelectorPanel
+@onready var slot_list_container = $SlotSelectorPanel/VBoxContainer/ScrollContainer/SlotList
+@onready var slot_btn_quit = $SlotSelectorPanel/VBoxContainer/FooterRow/BtnQuit
+@onready var center_container = $CenterContainer
+
 # Tab actualmente seleccionada en el panel de historial: "current" o "all"
 var _history_tab: String = "current"
 
@@ -30,24 +35,7 @@ var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
 
 func _ready():
-	var has_save := FileAccess.file_exists(SaveManager.SAVE_PATH)
-	var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
-
-	if has_save:
-		# Run activa: "Continuar" carga el guardado normalmente
-		btn_continue.text = "Continuar"
-		btn_continue.pressed.connect(_on_continue_pressed)
-	elif post_transcendence:
-		# Sin run activa pero con trascendencias: "Continuar" inicia nueva run con buffs cósmicos
-		btn_continue.text = EmojiToRichText.strip("▶ Nueva Run (buffs cósmicos activos)")
-		btn_continue.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
-		btn_continue.pressed.connect(_start_new_run)
-	else:
-		# Sin nada: deshabilitar
-		btn_continue.disabled = true
-		btn_continue.modulate = Color(1, 1, 1, 0.4)
-		btn_continue.pressed.connect(_on_continue_pressed)
-
+	# Conectar handlers que no dependen del slot
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
 	btn_legacy.pressed.connect(_on_legacy_pressed)
@@ -59,12 +47,47 @@ func _ready():
 	btn_tab_current.pressed.connect(_on_history_tab_current)
 	btn_tab_all.pressed.connect(_on_history_tab_all)
 	$CenterContainer/VBoxContainer/BtnQuit.pressed.connect(get_tree().quit)
+	slot_btn_quit.pressed.connect(get_tree().quit)
+
+	# Mostrar SlotSelector al arrancar (excepto si veníamos de un reload programático)
+	if SlotManager.skip_selector_once:
+		SlotManager.skip_selector_once = false
+		_show_main_menu()
+	else:
+		_show_slot_selector()
+
+# Configura los botones del menú principal según el slot activo. Se llama
+# después de que el SlotSelector seleccionó/creó/cambió un slot.
+func _setup_main_menu_for_active_slot() -> void:
+	# Resetear estado del botón Continuar (puede haberse modificado en setups previos)
+	btn_continue.disabled = false
+	btn_continue.modulate = Color(1, 1, 1, 1)
+	if btn_continue.pressed.is_connected(_on_continue_pressed):
+		btn_continue.pressed.disconnect(_on_continue_pressed)
+	if btn_continue.pressed.is_connected(_start_new_run):
+		btn_continue.pressed.disconnect(_start_new_run)
+
+	var has_save := FileAccess.file_exists(SaveManager.SAVE_PATH)
+	var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
+
+	if has_save:
+		btn_continue.text = "Continuar"
+		btn_continue.pressed.connect(_on_continue_pressed)
+	elif post_transcendence:
+		btn_continue.text = EmojiToRichText.strip("▶ Nueva Run (buffs cósmicos activos)")
+		btn_continue.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		btn_continue.pressed.connect(_start_new_run)
+	else:
+		btn_continue.disabled = true
+		btn_continue.modulate = Color(1, 1, 1, 0.4)
+		btn_continue.pressed.connect(_on_continue_pressed)
 
 	# Gate del historial: visible solo si compraron memoria_de_run en el Banco Genético
 	_refresh_history_gate()
 
-	# --- TRASCENDENCIA UI ---
-	_setup_trascendencia_ui()
+	# --- TRASCENDENCIA UI (si no fue creada todavía) ---
+	if btn_trascendencia == null:
+		_setup_trascendencia_ui()
 
 	# --- BADGES de notificación ---
 	_refresh_nav_badges()
@@ -288,6 +311,230 @@ func _on_back_pressed():
 	# Actualizar badges + gate al cerrar (puede haberse comprado memoria_de_run)
 	_refresh_nav_badges()
 	_refresh_history_gate()
+
+# ===================== SLOT SELECTOR =====================
+func _show_slot_selector() -> void:
+	slot_selector_panel.visible = true
+	center_container.visible = false
+	achievements_panel.visible = false
+	legacy_panel.visible = false
+	history_panel.visible = false
+	_refresh_slot_list()
+
+func _show_main_menu() -> void:
+	slot_selector_panel.visible = false
+	center_container.visible = true
+	_setup_main_menu_for_active_slot()
+
+func _refresh_slot_list() -> void:
+	for child in slot_list_container.get_children():
+		child.queue_free()
+	# Renderizar slots existentes
+	for s in SlotManager.list_slots():
+		_add_slot_card(s)
+	# Renderizar slots vacíos disponibles para crear
+	var empty_remaining := SlotManager.available_empty_slots()
+	for i in range(empty_remaining):
+		_add_empty_slot_card()
+	# Mensaje si llegó al límite y no tiene más por desbloquear
+	if empty_remaining == 0:
+		_add_unlock_hint_label()
+
+func _add_slot_card(slot_data: Dictionary) -> void:
+	var slot_id: String = slot_data.get("id", "")
+	var slot_name: String = slot_data.get("name", slot_id)
+	var summary: Dictionary = SlotManager.read_slot_summary(slot_id)
+	var has_save: bool = SlotManager.slot_has_savegame(slot_id)
+	var is_active: bool = (slot_id == SlotManager.active_slot)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 90)
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(hbox)
+
+	# Bloque de info (izquierda)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 4)
+	hbox.add_child(info)
+
+	var name_label := Label.new()
+	name_label.text = slot_name + ("  [activo]" if is_active else "")
+	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	info.add_child(name_label)
+
+	var stats := Label.new()
+	stats.add_theme_font_size_override("font_size", 13)
+	stats.add_theme_color_override("font_color", Color(0.65, 0.7, 0.78))
+	if summary.exists:
+		var last := summary.last_ending if summary.last_ending != "" else "—"
+		stats.text = "T%d · %d ciclos · Ξ %d · último: %s" % [
+			summary.t_count, summary.total_runs, summary.esencia, last,
+		]
+	else:
+		stats.text = "Slot vacío — sin runs registradas"
+	info.add_child(stats)
+
+	# Botones (derecha)
+	var btn_select := Button.new()
+	btn_select.text = "Continuar" if has_save else "Iniciar"
+	btn_select.custom_minimum_size = Vector2(110, 60)
+	btn_select.pressed.connect(_on_slot_chosen.bind(slot_id))
+	hbox.add_child(btn_select)
+
+	var btn_rename := Button.new()
+	btn_rename.text = "Renombrar"
+	btn_rename.custom_minimum_size = Vector2(100, 60)
+	btn_rename.pressed.connect(_on_slot_rename.bind(slot_id))
+	hbox.add_child(btn_rename)
+
+	var btn_delete := Button.new()
+	btn_delete.text = "Borrar"
+	btn_delete.custom_minimum_size = Vector2(80, 60)
+	btn_delete.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
+	btn_delete.pressed.connect(_on_slot_delete.bind(slot_id))
+	# No dejar borrar el último slot (regla de SlotManager.delete_slot)
+	if SlotManager.list_slots().size() <= 1:
+		btn_delete.disabled = true
+		btn_delete.tooltip_text = "No se puede borrar el último slot"
+	hbox.add_child(btn_delete)
+
+	slot_list_container.add_child(card)
+
+func _add_empty_slot_card() -> void:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 70)
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(hbox)
+
+	var info := Label.new()
+	info.text = "Slot vacío disponible"
+	info.add_theme_font_size_override("font_size", 16)
+	info.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7))
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(info)
+
+	var btn_create := Button.new()
+	btn_create.text = "Crear nuevo"
+	btn_create.custom_minimum_size = Vector2(140, 50)
+	btn_create.add_theme_color_override("font_color", Color(0.5, 1.0, 0.7))
+	btn_create.pressed.connect(_on_slot_create_pressed)
+	hbox.add_child(btn_create)
+
+	slot_list_container.add_child(card)
+
+func _add_unlock_hint_label() -> void:
+	var label := Label.new()
+	label.text = "Comprá 'Slot Adicional' en el Banco Genético / Conocimiento para desbloquear más slots."
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", Color(0.5, 0.55, 0.65))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	slot_list_container.add_child(label)
+
+func _on_slot_chosen(slot_id: String) -> void:
+	if slot_id == SlotManager.active_slot:
+		_show_main_menu()
+		return
+	SlotManager.switch_slot(slot_id)
+	# Recarga el legacy del nuevo slot vía reload de escena (estado limpio)
+	SlotManager.skip_selector_once = true
+	get_tree().reload_current_scene()
+
+func _on_slot_create_pressed() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Nuevo slot"
+	dialog.dialog_hide_on_ok = false
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	var lbl := Label.new()
+	lbl.text = "Nombre del slot:"
+	vbox.add_child(lbl)
+	var line := LineEdit.new()
+	line.placeholder_text = "Ej: Run de prueba"
+	line.custom_minimum_size = Vector2(280, 0)
+	vbox.add_child(line)
+	dialog.add_child(vbox)
+	dialog.register_text_enter(line)
+	add_child(dialog)
+	dialog.popup_centered(Vector2(360, 140))
+	line.grab_focus.call_deferred()
+	dialog.confirmed.connect(func():
+		var name :String = line.text
+		var new_id: String = SlotManager.create_slot(name)
+		if new_id != "":
+			SlotManager.switch_slot(new_id)
+			SlotManager.skip_selector_once = true
+			dialog.queue_free()
+			get_tree().reload_current_scene()
+		else:
+			dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+
+func _on_slot_rename(slot_id: String) -> void:
+	var current_name := ""
+	for s in SlotManager.list_slots():
+		if s.get("id", "") == slot_id:
+			current_name = s.get("name", "")
+			break
+	var dialog := AcceptDialog.new()
+	dialog.title = "Renombrar slot"
+	dialog.dialog_hide_on_ok = false
+	var vbox := VBoxContainer.new()
+	var lbl := Label.new()
+	lbl.text = "Nuevo nombre:"
+	vbox.add_child(lbl)
+	var line := LineEdit.new()
+	line.text = current_name
+	line.custom_minimum_size = Vector2(280, 0)
+	vbox.add_child(line)
+	dialog.add_child(vbox)
+	dialog.register_text_enter(line)
+	add_child(dialog)
+	dialog.popup_centered(Vector2(360, 140))
+	line.grab_focus.call_deferred()
+	line.select_all.call_deferred()
+	dialog.confirmed.connect(func():
+		SlotManager.rename_slot(slot_id, line.text)
+		dialog.queue_free()
+		_refresh_slot_list()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+
+func _on_slot_delete(slot_id: String) -> void:
+	var slot_name := slot_id
+	for s in SlotManager.list_slots():
+		if s.get("id", "") == slot_id:
+			slot_name = s.get("name", slot_id)
+			break
+	var confirm := ConfirmationDialog.new()
+	confirm.title = "Borrar slot"
+	confirm.dialog_text = "¿Borrar el slot '%s'?\nEste universo paralelo se perderá: legado, esencia, trascendencias y run actual.\nEsta acción es irreversible." % slot_name
+	confirm.get_ok_button().text = "Borrar"
+	confirm.get_cancel_button().text = "Cancelar"
+	add_child(confirm)
+	confirm.popup_centered(Vector2(440, 200))
+	confirm.confirmed.connect(func():
+		var was_active := slot_id == SlotManager.active_slot
+		var deleted := SlotManager.delete_slot(slot_id)
+		confirm.queue_free()
+		if not deleted:
+			return
+		if was_active:
+			# El slot activo cambió: reload para refrescar legacy en memoria
+			SlotManager.skip_selector_once = false  # Volver a mostrar selector
+			get_tree().reload_current_scene()
+		else:
+			_refresh_slot_list()
+	)
+	confirm.canceled.connect(confirm.queue_free)
 
 # ===================== HISTORIAL DE CICLOS =====================
 func _refresh_history_gate() -> void:

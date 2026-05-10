@@ -18,6 +18,10 @@ var slots: Array = []          # Array of {id, name, created_at}
 var active_slot: String = ""   # ID del slot activo
 var unlocked_count: int = 1    # Cuántos slots están desbloqueados (default 1)
 
+# Flag transitorio: si está true, el próximo MainMenu._ready saltea el SlotSelector.
+# Lo setean los handlers de switch/create cuando reload la escena programáticamente.
+var skip_selector_once: bool = false
+
 func _ready():
 	_ensure_dir(SAVES_DIR)
 	_load_meta()

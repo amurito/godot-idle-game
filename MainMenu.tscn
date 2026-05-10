@@ -244,3 +244,59 @@ custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Volver"
+
+[node name="SlotSelectorPanel" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.03, 0.045, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SlotSelectorPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 30.0
+offset_right = -40.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="SlotSelectorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.824, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "Seleccionar Slot"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="SlotSelectorPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.639, 0.745, 1)
+theme_override_font_sizes/font_size = 14
+text = "Cada slot es un universo paralelo: legado, esencia y trascendencias propias."
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SlotSelectorPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SlotList" type="VBoxContainer" parent="SlotSelectorPanel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="FooterRow" type="HBoxContainer" parent="SlotSelectorPanel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 15
+
+[node name="BtnQuit" type="Button" parent="SlotSelectorPanel/VBoxContainer/FooterRow"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+text = "Salir del juego"
