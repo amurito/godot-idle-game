@@ -786,7 +786,7 @@ func purchase_legacy(id: String) -> bool:
 ## Side-effects de upgrades cuyos efectos viven fuera del estado del legacy
 ## (p.ej. desbloquear un slot global en SlotManager).
 func _apply_post_purchase_effects(id: String) -> void:
-	var entry: Dictionary = BUFF_DATA.get(id, {})
+	var entry: Dictionary = LEGACY_DEFS.get(id, {})
 	var effect: Dictionary = entry.get("effect", {})
 	match effect.get("type", ""):
 		"unlock_save_slot":

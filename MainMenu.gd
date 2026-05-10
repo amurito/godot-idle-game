@@ -370,7 +370,7 @@ func _add_slot_card(slot_data: Dictionary) -> void:
 	stats.add_theme_font_size_override("font_size", 13)
 	stats.add_theme_color_override("font_color", Color(0.65, 0.7, 0.78))
 	if summary.exists:
-		var last := summary.last_ending if summary.last_ending != "" else "—"
+		var last: String = summary.last_ending if summary.last_ending != "" else "—"
 		stats.text = "T%d · %d ciclos · Ξ %d · último: %s" % [
 			summary.t_count, summary.total_runs, summary.esencia, last,
 		]
