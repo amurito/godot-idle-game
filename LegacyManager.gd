@@ -13,7 +13,11 @@ extends Node
 #   - is_unlockable(id) -> bool — si las condiciones de desbloqueo se cumplen
 #   - grant_buff(id) — otorga un buff sin compra (para NG+)
 
-const LEGACY_PATH := "user://legacy_bank.json"
+# LEGACY_PATH ahora es property dinámica que apunta al slot activo de SlotManager.
+# Cada slot tiene su propio legacy_bank.json (universos paralelos).
+var LEGACY_PATH: String:
+	get:
+		return SlotManager.get_active_legacy_path()
 
 # =====================================================
 #  DEFINICIÓN DE BUFFS — 40 mejoras
@@ -527,7 +531,12 @@ func save_legacy():
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
 	}
-	var file := FileAccess.open(LEGACY_PATH, FileAccess.WRITE)
+	var path := LEGACY_PATH
+	# Asegurar que el directorio del slot existe antes de escribir
+	var slot_dir := SlotManager.get_slot_dir(SlotManager.active_slot)
+	if not DirAccess.dir_exists_absolute(slot_dir):
+		DirAccess.make_dir_recursive_absolute(slot_dir)
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
 		file.close()
