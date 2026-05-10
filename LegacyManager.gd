@@ -543,24 +543,75 @@ func save_legacy():
 	var slot_dir := SlotManager.get_slot_dir(SlotManager.active_slot)
 	if not DirAccess.dir_exists_absolute(slot_dir):
 		DirAccess.make_dir_recursive_absolute(slot_dir)
+	# AUTOBACKUP: copiar archivo existente a .bak antes de sobreescribir
+	_backup_legacy(path)
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
 		file.close()
 		print("💾 [Legacy] Banco genético guardado.")
 
-func load_legacy():
-	if not FileAccess.file_exists(LEGACY_PATH):
+## Copia legacy_bank.json → legacy_bank.json.bak si tiene datos reales (> 100 bytes).
+## Llamado siempre antes de sobreescribir para que haya un fallback de la última versión buena.
+func _backup_legacy(path: String) -> void:
+	if not FileAccess.file_exists(path):
 		return
-	var file := FileAccess.open(LEGACY_PATH, FileAccess.READ)
+	var src := FileAccess.open(path, FileAccess.READ)
+	if not src:
+		return
+	var content := src.get_as_text()
+	src.close()
+	if content.length() < 100:
+		return   # archivo vacío o trivial, no vale backupear
+	var bak := FileAccess.open(path + ".bak", FileAccess.WRITE)
+	if bak:
+		bak.store_string(content)
+		bak.close()
+
+## Parsea un archivo JSON y devuelve su contenido como Dictionary, o {} si falla.
+func _parse_json_file(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
-		return
+		return {}
 	var json := JSON.new()
 	if json.parse(file.get_as_text()) != OK:
 		file.close()
-		return
-	var data: Dictionary = json.data
+		return {}
 	file.close()
+	return json.data if json.data is Dictionary else {}
+
+## Devuelve true si el diccionario cargado no tiene progreso real.
+## Evita usar como "banco vacío" un archivo que se inicializó con defaults.
+func _is_empty_bank(data: Dictionary) -> bool:
+	if data.is_empty():
+		return true
+	return (data.get("trascendencia_count", 0) == 0
+		and (data.get("buffs", {}) as Dictionary).is_empty()
+		and data.get("legacy_points", 0) == 0
+		and (data.get("endings_achieved", {}) as Dictionary).is_empty())
+
+func load_legacy():
+	var path := LEGACY_PATH
+	var data := _parse_json_file(path)
+
+	# RECOVERY: si el archivo principal está vacío/corrupto y hay backup con datos reales,
+	# restaurar desde el backup y reescribir el principal.
+	if _is_empty_bank(data):
+		var bak_path := path + ".bak"
+		if FileAccess.file_exists(bak_path):
+			var bak_data := _parse_json_file(bak_path)
+			if not _is_empty_bank(bak_data):
+				print("⚠️ [Legacy] Banco principal vacío — restaurando desde backup automático")
+				data = bak_data
+				var restore := FileAccess.open(path, FileAccess.WRITE)
+				if restore:
+					restore.store_string(JSON.stringify(data))
+					restore.close()
+
+	if data.is_empty():
+		return
 
 	legacy_points = data.get("legacy_points", 0)
 	internal_spores_total = data.get("spores_buffer", 0.0)

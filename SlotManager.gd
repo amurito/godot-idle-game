@@ -94,6 +94,17 @@ func _move_file(from: String, to: String) -> void:
 		return
 	var content := src.get_as_text()
 	src.close()
+	# Guard: si el destino ya tiene datos reales, no sobreescribir.
+	# Evita que una migración pise datos buenos con un archivo vacío/stale.
+	if FileAccess.file_exists(to):
+		var dst_check := FileAccess.open(to, FileAccess.READ)
+		if dst_check:
+			var existing := dst_check.get_as_text()
+			dst_check.close()
+			if existing.length() > 200:
+				print("⚠️ [SlotManager] Destino ya tiene datos reales, omitiendo migración de: ", to)
+				DirAccess.remove_absolute(from)
+				return
 	var dst := FileAccess.open(to, FileAccess.WRITE)
 	if dst:
 		dst.store_string(content)
