@@ -56,6 +56,8 @@ func build_save_data(main: Node) -> Dictionary:
 			"mutation_red_micelial": EvoManager.mutation_red_micelial,
 			"mutation_sporulation": EvoManager.mutation_sporulation,
 			"mutation_parasitism": EvoManager.mutation_parasitism,
+			"mutation_allostasis": EvoManager.mutation_allostasis,
+			"mutation_homeorhesis": EvoManager.mutation_homeorhesis,
 			"mutation_depredador": EvoManager.mutation_depredador,
 			"mutation_met_oscuro": EvoManager.mutation_met_oscuro,
 			"depredador_timer": EvoManager.depredador_timer,
@@ -169,6 +171,8 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.mutation_red_micelial = ev.get("mutation_red_micelial", EvoManager.mutation_red_micelial)
 		EvoManager.mutation_sporulation = ev.get("mutation_sporulation", EvoManager.mutation_sporulation)
 		EvoManager.mutation_parasitism = ev.get("mutation_parasitism", EvoManager.mutation_parasitism)
+		EvoManager.mutation_allostasis = ev.get("mutation_allostasis", EvoManager.mutation_allostasis)
+		EvoManager.mutation_homeorhesis = ev.get("mutation_homeorhesis", EvoManager.mutation_homeorhesis)
 		EvoManager.mutation_depredador = ev.get("mutation_depredador", EvoManager.mutation_depredador)
 		EvoManager.mutation_met_oscuro = ev.get("mutation_met_oscuro", EvoManager.mutation_met_oscuro)
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
@@ -210,6 +214,9 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		RunManager.carnaval_total_rotations = pt.get("carnaval_total_rotations", RunManager.carnaval_total_rotations)
 		RunManager.carnaval_peak_money = pt.get("carnaval_peak_money", RunManager.carnaval_peak_money)
 		RunManager.reencarnacion_active = pt.get("reencarnacion_active", RunManager.reencarnacion_active)
+		# Re-sincronizar flags de mutación con el índice activo del carnaval
+		if RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
+			EvoManager.carnaval_set_mutation(RunManager.carnaval_mutations[RunManager.carnaval_index])
 
 	# Los logros ahora viven en legacy_bank.json y se cargan desde LegacyManager.load_legacy().
 	# Si el save viejo tenía data["achievements"], ya se migró en el bloque de flags de arriba.
@@ -274,3 +281,20 @@ func delete_save_and_restart():
 			main.reset_local_state()
 	
 	get_tree().reload_current_scene()
+
+
+## Muestra un ConfirmationDialog antes de borrar el slot activo.
+## Mantiene Legacy y Trascendencia — solo borra la run actual.
+func confirm_and_reset(parent: Node) -> void:
+	var dlg := ConfirmationDialog.new()
+	dlg.title = "Borrar run actual"
+	dlg.dialog_text = "Esto borra la run actual del slot activo.\nLegacy y Trascendencia se preservan.\n\n¿Continuar?"
+	dlg.ok_button_text = "Borrar y reiniciar"
+	dlg.get_cancel_button().text = "Cancelar"
+	parent.add_child(dlg)
+	dlg.confirmed.connect(func():
+		dlg.queue_free()
+		delete_save_and_restart())
+	dlg.canceled.connect(func():
+		dlg.queue_free())
+	dlg.popup_centered()

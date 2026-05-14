@@ -134,6 +134,61 @@ func close_run(route: String, reason: String):
 			LegacyManager.add_pl(extra_pl)
 			main.add_lap("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
+	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
+	if LegacyManager.trascendencia_count >= 1:
+		var ng_bonus := 0
+		var ng_formula := ""
+		match route:
+			# ── Tier 1 ──
+			"HOMEOSTASIS":
+				var raw := int(floor(resilience_score / 50.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "resiliencia %.0f / 50 = %d (cap 6)" % [resilience_score, ng_bonus]
+			"SIMBIOSIS":
+				var raw := int(floor(main.run_time / 300.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "run_time %.0fs / 300 = %d (cap 6)" % [main.run_time, ng_bonus]
+			"HIPERASIMILACION", "HIPERASIMILACIÓN":
+				var raw := int(floor(StructuralModel.epsilon_peak * 5.0))
+				ng_bonus = min(raw, 5)
+				ng_formula = "ε_peak %.2f × 5 = %d (cap 5)" % [StructuralModel.epsilon_peak, ng_bonus]
+			"PARASITISMO":
+				var raw := int(floor(BiosphereEngine.biomasa / 8.0))
+				ng_bonus = min(raw, 4)
+				ng_formula = "biomasa %.1f / 8 = %d (cap 4)" % [BiosphereEngine.biomasa, ng_bonus]
+			# ── Red micelial ──
+			"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL":
+				var raw := int(floor(BiosphereEngine.micelio / 20.0))
+				ng_bonus = min(raw, 5)
+				ng_formula = "micelio %.1f / 20 = %d (cap 5)" % [BiosphereEngine.micelio, ng_bonus]
+			# ── Tier 2 ──
+			"ALLOSTASIS":
+				ng_bonus = min(disturbances_survived, 5)
+				ng_formula = "perturbaciones %d (cap 5)" % disturbances_survived
+			"HOMEORHESIS":
+				var raw := int(floor(omega_min_peak * 10.0))
+				ng_bonus = min(raw, 7)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 7)" % [omega_min_peak, ng_bonus]
+			"MUTACION_FINAL", "METABOLISMO OSCURO":
+				var raw := EvoManager.met_oscuro_devoured_count * 2
+				ng_bonus = min(raw, 8)
+				ng_formula = "devoured %d × 2 = %d (cap 8)" % [EvoManager.met_oscuro_devoured_count, ng_bonus]
+			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
+				var raw := int(floor(carnaval_total_rotations / 2.0))
+				ng_bonus = min(raw, 8)
+				ng_formula = "rotaciones %d / 2 = %d (cap 8)" % [carnaval_total_rotations, ng_bonus]
+			"DOMADOR DEL CAOS":
+				var raw := int(floor(carnaval_peak_money / 500_000.0))
+				ng_bonus = min(raw, 8)
+				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap 8)" % [carnaval_peak_money / 1_000_000.0, ng_bonus]
+			"ASCESIS_PROFUNDA":
+				var raw := int(floor(omega_min_peak * 10.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 6)" % [omega_min_peak, ng_bonus]
+		if ng_bonus > 0:
+			LegacyManager.add_pl(ng_bonus)
+			main.add_lap("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
+
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
 	disturbances_without_reset = 0

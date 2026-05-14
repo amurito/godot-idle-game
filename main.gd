@@ -747,12 +747,6 @@ func _ready():
 	# =====================================================
 	_apply_cosmic_buffs()
 
-	# =====================================================
-	#  RUTAS POST-TRASCENDENCIA — Activar si corresponde
-	# =====================================================
-	RunManager.activate_post_tras_route()
-	UIManager.update_route_badge()
-
 	update_ui()
 
 	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
@@ -839,6 +833,14 @@ func _ready():
 
 	# Restaurar juego vía Autoload
 	SaveManager.load_game(self)
+
+	# =====================================================
+	#  RUTAS POST-TRASCENDENCIA — Activar DESPUÉS de load_game
+	#  para que no sean sobreescritas por el guardado anterior
+	# =====================================================
+	RunManager.activate_post_tras_route()
+	UIManager.update_route_badge()
+
 	call_deferred("_update_legacy_indicators")
 
 	# --- EMERGENCY RE-OPEN (v0.8.43) ---
