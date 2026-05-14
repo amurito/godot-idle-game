@@ -32,6 +32,9 @@ RunManager="*res://RunManager.gd"
 EconomyManager="*res://EconomyManager.gd"
 StructuralModel="*res://StructuralModel.gd"
 EmojiToRichText="*res://EmojiToRichText.gd"
+AudioManager="*res://AudioManager.gd"
+TutorialManager="*res://TutorialManager.gd"
+TelemetryManager="*res://TelemetryManager.gd"
 
 [editor]
 

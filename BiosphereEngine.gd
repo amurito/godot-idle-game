@@ -82,6 +82,12 @@ func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation:
 	var biomass_gain = hifas * sqrt(nutrientes) * 0.02 * delta
 	if is_parasitism:
 		biomass_gain *= 2.0 # Descontrol parásito
+
+	# ABSORCIÓN MEJORADA (Legado): Las hifas extraen más biomasa por nutriente absorbido.
+	var absorb_mult: float = LegacyManager.get_effect_value("nutrient_absorb_mult")
+	if absorb_mult > 0.0:
+		biomass_gain *= (1.0 + absorb_mult)
+
 	biomasa += biomass_gain
 
 	# Consumo de nutrientes

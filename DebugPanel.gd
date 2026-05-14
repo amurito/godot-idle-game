@@ -185,6 +185,16 @@ func _build_zona_peligrosa(parent: VBoxContainer) -> void:
 	)
 	hbox.add_child(btn_wipe)
 
+	var btn_tutorial := Button.new()
+	btn_tutorial.text = "Reset Tutorial"
+	btn_tutorial.custom_minimum_size = Vector2(120, 30)
+	btn_tutorial.modulate = Color(0.7, 0.7, 1.0)
+	btn_tutorial.pressed.connect(func():
+		TutorialManager.reset_tutorial()
+		_main.show_system_toast("DEBUG: Tutorial reiniciado")
+	)
+	hbox.add_child(btn_tutorial)
+
 
 func refresh_info() -> void:
 	if not is_instance_valid(_info_label):

@@ -94,6 +94,8 @@ func buy(id: String, money: float) -> bool:
 	var def = get_def(id)
 
 	s.level += 1
+	AudioManager.play_sfx("upgrade")
+	TutorialManager.notify_upgrade_bought()
 
 	if def.is_multiplicative:
 		s.current_value *= def.gain
@@ -129,6 +131,10 @@ func buy(id: String, money: float) -> bool:
 
 	# Notificar logros
 	AchievementManager.on_upgrade_bought(id)
+	TelemetryManager.track_event("upgrade_bought", {
+		"upgrade_id": id,
+		"new_level": int(s.level)
+	})
 
 	return true
 

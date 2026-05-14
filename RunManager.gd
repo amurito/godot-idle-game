@@ -90,6 +90,7 @@ func close_run(route: String, reason: String):
 	run_closed = true
 	final_route = route
 	final_reason = reason
+	AudioManager.play_sfx("run_close")
 	main.add_lap("🚩 RUN CERRADA: " + route)
 
 	LegacyManager.last_run_ending = route
@@ -103,8 +104,8 @@ func close_run(route: String, reason: String):
 	var pl_to_add := 0
 	match route:
 		"HOMEOSTASIS": pl_to_add = 3
-		"ALLOSTASIS": pl_to_add = 4
-		"HOMEORHESIS": pl_to_add = 8
+		"ALLOSTASIS": pl_to_add = 6
+		"HOMEORHESIS": pl_to_add = 10
 		"SIMBIOSIS": pl_to_add = 4
 		# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
 		# No agregar aquí para evitar doble award
@@ -144,6 +145,16 @@ func close_run(route: String, reason: String):
 		StructuralModel.epsilon_peak,
 		total_pl_gained,
 	)
+
+	TelemetryManager.close_run({
+		"final_route": route,
+		"run_time": main.run_time,
+		"pl_gained": total_pl_gained,
+		"epsilon_peak": StructuralModel.epsilon_peak,
+		"max_mu": main.mu_peak_run,
+		"max_delta_per_sec": main.delta_peak_run,
+		"trascendencia_count": LegacyManager.trascendencia_count
+	})
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -257,13 +268,11 @@ func check_symbiosis_final(_delta: float):
 		and main.run_time > 60.0:
 		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
 
-func check_fractura_epistemica(_delta: float):
-	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
+func is_fractura_epistemica_available() -> bool:
+	# FRACTURA EPISTÉMICA: retorna true cuando las condiciones de colapso controlado están activas
 	if carnaval_active or run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
-		return
-	# Condición: ε_effective > 0.90 Y Ω > 0.30 (colapso controlado)
-	if StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30:
-		close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
+		return false
+	return StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30
 
 func check_parasitism_final(_delta: float):
 	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:

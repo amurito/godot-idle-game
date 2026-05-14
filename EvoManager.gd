@@ -273,20 +273,37 @@ func _update_simbiosis(ctx: Dictionary) -> void:
 		_set_genome_state("simbiosis", "dormido")
 
 
-## HOMEOSTASIS (v0.8.10 — Ruta del Orden): 2 sistemas activos + sin colapso (ε < 0.50).
+## HOMEOSTASIS (Ruta del Equilibrio): ε en banda + Ω balanceado + flujos duales.
 func _update_homeostasis(ctx: Dictionary) -> void:
-	var dos_sistemas_activos: bool = ctx.accounting >= 1 and (ctx.biomasa > 1.0 or ctx.hifas > 2.0)
-	var sin_colapso: bool = ctx.epsilon < 0.50
+	var t := LegacyManager.trascendencia_count
 	var low_fungal_noise: bool = ctx.hifas < 8.0
+
+	# Condiciones de latente según tier de run
+	var epsilon_ok: bool
+	var flujos_ok: bool
+	var omega_ok: bool
+	var orden_ok: bool
+
+	if t >= 1:
+		epsilon_ok = ctx.epsilon > 0.05 and ctx.epsilon < 0.25
+		var total_flow: float = float(ctx.ap["activo"]) + float(ctx.ap["pasivo"])
+		flujos_ok = total_flow > 0 and (float(ctx.ap["pasivo"]) / total_flow) >= 0.30
+		omega_ok = StructuralModel.omega >= 0.55
+		orden_ok = ctx.accounting >= 2
+	else:
+		epsilon_ok = ctx.epsilon > 0.02 and ctx.epsilon < 0.45
+		flujos_ok = ctx.ap["pasivo"] > 0 and ctx.ap["activo"] > 0
+		omega_ok = StructuralModel.omega >= 0.40
+		orden_ok = ctx.accounting >= 1
 
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism \
 			or mutation_symbiosis or mutation_allostasis or mutation_homeorhesis:
 		_set_genome_state("homeostasis", "bloqueado")
 	elif mutation_homeostasis:
 		_set_genome_state("homeostasis", "activo")
-	elif main.is_homeostasis_candidate(main.LOGIC_TICK) and low_fungal_noise and sin_colapso:
+	elif main.is_homeostasis_candidate(main.LOGIC_TICK) and low_fungal_noise and epsilon_ok:
 		_set_genome_state("homeostasis", "latente")
-	elif dos_sistemas_activos and ctx.run_time > 120.0:
+	elif orden_ok and flujos_ok and omega_ok and ctx.run_time > 120.0:
 		_set_genome_state("homeostasis", "latente")
 	else:
 		_set_genome_state("homeostasis", "dormido")
@@ -668,8 +685,12 @@ func get_reactor_color() -> Color:
 	# Prioridad 3: Mutaciones base activas
 	if mutation_hyperassimilation:
 		return Color(1.0, 0.1, 0.6)       # Magenta
+	if mutation_homeorhesis:
+		return Color(0.55, 1.0, 0.92)     # Aqua Nacarado (NG+++)
+	if mutation_allostasis:
+		return Color(0.2, 1.0, 0.88)      # Turquesa Brillante (NG+)
 	if mutation_homeostasis:
-		return Color(0.2, 0.85, 1.0)      # Celeste Suave
+		return Color(0.05, 0.88, 0.68)    # Verde Equilibrio
 	if mutation_parasitism:
 		return Color(1.0, 0.45, 0.0)      # Naranja
 	if mutation_red_micelial:

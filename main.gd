@@ -50,6 +50,8 @@ const MET_OSCURO_STATUS_INTERVAL := 12.0
 const MET_OSCURO_SEAL_COOLDOWN := 120.0  # Mínimo 2min antes de poder sellar
 var _met_oscuro_seal_btn: Button = null
 var _simbiosis_seal_btn: Button = null
+var _colapso_controlado_btn: Button = null
+var _fractura_notified: bool = false
 
 # NG+ Metabolismo Glitch
 var _glitch_was_active := false
@@ -62,6 +64,8 @@ var cached_mu: float = 1.0
 var mu_peak_run: float = 0.0  # Pico de μ en la run actual (para historial de ciclos)
 
 var delta_per_sec: float = 0.0
+var delta_peak_run: float = 0.0
+var _telemetry_sample_timer: float = 0.0
 
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
@@ -279,6 +283,42 @@ func _on_simbiosis_seal_pressed():
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.visible = false
 	close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
+
+func _update_colapso_controlado_btn():
+	if RunManager.run_closed:
+		if is_instance_valid(_colapso_controlado_btn):
+			_colapso_controlado_btn.visible = false
+		return
+	var available := RunManager.is_fractura_epistemica_available()
+	if not available:
+		if is_instance_valid(_colapso_controlado_btn):
+			_colapso_controlado_btn.visible = false
+		_fractura_notified = false
+		return
+	if not _fractura_notified:
+		_fractura_notified = true
+		add_lap("⚡ FRACTURA EPISTÉMICA — ε > 0.90 con Ω estable. Podés provocar el colapso (+6 PL)")
+	if _colapso_controlado_btn == null or not is_instance_valid(_colapso_controlado_btn):
+		_colapso_controlado_btn = Button.new()
+		_colapso_controlado_btn.add_theme_font_size_override("font_size", 20)
+		_colapso_controlado_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.1))
+		_colapso_controlado_btn.custom_minimum_size = Vector2(0, 70)
+		_colapso_controlado_btn.pressed.connect(_on_colapso_controlado_pressed)
+		var panel := get_node_or_null("UIRootContainer/RightPanel")
+		if panel:
+			panel.add_child(_colapso_controlado_btn)
+			panel.move_child(_colapso_controlado_btn, 0)
+	var eps_peak_bonus := int(floor(StructuralModel.epsilon_peak * LegacyManager.get_effect_value("epsilon_peak_pl_bonus")))
+	var total_label := 6 + eps_peak_bonus
+	_colapso_controlado_btn.text = EmojiToRichText.strip("⚡ COLAPSO CONTROLADO (+%d PL)" % total_label)
+	_colapso_controlado_btn.visible = true
+
+func _on_colapso_controlado_pressed():
+	if RunManager.run_closed:
+		return
+	if is_instance_valid(_colapso_controlado_btn):
+		_colapso_controlado_btn.visible = false
+	close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
 
 func _apply_legacy_buffs() -> void:
 	# LEGADO METABÓLICO: dinero inicial (150 × level, escala con cost_growth)
@@ -549,19 +589,32 @@ func _on_upgrade_bought_actions(id: String) -> void:
 #  HOMEOSTASIS TRACKING helper v0.8
 # =====================================================
 func is_homeostasis_candidate(_delta: float) -> bool:
-	# Retorna TRUE si las condiciones actuales se cumplen (para habilitar el botón)
-	var banda_estricta = RunManager.get_en_banda_homeostatica()
-	var flexibilidad_minima = StructuralModel.omega> 0.25
-	var control_activo = UpgradeManager.level("accounting") >= 1
-	var metabolismo_activo = delta_per_sec > 30.0
-	var crecimiento_controlado = BiosphereEngine.biomasa < 12.0
-	var redundancia = StructuralModel.unlocked_d and StructuralModel.unlocked_e
-	
+	# Retorna TRUE si las condiciones de equilibrio activo se cumplen (para habilitar el botón)
+	var t := LegacyManager.trascendencia_count
+	var ap: Dictionary = get_active_passive_breakdown()
+	var redundancia := StructuralModel.unlocked_d and StructuralModel.unlocked_e
 	var no_hyper := not EvoManager.mutation_hyperassimilation
-	# 🔒 BLOQUEO: Red Micelial madura no puede homeostasiar
-	var red_blocks_homeostasis := EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2
+	var red_blocks := EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2
 
-	return banda_estricta and flexibilidad_minima and control_activo and metabolismo_activo and crecimiento_controlado and redundancia and no_hyper and not red_blocks_homeostasis
+	if t >= 1:
+		# NG+: equilibrio más exigente — la banda se estrecha y el sistema debe ser más maduro
+		var eps_eff := StructuralModel.epsilon_effective
+		var banda_ng := eps_eff >= 0.05 and eps_eff <= 0.25
+		var omega_ng := StructuralModel.omega >= 0.55
+		var acc_ng := UpgradeManager.level("accounting") >= 2
+		var delta_ng := delta_per_sec > 150.0
+		var total_flow: float = float(ap["activo"]) + float(ap["pasivo"])
+		var balance_ng := total_flow > 0 and (float(ap["pasivo"]) / total_flow) >= 0.30
+		var bio_ng := BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
+		return banda_ng and omega_ng and acc_ng and delta_ng and balance_ng and bio_ng and redundancia and no_hyper and not red_blocks
+	else:
+		var banda_estricta := RunManager.get_en_banda_homeostatica()
+		var equilibrio_omega := StructuralModel.omega >= 0.40
+		var control_activo := UpgradeManager.level("accounting") >= 1
+		var metabolismo_activo := delta_per_sec > 30.0
+		var produccion_dual: bool = float(ap["pasivo"]) > 0
+		var crecimiento_controlado := BiosphereEngine.biomasa < 12.0
+		return banda_estricta and equilibrio_omega and control_activo and metabolismo_activo and produccion_dual and crecimiento_controlado and redundancia and no_hyper and not red_blocks
 # =====================================================
 #  RUTA FINAL DE LA RUN v0.8
 # =====================================================
@@ -692,6 +745,8 @@ func reset_local_state():
 	EconomyManager.reset()
 	StructuralModel.reset()
 	delta_per_sec = 0.0
+	delta_peak_run = 0.0
+	_telemetry_sample_timer = 0.0
 	run_time = 0.0
 	mu_peak_run = 0.0
 	# Los logros persisten entre runs (vivían en main.gd como flags, ahora en AchievementManager).
@@ -709,6 +764,10 @@ func reset_local_state():
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.queue_free()
 		_simbiosis_seal_btn = null
+	if is_instance_valid(_colapso_controlado_btn):
+		_colapso_controlado_btn.queue_free()
+		_colapso_controlado_btn = null
+	_fractura_notified = false
 	mente_colmena_timer = 0.0
 	_mente_colmena_buy_timer = 0.0
 	_glitch_was_active = false
@@ -722,16 +781,10 @@ func reset_local_state():
 func _ready():
 	show()
 	add_to_group("main")
+	AudioManager.play_music("ambient")
 	UIManager.setup(ui_root)
 	LogManager.show_all_laps = false
 	update_lap_toggle_button()
-	if RunManager.legacy_homeostasis:
-		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.15)
-	
-	if LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS":
-		RunManager.homeostasis_mode = true
-		RunManager.post_homeostasis = true # Allows perfect homeostasis legacy to proc, or just perturbations
-		
 	update_lap_toggle_button()
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
@@ -742,22 +795,6 @@ func _ready():
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
-
-	# =====================================================
-	#  BANCO GENÉTICO — Aplicar buffs al inicio de run
-	# =====================================================
-	_apply_legacy_buffs()
-
-	# =====================================================
-	#  BANCO CÓSMICO — Aplicar buffs al inicio de run
-	# =====================================================
-	_apply_cosmic_buffs()
-
-	# =====================================================
-	#  RUTAS POST-TRASCENDENCIA — Activar si corresponde
-	# =====================================================
-	RunManager.activate_post_tras_route()
-	UIManager.update_route_badge()
 
 	update_ui()
 
@@ -802,7 +839,7 @@ func _ready():
 	reset_btn.text = EmojiToRichText.strip("⚠️ Reset")
 	reset_btn.modulate = Color(0.8, 0.4, 0.4)
 	reset_btn.add_theme_font_size_override("font_size", 10)
-	reset_btn.pressed.connect(SaveManager.delete_save_and_restart)
+	reset_btn.pressed.connect(func(): SaveManager.confirm_and_reset(self))
 	bottom_left_panel.add_child(reset_btn)
 	
 	var legacy_btn := Button.new()
@@ -810,6 +847,27 @@ func _ready():
 	legacy_btn.add_theme_font_size_override("font_size", 11)
 	legacy_btn.pressed.connect(_on_legacy_pressed)
 	bottom_left_panel.add_child(legacy_btn)
+
+	var settings_btn := Button.new()
+	settings_btn.text = "Ajustes"
+	settings_btn.add_theme_font_size_override("font_size", 11)
+	settings_btn.pressed.connect(func(): AudioManager.show_settings_panel(self))
+	bottom_left_panel.add_child(settings_btn)
+
+	var shortcuts_btn := Button.new()
+	shortcuts_btn.text = "?"
+	shortcuts_btn.add_theme_font_size_override("font_size", 14)
+	shortcuts_btn.tooltip_text = "Atajos de teclado e indicadores"
+	shortcuts_btn.custom_minimum_size = Vector2(32.0, 0.0)
+	shortcuts_btn.pressed.connect(func(): TutorialManager.toggle_shortcuts_panel(self))
+	bottom_left_panel.add_child(shortcuts_btn)
+
+	var objectives_btn := Button.new()
+	objectives_btn.text = "Obj."
+	objectives_btn.add_theme_font_size_override("font_size", 11)
+	objectives_btn.tooltip_text = "Progreso de la run actual"
+	objectives_btn.pressed.connect(func(): TutorialManager.toggle_objectives_panel(self))
+	bottom_left_panel.add_child(objectives_btn)
 
 	# === EVO MANAGER SIGNALS ===
 	EvoManager.mutation_activated.connect(_on_mutation_activated)
@@ -839,6 +897,28 @@ func _ready():
 
 	# Restaurar juego vía Autoload
 	SaveManager.load_game(self)
+
+	# =====================================================
+	#  RUTAS POST-TRASCENDENCIA — Activar DESPUÉS de load_game
+	#  para que el estado de carnaval/mutaciones del save no
+	#  sea sobreescrito por activate_post_tras_route().
+	# =====================================================
+	RunManager.activate_post_tras_route()
+	UIManager.update_route_badge()
+
+	# Aplicar buffs DESPUÉS de load_game para que:
+	# 1) _file_existed_on_load sea correcto para bonuses one-time
+	# 2) StructuralModel.reset() y RunManager.reset() (en _reset_for_new_slot)
+	#    no borren los floors aplicados aquí.
+	_apply_legacy_buffs()
+	_apply_cosmic_buffs()
+	if RunManager.legacy_homeostasis:
+		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.15)
+	if not RunManager.run_closed:
+		if LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS":
+			RunManager.homeostasis_mode = true
+			RunManager.post_homeostasis = true
+
 	call_deferred("_update_legacy_indicators")
 
 	# --- EMERGENCY RE-OPEN (v0.8.43) ---
@@ -870,6 +950,13 @@ func _ready():
 		call_deferred("_replace_emojis_for_html5")
 	if _use_3d_reactor:
 		_init_reactor_3d()
+
+	# Tutorial — arrancar después de que todo el árbol esté listo
+	TutorialManager.set_main(self)
+	TutorialManager.start()
+	TutorialManager.setup_header_tooltips()
+	if not RunManager.run_closed:
+		TelemetryManager.start_run(self)
 
 func _replace_emojis_for_html5():
 	print("✅ INICIANDO reemplazo de emojis...")
@@ -925,6 +1012,8 @@ func _replace_emojis_in_node(node: Node):
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
+	AudioManager.play_sfx("click")
+	TutorialManager.notify_reactor_clicked()
 	var power := get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
@@ -1154,6 +1243,12 @@ func _on_logic_tick():
 	# 1) Economía base
 	apply_dynamic_persistence(dt)
 	delta_per_sec = get_passive_total()
+	delta_peak_run = max(delta_peak_run, get_delta_total())
+	TelemetryManager.sample_metrics(self, false)
+	_telemetry_sample_timer += dt
+	if _telemetry_sample_timer >= 30.0:
+		_telemetry_sample_timer = 0.0
+		TelemetryManager.sample_metrics(self)
 	update_economy(dt)
 
 	# 2) Estrés del sistema
@@ -1266,9 +1361,9 @@ func _on_logic_tick():
 		RunManager.check_perfect_homeostasis()
 	if EvoManager.mutation_parasitism:
 		RunManager.check_parasitism_final(dt)
-	# FRACTURA EPISTÉMICA: siempre chequear si está habilitada
+	# FRACTURA EPISTÉMICA: mostrar botón manual de colapso controlado
 	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
-		RunManager.check_fractura_epistemica(dt)
+		_update_colapso_controlado_btn()
 		_parasitism_status_timer += dt
 		if _parasitism_status_timer >= PARASITISM_STATUS_INTERVAL:
 			_parasitism_status_timer = 0.0
@@ -1354,6 +1449,7 @@ func _notification(what):
 @onready var dimmer = $DimmerBackground
 
 func _on_mutation_activated(id: String, display_name: String):
+	AudioManager.play_sfx("mutation")
 	LogManager.add("🧬 Mutación irreversible — " + display_name, self)
 
 	# Mostrar efectos activos como lap (visible en pantalla final)
@@ -1888,9 +1984,14 @@ func _update_legacy_indicators() -> void:
 		"metabolismo_glitch":     ["Met.Osc", "Metabolismo Oscuro\nClick ×1.5 · Pasivo ×1.8 (si ε > 0.40)", Color(0.6, 0.1, 0.8)],
 		"legado_alostasis":       ["Alost.", "Resiliencia Alostática\nω_min ≥ 0.45 garantizado", Color(0.5, 0.8, 1.0)],
 		"legado_homeorresis":     ["Crist.", "Trascendencia Cristalina\nω_min ≥ 0.55 garantizado", Color(0.3, 1.0, 0.9)],
-		"glitch_persistente":     ["Glitch", "Glitch Persistente\nPasivo +15%", Color(0.7, 0.7, 0.7)],
+		"glitch_persistente":     ["Glitch", "Glitch Persistente\nPasivo +15% (con Red Micelial activa)", Color(0.7, 0.7, 0.7)],
 		"setpoint_adaptativo":    ["Set.", "Setpoint Adaptativo\nRecuperación de Ω ×1.5", Color(0.5, 0.8, 1.0)],
 		"eco_primordial":         ["Eco", "Eco Primordial\nTodos los ingresos +10%", Color(0.4, 1.0, 0.6)],
+		"absorcion_mejorada":     ["Abs.", "Absorción Mejorada\nBiomasa por nutriente +20% por nivel", Color(0.3, 0.85, 0.4)],
+		"deriva_controlada":      ["Deriv.", "Deriva Controlada\nPersistencia converge +40% más rápido", Color(0.6, 0.75, 1.0)],
+		"equilibrio_heredado":    ["Eq.H", "Equilibrio Heredado\nRecuperación de Ω ×1.25", Color(0.3, 0.8, 1.0)],
+		"cristalizacion_permanente": ["Crist.", "Cristalización Permanente\nDaño de shock extremo a Ω -50%", Color(0.5, 0.9, 1.0)],
+		"umbral_adaptativo":      ["Umb.", "Umbral Adaptativo\nRecuperación post-perturbación ×1.40", Color(0.6, 0.9, 0.7)],
 	}
 
 	for id in INDICATORS:
@@ -2054,6 +2155,8 @@ func _input(event):
 				UIManager.genome_scroll.visible = lab_mode
 			if LogManager.show_all_laps != lab_mode:
 				toggle_lap_view()
+			if lab_mode:
+				TutorialManager.notify_lab_opened()
 
 		if OS.is_debug_build() and event.keycode == KEY_F1 and is_instance_valid(_debug_panel):
 			_debug_panel.visible = not _debug_panel.visible

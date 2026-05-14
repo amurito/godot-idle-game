@@ -94,10 +94,17 @@ func apply_dynamic_persistence(delta: float) -> void:
 	var n_struct := float(get_structural_upgrades())
 	var target := get_persistence_target()
 	var a := f_n_alpha(n_struct)
+
+	# DERIVA CONTROLADA (Legado): Convergencia más rápida hacia el setpoint de persistencia.
+	var conv_speed_mult := 1.0
+	var conv_bonus: float = LegacyManager.get_effect_value("persistence_conv_speed")
+	if conv_bonus > 0.0:
+		conv_speed_mult = conv_bonus  # valor ya es el multiplicador (ej. 0.40 = +40%)
+
 	persistence_dynamic = lerp(
 		persistence_dynamic,
 		target,
-		clamp(a * delta * 0.4 * persistence_inertia, 0.0, 0.25)
+		clamp(a * delta * 0.4 * persistence_inertia * (1.0 + conv_speed_mult), 0.0, 0.25)
 	)
 
 # ==================== OBJETIVO DE PERSISTENCIA ====================
@@ -192,6 +199,17 @@ func get_mu_structural_factor() -> float:
 
 	var mu_fungi: float = BiosphereEngine.get_mu_fungi_multiplier(EvoManager.mutation_hyperassimilation, EvoManager.mutation_homeostasis)
 	var mu_total: float = mu_base * mu_fungi
+
+	# B — Contabilidad amplifica μ: orden administrativo → eficiencia cognitiva
+	var acc_lvl: int = UpgradeManager.level("accounting")
+	if acc_lvl > 0:
+		mu_total *= (1.0 + acc_lvl * 0.08)
+
+	# C — Resiliencia acumulada amplifica μ (solo durante homeostasis)
+	# Cap en 300 (umbral homeostasis_perfecta), bonus máx +30%
+	if RunManager.resilience_score > 0.0:
+		var res_factor: float = min(RunManager.resilience_score / 300.0, 1.0) * 0.30
+		mu_total *= (1.0 + res_factor)
 
 	return mu_total
 

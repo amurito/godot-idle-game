@@ -60,6 +60,10 @@ func get_click_power() -> float:
 	if EvoManager.mutation_hyperassimilation:
 		power *= 10.0 # RUSH DE CLICK EXTREMO
 
+	# HOMEOSTASIS: Orden Administrativo — +50% a toda la producción (click + pasivo)
+	if EvoManager.mutation_homeostasis:
+		power *= 1.5
+
 	# MET.OSCURO: energía alternativa ×3 (reemplaza el x10 de hiper)
 	if EvoManager.mutation_met_oscuro:
 		power *= 3.0
@@ -161,7 +165,7 @@ func get_passive_total() -> float:
 	if EvoManager.mutation_hyperassimilation:
 		total *= 0.25 # Sacrifica el pasivo por el núcleo
 	if EvoManager.mutation_homeostasis:
-		total *= 1.5 # Orden Administrativa
+		total *= 1.5 # Orden Administrativa (+50% pasivo — el mismo factor se aplica en get_click_power)
 	if EvoManager.mutation_parasitism:
 		total *= 1.2 # Crecimiento Parásito inicial
 		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo

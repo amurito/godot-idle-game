@@ -35,6 +35,7 @@ var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
 
 func _ready():
+	AudioManager.play_music("ambient")
 	# Conectar handlers que no dependen del slot
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
@@ -88,6 +89,29 @@ func _setup_main_menu_for_active_slot() -> void:
 	# --- TRASCENDENCIA UI (si no fue creada todavía) ---
 	if btn_trascendencia == null:
 		_setup_trascendencia_ui()
+
+	# --- BOTÓN AJUSTES (siempre visible, justo antes de Salir) ---
+	if not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnSettings")):
+		var btn_settings := Button.new()
+		btn_settings.name = "BtnSettings"
+		btn_settings.custom_minimum_size = Vector2(0, 45)
+		btn_settings.text = "Ajustes"
+		btn_settings.pressed.connect(func(): AudioManager.show_settings_panel(self))
+		var vbox_s = $CenterContainer/VBoxContainer
+		vbox_s.add_child(btn_settings)
+		vbox_s.move_child(btn_settings, vbox_s.get_child_count() - 2)
+
+	# --- BOTÓN TELEMETRÍA (solo en debug) ---
+	if OS.is_debug_build() and not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnTools")):
+		var btn_tools := Button.new()
+		btn_tools.name = "BtnTools"
+		btn_tools.custom_minimum_size = Vector2(0, 40)
+		btn_tools.text = "Telemetria"
+		btn_tools.add_theme_color_override("font_color", Color(0.4, 0.85, 1.0))
+		btn_tools.pressed.connect(_on_tools_analyze_pressed)
+		var vbox_t = $CenterContainer/VBoxContainer
+		vbox_t.add_child(btn_tools)
+		vbox_t.move_child(btn_tools, vbox_t.get_child_count() - 2)
 
 	# --- BADGES de notificación ---
 	_refresh_nav_badges()
@@ -1052,6 +1076,7 @@ func _execute_trascendencia() -> void:
 
 	var is_first := LegacyManager.trascendencia_count == 0
 	var gain := LegacyManager.transcend()
+	AudioManager.play_sfx("transcend")
 
 	_close_trascend_confirm_panel()
 
@@ -1246,6 +1271,49 @@ func _show_cosmic_bank_panel() -> void:
 	btn_back.custom_minimum_size = Vector2(0, 40)
 	btn_back.pressed.connect(_close_cosmic_panel)
 	vbox.add_child(btn_back)
+
+# =====================================================
+#  TOOLS — Telemetría (solo debug)
+# =====================================================
+
+func _on_tools_analyze_pressed() -> void:
+	var btn_tools := get_node_or_null("CenterContainer/VBoxContainer/BtnTools")
+	if not is_instance_valid(btn_tools):
+		return
+
+	var script_path := ProjectSettings.globalize_path("res://tools/analyze_telemetry.py")
+	var runs_dir   := OS.get_user_data_dir() + "/telemetry/runs"
+	var output_html := ProjectSettings.globalize_path("res://tools/analysis_output/telemetry_dashboard.html")
+
+	print("[Tools] script: ", script_path)
+	print("[Tools] runs_dir: ", runs_dir)
+
+	btn_tools.text = "Analizando..."
+	btn_tools.disabled = true
+
+	# OS.execute bloquea — lo corremos en un thread para no freear el juego.
+	var thread := Thread.new()
+	thread.start(func():
+		var out: Array = []
+		var code := OS.execute("python", [script_path, runs_dir], out, true)
+		call_deferred("_tools_analysis_done", thread, code, out, output_html)
+	)
+
+
+func _tools_analysis_done(thread: Thread, exit_code: int, output: Array, html_path: String) -> void:
+	thread.wait_to_finish()
+	print("[Tools] exit code: ", exit_code)
+	for line in output:
+		print("[Tools] ", line)
+	var btn_tools := get_node_or_null("CenterContainer/VBoxContainer/BtnTools")
+	if is_instance_valid(btn_tools):
+		btn_tools.text = "Telemetria" if exit_code == 0 else "Error (ver Output)"
+		btn_tools.disabled = false
+	if exit_code == 0:
+		OS.shell_open(html_path)
+	else:
+		push_warning("[Tools] analyze_telemetry.py fallo con codigo " + str(exit_code))
+
 
 func _on_buy_cosmic(id: String) -> void:
 	if LegacyManager.purchase_cosmic(id):

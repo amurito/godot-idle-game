@@ -853,6 +853,7 @@ func purchase_legacy(id: String) -> bool:
 	legacy_points -= cost
 	_set_buff_level(id, get_buff_level(id) + 1)
 	save_legacy()
+	AudioManager.play_sfx("upgrade")
 	print("✨ [Legacy] Comprado: %s (nivel %d) por %d PL" % [id, get_buff_level(id), cost])
 	# Side-effects post-compra para upgrades con efecto fuera del estado del legacy
 	_apply_post_purchase_effects(id)
@@ -1021,6 +1022,9 @@ func transcend() -> int:
 
 	esencia += esencia_gain
 	trascendencia_count += 1
+	TelemetryManager.track_event("trascendencia", {
+		"trascendencia_count_new": trascendencia_count
+	})
 
 	# Capturar snapshot de upgrades para la ruta Reencarnación Heredada
 	reencarnacion_snapshot = UpgradeManager.serialize()
@@ -1064,6 +1068,7 @@ func purchase_cosmic(cosmic_id: String) -> bool:
 	esencia -= int((COSMIC_DATA[cosmic_id] as Dictionary).get("cost", 0))
 	cosmic_unlocked[cosmic_id] = true
 	save_legacy()
+	AudioManager.play_sfx("upgrade")
 	print("✨ [Cosmic] Desbloqueado: ", cosmic_id)
 	return true
 

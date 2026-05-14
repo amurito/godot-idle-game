@@ -435,7 +435,12 @@ func update_click_stats_panel(main: Node) -> String:
 	
 	t += "\n\n--- Capital Cognitivo ---\n"
 	t += "μ = %.2f\n" % main.cached_mu
-	t += "Nivel cognitivo = %d" % UpgradeManager.level("cognitive")
+	t += "Nivel cognitivo = %d\n" % UpgradeManager.level("cognitive")
+	var acc_lvl_d: int = UpgradeManager.level("accounting")
+	if acc_lvl_d > 0:
+		t += "Contabilidad ×μ = ×%.2f\n" % (1.0 + acc_lvl_d * 0.08)
+	if RunManager.resilience_score > 0.0:
+		t += "Resiliencia ×μ = ×%.2f (score %.0f)" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
 	
 	t += "[/color]"
 	
@@ -682,20 +687,20 @@ func _build_run_end_lore(route: String) -> String:
 		# ── RAMA AZUL: HOMEOSTASIS ────────────────────────────────────────────────
 		"HOMEOSTASIS": {
 			"emoji": "⚖️", "color": "#00ccff",
-			"lore": "Regulación interna de variables críticas. Con al menos 2 sistemas activos y sin colapso, el sistema alcanzó equilibrio sostenido. La entropía fue domesticada, no eliminada.",
-			"buffs": ["Producción total +50% (Orden Administrativo)", "Ω_min 0.35 — seguridad estructural base", "Evita pérdidas grandes ante perturbaciones", "+3 PL ganados"],
-			"nerfs": ["Cap de crecimiento biológico (biomasa < 12)", "Requiere 2+ sistemas activos sin colapso activo", "Velocidad de scaling reducida"]
+			"lore": "Equilibrio activo sostenido. El sistema reguló sus variables internas — ε en banda, Ω balanceado, flujos duales. La entropía fue domesticada, no eliminada.",
+			"buffs": ["Toda la producción +50% — click y pasivo (Orden Administrativo)", "Ω_min 0.35 — seguridad estructural base", "Evita pérdidas grandes ante perturbaciones", "+3 PL ganados"],
+			"nerfs": ["Cap de crecimiento biológico (biomasa < 12)", "Requiere ε en banda + Ω ≥ 0.40 + flujos duales (activo y pasivo)", "Velocidad de scaling reducida"]
 		},
 		"ALLOSTASIS": {
 			"emoji": "💜", "color": "#aa55ff",
 			"lore": "Adaptación dinámica a nuevos estados de equilibrio. El hongo sobrevivió perturbaciones y aprendió a recalibrar su setpoint. El equilibrio ya no es un punto: es una trayectoria.",
-			"buffs": ["Setpoint adaptativo — resiliencia +80% dinámica", "Ω_min >= 0.45 permanente en próxima run", "Impulso Metabólico Adaptativo: pasivo ×5", "+4 PL ganados"],
+			"buffs": ["Setpoint adaptativo — resiliencia +80% dinámica", "Ω_min >= 0.45 permanente en próxima run", "Impulso Metabólico Adaptativo: pasivo ×5", "+6 PL ganados"],
 			"nerfs": ["Requiere haber sobrevivido ≥1 perturbación activa", "Requiere Resiliencia ≥ 150 + Δ$ > 200/s + Cont. nivel 2"]
 		},
 		"HOMEORHESIS": {
 			"emoji": "💎", "color": "#00ffee",
 			"lore": "Equilibrio dinámico avanzado. El sistema atravesó 5+ ciclos de perturbación sin colapso y alcanzó auto-regulación en trayectorias de cambio continuo. Más allá de la homeostasis.",
-			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+8 PL ganados"],
+			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+10 PL ganados"],
 			"nerfs": ["Requiere ≥5 disturbances + shock extremo + Resiliencia ≥ 400", "Run ≥ 20 min + Δ$ > 300/s + Ω_min ≥ 0.50", "Extremadamente difícil de sostener"]
 		},
 		# ── RAMA VERDE: SIMBIOSIS / SINGULARIDAD ─────────────────────────────────
@@ -748,6 +753,13 @@ func _build_run_end_lore(route: String) -> String:
 			"lore": "Absorción agresiva total. El sistema quema todo en un instante de velocidad extrema. Overheat — acumulás demasiado y la penalización es exponencial.",
 			"buffs": ["Click PUSH ×10 (≈+250% velocidad efectiva)", "+50% absorción de biomasa global", "Escala early-game explosivamente", "+1 PL ganado"],
 			"nerfs": ["-60% estabilidad estructural (Ω colapsa a 0)", "-75% producción pasiva (Atrofia Autómata)", "Colapso garantizado — la run termina al activarse (salvo NG+ Parasitismo)"]
+		},
+		# ── FRACTURA EPISTÉMICA ──────────────────────────────────────────────────
+		"COLAPSO CONTROLADO": {
+			"emoji": "⚡", "color": "#ff6622",
+			"lore": "El sistema llegó al límite epistémico — ε extremo, pero Ω mantenida. En vez de colapsar pasivamente, el jugador dirigió la fractura. El conocimiento se rompe, pero deja semillas.",
+			"buffs": ["+6 PL base (Fractura Epistémica)", "+PL extra × ε_peak (si tenés Colapso Controlado en Banco Genético)", "Cierre voluntario — sin sorpresas"],
+			"nerfs": ["Requiere Fractura Epistémica (Banco Cósmico T3)", "Condición: ε_effective > 0.90 con Ω > 0.30", "Requiere haber desbloqueado la ruta Hiperasimilación + Horizonte Estructural previamente"]
 		},
 		# ── RAMA GLITCH: DEPREDADOR / MET.OSCURO ─────────────────────────────────
 		"DEPREDADOR DE REALIDADES": {
@@ -881,7 +893,7 @@ func build_mutation_status_text() -> String:
 
 	if EvoManager.mutation_homeostasis:
 		t += "[b][color=cyan]⚖️ HOMEOSTASIS:[/color][/b]\n"
-		t += buff + " Producción total +50% (Orden Administrativo)[/color]\n"
+		t += buff + " Toda la producción +50% — click y pasivo (Orden Administrativo)[/color]\n"
 		t += buff + " Estabilidad ε (runtime reducido)[/color]\n"
 		t += buff + " Ω_min 0.35 (Seguridad estructural)[/color]\n"
 		t += nerf + " Limitación Biomasa (crecimiento controlado)[/color]\n"
@@ -1005,20 +1017,43 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_homeostasis):
 		data["header"] = "MUTACIÓN DETECTADA (TIER 1)"
 
-		var h_ok_eps = RunManager.get_en_banda_homeostatica()
-		var h_ok_omega = StructuralModel.omega > 0.25
-		var h_ok_delta = main.delta_per_sec > 30.0
-		var h_ok_bio = BiosphereEngine.biomasa < 12.0
-		var h_ok_acc = acc_lvl >= 1
+		var h_t := LegacyManager.trascendencia_count
+		var h_ap: Dictionary = main.get_active_passive_breakdown()
 		var h_ok_red = StructuralModel.unlocked_d and StructuralModel.unlocked_e
+		var h_txt := "[center]HOMEOSTASIS\nEquilibrio activo sostenido.\n\n"
 
-		var h_txt = "[center]HOMEOSTASIS\nOrden administrativo.\n\n"
-		h_txt += "[color=%s]%s 0.03 < ε < 0.30[/color]\n" % ["#00ff00" if h_ok_eps else "#ff4444", "[x]" if h_ok_eps else "[ ]"]
-		h_txt += "[color=%s]%s Flexibilidad Ω > 0.25[/color]\n" % ["#00ff00" if h_ok_omega else "#ff4444", "[x]" if h_ok_omega else "[ ]"]
-		h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % ["#00ff00" if h_ok_delta else "#ff4444", "[x]" if h_ok_delta else "[ ]"]
-		h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % ["#00ff00" if h_ok_bio else "#ff4444", "[x]" if h_ok_bio else "[ ]"]
-		h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if h_ok_acc else "#ff4444", "[x]" if h_ok_acc else "[ ]"]
-		h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
+		if h_t >= 1:
+			# NG+: condiciones más exigentes
+			var eps_eff := StructuralModel.epsilon_effective
+			var h_ok_eps_ng = eps_eff >= 0.05 and eps_eff <= 0.25
+			var h_ok_omega_ng = StructuralModel.omega >= 0.55
+			var h_ok_acc_ng = acc_lvl >= 2
+			var h_ok_delta_ng = main.delta_per_sec > 150.0
+			var total_flow: float = float(h_ap["activo"]) + float(h_ap["pasivo"])
+			var h_ok_bal = total_flow > 0 and (float(h_ap["pasivo"]) / total_flow) >= 0.30
+			var h_ok_bio_ng = BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
+			h_txt += "[color=#ff8800][NG+] Requisitos de equilibrio estrictos[/color]\n\n"
+			h_txt += "[color=%s]%s 0.05 < ε < 0.25 (banda NG+)[/color]\n" % ["#00ff00" if h_ok_eps_ng else "#ff4444", "[x]" if h_ok_eps_ng else "[ ]"]
+			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.55[/color]\n" % ["#00ff00" if h_ok_omega_ng else "#ff4444", "[x]" if h_ok_omega_ng else "[ ]"]
+			h_txt += "[color=%s]%s Balance pasivo ≥ 30%% del flujo[/color]\n" % ["#00ff00" if h_ok_bal else "#ff4444", "[x]" if h_ok_bal else "[ ]"]
+			h_txt += "[color=%s]%s Producción > 150/s[/color]\n" % ["#00ff00" if h_ok_delta_ng else "#ff4444", "[x]" if h_ok_delta_ng else "[ ]"]
+			h_txt += "[color=%s]%s Biomasa 1.0–10.0[/color]\n" % ["#00ff00" if h_ok_bio_ng else "#ff4444", "[x]" if h_ok_bio_ng else "[ ]"]
+			h_txt += "[color=%s]%s Contabilidad >= 2[/color]\n" % ["#00ff00" if h_ok_acc_ng else "#ff4444", "[x]" if h_ok_acc_ng else "[ ]"]
+			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
+		else:
+			var h_ok_eps = RunManager.get_en_banda_homeostatica()
+			var h_ok_omega = StructuralModel.omega >= 0.40
+			var h_ok_delta = main.delta_per_sec > 30.0
+			var h_ok_bio = BiosphereEngine.biomasa < 12.0
+			var h_ok_acc = acc_lvl >= 1
+			var h_ok_dual = h_ap["pasivo"] > 0
+			h_txt += "[color=%s]%s 0.03 < ε < 0.30 (banda)[/color]\n" % ["#00ff00" if h_ok_eps else "#ff4444", "[x]" if h_ok_eps else "[ ]"]
+			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.40[/color]\n" % ["#00ff00" if h_ok_omega else "#ff4444", "[x]" if h_ok_omega else "[ ]"]
+			h_txt += "[color=%s]%s Flujos duales (activo + pasivo)[/color]\n" % ["#00ff00" if h_ok_dual else "#ff4444", "[x]" if h_ok_dual else "[ ]"]
+			h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % ["#00ff00" if h_ok_delta else "#ff4444", "[x]" if h_ok_delta else "[ ]"]
+			h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % ["#00ff00" if h_ok_bio else "#ff4444", "[x]" if h_ok_bio else "[ ]"]
+			h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if h_ok_acc else "#ff4444", "[x]" if h_ok_acc else "[ ]"]
+			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
 
 		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
 			var ratio = min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
