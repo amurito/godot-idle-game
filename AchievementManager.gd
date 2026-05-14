@@ -543,6 +543,8 @@ var unlocked: Dictionary = {}
 
 # ──────────────────────── ESTADO EFÍMERO (per-run) ────────────────────────
 var main: Node = null
+var _toast_layer: CanvasLayer = null
+var _toast_container: VBoxContainer = null
 var _snapshot: Dictionary = {}          # último push_snapshot recibido
 
 # Progreso de event_count (id → float, se resetea en reset_run_state)
@@ -1023,25 +1025,107 @@ func on_seta_formed() -> void:
 
 # ──────────────────────── TOAST ────────────────────────
 
+func _get_toast_container() -> VBoxContainer:
+	if is_instance_valid(_toast_container):
+		return _toast_container
+	if not main:
+		return null
+	_toast_layer = CanvasLayer.new()
+	_toast_layer.layer = 10
+	main.add_child(_toast_layer)
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_toast_layer.add_child(root)
+	_toast_container = VBoxContainer.new()
+	_toast_container.add_theme_constant_override("separation", 6)
+	_toast_container.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_toast_container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_toast_container.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toast_container.offset_left = -396
+	_toast_container.offset_top = -320
+	_toast_container.offset_right = -16
+	_toast_container.offset_bottom = -72
+	root.add_child(_toast_container)
+	return _toast_container
+
+
 func _show_toast(id: String, def: Dictionary) -> void:
 	var level: String = def.get("toast", "full")
 	if level == "silent":
 		return
-	if not UIManager.system_message_label:
-		return
+
 	var tier: int = def.get("tier", Tier.MICELIO)
 	var icon: String = TIER_ICONS.get(tier, "🏁")
 	var tier_name: String = TIER_NAMES.get(tier, "?")
 	var name_str: String = def["name"]
-	match level:
-		"small":
-			UIManager.system_message_label.text = "%s %s" % [icon, name_str]
-		"full":
-			UIManager.system_message_label.text = \
-				"%s LOGRO [%s] — %s" % [icon, tier_name, name_str]
-		"legendary":
-			UIManager.system_message_label.text = \
-				"✨ %s LOGRO LEGENDARIO [%s] ✨ — %s" % [icon, tier_name, name_str]
+	var desc_str: String = def.get("desc", "")
+	var color: Color = TIER_COLORS.get(tier, Color(0.7, 0.7, 0.75))
+	var is_legendary: bool = level == "legendary"
+
+	var container := _get_toast_container()
+	if not container:
+		return
+
+	# ── Panel principal ──
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(380, 0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.07, 0.11, 0.96)
+	style.set_border_width_all(0)
+	style.border_width_left = 4
+	style.border_color = color
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	panel.add_theme_stylebox_override("panel", style)
+	panel.modulate.a = 0.0
+	container.add_child(panel)
+
+	# ── Layout interno ──
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	panel.add_child(hbox)
+
+	var icon_lbl := Label.new()
+	icon_lbl.text = icon
+	icon_lbl.add_theme_font_size_override("font_size", 28)
+	icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(icon_lbl)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 1)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+
+	var header_lbl := Label.new()
+	header_lbl.text = ("★ LOGRO LEGENDARIO" if is_legendary else "LOGRO") + " — " + tier_name
+	header_lbl.add_theme_font_size_override("font_size", 10)
+	header_lbl.add_theme_color_override("font_color", color)
+	vbox.add_child(header_lbl)
+
+	var name_lbl := Label.new()
+	name_lbl.text = name_str
+	name_lbl.add_theme_font_size_override("font_size", 15)
+	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0))
+	vbox.add_child(name_lbl)
+
+	if level in ["full", "legendary"] and desc_str != "":
+		var desc_lbl := Label.new()
+		desc_lbl.text = desc_str
+		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_lbl.custom_minimum_size = Vector2(260, 0)
+		vbox.add_child(desc_lbl)
+
+	# ── Animación: fade-in → espera → slide-out derecha ──
+	var tween := panel.create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.25)
+	tween.tween_interval(4.0 if level == "small" else 5.0)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(panel.queue_free)
 
 # ──────────────────────── PERSISTENCIA ────────────────────────
 

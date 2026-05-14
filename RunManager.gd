@@ -185,6 +185,23 @@ func close_run(route: String, reason: String):
 				var raw := int(floor(omega_min_peak * 10.0))
 				ng_bonus = min(raw, 6)
 				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 6)" % [omega_min_peak, ng_bonus]
+			# ── Tier 3 (late-game) ──
+			"MENTE COLMENA DISTRIBUIDA":
+				var raw := int(floor(main.run_time / 600.0))
+				ng_bonus = min(raw, 8)
+				ng_formula = "run_time %.0fs / 600 = %d (cap 8)" % [main.run_time, ng_bonus]
+			"DEPREDADOR DE REALIDADES":
+				var raw := EvoManager.met_oscuro_devoured_count
+				ng_bonus = min(raw, 8)
+				ng_formula = "devoured %d (cap 8)" % EvoManager.met_oscuro_devoured_count
+			"COLAPSO DEPREDATORIO":
+				var raw := EvoManager.met_oscuro_devoured_count * 2
+				ng_bonus = min(raw, 5)
+				ng_formula = "devoured %d × 2 = %d (cap 5)" % [EvoManager.met_oscuro_devoured_count, ng_bonus]
+			"PANSPERMIA NEGRA":
+				var raw := int(floor(BiosphereEngine.micelio / 20.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "micelio %.1f / 20 = %d (cap 6)" % [BiosphereEngine.micelio, ng_bonus]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			main.add_lap("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
@@ -301,13 +318,17 @@ func check_symbiosis_final(_delta: float):
 		and main.run_time > 60.0:
 		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
 
+func is_fractura_epistemica_available() -> bool:
+	return not carnaval_active and not run_closed \
+		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
+		and StructuralModel.epsilon_effective > 0.90 \
+		and StructuralModel.omega > 0.30
+
 func check_fractura_epistemica(_delta: float):
 	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
-	if carnaval_active or run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
+	if not is_fractura_epistemica_available():
 		return
-	# Condición: ε_effective > 0.90 Y Ω > 0.30 (colapso controlado)
-	if StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30:
-		close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
+	close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
 
 func check_parasitism_final(_delta: float):
 	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:
