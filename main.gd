@@ -1737,34 +1737,82 @@ func _update_legacy_indicators() -> void:
 	for c in _legacy_indicators.get_children():
 		c.queue_free()
 
-	# Buffs con efecto directo en ingresos o mecánicas importantes
-	# formato: id -> [etiqueta_corta, tooltip, color]
-	const INDICATORS: Dictionary = {
-		"plasticidad_adaptativa": ["Plast.", "Plasticidad Adaptativa\nω_min = 0.30 garantizado", Color(0.5, 0.8, 1.0)],
-		"resonancia_simbionte":   ["Res.S", "Resonancia Simbionte\nClick ×1.20", Color(0.4, 0.9, 0.5)],
-		"sangre_negra":           ["S.Neg", "Sangre Negra\nBiomasa al inicio ×1.30", Color(0.8, 0.2, 0.2)],
-		"deriva_esporada":        ["Deriva", "Deriva Esporada\nPL ganados ×1.25", Color(0.9, 0.85, 0.4)],
-		"aura_dorada":            ["Aura", "Aura Dorada\nClick ×1.5 · Pasivo ×1.5", Color(1.0, 0.85, 0.2)],
-		"semilla_cosmica":        ["Semilla", "Semilla Cósmica\nClick ×2.0 · Pasivo ×2.0", Color(0.5, 0.5, 0.9)],
-		"mente_colmena":          ["Colmena", "Mente Colmena\nPasivo ×3.0 · Auto-click ×10", Color(0.9, 0.3, 0.9)],
-		"metabolismo_glitch":     ["Met.Osc", "Metabolismo Oscuro\nClick ×1.5 · Pasivo ×1.8 (si ε > 0.40)", Color(0.6, 0.1, 0.8)],
-		"legado_alostasis":       ["Alost.", "Resiliencia Alostática\nω_min ≥ 0.45 garantizado", Color(0.5, 0.8, 1.0)],
-		"legado_homeorresis":     ["Crist.", "Trascendencia Cristalina\nω_min ≥ 0.55 garantizado", Color(0.3, 1.0, 0.9)],
-		"glitch_persistente":     ["Glitch", "Glitch Persistente\nPasivo +15%", Color(0.7, 0.7, 0.7)],
-		"setpoint_adaptativo":    ["Set.", "Setpoint Adaptativo\nRecuperación de Ω ×1.5", Color(0.5, 0.8, 1.0)],
-		"eco_primordial":         ["Eco", "Eco Primordial\nTodos los ingresos +10%", Color(0.4, 1.0, 0.6)],
-	}
+	var _add_chip := func(text: String, tooltip: String, color: Color) -> void:
+		var chip := Label.new()
+		chip.text = text
+		chip.tooltip_text = tooltip
+		chip.add_theme_font_size_override("font_size", 11)
+		chip.modulate = color
+		chip.mouse_filter = Control.MOUSE_FILTER_STOP
+		_legacy_indicators.add_child(chip)
 
-	for id in INDICATORS:
-		if LegacyManager.get_buff_level(id) > 0 and LegacyManager.buff_enabled.get(id, true):
-			var data: Array = INDICATORS[id]
-			var chip := Label.new()
-			chip.text = data[0]
-			chip.tooltip_text = data[1]
-			chip.add_theme_font_size_override("font_size", 10)
-			chip.modulate = data[2]
-			chip.mouse_filter = Control.MOUSE_FILTER_STOP
-			_legacy_indicators.add_child(chip)
+	# ── Click multiplier (buffs permanentes) ──
+	var click_mult := 1.0
+	var click_tip := "Click legado:"
+	if LegacyManager.get_buff_value("impulso_manual"):
+		click_mult *= 2.0;   click_tip += "\n• Impulso Manual ×2.0"
+	if LegacyManager.get_buff_value("resonancia_simbionte"):
+		click_mult *= 1.2;   click_tip += "\n• Resonancia Simbionte ×1.2"
+	if LegacyManager.get_buff_value("aura_dorada"):
+		click_mult *= 1.5;   click_tip += "\n• Aura Dorada ×1.5"
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		click_mult *= 2.0;   click_tip += "\n• Semilla Cósmica ×2.0"
+	var eco := LegacyManager.get_effect_value("all_income_mult")
+	if eco > 0.0:
+		click_mult *= (1.0 + eco)
+		click_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		var cc := 1.0 + LegacyManager.trascendencia_count * 0.05
+		click_mult *= cc
+		click_tip += "\n• Convergencia Cíclica ×%.2f (T=%d)" % [cc, LegacyManager.trascendencia_count]
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		click_tip += "\n• Metabolismo Oscuro ×1.5 (si ε>0.40)*"
+
+	# ── Pasivo multiplier (buffs permanentes) ──
+	var pasivo_mult := 1.0
+	var pas_tip := "Pasivo legado:"
+	if LegacyManager.get_buff_value("aura_dorada"):
+		pasivo_mult *= 1.5;  pas_tip += "\n• Aura Dorada ×1.5"
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		pasivo_mult *= 2.0;  pas_tip += "\n• Semilla Cósmica ×2.0"
+	if LegacyManager.get_buff_value("mente_colmena"):
+		pasivo_mult *= 3.0;  pas_tip += "\n• Mente Colmena ×3.0"
+	if eco > 0.0:
+		pasivo_mult *= (1.0 + eco)
+		pas_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		pas_tip += "\n• Metabolismo Oscuro ×1.8 (si ε>0.40)*"
+	if LegacyManager.get_buff_value("glitch_persistente"):
+		pas_tip += "\n• Glitch Persistente ×1.15 (red micelial)*"
+
+	# ── Omega mínimo garantizado ──
+	var omega_min := 0.0
+	var omega_tip := "Ω garantizado:"
+	if LegacyManager.get_buff_value("plasticidad_adaptativa"):
+		omega_min = max(omega_min, 0.30);  omega_tip += "\n• Plasticidad Adaptativa ≥0.30"
+	if LegacyManager.get_buff_value("legado_alostasis"):
+		omega_min = max(omega_min, 0.45);  omega_tip += "\n• Resiliencia Alostática ≥0.45"
+	if LegacyManager.get_buff_value("legado_homeorresis"):
+		omega_min = max(omega_min, 0.55);  omega_tip += "\n• Trascendencia Cristalina ≥0.55"
+	if LegacyManager.get_buff_value("setpoint_adaptativo"):
+		omega_tip += "\n• Setpoint Adaptativo: recuperación ×1.5"
+
+	# ── Emit chips ──
+	if click_mult > 1.01:
+		_add_chip.call("click×%.1f" % click_mult, click_tip, Color(0.4, 0.95, 0.5))
+	if pasivo_mult > 1.01:
+		_add_chip.call("pas×%.1f" % pasivo_mult, pas_tip, Color(0.85, 0.45, 1.0))
+	if omega_min > 0.0:
+		var omega_lbl := "Ω≥%.2f" % omega_min
+		if LegacyManager.get_buff_value("setpoint_adaptativo"):
+			omega_lbl += " ↑"
+		_add_chip.call(omega_lbl, omega_tip, Color(0.4, 0.9, 1.0))
+	if LegacyManager.get_buff_value("deriva_esporada"):
+		_add_chip.call("PL×1.25", "Deriva Esporada\nPL ganados ×1.25", Color(0.9, 0.85, 0.4))
+	if LegacyManager.get_buff_value("sangre_negra"):
+		_add_chip.call("bio×1.3", "Sangre Negra\nBiomasa inicial ×1.30", Color(0.85, 0.25, 0.25))
+	if mente_colmena_active:
+		_add_chip.call("🧠IA", "Mente Colmena activa\nAuto-click ×10 por segundo", Color(0.9, 0.3, 0.9))
 
 
 
