@@ -104,8 +104,8 @@ func close_run(route: String, reason: String):
 	var pl_to_add := 0
 	match route:
 		"HOMEOSTASIS": pl_to_add = 3
-		"ALLOSTASIS": pl_to_add = 6
-		"HOMEORHESIS": pl_to_add = 10
+		"ALLOSTASIS": pl_to_add = 4
+		"HOMEORHESIS": pl_to_add = 8
 		"SIMBIOSIS": pl_to_add = 4
 		# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
 		# No agregar aquí para evitar doble award
@@ -122,7 +122,6 @@ func close_run(route: String, reason: String):
 		"DOMADOR DEL CAOS": pl_to_add = 11
 		"ASCESIS_PROFUNDA": pl_to_add = 7
 
-	var total_pl_gained: int = pl_to_add
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		main.show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
@@ -133,28 +132,62 @@ func close_run(route: String, reason: String):
 		var extra_pl: int = int(floor(StructuralModel.epsilon_peak * eps_bonus))
 		if extra_pl > 0:
 			LegacyManager.add_pl(extra_pl)
-			total_pl_gained += extra_pl
 			main.add_lap("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
-	# Registrar la run en el historial de ciclos (para panel Memoria de Run)
-	LegacyManager.record_run_end(
-		route,
-		reason,
-		main.run_time,
-		main.mu_peak_run,
-		StructuralModel.epsilon_peak,
-		total_pl_gained,
-	)
-
-	TelemetryManager.close_run({
-		"final_route": route,
-		"run_time": main.run_time,
-		"pl_gained": total_pl_gained,
-		"epsilon_peak": StructuralModel.epsilon_peak,
-		"max_mu": main.mu_peak_run,
-		"max_delta_per_sec": main.delta_peak_run,
-		"trascendencia_count": LegacyManager.trascendencia_count
-	})
+	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
+	if LegacyManager.trascendencia_count >= 1:
+		var ng_bonus := 0
+		var ng_formula := ""
+		match route:
+			# ── Tier 1 ──
+			"HOMEOSTASIS":
+				var raw := int(floor(resilience_score / 50.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "resiliencia %.0f / 50 = %d (cap 6)" % [resilience_score, ng_bonus]
+			"SIMBIOSIS":
+				var raw := int(floor(main.run_time / 300.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "run_time %.0fs / 300 = %d (cap 6)" % [main.run_time, ng_bonus]
+			"HIPERASIMILACION", "HIPERASIMILACIÓN":
+				var raw := int(floor(StructuralModel.epsilon_peak * 5.0))
+				ng_bonus = min(raw, 5)
+				ng_formula = "ε_peak %.2f × 5 = %d (cap 5)" % [StructuralModel.epsilon_peak, ng_bonus]
+			"PARASITISMO":
+				var raw := int(floor(BiosphereEngine.biomasa / 8.0))
+				ng_bonus = min(raw, 4)
+				ng_formula = "biomasa %.1f / 8 = %d (cap 4)" % [BiosphereEngine.biomasa, ng_bonus]
+			# ── Red micelial ──
+			"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL":
+				var raw := int(floor(BiosphereEngine.micelio / 20.0))
+				ng_bonus = min(raw, 5)
+				ng_formula = "micelio %.1f / 20 = %d (cap 5)" % [BiosphereEngine.micelio, ng_bonus]
+			# ── Tier 2 ──
+			"ALLOSTASIS":
+				ng_bonus = min(disturbances_survived, 5)
+				ng_formula = "perturbaciones %d (cap 5)" % disturbances_survived
+			"HOMEORHESIS":
+				var raw := int(floor(omega_min_peak * 10.0))
+				ng_bonus = min(raw, 7)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 7)" % [omega_min_peak, ng_bonus]
+			"MUTACION_FINAL", "METABOLISMO OSCURO":
+				var raw := EvoManager.met_oscuro_devoured_count * 2
+				ng_bonus = min(raw, 8)
+				ng_formula = "devoured %d × 2 = %d (cap 8)" % [EvoManager.met_oscuro_devoured_count, ng_bonus]
+			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
+				var raw := int(floor(carnaval_total_rotations / 2.0))
+				ng_bonus = min(raw, 8)
+				ng_formula = "rotaciones %d / 2 = %d (cap 8)" % [carnaval_total_rotations, ng_bonus]
+			"DOMADOR DEL CAOS":
+				var raw := int(floor(carnaval_peak_money / 500_000.0))
+				ng_bonus = min(raw, 8)
+				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap 8)" % [carnaval_peak_money / 1_000_000.0, ng_bonus]
+			"ASCESIS_PROFUNDA":
+				var raw := int(floor(omega_min_peak * 10.0))
+				ng_bonus = min(raw, 6)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 6)" % [omega_min_peak, ng_bonus]
+		if ng_bonus > 0:
+			LegacyManager.add_pl(ng_bonus)
+			main.add_lap("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -268,11 +301,13 @@ func check_symbiosis_final(_delta: float):
 		and main.run_time > 60.0:
 		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
 
-func is_fractura_epistemica_available() -> bool:
-	# FRACTURA EPISTÉMICA: retorna true cuando las condiciones de colapso controlado están activas
+func check_fractura_epistemica(_delta: float):
+	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
 	if carnaval_active or run_closed or not LegacyManager.has_cosmic_buff("fractura_epistemica"):
-		return false
-	return StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30
+		return
+	# Condición: ε_effective > 0.90 Y Ω > 0.30 (colapso controlado)
+	if StructuralModel.epsilon_effective > 0.90 and StructuralModel.omega > 0.30:
+		close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
 
 func check_parasitism_final(_delta: float):
 	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:
@@ -529,7 +564,7 @@ func _show_evolution_button(target: String):
 		main.get_node("UIRootContainer/RightPanel").add_child(evolution_button)
 		main.get_node("UIRootContainer/RightPanel").move_child(evolution_button, 0)
 
-	evolution_button.text = EmojiToRichText.strip("🧬 SELLAR FINAL (" + target + ")")
+	evolution_button.text = "🧬 SELLAR FINAL (" + target + ")"
 	match target:
 		"HOMEOSTASIS":
 			evolution_button.add_theme_color_override("font_color", Color.CYAN)
