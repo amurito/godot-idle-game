@@ -207,11 +207,13 @@ const LEGACY_DEFS: Dictionary = {
 	},
 	"equilibrio_heredado": {
 		"name": "Equilibrio Heredado",
-		"flavor": "La homeostasis no termina con la run. Sobrevive en el siguiente ciclo.",
+		"flavor": "El orden no regresa solo. Regresa más rápido cada vez que lo practicás.",
 		"cat": "ruta", "cost": 5, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed", "route": "HOMEOSTASIS"},
 		"unlock": {"type": "route_closed", "route": "HOMEOSTASIS"},
-		"effect": {"type": "omega_recovery_speed", "value": 1.25},
+		"effect": {"type": "omega_min_per_disturbance", "value": 0.04},
+		# Efecto: +0.04 Ω_min en burst por perturbación sobrevivida (cap 0.70)
+		# Implementado en RunManager.check_shock_tracking()
 	},
 	"sangre_negra": {
 		"name": "Sangre Negra",
@@ -287,11 +289,13 @@ const LEGACY_DEFS: Dictionary = {
 	},
 	"resonancia_cognitiva": {
 		"name": "Resonancia Cognitiva",
-		"flavor": "El capital cognitivo no muere con la run. Deja un eco.",
+		"flavor": "El sistema recuerda cuánto aprendió. El conocimiento acumulado amplifica cada acción.",
 		"cat": "ruta", "cost": 7, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "always"},
 		"unlock": {"type": "mu_peak_reached", "threshold": 2.5},
-		"effect": {"type": "start_nivel_cognitivo_bonus", "value": 1.0},
+		"effect": {"type": "cognitivo_income_mult_per_level", "value": 0.05},
+		# Efecto: +5% a todos los ingresos por nivel cognitivo activo
+		# Implementado en EconomyManager.get_click_power() y get_passive_total()
 	},
 
 	# ────────────────────────────────────────────────
@@ -299,11 +303,13 @@ const LEGACY_DEFS: Dictionary = {
 	# ────────────────────────────────────────────────
 	"legado_alostasis": {
 		"name": "Resiliencia Alostática",
-		"flavor": "El sistema ha aprendido a recalibrarse tras el caos.",
+		"flavor": "Cada shock superado endurece el sustrato. El caos se vuelve construcción.",
 		"cat": "ng_plus", "cost": 0, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed", "route": "ALLOSTASIS"},
 		"unlock": {"type": "route_closed", "route": "ALLOSTASIS"},
 		"effect": {"type": "legado_alostasis_active", "value": 1.0},
+		# Efecto real: +0.02 Ω_min por perturbación sobrevivida (acumulativo, cap 0.70)
+		# Implementado en RunManager.check_shock_tracking()
 	},
 	"legado_homeorresis": {
 		"name": "Trascendencia Cristalina",

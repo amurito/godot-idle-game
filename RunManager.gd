@@ -450,6 +450,17 @@ func check_shock_tracking():
 		main.add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
 		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
+		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)
+		if LegacyManager.get_buff_value("legado_alostasis"):
+			StructuralModel.omega_min = min(StructuralModel.omega_min + 0.02, 0.70)
+			main.add_lap("✦ [NG+] Resiliencia Alostática — Ω_min +0.02 → %.2f" % StructuralModel.omega_min)
+
+		# EQUILIBRIO HEREDADO: +0.04 Ω_min en burst por shock estabilizado (cap 0.70)
+		var eq_bonus: float = LegacyManager.get_effect_value("omega_min_per_disturbance")
+		if eq_bonus > 0.0:
+			StructuralModel.omega_min = min(StructuralModel.omega_min + eq_bonus, 0.70)
+			main.add_lap("✦ [Legado] Equilibrio Heredado — Ω_min +%.2f → %.2f" % [eq_bonus, StructuralModel.omega_min])
+
 func check_perfect_homeostasis():
 	if not post_homeostasis or AchievementManager.is_unlocked("homeostasis_perfecta"):
 		return

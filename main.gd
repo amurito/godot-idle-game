@@ -347,11 +347,9 @@ func _apply_legacy_buffs() -> void:
 		mente_colmena_active = true
 		add_lap("🧠 [NG+] Mente Colmena — IA distribuida activa desde el inicio (auto-click ×10)")
 
-	# LEGADO ALOSTASIS: Ω_min garantizado ≥ 0.45
+	# LEGADO ALOSTASIS: Ω_min crece +0.02 por perturbación sobrevivida (acumulativo en run)
 	if LegacyManager.get_buff_value("legado_alostasis"):
-		if StructuralModel.omega_min < 0.45:
-			StructuralModel.omega_min = 0.45
-		add_lap("✦ [NG+] Resiliencia Alostática — Ω_min garantizado ≥ 0.45")
+		add_lap("✦ [NG+] Resiliencia Alostática activa — Ω_min +0.02 por shock estabilizado")
 
 	# LEGADO HOMEORRESIS: Ω_min garantizado ≥ 0.55
 	if LegacyManager.get_buff_value("legado_homeorresis"):
@@ -1328,8 +1326,6 @@ func _on_logic_tick():
 			StructuralModel.omega = max(StructuralModel.omega, 0.60)
 		elif LegacyManager.get_buff_value("legado_homeorresis"):
 			StructuralModel.omega = max(StructuralModel.omega, 0.55)
-		elif LegacyManager.get_buff_value("legado_alostasis"):
-			StructuralModel.omega = max(StructuralModel.omega, 0.45)
 
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
@@ -2001,6 +1997,9 @@ func _update_legacy_indicators() -> void:
 		click_tip += "\n• Convergencia Cíclica ×%.2f (T=%d)" % [cc, LegacyManager.trascendencia_count]
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		click_tip += "\n• Metabolismo Oscuro ×1.5 (si ε>0.40)*"
+	var cog_mult_val: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
+	if cog_mult_val > 0.0:
+		click_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
 
 	# ── Pasivo multiplier (buffs permanentes) ──
 	var pasivo_mult := 1.0
@@ -2018,6 +2017,8 @@ func _update_legacy_indicators() -> void:
 		pas_tip += "\n• Metabolismo Oscuro ×1.8 (si ε>0.40)*"
 	if LegacyManager.get_buff_value("glitch_persistente"):
 		pas_tip += "\n• Glitch Persistente ×1.15 (red micelial)*"
+	if cog_mult_val > 0.0:
+		pas_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
 
 	# ── Omega mínimo garantizado + recuperación ──
 	var omega_min := 0.0
@@ -2039,8 +2040,18 @@ func _update_legacy_indicators() -> void:
 		_add_chip.call("click×%.1f" % click_mult, click_tip, Color(0.4, 0.95, 0.5))
 	if pasivo_mult > 1.01:
 		_add_chip.call("pas×%.1f" % pasivo_mult, pas_tip, Color(0.85, 0.45, 1.0))
-	if omega_min > 0.0 or omega_rec > 0.0 or LegacyManager.get_buff_value("cristalizacion_permanente"):
+	var alostasis_active := LegacyManager.get_buff_value("legado_alostasis")
+	var eq_bonus_active := LegacyManager.get_effect_value("omega_min_per_disturbance") > 0.0
+	if omega_min > 0.0 or omega_rec > 0.0 or LegacyManager.get_buff_value("cristalizacion_permanente") \
+			or alostasis_active or eq_bonus_active:
 		var omega_lbl := "Ω≥%.2f" % omega_min if omega_min > 0.0 else "Ω↑"
+		if alostasis_active:
+			omega_tip += "\n• Resiliencia Alostática: +0.02/shock*"
+			omega_lbl += " ↑"
+		if eq_bonus_active:
+			omega_tip += "\n• Equilibrio Heredado: +0.04/shock*"
+			if "↑" not in omega_lbl:
+				omega_lbl += " ↑"
 		if omega_rec > 0.0:
 			omega_lbl += " ↑"
 		_add_chip.call(omega_lbl, omega_tip, Color(0.4, 0.9, 1.0))
@@ -2158,8 +2169,6 @@ func update_epsilon_runtime():
 		StructuralModel.omega = max(StructuralModel.omega, 0.60)
 	elif LegacyManager.get_buff_value("legado_homeorresis"):
 		StructuralModel.omega = max(StructuralModel.omega, 0.55) # Trascendencia: Ω permanente superior
-	elif LegacyManager.get_buff_value("legado_alostasis"):
-		StructuralModel.omega = max(StructuralModel.omega, 0.45) # Beneficio persistente del legado
 
 	# RAMA SIMBIOSIS: Piso de omega 0.50 (v0.8.5)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:

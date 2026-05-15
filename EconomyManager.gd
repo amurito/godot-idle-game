@@ -101,6 +101,13 @@ func get_click_power() -> float:
 	if eco_primordial_mult > 0.0:
 		power *= (1.0 + eco_primordial_mult)
 
+	# RESONANCIA COGNITIVA: +5% click por nivel cognitivo activo
+	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
+	if cog_mult > 0.0:
+		var acc_lvl: int = UpgradeManager.level("accounting")
+		if acc_lvl > 0:
+			power *= (1.0 + acc_lvl * cog_mult)
+
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción a cambio de buffs cósmicos
 	if RunManager.vacio_hambriento_active:
 		power *= RunManager.vacio_hambriento_mult
@@ -213,6 +220,13 @@ func get_passive_total() -> float:
 	var eco_primordial_mult: float = LegacyManager.get_effect_value("all_income_mult")
 	if eco_primordial_mult > 0.0:
 		total *= (1.0 + eco_primordial_mult)
+
+	# RESONANCIA COGNITIVA: +5% pasivo por nivel cognitivo activo
+	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
+	if cog_mult > 0.0:
+		var acc_lvl: int = UpgradeManager.level("accounting")
+		if acc_lvl > 0:
+			total *= (1.0 + acc_lvl * cog_mult)
 
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción
 	if RunManager.vacio_hambriento_active:
