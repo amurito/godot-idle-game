@@ -310,6 +310,8 @@ func build_formula_text(main: Node) -> String:
 		active_term = "( " + active_term + " · [color=#ffcc00]im[/color] )"
 	if LegacyManager.get_buff_value("resonancia_simbionte"):
 		active_term += " · [color=#44ee88]rs[/color]"
+	if LegacyManager.get_buff_value("aura_dorada"):
+		active_term += " · [color=#ffdd44]au[/color]"
 	if RunManager.vacio_hambriento_active:
 		active_term += " · [color=#bb44ff]vh[/color]"
 
@@ -342,8 +344,7 @@ func build_formula_text(main: Node) -> String:
 	# Aplican a click + pasivo simultáneamente
 	var lambda_parts: Array = []
 	var lambda_total := 1.0
-	if LegacyManager.get_buff_value("aura_dorada"):
-		lambda_parts.append("[color=#ffdd44]au[/color]"); lambda_total *= 1.5
+	# aura_dorada es solo click — se muestra en el término activo como rs/im, no en Λ
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		lambda_parts.append("[color=#8899ff]sc[/color]"); lambda_total *= 2.0
 	if LegacyManager.get_buff_value("mente_colmena"):
@@ -479,9 +480,11 @@ func update_click_stats_panel(main: Node) -> String:
 	if LegacyManager.get_buff_value("impulso_manual"):
 		income_section += "im  Impulso Manual        click base ×2.00\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("resonancia_simbionte"):
-		income_section += "rs  Resonancia Simbionte   click ×1.20\n"; has_income_buff = true
+		var rs_val: float = min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
+		income_section += "rs  Resonancia Simbionte   click ×%.2f (bio=%.1f, cap ×2.5)\n" % [rs_val, BiosphereEngine.biomasa]
+		has_income_buff = true
 	if LegacyManager.get_buff_value("aura_dorada"):
-		income_section += "au  Aura Dorada            click ×1.50 · pasivo ×1.50\n"; has_income_buff = true
+		income_section += "au  Aura Dorada            click ×2.50  [solo click]\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		income_section += "sc  Semilla Cósmica        click ×2.00 · pasivo ×2.00\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("mente_colmena"):

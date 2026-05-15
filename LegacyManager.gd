@@ -225,11 +225,13 @@ const LEGACY_DEFS: Dictionary = {
 	},
 	"resonancia_simbionte": {
 		"name": "Resonancia Simbionte",
-		"flavor": "La simbiosis no termina. Se transfiere al siguiente huésped.",
+		"flavor": "La simbiosis no termina. La biomasa heredada amplifica cada gesto.",
 		"cat": "ruta", "cost": 5, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed", "route": "SIMBIOSIS"},
 		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
-		"effect": {"type": "simbiosis_click_bonus", "value": 0.20},
+		"effect": {"type": "simbiosis_click_biomasa_scale", "value": 0.05},
+		# Efecto: click × (1 + biomasa × 0.05), cap ×2.5
+		# Implementado en EconomyManager.get_click_power()
 	},
 	"deriva_esporada": {
 		"name": "Deriva Esporada",
@@ -345,11 +347,12 @@ const LEGACY_DEFS: Dictionary = {
 	},
 	"aura_dorada": {
 		"name": "Aura Dorada",
-		"flavor": "La simbiosis perfecta deja un residuo luminoso en el sistema.",
+		"flavor": "La simbiosis perfecta concentra toda su energía en el gesto activo.",
 		"cat": "ng_plus", "cost": 0, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed", "route": "SIMBIOSIS"},
 		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
 		"effect": {"type": "aura_dorada_active", "value": 1.0},
+		# Efecto: click ×2.5 (solo click — no afecta pasivo)
 	},
 
 	# ────────────────────────────────────────────────

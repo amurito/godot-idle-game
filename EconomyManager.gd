@@ -69,7 +69,7 @@ func get_click_power() -> float:
 		power *= 3.0
 
 	if LegacyManager.get_buff_value("aura_dorada"):
-		power *= 1.5 # Aura Dorada (Bonus permanente)
+		power *= 2.5 # Aura Dorada — click ×2.5 (especializado, no afecta pasivo)
 
 	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% por trascendencia acumulada
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
@@ -86,9 +86,9 @@ func get_click_power() -> float:
 	if EvoManager.mutation_parasitism:
 		power *= parasitism_corrosion
 
-	# RESONANCIA SIMBIONTE: +20% click si la simbiosis fue completada
+	# RESONANCIA SIMBIONTE: click escala con biomasa actual (×1 + biomasa×0.05, cap ×2.5)
 	if LegacyManager.get_buff_value("resonancia_simbionte"):
-		power *= 1.20
+		power *= min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
 
 	# SIMBIOSIS AGRESIVA: ×1.15 si se completaron SIMBIOSIS y PARASITISMO
 	if LegacyManager.get_buff_value("simbiosis_agresiva"):
@@ -181,8 +181,7 @@ func get_passive_total() -> float:
 	if EvoManager.mutation_met_oscuro:
 		total = 0.0
 
-	if LegacyManager.get_buff_value("aura_dorada"):
-		total *= 1.5 # Aura Dorada (Bonus permanente)
+	# aura_dorada ya NO afecta pasivo (rework — solo click ×2.5)
 
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		total *= 2.0 # Semilla Cósmica (Bonus permanente)

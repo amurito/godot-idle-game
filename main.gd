@@ -1982,9 +1982,11 @@ func _update_legacy_indicators() -> void:
 	if LegacyManager.get_buff_value("impulso_manual"):
 		click_mult *= 2.0;   click_tip += "\n• Impulso Manual ×2.0"
 	if LegacyManager.get_buff_value("resonancia_simbionte"):
-		click_mult *= 1.2;   click_tip += "\n• Resonancia Simbionte ×1.2"
+		var rs_mult: float = min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
+		click_mult *= rs_mult
+		click_tip += "\n• Resonancia Simbionte ×%.2f (bio=%.1f)" % [rs_mult, BiosphereEngine.biomasa]
 	if LegacyManager.get_buff_value("aura_dorada"):
-		click_mult *= 1.5;   click_tip += "\n• Aura Dorada ×1.5"
+		click_mult *= 2.5;   click_tip += "\n• Aura Dorada ×2.5 (solo click)"
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		click_mult *= 2.0;   click_tip += "\n• Semilla Cósmica ×2.0"
 	var eco := LegacyManager.get_effect_value("all_income_mult")
@@ -2004,8 +2006,7 @@ func _update_legacy_indicators() -> void:
 	# ── Pasivo multiplier (buffs permanentes) ──
 	var pasivo_mult := 1.0
 	var pas_tip := "Pasivo legado:"
-	if LegacyManager.get_buff_value("aura_dorada"):
-		pasivo_mult *= 1.5;  pas_tip += "\n• Aura Dorada ×1.5"
+	# aura_dorada ya NO afecta pasivo (rework)
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		pasivo_mult *= 2.0;  pas_tip += "\n• Semilla Cósmica ×2.0"
 	if LegacyManager.get_buff_value("mente_colmena"):
