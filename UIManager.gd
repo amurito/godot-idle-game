@@ -204,15 +204,15 @@ func update_timer(t: float):
 func update_header_money(amount: float, delta_per_sec: float):
 	if header_money_value:
 		if amount >= 1e12:
-			header_money_value.text = "$%.2fT" % (amount / 1e12)
+			header_money_value.text = "%.2fT" % (amount / 1e12)
 		elif amount >= 1e9:
-			header_money_value.text = "$%.2fB" % (amount / 1e9)
+			header_money_value.text = "%.2fB" % (amount / 1e9)
 		elif amount >= 1e6:
-			header_money_value.text = "$%.2fM" % (amount / 1e6)
+			header_money_value.text = "%.2fM" % (amount / 1e6)
 		elif amount >= 1e3:
-			header_money_value.text = "$%.1fK" % (amount / 1e3)
+			header_money_value.text = "%.1fK" % (amount / 1e3)
 		else:
-			header_money_value.text = "$" + str(round(amount))
+			header_money_value.text = str(round(amount))
 
 	if header_money_delta:
 		var delta_text = ""
@@ -300,30 +300,30 @@ func _toggle_collapsible_panel(panel: Control, btn: Button, pressed: bool, label
 
 func build_formula_text(main: Node) -> String:
 	var has_abc = UpgradeManager.level("click_mult") > 0
-	
+
 	# --- TÉRMINO ACTIVO (Clicks) ---
-	# clicks · a · b · cₙ
 	var active_term = "clicks · a"
 	if has_abc: active_term += " · b"
 	active_term += " · cₙ"
-	
+
 	if LegacyManager.get_buff_value("impulso_manual"):
 		active_term = "( " + active_term + " · [color=#ffcc00]im[/color] )"
-
+	if LegacyManager.get_buff_value("resonancia_simbionte"):
+		active_term += " · [color=#44ee88]rs[/color]"
 	if RunManager.vacio_hambriento_active:
 		active_term += " · [color=#bb44ff]vh[/color]"
 
 	var formula_main = active_term
-	
+
 	# --- TÉRMINOS PASIVOS (D y E) ---
-	if StructuralModel.unlocked_d: 
+	if StructuralModel.unlocked_d:
 		var d_term = "d"
 		if StructuralModel.unlocked_md:
 			d_term = "d · md"
 			if UpgradeManager.level("specialization") > 0:
 				d_term += " · so"
 		formula_main += " + " + d_term
-		
+
 		if StructuralModel.unlocked_e:
 			var e_term = "e"
 			if StructuralModel.unlocked_me:
@@ -331,32 +331,63 @@ func build_formula_text(main: Node) -> String:
 			if UpgradeManager.level("trueque_allo") > 0:
 				e_term += " · [color=cyan]ea[/color]"
 			formula_main += " + " + e_term
-		
-	# --- MULTIPLICADOR GLOBAL (μ) ---
+
+	# --- REDIRECCIÓN + μ ---
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		formula_main += " + [color=#ffcc00]re[/color]"
-
 	if main.cached_mu > 1.01:
 		formula_main = "[ " + formula_main + " ] · [color=#ff4dff]μ[/color]"
-	
-	var plain_str = formula_main.replace("[color=#ffcc00]", "").replace("[color=#ff4dff]", "").replace("[/color]", "")
-	var fLen = plain_str.length()
-	var fSize = 18
+
+	# --- MULTIPLICADORES GLOBALES DE LEGADO (Λ) ---
+	# Aplican a click + pasivo simultáneamente
+	var lambda_parts: Array = []
+	var lambda_total := 1.0
+	if LegacyManager.get_buff_value("aura_dorada"):
+		lambda_parts.append("[color=#ffdd44]au[/color]"); lambda_total *= 1.5
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		lambda_parts.append("[color=#8899ff]sc[/color]"); lambda_total *= 2.0
+	if LegacyManager.get_buff_value("mente_colmena"):
+		lambda_parts.append("[color=#ff44ff]mc[/color]"); lambda_total *= 3.0
+	var eco_v: float = LegacyManager.get_effect_value("all_income_mult")
+	if eco_v > 0.0:
+		lambda_parts.append("[color=#44ffaa]ep[/color]"); lambda_total *= (1.0 + eco_v)
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		lambda_parts.append("[color=#ffaa44]cc[/color]")
+		lambda_total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		lambda_parts.append("[color=#9933cc]mg?[/color]")  # condicional ε>0.40
+	if lambda_parts.size() > 0:
+		formula_main += " · [color=#ffdd88]Λ[/color]"
+
+	# Auto-escala por longitud
+	var plain_str := formula_main
+	for tag in ["[color=#ffcc00]","[color=#ff4dff]","[color=#44ee88]","[color=#bb44ff]",
+				"[color=#ffdd44]","[color=#8899ff]","[color=#ff44ff]","[color=#44ffaa]",
+				"[color=#ffaa44]","[color=#9933cc]","[color=#ffdd88]","[color=cyan]","[/color]"]:
+		plain_str = plain_str.replace(tag, "")
+	var fLen := plain_str.length()
+	var fSize := 18
 	if fLen > 70: fSize = 13
 	elif fLen > 55: fSize = 15
 	elif fLen > 40: fSize = 16
-	
+
 	var t: String = "[center][font_size=%d]∫$ = " % fSize + formula_main + "[/font_size]\n"
-	
+
+	# Λ breakdown (solo si hay mults de legado)
+	if lambda_parts.size() > 0:
+		t += "[color=#ffdd88][font_size=11]Λ = " + " · ".join(lambda_parts)
+		if LegacyManager.get_buff_value("metabolismo_glitch"):
+			t += "  (mg activo si ε>0.40)"
+		t += "[/font_size][/color]\n"
+
 	# Información del Modelo
 	t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
 	t += "κμ = k · (1 + α · (μ - 1))\n"
-	
-	var raw_n = main.get_structural_upgrades()
+	var raw_n := main.get_structural_upgrades()
 	t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
 		StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
 	]
-		
+
 	return t
 
 func build_formula_values(_main: Node) -> String:
@@ -440,10 +471,64 @@ func update_click_stats_panel(main: Node) -> String:
 	if acc_lvl_d > 0:
 		t += "Contabilidad ×μ = ×%.2f\n" % (1.0 + acc_lvl_d * 0.08)
 	if RunManager.resilience_score > 0.0:
-		t += "Resiliencia ×μ = ×%.2f (score %.0f)" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
-	
+		t += "Resiliencia ×μ = ×%.2f (score %.0f)\n" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
+
+	# --- LEGADO: MULTIPLICADORES DE INGRESOS ---
+	var has_income_buff := false
+	var income_section := "\n--- LEGADO: Multiplicadores ---\n"
+	if LegacyManager.get_buff_value("impulso_manual"):
+		income_section += "im  Impulso Manual        click base ×2.00\n"; has_income_buff = true
+	if LegacyManager.get_buff_value("resonancia_simbionte"):
+		income_section += "rs  Resonancia Simbionte   click ×1.20\n"; has_income_buff = true
+	if LegacyManager.get_buff_value("aura_dorada"):
+		income_section += "au  Aura Dorada            click ×1.50 · pasivo ×1.50\n"; has_income_buff = true
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		income_section += "sc  Semilla Cósmica        click ×2.00 · pasivo ×2.00\n"; has_income_buff = true
+	if LegacyManager.get_buff_value("mente_colmena"):
+		income_section += "mc  Mente Colmena          pasivo ×3.00\n"; has_income_buff = true
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		var mg_active := StructuralModel.epsilon_runtime > 0.40
+		var mg_state := "ACTIVO" if mg_active else "inactivo (ε=%.2f)" % StructuralModel.epsilon_runtime
+		income_section += "mg  Metabolismo Oscuro     click ×1.50 · pasivo ×1.80  [%s]\n" % mg_state
+		has_income_buff = true
+	var eco_mult: float = LegacyManager.get_effect_value("all_income_mult")
+	if eco_mult > 0.0:
+		income_section += "ep  Eco Primordial         todos ×%.2f\n" % (1.0 + eco_mult); has_income_buff = true
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		var cc_val := 1.0 + LegacyManager.trascendencia_count * 0.05
+		income_section += "cc  Convergencia Cíclica   todos ×%.2f (T=%d)\n" % [cc_val, LegacyManager.trascendencia_count]
+		has_income_buff = true
+	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
+	if cog_mult > 0.0:
+		var cog_val := 1.0 + UpgradeManager.level("accounting") * cog_mult
+		income_section += "rc  Resonancia Cognitiva   todos ×%.2f (nv.cog=%d)\n" % [cog_val, UpgradeManager.level("accounting")]
+		has_income_buff = true
+	if has_income_buff:
+		t += income_section
+
+	# --- LEGADO: DEFENSA OMEGA ---
+	var has_omega_buff := false
+	var omega_section := "\n--- LEGADO: Defensa Ω ---\n"
+	if LegacyManager.get_buff_value("plasticidad_adaptativa"):
+		omega_section += "Plasticidad Adaptativa    Ω_min inicio ≥ 0.30\n"; has_omega_buff = true
+	if LegacyManager.get_buff_value("legado_homeorresis"):
+		omega_section += "Trascendencia Cristalina  Ω ≥ 0.55 (tick)\n"; has_omega_buff = true
+	if LegacyManager.get_buff_value("legado_alostasis"):
+		omega_section += "Resiliencia Alostática    Ω_min +0.02/shock (acumulado: %d shocks)\n" % RunManager.disturbances_survived
+		has_omega_buff = true
+	var eq_per_dist: float = LegacyManager.get_effect_value("omega_min_per_disturbance")
+	if eq_per_dist > 0.0:
+		omega_section += "Equilibrio Heredado       Ω_min +%.2f/shock\n" % eq_per_dist; has_omega_buff = true
+	var omega_rec: float = LegacyManager.get_effect_value("omega_recovery_speed")
+	if omega_rec > 0.0:
+		omega_section += "Setpoint Adaptativo       Ω_min regen ×%.2f/s\n" % omega_rec; has_omega_buff = true
+	if LegacyManager.get_buff_value("cristalizacion_permanente"):
+		omega_section += "Cristalización Permanente shock Ω_min −50%%\n"; has_omega_buff = true
+	if has_omega_buff:
+		t += omega_section
+
 	t += "[/color]"
-	
+
 	return t
 
 # --- Helpers ---
