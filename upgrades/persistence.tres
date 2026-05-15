@@ -11,5 +11,5 @@ cost_scale = 1.0
 gain = 1.25
 is_multiplicative = true
 base_value = 1.4
-unlock_requires = ""
+unlock_requires = "trueque"
 one_shot = true

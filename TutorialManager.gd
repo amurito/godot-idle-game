@@ -24,6 +24,7 @@ var _tooltip_canvas: CanvasLayer = null  # layer 127 — tooltips y anti-stuck
 # ==================== REFS ACTIVAS (tutorial) ====================
 
 var _highlight_panel: Panel = null
+var _extra_highlights: Array = []   # highlights adicionales para multi-target
 var _hint_container: PanelContainer = null
 var _target_node: Control = null
 var _tween: Tween = null
@@ -695,12 +696,22 @@ func _run_step(step: int) -> void:
 			)
 
 		5:
-			_show_floating_hint(
+			# Highlight en [2] Automatización y [3] Trueque simultáneamente
+			var auto_btn := _find_upgrade_button("auto")
+			var trueque_btn := _find_upgrade_button("trueque")
+			var hint_text := (
 				"[color=#88ff88][b]Ingreso Pasivo[/b][/color]\n\n"
-				+ "Las mejoras de [b]Automatización[/b] y [b]Trueque[/b] generan\n"
-				+ "$/s sin necesidad de hacer clic.\n\n"
-				+ "Observá el indicador [b]$/s[/b] en el header para\nver cómo crece con cada mejora."
+				+ "[b][2] Automatización[/b] y [b][3] Trueque[/b]\ngeneran $/s sin hacer clic.\n\n"
+				+ "Observá el indicador [b]$/s[/b] en el header."
 			)
+			if is_instance_valid(auto_btn):
+				_show_highlight(auto_btn, hint_text)
+				if is_instance_valid(trueque_btn):
+					_add_extra_highlight(trueque_btn)
+			elif is_instance_valid(trueque_btn):
+				_show_highlight(trueque_btn, hint_text)
+			else:
+				_show_floating_hint(hint_text)
 
 		6:
 			_show_floating_hint(
@@ -838,7 +849,7 @@ func _make_hint_bubble(hint_text: String, dismiss_fn: Callable = Callable()) -> 
 	vbox.add_child(label)
 
 	var btn := Button.new()
-	btn.text = "Entendido ✓"
+	btn.text = EmojiToRichText.strip("Entendido ✓")
 	btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	if dismiss_fn.is_valid():
 		btn.pressed.connect(dismiss_fn)
@@ -895,8 +906,41 @@ func _clear_all() -> void:
 	for child in _canvas.get_children():
 		child.queue_free()
 	_highlight_panel = null
+	_extra_highlights.clear()
 	_hint_container = null
 	_target_node = null
+
+
+## Crea un highlight dorado adicional sobre un target extra (sin hint bubble ni tween)
+func _add_extra_highlight(target: Control) -> void:
+	var p := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.border_color = Color(1.0, 0.82, 0.1)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(5)
+	p.add_theme_stylebox_override("panel", sb)
+	var r := target.get_global_rect()
+	p.position = r.position - Vector2(4.0, 4.0)
+	p.size = r.size + Vector2(8.0, 8.0)
+	_canvas.add_child(p)
+	_extra_highlights.append(p)
+	# Pulso sincronizado con el highlight principal
+	var tw := create_tween()
+	tw.set_loops()
+	tw.tween_property(p, "modulate:a", 0.25, 0.65)
+	tw.tween_property(p, "modulate:a", 1.0, 0.65)
+
+
+## Busca un UpgradeButton por su upgrade_id
+func _find_upgrade_button(id: String) -> Control:
+	if not is_instance_valid(_main):
+		return null
+	var btns := _main.get_tree().get_nodes_in_group("upgrade_buttons")
+	for b in btns:
+		if b.has_method("get") and b.get("upgrade_id") == id and (b as Button).visible:
+			return b as Control
+	return null
 
 
 # ==================== HELPERS JUEGO ====================
