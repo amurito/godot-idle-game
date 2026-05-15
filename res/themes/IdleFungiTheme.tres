@@ -1,0 +1,238 @@
+[gd_resource type="Theme" load_steps=15 format=3 uid="uid://idle_fungi_theme"]
+
+[ext_resource type="FontFile" uid="uid://noto_emoji_fallback" path="res://fonts/Noto-COLRv1-noflags.ttf" id="NotoEmoji"]
+
+[sub_resource type="SystemFont" id="DefaultFontWithEmoji"]
+fallbacks = Array[Font]([ExtResource("NotoEmoji")])
+
+[sub_resource type="StyleBoxFlat" id="PanelHeaderStyle"]
+bg_color = Color(0.05, 0.04, 0.08, 1)
+border_width_left = 0
+border_width_top = 2
+border_width_right = 0
+border_width_bottom = 2
+border_color = Color(0.8, 0.3, 0.9, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="PanelActiveStyle"]
+content_margin_left = 8
+content_margin_top = 8
+content_margin_right = 8
+content_margin_bottom = 8
+bg_color = Color(0.05, 0.04, 0.08, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.3, 0.9, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="PanelDisabledStyle"]
+content_margin_left = 8
+content_margin_top = 8
+content_margin_right = 8
+content_margin_bottom = 8
+bg_color = Color(0.05, 0.04, 0.08, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.35, 0.45, 0.6)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="PanelWarningStyle"]
+content_margin_left = 8
+content_margin_top = 8
+content_margin_right = 8
+content_margin_bottom = 8
+bg_color = Color(0.08, 0.05, 0.05, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.2, 0.2, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="ModalPanelStyle"]
+content_margin_left = 25
+content_margin_top = 25
+content_margin_right = 25
+content_margin_bottom = 25
+bg_color = Color(0.02, 0.02, 0.05, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.8, 0.3, 0.9, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 20
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxFlat" id="ButtonAffordableStyle"]
+content_margin_left = 4
+content_margin_top = 4
+content_margin_right = 4
+content_margin_bottom = 4
+bg_color = Color(0.08, 0.07, 0.1, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 1, 0.05, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="ButtonUnaffordableStyle"]
+content_margin_left = 4
+content_margin_top = 4
+content_margin_right = 4
+content_margin_bottom = 4
+bg_color = Color(0.08, 0.07, 0.1, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.35, 0.45, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="ProgressBarStyle"]
+content_margin_left = 2
+content_margin_top = 2
+content_margin_right = 2
+content_margin_bottom = 2
+bg_color = Color(0.05, 0.04, 0.08, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.35, 0.45, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="ProgressBarFillStyle"]
+bg_color = Color(0.45, 1, 0.05, 0.8)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[resource]
+; ============================================================================
+; FONT COLORS
+; ============================================================================
+; Header/Bright (for KPIs, important metrics)
+Label/colors/header_bright = Color(1, 1, 1, 1)
+Label/colors/header_cyan = Color(0.1, 1, 1, 1)
+Label/colors/header_magenta = Color(1, 0.45, 1, 1)
+
+; Body (default text)
+Label/colors/font_color = Color(0.78431374, 0.29411766, 1, 1)
+Label/colors/body_text = Color(0.78431374, 0.29411766, 1, 0.9)
+Label/colors/body_muted = Color(0.6, 0.5, 0.7, 0.8)
+
+; Disabled/Dim
+Label/colors/disabled_text = Color(0.4, 0.35, 0.45, 0.7)
+Label/colors/font_outline_color = Color(0.07058824, 0, 0.08235294, 1)
+
+; Accent Colors
+Label/colors/accent_green = Color(0.45, 1, 0.05, 1)
+Label/colors/accent_red = Color(1, 0.2, 0.2, 1)
+Label/colors/accent_cyan = Color(0.1, 1, 1, 1)
+Label/colors/accent_magenta = Color(1, 0.4, 0.9, 1)
+Label/colors/accent_yellow = Color(1, 0.85, 0, 1)
+
+; ============================================================================
+; FONT SIZES
+; ============================================================================
+Label/font_sizes/header_size = 22
+Label/font_sizes/title_size = 20
+Label/font_sizes/normal_size = 13
+Label/font_sizes/small_size = 11
+Label/font_sizes/tiny_size = 9
+
+; ============================================================================
+; TEXT OUTLINE
+; ============================================================================
+Label/constants/outline_size = 2
+Label/constants/line_spacing = 4
+
+; ============================================================================
+; BUTTON COLORS & STYLES
+; ============================================================================
+Button/colors/font_color = Color(0.78431374, 0.29411766, 1, 1)
+Button/colors/font_hover_color = Color(1, 0.7, 1, 1)
+Button/colors/font_pressed_color = Color(0.8, 0.3, 0.9, 1)
+Button/colors/font_disabled_color = Color(0.4, 0.35, 0.45, 0.7)
+Button/colors/font_outline_color = Color(0.07058824, 0, 0.08235294, 1)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+
+Button/font_sizes/font_size = 13
+Button/constants/outline_size = 1
+
+Button/styles/normal = SubResource("ButtonUnaffordableStyle")
+Button/styles/hover = SubResource("ButtonAffordableStyle")
+Button/styles/pressed = SubResource("ButtonAffordableStyle")
+Button/styles/focus = SubResource("ButtonAffordableStyle")
+Button/styles/disabled = SubResource("ButtonUnaffordableStyle")
+
+; ============================================================================
+; PANEL STYLES
+; ============================================================================
+PanelContainer/styles/panel = SubResource("PanelActiveStyle")
+
+Panel/styles/panel = SubResource("PanelActiveStyle")
+Panel/styles/panel_header = SubResource("PanelHeaderStyle")
+
+; ============================================================================
+; PROGRESS BAR
+; ============================================================================
+ProgressBar/colors/font_color = Color(0.45, 1, 0.05, 1)
+ProgressBar/colors/font_outline_color = Color(0.07058824, 0, 0.08235294, 1)
+ProgressBar/font_sizes/font_size = 12
+ProgressBar/constants/outline_size = 1
+ProgressBar/styles/background = SubResource("ProgressBarStyle")
+ProgressBar/styles/fill = SubResource("ProgressBarFillStyle")
+
+; ============================================================================
+; SCROLL CONTAINER
+; ============================================================================
+ScrollContainer/colors/font_color = Color(0.78431374, 0.29411766, 1, 1)
+
+; ============================================================================
+; SPACING & CONSTANTS
+; ============================================================================
+HBoxContainer/constants/separation = 8
+VBoxContainer/constants/separation = 8
+MarginContainer/constants/margin_left = 8
+MarginContainer/constants/margin_top = 8
+MarginContainer/constants/margin_right = 8
+MarginContainer/constants/margin_bottom = 8
+
+; ============================================================================
+; RICHTEXT DEFAULTS
+; ============================================================================
+RichTextLabel/colors/default_color = Color(0.78431374, 0.29411766, 1, 0.9)
+RichTextLabel/colors/font_color = Color(0.78431374, 0.29411766, 1, 0.9)
+RichTextLabel/font_sizes/normal_font_size = 12
+default_font = SubResource("DefaultFontWithEmoji")

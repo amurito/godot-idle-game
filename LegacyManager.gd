@@ -551,6 +551,29 @@ func reload_for_slot() -> void:
 #  PERSISTENCIA
 # =====================================================
 
+## Devuelve el diccionario de legacy sin escribir a disco.
+## Usado por SaveManager para el export completo (run + legacy).
+func get_save_dict() -> Dictionary:
+	return {
+		"legacy_points": legacy_points,
+		"buffs": buffs,
+		"spores_buffer": internal_spores_total,
+		"total_runs": total_runs,
+		"last_run_ending": last_run_ending,
+		"mu_peak_achieved": mu_peak_achieved,
+		"esencia": esencia,
+		"trascendencia_count": trascendencia_count,
+		"first_trascendencia_shown": first_trascendencia_shown,
+		"endings_achieved": endings_achieved,
+		"cosmic_unlocked": cosmic_unlocked,
+		"achievement_data": achievement_data,
+		"buff_enabled": buff_enabled,
+		"post_tras_route": post_tras_route,
+		"reencarnacion_snapshot": reencarnacion_snapshot,
+		"current_cycle_history": current_cycle_history,
+		"all_time_history": all_time_history,
+	}
+
 func save_legacy():
 	var data := {
 		"legacy_points": legacy_points,

@@ -226,7 +226,7 @@ func _update_met_oscuro_seal_button():
 
 	if _met_oscuro_seal_btn == null or not is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn = Button.new()
-		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", 20)
+		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 		_met_oscuro_seal_btn.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
 		_met_oscuro_seal_btn.custom_minimum_size = Vector2(0, 70)
 		_met_oscuro_seal_btn.pressed.connect(_on_met_oscuro_seal_pressed)
@@ -269,7 +269,7 @@ func _update_simbiosis_seal_button():
 	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn = Button.new()
 		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 SELLAR SIMBIOSIS (+4 PL)")
-		_simbiosis_seal_btn.add_theme_font_size_override("font_size", 20)
+		_simbiosis_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
 		_simbiosis_seal_btn.pressed.connect(_on_simbiosis_seal_pressed)
@@ -300,7 +300,7 @@ func _update_colapso_controlado_btn():
 		add_lap("⚡ FRACTURA EPISTÉMICA — ε > 0.90 con Ω estable. Podés provocar el colapso (+6 PL)")
 	if _colapso_controlado_btn == null or not is_instance_valid(_colapso_controlado_btn):
 		_colapso_controlado_btn = Button.new()
-		_colapso_controlado_btn.add_theme_font_size_override("font_size", 20)
+		_colapso_controlado_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 		_colapso_controlado_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.1))
 		_colapso_controlado_btn.custom_minimum_size = Vector2(0, 70)
 		_colapso_controlado_btn.pressed.connect(_on_colapso_controlado_pressed)
@@ -779,6 +779,11 @@ func reset_local_state():
 func _ready():
 	show()
 	add_to_group("main")
+	# Aplicar escala de fuente base vía Theme (afecta labels/buttons sin override explícito)
+	if AccessibilityManager.font_scale != 1.0:
+		var t := Theme.new()
+		t.default_font_size = AccessibilityManager.fs(16)
+		self.theme = t
 	AudioManager.play_music("ambient")
 	UIManager.setup(ui_root)
 	LogManager.show_all_laps = false
@@ -813,7 +818,7 @@ func _ready():
 	# === CONTROLES MINIMALISTAS (SUPERIOR IZQUIERDA) ===
 	var menu_btn := Button.new()
 	menu_btn.text = EmojiToRichText.strip("🏠 Menú")
-	menu_btn.add_theme_font_size_override("font_size", 12)
+	menu_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	menu_btn.pressed.connect(func():
 		print("💾 Guardando y volviendo al menú...")
 		SaveManager.save_game(self)
@@ -825,7 +830,7 @@ func _ready():
 	bios_btn.text = EmojiToRichText.strip("🌱 Biosfera")
 	bios_btn.toggle_mode = true
 	bios_btn.button_pressed = true
-	bios_btn.add_theme_font_size_override("font_size", 12)
+	bios_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	bios_btn.toggled.connect(func(pressed):
 		# Mostrar/ocultar el Fungi DLC (violeta)
 		if is_instance_valid(fungi_ui):
@@ -836,25 +841,25 @@ func _ready():
 	var reset_btn := Button.new()
 	reset_btn.text = EmojiToRichText.strip("⚠️ Reset")
 	reset_btn.modulate = Color(0.8, 0.4, 0.4)
-	reset_btn.add_theme_font_size_override("font_size", 10)
+	reset_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	reset_btn.pressed.connect(func(): SaveManager.confirm_and_reset(self))
 	bottom_left_panel.add_child(reset_btn)
 	
 	var legacy_btn := Button.new()
 	legacy_btn.text = EmojiToRichText.strip("🧬 Banco Genético")
-	legacy_btn.add_theme_font_size_override("font_size", 11)
+	legacy_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	legacy_btn.pressed.connect(_on_legacy_pressed)
 	bottom_left_panel.add_child(legacy_btn)
 
 	var settings_btn := Button.new()
 	settings_btn.text = "Ajustes"
-	settings_btn.add_theme_font_size_override("font_size", 11)
+	settings_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	settings_btn.pressed.connect(func(): AudioManager.show_settings_panel(self))
 	bottom_left_panel.add_child(settings_btn)
 
 	var shortcuts_btn := Button.new()
 	shortcuts_btn.text = "?"
-	shortcuts_btn.add_theme_font_size_override("font_size", 14)
+	shortcuts_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	shortcuts_btn.tooltip_text = "Atajos de teclado e indicadores"
 	shortcuts_btn.custom_minimum_size = Vector2(32.0, 0.0)
 	shortcuts_btn.pressed.connect(func(): TutorialManager.toggle_shortcuts_panel(self))
@@ -862,7 +867,7 @@ func _ready():
 
 	var objectives_btn := Button.new()
 	objectives_btn.text = "Obj."
-	objectives_btn.add_theme_font_size_override("font_size", 11)
+	objectives_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	objectives_btn.tooltip_text = "Progreso de la run actual"
 	objectives_btn.pressed.connect(func(): TutorialManager.toggle_objectives_panel(self))
 	bottom_left_panel.add_child(objectives_btn)
@@ -1067,7 +1072,7 @@ func _init_reactor_3d() -> void:
 		_3d_power_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_3d_power_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_3d_power_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-		_3d_power_label.add_theme_font_size_override("font_size", 14)
+		_3d_power_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		_3d_power_label.add_theme_color_override("font_color", Color.WHITE)
 		_3d_power_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
 		_3d_power_label.add_theme_constant_override("shadow_outline_size", 4)
@@ -1795,7 +1800,6 @@ func _mente_colmena_auto_buy() -> void:
 		var def := UpgradeManager.get_def(bought_id)
 		var label_str := def.label if def else bought_id
 		add_lap("🧠 IA: Comprado [%s] ($%.0f)" % [label_str, bought_cost])
-		show_system_toast("🧠 IA compró: %s" % label_str)
 		update_ui()
 
 func _on_legacy_pressed():
@@ -1864,7 +1868,7 @@ func _refresh_legacy_store():
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
 			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
-			hdr.add_theme_font_size_override("font_size", 11)
+			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 22
 			col.add_child(hdr)
@@ -1893,7 +1897,7 @@ func _build_legacy_item(id: String) -> Control:
 		name_str += "  [%d/%d]" % [lvl, max_lvl]
 	var l_title: Label = Label.new()
 	l_title.text = name_str
-	l_title.add_theme_font_size_override("font_size", 11)
+	l_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var is_enabled: bool = LegacyManager.buff_enabled.get(id, true)
 	if lvl > 0 and not is_enabled:
@@ -1906,7 +1910,7 @@ func _build_legacy_item(id: String) -> Control:
 	var l_desc: Label = Label.new()
 	l_desc.text = def.get("flavor", "")
 	l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l_desc.add_theme_font_size_override("font_size", 9)
+	l_desc.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
 	l_desc.modulate = Color(0.6, 0.6, 0.6)
 
 	v.add_child(l_title)
@@ -1971,7 +1975,7 @@ func _update_legacy_indicators() -> void:
 		var chip := Label.new()
 		chip.text = text
 		chip.tooltip_text = tooltip
-		chip.add_theme_font_size_override("font_size", 11)
+		chip.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		chip.modulate = color
 		chip.mouse_filter = Control.MOUSE_FILTER_STOP
 		_legacy_indicators.add_child(chip)
@@ -2068,7 +2072,7 @@ func _update_legacy_indicators() -> void:
 	if bio_mult > 1.01 or absorb > 0.0:
 		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
 	if mente_colmena_active:
-		_add_chip.call("🧠IA", "Mente Colmena activa\nAuto-click ×10 por segundo", Color(0.9, 0.3, 0.9))
+		_add_chip.call(EmojiToRichText.strip("🧠IA"), "Mente Colmena activa\nAuto-click x10 por segundo", Color(0.9, 0.3, 0.9))
 
 
 

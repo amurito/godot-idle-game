@@ -31,8 +31,18 @@ Thumbs.db
 # Runs / laboratorio
 runs/
 
-.godot/ >> .gitignore
-.import/ >> .gitignore
-*.import >> .gitignore
-.mono/ >> .gitignore
-.vscode/ >> .gitignore
+.godot/
+*.import
+.mono/
+.vscode/
+
+# Build outputs (carpeta local)
+builds/
+
+# Claude worktrees
+.claude/
+
+# Analysis / tools cache
+analysis_output/
+tools/__pycache__/
+tools/analysis_output/

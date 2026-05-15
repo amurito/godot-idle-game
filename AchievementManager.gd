@@ -1035,6 +1035,7 @@ func _get_toast_container() -> VBoxContainer:
 	main.add_child(_toast_layer)
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast_layer.add_child(root)
 	_toast_container = VBoxContainer.new()
 	_toast_container.add_theme_constant_override("separation", 6)
@@ -1045,6 +1046,7 @@ func _get_toast_container() -> VBoxContainer:
 	_toast_container.offset_top = -320
 	_toast_container.offset_right = -16
 	_toast_container.offset_bottom = -72
+	_toast_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_toast_container)
 	return _toast_container
 
@@ -1069,6 +1071,7 @@ func _show_toast(id: String, def: Dictionary) -> void:
 	# ── Panel principal ──
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(380, 0)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.06, 0.07, 0.11, 0.96)
 	style.set_border_width_all(0)
@@ -1088,10 +1091,14 @@ func _show_toast(id: String, def: Dictionary) -> void:
 	hbox.add_theme_constant_override("separation", 10)
 	panel.add_child(hbox)
 
-	var icon_lbl := Label.new()
-	icon_lbl.text = icon
-	icon_lbl.add_theme_font_size_override("font_size", 28)
-	icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# RichTextLabel para que EmojiToRichText pueda reemplazar con Twemoji en web
+	var icon_lbl := RichTextLabel.new()
+	icon_lbl.bbcode_enabled = true
+	icon_lbl.fit_content = true
+	icon_lbl.scroll_active = false
+	icon_lbl.custom_minimum_size = Vector2(36, 36)
+	icon_lbl.add_theme_font_size_override("normal_font_size", 28)
+	icon_lbl.text = EmojiToRichText.rich(icon)
 	hbox.add_child(icon_lbl)
 
 	var vbox := VBoxContainer.new()
@@ -1101,31 +1108,37 @@ func _show_toast(id: String, def: Dictionary) -> void:
 
 	var header_lbl := Label.new()
 	header_lbl.text = ("★ LOGRO LEGENDARIO" if is_legendary else "LOGRO") + " — " + tier_name
-	header_lbl.add_theme_font_size_override("font_size", 10)
+	header_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	header_lbl.add_theme_color_override("font_color", color)
 	vbox.add_child(header_lbl)
 
 	var name_lbl := Label.new()
 	name_lbl.text = name_str
-	name_lbl.add_theme_font_size_override("font_size", 15)
+	name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0))
 	vbox.add_child(name_lbl)
 
 	if level in ["full", "legendary"] and desc_str != "":
 		var desc_lbl := Label.new()
 		desc_lbl.text = desc_str
-		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc_lbl.custom_minimum_size = Vector2(260, 0)
 		vbox.add_child(desc_lbl)
 
 	# ── Animación: fade-in → espera → slide-out derecha ──
-	var tween := panel.create_tween()
-	tween.tween_property(panel, "modulate:a", 1.0, 0.25)
-	tween.tween_interval(4.0 if level == "small" else 5.0)
-	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
-	tween.tween_callback(panel.queue_free)
+	if AccessibilityManager.reduce_motion:
+		panel.modulate.a = 1.0
+		var t := panel.create_tween()
+		t.tween_interval(3.0 if level == "small" else 4.5)
+		t.tween_callback(panel.queue_free)
+	else:
+		var tween := panel.create_tween()
+		tween.tween_property(panel, "modulate:a", 1.0, 0.25)
+		tween.tween_interval(4.0 if level == "small" else 5.0)
+		tween.tween_property(panel, "modulate:a", 0.0, 0.4)
+		tween.tween_callback(panel.queue_free)
 
 # ──────────────────────── PERSISTENCIA ────────────────────────
 

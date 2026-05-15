@@ -327,3 +327,145 @@ func confirm_and_reset(parent: Node) -> void:
 	dlg.canceled.connect(func():
 		dlg.queue_free())
 	dlg.popup_centered()
+
+
+## Exporta el save actual como JSON descargable.
+## Incluye tanto los datos de run (savegame) como el legacy (banco genético + trascendencias).
+## Formato: { "run": {...}, "legacy": {...} }
+## Web: usa JavaScriptBridge para forzar descarga. Desktop: escribe en user:// y abre carpeta.
+## main_node puede ser null — en ese caso lee los archivos de disco directamente.
+func export_save_json(main_node: Node) -> void:
+	# ── Datos de run ────────────────────────────────────────
+	var run_dict: Dictionary = {}
+	if main_node != null:
+		run_dict = build_save_data(main_node)
+	else:
+		var path: String = SAVE_PATH
+		if FileAccess.file_exists(path):
+			var file := FileAccess.open(path, FileAccess.READ)
+			if file:
+				var json := JSON.new()
+				if json.parse(file.get_as_text()) == OK:
+					run_dict = json.data
+				file.close()
+
+	# ── Datos de legacy ──────────────────────────────────────
+	var legacy_dict: Dictionary = LegacyManager.get_save_dict()
+
+	if run_dict.is_empty() and legacy_dict.is_empty():
+		push_warning("[SaveManager] export_save_json: no hay datos para exportar.")
+		return
+
+	var export_data := {"run": run_dict, "legacy": legacy_dict}
+	var json_str: String = JSON.stringify(export_data, "\t")
+
+	if OS.get_name() == "Web":
+		var js_literal: String = JSON.stringify(json_str)
+		var js_code: String = "(function(){var d=%s;var b=new Blob([d],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='antigravity_save.json';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},200);})();" % js_literal
+		JavaScriptBridge.eval(js_code)
+	else:
+		var export_path: String = "user://antigravity_save_export.json"
+		var file := FileAccess.open(export_path, FileAccess.WRITE)
+		if file:
+			file.store_string(json_str)
+			file.close()
+			print("[SaveManager] Save exportado a: ", ProjectSettings.globalize_path(export_path))
+		OS.shell_open(ProjectSettings.globalize_path("user://"))
+
+
+# Timer interno usado por el polling de importación web
+var _import_timer: Timer = null
+
+## Importa un save desde archivo JSON (run + legacy).
+## Web: abre file picker via JS y lee el archivo con FileReader.
+## Desktop: no aplica (el jugador tiene acceso directo a user://).
+func import_save_json() -> void:
+	if OS.get_name() != "Web":
+		push_warning("[SaveManager] import_save_json: solo disponible en web.")
+		return
+
+	# Limpiar resultado anterior
+	JavaScriptBridge.eval("window._antigravity_import_json = null;")
+
+	# Crear input[type=file] invisible, disparar click
+	JavaScriptBridge.eval("""
+(function(){
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.style.display = 'none';
+  input.onchange = function(e){
+    var file = e.target.files[0];
+    if(!file){ window._antigravity_import_json='__CANCEL__'; return; }
+    var reader = new FileReader();
+    reader.onload = function(ev){ window._antigravity_import_json = ev.target.result; };
+    reader.onerror = function(){ window._antigravity_import_json = '__ERROR__'; };
+    reader.readAsText(file);
+  };
+  document.body.appendChild(input);
+  input.click();
+  setTimeout(function(){ document.body.removeChild(input); }, 10000);
+})();
+""")
+
+	# Polling cada 200ms hasta recibir el resultado
+	if is_instance_valid(_import_timer):
+		_import_timer.queue_free()
+	_import_timer = Timer.new()
+	_import_timer.wait_time = 0.2
+	_import_timer.autostart = true
+	_import_timer.timeout.connect(_poll_import_result)
+	add_child(_import_timer)
+
+
+func _poll_import_result() -> void:
+	var result: String = str(JavaScriptBridge.eval("window._antigravity_import_json || ''"))
+	if result == "":
+		return  # todavía esperando
+
+	# Limpiar timer y variable JS
+	if is_instance_valid(_import_timer):
+		_import_timer.queue_free()
+		_import_timer = null
+	JavaScriptBridge.eval("window._antigravity_import_json = null;")
+
+	if result in ["__CANCEL__", "__ERROR__"]:
+		push_warning("[SaveManager] Importación cancelada o fallida.")
+		return
+
+	# Parsear el JSON exportado
+	var json := JSON.new()
+	if json.parse(result) != OK:
+		push_warning("[SaveManager] JSON de importación inválido.")
+		return
+
+	var data: Dictionary = json.data
+
+	# Soporta formato nuevo { run, legacy } y formato viejo (solo run)
+	var run_data: Dictionary = data.get("run", data)
+	var legacy_data: Dictionary = data.get("legacy", {})
+
+	# Asegurar que el directorio del slot existe
+	var slot_dir: String = SlotManager.get_slot_dir(SlotManager.active_slot)
+	if not DirAccess.dir_exists_absolute(slot_dir):
+		DirAccess.make_dir_recursive_absolute(slot_dir)
+
+	# Escribir savegame
+	if not run_data.is_empty():
+		var save_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+		if save_file:
+			save_file.store_string(JSON.stringify(run_data))
+			save_file.close()
+			print("[SaveManager] Run importada a: ", SAVE_PATH)
+
+	# Escribir legacy
+	if not legacy_data.is_empty():
+		var legacy_file := FileAccess.open(LegacyManager.LEGACY_PATH, FileAccess.WRITE)
+		if legacy_file:
+			legacy_file.store_string(JSON.stringify(legacy_data))
+			legacy_file.close()
+			print("[SaveManager] Legacy importado a: ", LegacyManager.LEGACY_PATH)
+
+	# Recargar y reiniciar escena
+	LegacyManager.reload_for_slot()
+	get_tree().reload_current_scene()

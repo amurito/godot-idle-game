@@ -153,7 +153,7 @@ func setup(ui_root: Control):
 	var header_content = _find_scene("HeaderContent")
 	if header_content:
 		route_badge_label = Label.new()
-		route_badge_label.add_theme_font_size_override("font_size", 13)
+		route_badge_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 		route_badge_label.visible = false
 		# Insertar antes del spacer derecho (último hijo)
 		header_content.add_child(route_badge_label)
@@ -575,8 +575,8 @@ func build_evo_checklist(main: Node) -> String:
 	var t := "[color=cyan][b]--- Próxima transición ---[/b][/color]\n"
 	var acc := UpgradeManager.level("accounting")
 	var ch : String
-	var ok_color := "[color=#00ff00]"
-	var fail_color := "[color=#ff4444]"
+	var ok_color := "[color=%s]" % AccessibilityManager.cok_hex()
+	var fail_color := "[color=%s]" % AccessibilityManager.cno_hex()
 
 	if EvoManager.mutation_homeostasis:
 		var tier := RunManager.homeostasis_tier_reached
@@ -902,9 +902,9 @@ func build_genome_text() -> String:
 			var bio_ok: bool = BiosphereEngine.biomasa < 0.5
 			var sin_p: bool = UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
 			var eps_ok: bool = StructuralModel.epsilon_runtime < 0.25
-			var bio_s: String = "[color=#44ff88]OK[/color]" if bio_ok else "[color=#ff4444]FALLA[/color]"
-			var pas_s: String = "[color=#44ff88]OK[/color]" if sin_p else "[color=#ff4444]FALLA[/color]"
-			var eps_s: String = "[color=#44ff88]OK[/color]" if eps_ok else "[color=#ff4444]FALLA[/color]"
+			var bio_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if bio_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
+			var pas_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if sin_p else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
+			var eps_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if eps_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			t += "Bio: " + bio_s + "  Pasivo: " + pas_s + "  e: " + eps_s + "\n"
 			var prog: float = clamp(RunManager.ascesis_timer / float(RunManager.ASCESIS_DURATION), 0.0, 1.0)
 			var filled: int = int(prog * 20)
@@ -1108,7 +1108,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		var h_t := LegacyManager.trascendencia_count
 		var h_ap: Dictionary = main.get_active_passive_breakdown()
 		var h_ok_red = StructuralModel.unlocked_d and StructuralModel.unlocked_e
-		var h_txt := "[center]HOMEOSTASIS\nEquilibrio activo sostenido.\n\n"
+		var h_txt := "[center]⚖️ HOMEOSTASIS\nEquilibrio activo sostenido.\n\n"
 
 		if h_t >= 1:
 			# NG+: condiciones más exigentes
@@ -1121,13 +1121,13 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 			var h_ok_bal = total_flow > 0 and (float(h_ap["pasivo"]) / total_flow) >= 0.30
 			var h_ok_bio_ng = BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
 			h_txt += "[color=#ff8800][NG+] Requisitos de equilibrio estrictos[/color]\n\n"
-			h_txt += "[color=%s]%s 0.05 < ε < 0.25 (banda NG+)[/color]\n" % ["#00ff00" if h_ok_eps_ng else "#ff4444", "[x]" if h_ok_eps_ng else "[ ]"]
-			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.55[/color]\n" % ["#00ff00" if h_ok_omega_ng else "#ff4444", "[x]" if h_ok_omega_ng else "[ ]"]
-			h_txt += "[color=%s]%s Balance pasivo ≥ 30%% del flujo[/color]\n" % ["#00ff00" if h_ok_bal else "#ff4444", "[x]" if h_ok_bal else "[ ]"]
-			h_txt += "[color=%s]%s Producción > 150/s[/color]\n" % ["#00ff00" if h_ok_delta_ng else "#ff4444", "[x]" if h_ok_delta_ng else "[ ]"]
-			h_txt += "[color=%s]%s Biomasa 1.0–10.0[/color]\n" % ["#00ff00" if h_ok_bio_ng else "#ff4444", "[x]" if h_ok_bio_ng else "[ ]"]
-			h_txt += "[color=%s]%s Contabilidad >= 2[/color]\n" % ["#00ff00" if h_ok_acc_ng else "#ff4444", "[x]" if h_ok_acc_ng else "[ ]"]
-			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
+			h_txt += "[color=%s]%s 0.05 < ε < 0.25 (banda NG+)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_eps_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps_ng else "[ ]"]
+			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.55[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_omega_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega_ng else "[ ]"]
+			h_txt += "[color=%s]%s Balance pasivo ≥ 30%% del flujo[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bal else AccessibilityManager.cno_hex(), "[x]" if h_ok_bal else "[ ]"]
+			h_txt += "[color=%s]%s Producción > 150/s[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_delta_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta_ng else "[ ]"]
+			h_txt += "[color=%s]%s Biomasa 1.0–10.0[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bio_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio_ng else "[ ]"]
+			h_txt += "[color=%s]%s Contabilidad >= 2[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_acc_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc_ng else "[ ]"]
+			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"]
 		else:
 			var h_ok_eps = RunManager.get_en_banda_homeostatica()
 			var h_ok_omega = StructuralModel.omega >= 0.40
@@ -1135,13 +1135,13 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 			var h_ok_bio = BiosphereEngine.biomasa < 12.0
 			var h_ok_acc = acc_lvl >= 1
 			var h_ok_dual = h_ap["pasivo"] > 0
-			h_txt += "[color=%s]%s 0.03 < ε < 0.30 (banda)[/color]\n" % ["#00ff00" if h_ok_eps else "#ff4444", "[x]" if h_ok_eps else "[ ]"]
-			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.40[/color]\n" % ["#00ff00" if h_ok_omega else "#ff4444", "[x]" if h_ok_omega else "[ ]"]
-			h_txt += "[color=%s]%s Flujos duales (activo + pasivo)[/color]\n" % ["#00ff00" if h_ok_dual else "#ff4444", "[x]" if h_ok_dual else "[ ]"]
-			h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % ["#00ff00" if h_ok_delta else "#ff4444", "[x]" if h_ok_delta else "[ ]"]
-			h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % ["#00ff00" if h_ok_bio else "#ff4444", "[x]" if h_ok_bio else "[ ]"]
-			h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if h_ok_acc else "#ff4444", "[x]" if h_ok_acc else "[ ]"]
-			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % ["#00ff00" if h_ok_red else "#ff4444", "[x]" if h_ok_red else "[ ]"]
+			h_txt += "[color=%s]%s 0.03 < ε < 0.30 (banda)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_eps else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps else "[ ]"]
+			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.40[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_omega else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega else "[ ]"]
+			h_txt += "[color=%s]%s Flujos duales (activo + pasivo)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_dual else AccessibilityManager.cno_hex(), "[x]" if h_ok_dual else "[ ]"]
+			h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_delta else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta else "[ ]"]
+			h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bio else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio else "[ ]"]
+			h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_acc else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc else "[ ]"]
+			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"]
 
 		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
 			var ratio = min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
@@ -1158,12 +1158,12 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		var r_ok_acc = acc_lvl >= 1
 		var r_ok_dom = not act_domina
 
-		var r_txt = "[center]RED MICELIAL\nExpansión pasiva.\n\n"
-		r_txt += "[color=%s]%s Hifas >= 11.5[/color]\n" % ["#00ff00" if r_ok_hifas else "#ff4444", "[x]" if r_ok_hifas else "[ ]"]
-		r_txt += "[color=%s]%s Biomasa >= 5.0[/color]\n" % ["#00ff00" if r_ok_bio else "#ff4444", "[x]" if r_ok_bio else "[ ]"]
-		r_txt += "[color=%s]%s ε < 0.65[/color]\n" % ["#00ff00" if r_ok_eps else "#ff4444", "[x]" if r_ok_eps else "[ ]"]
-		r_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if r_ok_acc else "#ff4444", "[x]" if r_ok_acc else "[ ]"]
-		r_txt += "[color=%s]%s Dominio Pasivo[/color][/center]" % ["#00ff00" if r_ok_dom else "#ff4444", "[x]" if r_ok_dom else "[ ]"]
+		var r_txt = "[center]🕸️ RED MICELIAL\nExpansión pasiva.\n\n"
+		r_txt += "[color=%s]%s Hifas >= 11.5[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if r_ok_hifas else "[ ]"]
+		r_txt += "[color=%s]%s Biomasa >= 5.0[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_bio else AccessibilityManager.cno_hex(), "[x]" if r_ok_bio else "[ ]"]
+		r_txt += "[color=%s]%s ε < 0.65[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_eps else AccessibilityManager.cno_hex(), "[x]" if r_ok_eps else "[ ]"]
+		r_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_acc else AccessibilityManager.cno_hex(), "[x]" if r_ok_acc else "[ ]"]
+		r_txt += "[color=%s]%s Dominio Pasivo[/color][/center]" % [AccessibilityManager.cok_hex() if r_ok_dom else AccessibilityManager.cno_hex(), "[x]" if r_ok_dom else "[ ]"]
 
 		data["red_micelial_text"] = r_txt
 		data["red_micelial_ready"] = EvoManager.is_red_micelial_ready()
@@ -1173,11 +1173,11 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		var s_ok_acc = acc_lvl >= 1
 		var s_ok_dom = act_domina
 
-		var s_txt = "[center]SIMBIOSIS\nFusión activa.\n\n"
-		s_txt += "[color=%s]%s Hifas >= 5.0[/color]\n" % ["#00ff00" if s_ok_hifas else "#ff4444", "[x]" if s_ok_hifas else "[ ]"]
-		s_txt += "[color=%s]%s ε (0.15 - 0.45)[/color]\n" % ["#00ff00" if s_ok_eps else "#ff4444", "[x]" if s_ok_eps else "[ ]"]
-		s_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % ["#00ff00" if s_ok_acc else "#ff4444", "[x]" if s_ok_acc else "[ ]"]
-		s_txt += "[color=%s]%s Dominio Click[/color][/center]" % ["#00ff00" if s_ok_dom else "#ff4444", "[x]" if s_ok_dom else "[ ]"]
+		var s_txt = "[center]🌱 SIMBIOSIS\nFusión activa.\n\n"
+		s_txt += "[color=%s]%s Hifas >= 5.0[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if s_ok_hifas else "[ ]"]
+		s_txt += "[color=%s]%s ε (0.15 - 0.45)[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_eps else AccessibilityManager.cno_hex(), "[x]" if s_ok_eps else "[ ]"]
+		s_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_acc else AccessibilityManager.cno_hex(), "[x]" if s_ok_acc else "[ ]"]
+		s_txt += "[color=%s]%s Dominio Click[/color][/center]" % [AccessibilityManager.cok_hex() if s_ok_dom else AccessibilityManager.cno_hex(), "[x]" if s_ok_dom else "[ ]"]
 
 		data["simbiosis_text"] = s_txt
 		data["simbiosis_ready"] = EvoManager.is_simbiosis_ready()
@@ -1186,7 +1186,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		data["header"] = "TRANSICIÓN ALOSTÁTICA (TIER 2)"
 		var works = EvoManager.is_allostasis_ready(main)
 
-		var h_txt = "[center]ALLOSTASIS\nRegulación Dinámica del Sistema.\n\n"
+		var h_txt = "[center]🌪️ ALLOSTASIS\nRegulación Dinámica del Sistema.\n\n"
 		h_txt += "[color=#00ff00]+ Ingresos Globales x3.0[/color]\n"
 		h_txt += "[color=#00ff00]+ Estabilidad Adaptativa (Ω buffer)[/color]\n"
 		h_txt += "[color=#ff4444]- Exige Metabolismo > 200/s[/color]\n"
@@ -1198,7 +1198,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 	else:
 		data["header"] = "BIFURCACIÓN DEL GENOMA"
 
-		var col_txt = "[center]COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
+		var col_txt = "[center]🦠 COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
 			"[color=#00ff00]+ Automatización ×1.5[/color]\n" + \
 			"[color=#00ff00]+ Ciclo Primordio → Seta → Esporulación[/color]\n" + \
 			"[color=#ffaa00]Sin requisitos extra[/color][/center]"
@@ -1206,10 +1206,10 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		data["colonization_ready"] = true
 
 		var has_mechanics = UpgradeManager.level("accounting") >= 2
-		var mec_txt = "[center]SIMBIOSIS MECÁNICA\nRama hardware.\n\n" + \
+		var mec_txt = "[center]🔬 SIMBIOSIS MECÁNICA\nRama hardware.\n\n" + \
 			"[color=#00ff00]+ Ω_min 0.50 (estabilidad)[/color]\n" + \
 			"[color=#00ff00]+ Núcleo de Conciencia → SINGULARIDAD[/color]\n" + \
-			("[color=#00ff00]✓ Contabilidad ≥ 2[/color]" if has_mechanics else "[color=#ff4444]✗ Requiere Contabilidad nvl 2[/color]") + \
+			("[color=%s]✓ Contabilidad ≥ 2[/color]" % AccessibilityManager.cok_hex() if has_mechanics else "[color=%s]✗ Requiere Contabilidad nvl 2[/color]" % AccessibilityManager.cno_hex()) + \
 			"[/center]"
 		data["symbiosis_text"] = mec_txt
 		data["symbiosis_ready"] = has_mechanics

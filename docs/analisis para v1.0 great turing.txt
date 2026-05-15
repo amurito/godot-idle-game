@@ -1,0 +1,51 @@
+Acá va mi análisis para v1.0, ordenado por impacto en un jugador nuevo:
+
+---
+
+## Crítico para publicar
+
+**Tutorial / onboarding**
+El juego actualmente tira al jugador al fondo. Para v1.0 mínimo necesitás:
+- Tooltips contextuales en el primer click (qué es Δ$, qué es ω)
+- Un mensaje de bienvenida corto que explique la loop básica
+- Highlight del primer botón de upgrade disponible
+
+**Feedback de audio**
+Sin ningún sonido, el juego se siente vacío. Mínimo viable:
+- Click sound (el botón principal)
+- Sonido de unlock/upgrade
+- Música de fondo ambient (un loop, sin forzar)
+
+**Settings / opciones**
+Antes de publicar necesitás al menos:
+- Toggle de música y SFX
+- Opción de borrar save (con confirmación)
+
+---
+
+## Importante para retención
+
+**Balance de early game**
+Si el juego post-trascendencia está bien pulido pero las primeras 2 horas son confusas o lentas, nadie llega al contenido bueno. Merece una pasada.
+
+**Pantalla de título**
+Un menú principal real (New Game / Continue / Credits) en lugar de entrar directo a la partida.
+
+**Notificaciones de achievements**
+Los logros existen pero ¿aparecen en pantalla cuando se desbloquean? Si no, nadie los ve.
+
+**Save en la nube / export**
+Para web o distribución: backup manual de save o integración básica.
+
+---
+
+## Nice-to-have
+
+- **Créditos** (requerido en muchas plataformas)
+- **Icono y metadata** para itch.io / Steam
+- **Localización** (al menos EN además del ES actual)
+- **Accesibilidad básica** (tamaño de fuente, contraste)
+
+---
+
+¿Cuál de estos grupos querés atacar primero? Mi recomendación sería **tutorial + audio** como par, porque son lo que más impacta en la primera impresión de un jugador nuevo.

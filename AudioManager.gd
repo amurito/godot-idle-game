@@ -265,25 +265,38 @@ func show_settings_panel(parent: Node) -> void:
 		_settings_panel.queue_free()
 
 	_settings_panel = Panel.new()
-	_settings_panel.anchor_right = 1.0
-	_settings_panel.anchor_bottom = 1.0
-	_settings_panel.self_modulate = Color(0.04, 0.04, 0.08, 0.97)
+	_settings_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.04, 0.04, 0.08, 1.0)
+	_settings_panel.add_theme_stylebox_override("panel", bg_style)
 	parent.add_child(_settings_panel)
 
-	var center := CenterContainer.new()
-	center.anchor_right = 1.0
-	center.anchor_bottom = 1.0
-	_settings_panel.add_child(center)
+	# ScrollContainer para contenido largo
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_settings_panel.add_child(scroll)
+
+	# Fila horizontal para centrar el VBox
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(row)
 
 	var vbox := VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(420, 0)
-	vbox.add_theme_constant_override("separation", 16)
-	center.add_child(vbox)
+	vbox.custom_minimum_size = Vector2(440, 0)
+	vbox.add_theme_constant_override("separation", 14)
+	row.add_child(vbox)
+
+	# Espaciado superior
+	var top_spacer := Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 24)
+	vbox.add_child(top_spacer)
 
 	var title := Label.new()
-	title.text = "⚙ AJUSTES"
+	title.text = EmojiToRichText.strip("⚙ AJUSTES")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(28))
 	title.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	vbox.add_child(title)
 
@@ -301,6 +314,46 @@ func show_settings_panel(parent: Node) -> void:
 
 	vbox.add_child(HSeparator.new())
 	_build_telemetry_row(vbox)
+	vbox.add_child(HSeparator.new())
+	_build_accessibility_row(vbox)
+	vbox.add_child(HSeparator.new())
+
+	# ── Exportar / Importar save ──────────────────────────────────────
+	var btn_export := Button.new()
+	btn_export.text = "Exportar save (.json)"
+	btn_export.custom_minimum_size = Vector2(0, 36)
+	btn_export.pressed.connect(func():
+		var main_node: Node = get_tree().get_first_node_in_group("main")
+		SaveManager.export_save_json(main_node)
+	)
+	vbox.add_child(btn_export)
+
+	if OS.get_name() == "Web":
+		# En web también ofrecemos importar (para cargar un save exportado desde desktop)
+		var btn_import := Button.new()
+		btn_import.text = "Importar save (.json)"
+		btn_import.custom_minimum_size = Vector2(0, 36)
+		btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
+		btn_import.pressed.connect(func():
+			_close_settings_panel()
+			SaveManager.import_save_json()
+		)
+		vbox.add_child(btn_import)
+
+		var import_hint := Label.new()
+		import_hint.text = "Carga un save exportado desde desktop. Recarga la partida al terminar."
+		import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+		import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
+		vbox.add_child(import_hint)
+	else:
+		var export_hint := Label.new()
+		export_hint.text = "Se guarda en la carpeta de datos del juego y se abre el explorador."
+		export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+		export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
+		vbox.add_child(export_hint)
+
 	vbox.add_child(HSeparator.new())
 
 	var btn_tutorial := Button.new()
@@ -329,6 +382,11 @@ func show_settings_panel(parent: Node) -> void:
 	btn_close.pressed.connect(_close_settings_panel)
 	vbox.add_child(btn_close)
 
+	# Espaciado inferior para que el scroll no corte el último botón
+	var bot_spacer := Control.new()
+	bot_spacer.custom_minimum_size = Vector2(0, 32)
+	vbox.add_child(bot_spacer)
+
 
 func _build_volume_row(parent: VBoxContainer, label_text: String,
 		initial_value: float, initial_muted: bool,
@@ -340,7 +398,7 @@ func _build_volume_row(parent: VBoxContainer, label_text: String,
 
 	var lbl := Label.new()
 	lbl.text = label_text
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	row.add_child(lbl)
 
 	var hbox := HBoxContainer.new()
@@ -390,7 +448,7 @@ func _build_telemetry_row(parent: VBoxContainer) -> void:
 	var hint := Label.new()
 	hint.text = "Local y opt-in: guarda JSON anonimos en user://telemetry/runs al cerrar una run."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", 11)
+	hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
 	telemetry_box.add_child(hint)
 
@@ -401,6 +459,88 @@ func _build_telemetry_row(parent: VBoxContainer) -> void:
 	open_btn.pressed.connect(func():
 		TelemetryManager.open_runs_dir())
 	telemetry_box.add_child(open_btn)
+
+
+func _build_accessibility_row(parent: VBoxContainer) -> void:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	parent.add_child(box)
+
+	var sec_lbl := Label.new()
+	sec_lbl.text = "Accesibilidad"
+	sec_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+	sec_lbl.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+	box.add_child(sec_lbl)
+
+	# ── Escala de texto ──────────────────────────────
+	var scale_row := HBoxContainer.new()
+	scale_row.add_theme_constant_override("separation", 10)
+	box.add_child(scale_row)
+
+	var scale_lbl := Label.new()
+	scale_lbl.text = "Tamaño de texto:"
+	scale_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scale_row.add_child(scale_lbl)
+
+	var scale_opt := OptionButton.new()
+	scale_opt.add_item("85%",  0)
+	scale_opt.add_item("Normal (100%)", 1)
+	scale_opt.add_item("115%", 2)
+	scale_opt.add_item("130%", 3)
+	# Seleccionar el índice correspondiente al scale actual
+	var scale_map := {0.85: 0, 1.0: 1, 1.15: 2, 1.30: 3}
+	scale_opt.selected = scale_map.get(AccessibilityManager.font_scale, 1)
+	scale_opt.custom_minimum_size = Vector2(150, 0)
+	scale_opt.item_selected.connect(func(idx: int):
+		var vals := [0.85, 1.0, 1.15, 1.30]
+		AccessibilityManager.set_font_scale(vals[idx])
+		# set_font_scale hace reload_current_scene automáticamente
+	)
+	scale_row.add_child(scale_opt)
+
+	var scale_hint := Label.new()
+	scale_hint.text = "Requiere reinicio de escena al cambiar."
+	scale_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	scale_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
+	scale_hint.add_theme_color_override("font_color", Color(0.45, 0.50, 0.60))
+	box.add_child(scale_hint)
+
+	# ── Reducir movimiento ───────────────────────────
+	var motion_cb := CheckBox.new()
+	motion_cb.text = "Reducir movimiento (sin animaciones)"
+	motion_cb.button_pressed = AccessibilityManager.reduce_motion
+	motion_cb.toggled.connect(func(pressed: bool):
+		AccessibilityManager.set_reduce_motion(pressed))
+	box.add_child(motion_cb)
+
+	# ── Alto contraste ───────────────────────────────
+	var contrast_cb := CheckBox.new()
+	contrast_cb.text = "Alto contraste"
+	contrast_cb.button_pressed = AccessibilityManager.high_contrast
+	contrast_cb.toggled.connect(func(pressed: bool):
+		AccessibilityManager.set_high_contrast(pressed))
+	box.add_child(contrast_cb)
+
+	# ── Modo daltonismo ──────────────────────────────
+	var cb_row := HBoxContainer.new()
+	cb_row.add_theme_constant_override("separation", 10)
+	box.add_child(cb_row)
+
+	var cb_lbl := Label.new()
+	cb_lbl.text = "Daltonismo:"
+	cb_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cb_row.add_child(cb_lbl)
+
+	var cb_opt := OptionButton.new()
+	cb_opt.add_item("Desactivado", 0)
+	cb_opt.add_item("Deuteranopia (R-G)", 1)
+	cb_opt.add_item("Protanopia (R-G)", 2)
+	cb_opt.add_item("Tritanopia (B-A)", 3)
+	cb_opt.selected = AccessibilityManager.colorblind_mode
+	cb_opt.custom_minimum_size = Vector2(170, 0)
+	cb_opt.item_selected.connect(func(idx: int):
+		AccessibilityManager.set_colorblind_mode(idx))
+	cb_row.add_child(cb_opt)
 
 
 func _close_settings_panel() -> void:

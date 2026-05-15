@@ -94,9 +94,9 @@ func update_appearance(current_money: float) -> void:
 		hk_prefix = "[%d] " % HOTKEY_MAP[upgrade_id]
 
 	if def.one_shot:
-		text = "%s%s\n%s" % [hk_prefix, def.label, cost_str]
+		text = EmojiToRichText.strip("%s%s\n%s" % [hk_prefix, def.label, cost_str])
 	else:
-		text = "%s%s%s (%s)\n%s" % [hk_prefix, def.label, level_str, gain_str, cost_str]
+		text = EmojiToRichText.strip("%s%s%s (%s)\n%s" % [hk_prefix, def.label, level_str, gain_str, cost_str])
 	
 	# Desactivar si no alcanza el dinero
 	var can_afford = current_money >= cost
@@ -107,24 +107,28 @@ func update_appearance(current_money: float) -> void:
 
 ## Aplica estilos visuales basados en si el upgrade es asequible
 func _apply_affordability_style(can_afford: bool) -> void:
+	if AccessibilityManager.high_contrast:
+		_apply_affordability_style_hc(can_afford)
+		return
 	if can_afford:
-		# Normal
+		var ok_c: Color = AccessibilityManager.cok()
+		# Normal — fondo oscuro fijo, borde con el color accesible
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(0.07, 0.10, 0.07, 0.95)
+		s.bg_color = Color(0.06, 0.08, 0.06, 0.95)
 		s.set_border_width_all(2)
-		s.border_color = Color(0.45, 1.0, 0.05, 0.85)  # verde
+		s.border_color = Color(ok_c.r, ok_c.g, ok_c.b, 0.85)
 		s.set_corner_radius_all(4)
 		s.set_content_margin_all(4)
 		add_theme_stylebox_override("normal", s)
-		# Hover — más brillante
-		var h := s.duplicate()
-		h.bg_color = Color(0.10, 0.16, 0.10, 0.98)
-		h.border_color = Color(0.55, 1.0, 0.15, 1.0)
+		# Hover
+		var h := s.duplicate() as StyleBoxFlat
+		h.bg_color = Color(0.09, 0.12, 0.09, 0.98)
+		h.border_color = ok_c
 		add_theme_stylebox_override("hover", h)
 		# Pressed
-		var p := s.duplicate()
-		p.bg_color = Color(0.04, 0.08, 0.04, 1.0)
-		p.border_color = Color(0.35, 0.85, 0.05, 0.7)
+		var p := s.duplicate() as StyleBoxFlat
+		p.bg_color = Color(0.04, 0.06, 0.04, 1.0)
+		p.border_color = Color(ok_c.r, ok_c.g, ok_c.b, 0.7)
 		add_theme_stylebox_override("pressed", p)
 		remove_theme_color_override("font_color")
 	else:
@@ -139,6 +143,35 @@ func _apply_affordability_style(can_afford: bool) -> void:
 		add_theme_stylebox_override("hover", s)
 		add_theme_stylebox_override("pressed", s)
 		add_theme_color_override("font_color", Color(0.38, 0.33, 0.42, 0.65))
+
+## Alto contraste: blanco/negro en lugar de verde/gris
+func _apply_affordability_style_hc(can_afford: bool) -> void:
+	if can_afford:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(0.0, 0.0, 0.0, 1.0)
+		s.set_border_width_all(3)
+		s.border_color = Color(1.0, 1.0, 1.0, 1.0)
+		s.set_corner_radius_all(3)
+		s.set_content_margin_all(4)
+		add_theme_stylebox_override("normal", s)
+		var h := s.duplicate()
+		h.bg_color = Color(0.15, 0.15, 0.15, 1.0)
+		add_theme_stylebox_override("hover", h)
+		var p := s.duplicate()
+		p.bg_color = Color(0.25, 0.25, 0.25, 1.0)
+		add_theme_stylebox_override("pressed", p)
+		add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	else:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(0.08, 0.08, 0.08, 1.0)
+		s.set_border_width_all(1)
+		s.border_color = Color(0.45, 0.45, 0.45, 0.7)
+		s.set_corner_radius_all(3)
+		s.set_content_margin_all(4)
+		add_theme_stylebox_override("normal", s)
+		add_theme_stylebox_override("hover", s)
+		add_theme_stylebox_override("pressed", s)
+		add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 0.75))
 
 ## Estilo para upgrade one-shot ya adquirido
 func _apply_acquired_style() -> void:

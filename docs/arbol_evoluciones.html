@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ÁRBOL DE EVOLUCIONES — v0.8 Fungi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&family=IBM+Plex+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #08090f;
+    color: #c8d8e8;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    padding: 30px 20px 60px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    text-align: center;
+    font-size: 1.8rem;
+    letter-spacing: 6px;
+    color: #e0eaff;
+    margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(160,160,255,0.5);
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.78rem;
+    letter-spacing: 3px;
+    color: #4a6080;
+    margin-bottom: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── SVG TREE CANVAS ── */
+  .tree-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  svg.lines {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  svg.lines line {
+    stroke-width: 1.5;
+    opacity: 0.45;
+  }
+
+  /* ── GRID ── */
+  .tree {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 75px;
+    column-gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── NODE ── */
+  .node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  .circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    border: 2px solid;
+    cursor: default;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    z-index: 2;
+  }
+  .circle:hover {
+    transform: scale(1.12);
+  }
+
+  .node-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 1.5px;
+    margin-top: 7px;
+    line-height: 1.4;
+    color: #8899bb;
+  }
+
+  .node-tag {
+    font-size: 0.58rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #445566;
+    margin-top: 3px;
+  }
+
+  /* ── COLORS BY FAMILY ── */
+
+  /* NUCLEO */
+  .col-nucleo .circle {
+    background: radial-gradient(circle, #2a1a4a, #1a0e2e);
+    border-color: #9966cc;
+    box-shadow: 0 0 18px rgba(150,100,220,0.5), inset 0 0 12px rgba(150,100,220,0.2);
+  }
+  .col-nucleo .node-label { color: #bb99ee; }
+
+  /* ORDEN — azul/cian */
+  .col-orden .circle {
+    background: radial-gradient(circle, #0a1a2e, #06111e);
+    border-color: #3388cc;
+    box-shadow: 0 0 14px rgba(50,130,200,0.4);
+  }
+  .col-orden .node-label { color: #66aadd; }
+
+  /* BIOLOGÍA — verde */
+  .col-bio .circle {
+    background: radial-gradient(circle, #0a1e10, #060e08);
+    border-color: #33bb66;
+    box-shadow: 0 0 14px rgba(50,180,100,0.4);
+  }
+  .col-bio .node-label { color: #55cc88; }
+
+  /* COLAPSO — rojo/naranja */
+  .col-colapso .circle {
+    background: radial-gradient(circle, #2a0808, #1a0404);
+    border-color: #cc4422;
+    box-shadow: 0 0 14px rgba(200,60,30,0.4);
+  }
+  .col-colapso .node-label { color: #ee7744; }
+
+  /* RED MICELIAL — verde Lima */
+  .col-red .circle {
+    background: radial-gradient(circle, #101e08, #080e04);
+    border-color: #77cc22;
+    box-shadow: 0 0 14px rgba(100,200,30,0.4);
+  }
+  .col-red .node-label { color: #99dd44; }
+
+  /* SECRETO — magenta */
+  .col-secreto .circle {
+    background: radial-gradient(circle, #1a0818, #100610);
+    border-color: #cc44aa;
+    border-style: dashed;
+    box-shadow: 0 0 14px rgba(200,60,170,0.3);
+  }
+  .col-secreto .node-label { color: #dd77cc; }
+  .col-secreto .node-tag { color: #884466; }
+
+  /* TRASCENDENCIA */
+  .col-tras .circle {
+    background: radial-gradient(circle, #1a1a3a, #0e0e22);
+    border-color: #8855ff;
+    box-shadow: 0 0 24px rgba(130,80,255,0.6), inset 0 0 16px rgba(130,80,255,0.15);
+    width: 85px;
+    height: 85px;
+    font-size: 2rem;
+  }
+  .col-tras .node-label { color: #aa88ff; font-size: 0.58rem; }
+
+  /* HITO (no es final, es paso intermedio) */
+  .col-hito .circle {
+    background: radial-gradient(circle, #121a10, #0a1008);
+    border-color: #559933;
+    border-style: dashed;
+    width: 58px;
+    height: 58px;
+    font-size: 1.3rem;
+    box-shadow: 0 0 10px rgba(80,150,50,0.3);
+  }
+  .col-hito .node-label { color: #669944; font-size: 0.5rem; }
+  .col-hito .node-tag { color: #3a5522; }
+
+  /* POST-TRASCENDENCIA — colores especiales */
+
+  /* POLIMORFÍA TOTAL — multicolor/transformación */
+  .col-polimorfia .circle {
+    background: radial-gradient(circle, #2a1a3a, #1a0f2a);
+    border-color: #cc77ff;
+    box-shadow: 0 0 18px rgba(200,100,255,0.5), inset 0 0 12px rgba(200,100,255,0.2);
+    width: 75px;
+    height: 75px;
+    font-size: 1.8rem;
+  }
+  .col-polimorfia .node-label { color: #dd99ff; font-size: 0.54rem; }
+
+  /* DOMADOR DEL CAOS — índigo/caos */
+  .col-caos .circle {
+    background: radial-gradient(circle, #1a1a2a, #0f0f1a);
+    border-color: #6644ff;
+    box-shadow: 0 0 16px rgba(100,60,255,0.5), inset 0 0 10px rgba(100,60,255,0.15);
+    width: 75px;
+    height: 75px;
+    font-size: 1.8rem;
+  }
+  .col-caos .node-label { color: #9977ff; font-size: 0.54rem; }
+
+  /* ASCESIS PROFUNDA — vacío profundo */
+  .col-ascesis .circle {
+    background: radial-gradient(circle, #0a0f1a, #050810);
+    border-color: #4488ff;
+    box-shadow: 0 0 14px rgba(60,120,255,0.3), inset 0 0 8px rgba(60,120,255,0.1);
+    width: 72px;
+    height: 72px;
+    font-size: 1.7rem;
+  }
+  .col-ascesis .node-label { color: #7799ff; font-size: 0.53rem; }
+
+  /* REENCARNACIÓN CONSUMADA — ciclo/magenta */
+  .col-reencarn .circle {
+    background: radial-gradient(circle, #2a1a2a, #1a0f1a);
+    border-color: #ff44cc;
+    box-shadow: 0 0 16px rgba(255,60,180,0.5), inset 0 0 10px rgba(255,60,180,0.15);
+    width: 75px;
+    height: 75px;
+    font-size: 1.8rem;
+  }
+  .col-reencarn .node-label { color: #ff77dd; font-size: 0.54rem; }
+
+  /* COLAPSO CONTROLADO — rojo intenso/dominado */
+  .col-colapso-ctrl .circle {
+    background: radial-gradient(circle, #3a0a0a, #2a0505);
+    border-color: #ff6644;
+    box-shadow: 0 0 18px rgba(255,80,40,0.5), inset 0 0 12px rgba(255,80,40,0.2);
+    width: 75px;
+    height: 75px;
+    font-size: 1.8rem;
+  }
+  .col-colapso-ctrl .node-label { color: #ff9966; font-size: 0.54rem; }
+
+  /* ── TOOLTIP ── */
+  .node:hover .tooltip { display: block; }
+  .tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d1320;
+    border: 1px solid #2a3a55;
+    border-radius: 6px;
+    padding: 10px 14px;
+    min-width: 200px;
+    max-width: 280px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    line-height: 1.7;
+    color: #aabbcc;
+    z-index: 100;
+    text-align: left;
+    pointer-events: none;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+  }
+  .tooltip .t-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    color: #ddeeff;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #2a3a55;
+    padding-bottom: 4px;
+  }
+  .tooltip .t-cond { color: #88aacc; }
+  .tooltip .t-effect { color: #66cc88; }
+  .tooltip .t-pl { color: #ffcc44; }
+  .tooltip .t-ng { color: #ff6688; }
+  .tooltip .t-family { color: #9966cc; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin: 50px auto 30px;
+    max-width: 900px;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #6688aa;
+  }
+  .leg-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+  }
+
+  /* ── TRASCENDENCIA GATE ── */
+  .tras-gate {
+    text-align: center;
+    margin: 20px auto 0;
+    max-width: 700px;
+    background: #0d1020;
+    border: 1px solid #3322aa;
+    border-radius: 10px;
+    padding: 18px 24px;
+  }
+  .tras-gate h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: #8855ff;
+    margin-bottom: 12px;
+  }
+  .tras-family {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .tras-family .fam { text-align: left; }
+  .tras-family .fam-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .tras-family .fam-routes { color: #556677; line-height: 1.7; }
+  .fam-orden .fam-title { color: #4488cc; }
+  .fam-bio .fam-title   { color: #44bb66; }
+  .fam-col .fam-title   { color: #cc5533; }
+
+  /* spacer cells */
+  .spacer { visibility: hidden; }
+</style>
+</head>
+<body>
+
+<h1>ÁRBOL DE EVOLUCIONES</h1>
+<div class="subtitle">SISTEMA COMPLETO · v0.8 FUNGI · CÓDIGO FUENTE</div>
+
+<div class="tree-wrap">
+  <!-- SVG para las líneas de conexión -->
+  <svg class="lines" id="svg-lines"></svg>
+
+  <div class="tree" id="tree">
+
+    <!-- ══════════════ ROW 0: NÚCLEO ══════════════ -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="node col-nucleo" id="n-nucleo">
+      <div class="circle">🍄</div>
+      <div class="node-label">NÚCLEO</div>
+      <div class="tooltip">
+        <div class="t-title">NÚCLEO FÚNGICO</div>
+        <span class="t-cond">Estado inicial de cada run.
+El hongo observa el entorno y
+evalúa qué mutación activar.</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 1: TIER 1 ══════════════ -->
+    <div class="node col-colapso" id="n-hiper">
+      <div class="circle">🔥</div>
+      <div class="node-label">HIPERA­SIMI­LACIÓN</div>
+      <div class="node-tag">[COLAPSO]</div>
+      <div class="tooltip">
+        <div class="t-title">HIPERASIMILACIÓN</div>
+        <span class="t-cond">CONDICIONES:
+· Click domina >80% ingresos
+· ε_runtime > 0.40
+· Biomasa > 4.0
+· Contabilidad = Nv.0
+· Tiempo > 180s</span>
+
+<span class="t-effect">EFECTOS:
+· Click ×10 (RUSH extremo)
+· Pasivo ×0.25 (−75%)
+· Biomasa sin cap</span>
+
+<span class="t-pl">PL al cerrar: 1</span>
+<span class="t-ng">Si last_run=PARASITISMO:
+→ NO cierra, espera DEPREDADOR</span>
+      </div>
+    </div>
+
+    <div class="node col-bio" id="n-parasitism">
+      <div class="circle">☣️</div>
+      <div class="node-label">PARASI­TISMO</div>
+      <div class="node-tag">[BIOLOGÍA]</div>
+      <div class="tooltip">
+        <div class="t-title">PARASITISMO</div>
+        <span class="t-cond">CONDICIONES (cualquiera):
+· Bio>6 + ε>0.35 + acc=0 + t>420s
+· Inactividad (sin click >120s) + bio>3
+· Estancamiento (t>1800s, bio>5)</span>
+
+<span class="t-effect">EFECTOS:
+· Crecimiento biomasa ×2
+· Pasivo ×1.2 (inicial)
+· Corrosión parasitaria (↓ click con tiempo)</span>
+
+<span class="t-pl">PL al cerrar: 2</span>
+<span class="t-ng">Cierre: bio≥15+dinero&lt;1000
+O bio≥25 (masa crítica)</span>
+      </div>
+    </div>
+
+    <div class="node col-red" id="n-red">
+      <div class="circle">🕸️</div>
+      <div class="node-label">RED MICE­LIAL</div>
+      <div class="node-tag">[RAMA VERDE]</div>
+      <div class="tooltip">
+        <div class="t-title">RED MICELIAL</div>
+        <span class="t-cond">CONDICIONES:
+· Hifas ≥ 5.0
+· ε entre 0.15–0.45
+· Click domina (activo > pasivo)
+· Contabilidad ≥ Nv.1</span>
+
+<span class="t-effect">EFECTOS:
+· Pasivo ×2.5, Click ×0.5
+· Fase A → elegir rama:</span>
+<span class="t-ng">  🌿 COLONIZACIÓN (biológica)
+  ⚡ SIMB. MECÁNICA (azul)</span>
+      </div>
+    </div>
+
+    <div class="node col-bio" id="n-simbiosis">
+      <div class="circle">🤝</div>
+      <div class="node-label">SIM­BIO­SIS</div>
+      <div class="node-tag">[BIOLOGÍA]</div>
+      <div class="tooltip">
+        <div class="t-title">SIMBIOSIS ESTRUCTURAL</div>
+        <span class="t-cond">CONDICIONES:
+· Contabilidad ≥ Nv.1
+· Hifas ≥ 3.0–5.0
+· Ω ≥ 0.40
+· Click domina (activo > pasivo)</span>
+
+<span class="t-effect">EFECTOS:
+· Click ×2.5
+· Pasivo ×0.5
+· ε disipado al 25% (biosfera)</span>
+
+<span class="t-pl">PL al cerrar: 4</span>
+<span class="t-ng">Cierre auto: 5min en banda estable
+O Ω≥0.50 por 60s (rama mecánica)</span>
+      </div>
+    </div>
+
+    <div class="node col-orden" id="n-homeo">
+      <div class="circle">⚖️</div>
+      <div class="node-label">HOMEO­STASIS</div>
+      <div class="node-tag">[ORDEN]</div>
+      <div class="tooltip">
+        <div class="t-title">HOMEOSTASIS</div>
+        <span class="t-cond">CONDICIONES:
+· Contabilidad ≥ Nv.1 activa
+· Biomasa > 1.0 O hifas > 2.0
+· ε_runtime &lt; 0.50
+· Hifas &lt; 8.0</span>
+
+<span class="t-effect">EFECTOS:
+· Pasivo ×1.5 (Orden Admin)
+· Cap biomasa en 10.0
+· Habilita sistema de perturbaciones</span>
+
+<span class="t-pl">PL al cerrar: 3 → 4 → 8</span>
+<span class="t-ng">Tiers progresivos:
+HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 2: TIER 2 ══════════════ -->
+    <div class="node col-colapso" id="n-depredador">
+      <div class="circle">☠️</div>
+      <div class="node-label">DEPREDADOR DE REALIDADES</div>
+      <div class="node-tag">[COLAPSO · NG+]</div>
+      <div class="tooltip">
+        <div class="t-title">DEPREDADOR DE REALIDADES</div>
+        <span class="t-ng">PREREQUISITO: last_run = PARASITISMO</span>
+<span class="t-cond">
++ HIPERASIMILACIÓN activa
++ ε_runtime > 0.95
++ Mantener 30s (18s c/ Árbol Acelerado)</span>
+
+<span class="t-effect">EFECTOS:
+· Devora un upgrade cada 1.5s
+· Cada devour: +15 biomasa
+· Desbloquea Legado: METABOLISMO GLITCH</span>
+
+<span class="t-pl">PL al cerrar: 12</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Ramas de Red Micelial -->
+    <div class="node col-red" id="n-coloniz">
+      <div class="circle">🌿</div>
+      <div class="node-label">COLONI­ZACIÓN</div>
+      <div class="node-tag">[RAMA BIOLÓGICA]</div>
+      <div class="tooltip">
+        <div class="t-title">RAMA: COLONIZACIÓN</div>
+        <span class="t-cond">Elegida en Fase A de Red Micelial.
+Transición Fase A→B:
+· Hifas ≥ 11.5
+· Biomasa ≥ 5.0
+· ε ≤ 0.65
+· Tiempo ≥ 200s</span>
+
+<span class="t-effect">EFECTOS:
+· Pasivo ×2.5 (bonus colonización)
+· Habilita Primordio Biológico
+· Cap biomasa sube a 20.0</span>
+      </div>
+    </div>
+
+    <div class="node col-red" id="n-simb-mec">
+      <div class="circle">⚙️</div>
+      <div class="node-label">SIMB. MECÁNICA</div>
+      <div class="node-tag">[RAMA AZUL]</div>
+      <div class="tooltip">
+        <div class="t-title">RAMA: SIMBIOSIS MECÁNICA</div>
+        <span class="t-cond">Elegida en Fase A de Red Micelial.
+Transición Fase A→B:
+· Hifas ≥ 9.5
+· Biomasa ≥ 5.0
+· ε ≤ 0.35
+· Tiempo ≥ 200s</span>
+
+<span class="t-effect">EFECTOS:
+· Habilita Núcleo de Conciencia
+· μ bonus por micelio
+· Bonus contabilidad permanente</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="node col-orden" id="n-allos">
+      <div class="circle">💜</div>
+      <div class="node-label">ALLOS­TASIS</div>
+      <div class="node-tag">[ORDEN · TIER 2]</div>
+      <div class="tooltip">
+        <div class="t-title">ALLOSTASIS</div>
+        <span class="t-cond">Dentro de HOMEOSTASIS activa:
+· ≥ 3 perturbaciones sobrevividas
+· Ω_min ≥ 0.40
+· Resiliencia ≥ 150
+· Contabilidad ≥ Nv.2
+· Delta total > $200/s</span>
+
+<span class="t-effect">EFECTOS:
+· Otorga Legado: RESILIENCIA ALOSTÁTICA
+· Ω_min garantizado ≥ 0.45 (NG+)</span>
+
+<span class="t-pl">PL al cerrar en ALLOSTASIS: 4</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 3: TIER 3 ══════════════ -->
+    <div class="node col-colapso" id="n-met-oscuro">
+      <div class="circle">🌑</div>
+      <div class="node-label">META­BOLIS­MO OSCURO</div>
+      <div class="node-tag">[COLAPSO · NG++]</div>
+      <div class="tooltip">
+        <div class="t-title">METABOLISMO OSCURO</div>
+        <span class="t-ng">PREREQUISITO: DEPREDADOR activo</span>
+<span class="t-cond">
++ Devours acumulados ≥ 3
++ Dinero &lt; $1.000
++ Biomasa ≥ 25
++ Mantener 15s (9s c/ Árbol Acelerado)</span>
+
+<span class="t-effect">EFECTOS:
+· Pasivo = Bio × 0.8/s
+· Click ×3 (reemplaza x10 de Hiper)
+· ε decae automáticamente (−0.05/s)
+· Ω bloqueado en 0.10 (fragilidad total)</span>
+
+<span class="t-pl">PL al cerrar: 4</span>
+<span class="t-ng">Cierre: Bio≥100 O Dinero≥$1M</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="node col-hito" id="n-seta">
+      <div class="circle">🍄</div>
+      <div class="node-label">SETA FORMADA</div>
+      <div class="node-tag">[hito]</div>
+      <div class="tooltip">
+        <div class="t-title">HITO: SETA FORMADA</div>
+        <span class="t-cond">PRIMORDIO BIOLÓGICO (90s):
+· Hifas ≥ 14.5
+· Biomasa ≥ 8.0
+· ε &lt; 0.50 durante 90s
+· Delta > $50/s durante 90s
+· Hifas &lt; 60 durante 90s</span>
+
+<span class="t-effect">No es un final. Habilita:
+· Esporulación (botón)
+· Bonus esporas ×3 al cerrar</span>
+      </div>
+    </div>
+
+    <div class="node col-hito" id="n-nucleo-con">
+      <div class="circle">💾</div>
+      <div class="node-label">NÚCLEO DE CONCIENCIA</div>
+      <div class="node-tag">[hito]</div>
+      <div class="tooltip">
+        <div class="t-title">HITO: NÚCLEO DE CONCIENCIA</div>
+        <span class="t-cond">PRIMORDIO MECÁNICO (90s):
+· Contabilidad ≥ Nv.2
+· ε ≤ 0.25 durante 90s
+(velocidad ajustada por estabilidad)</span>
+
+<span class="t-effect">No es un final. Habilita:
+· SINGULARIDAD (botón)
+· +0.20 bonus contabilidad permanente</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="node col-orden" id="n-homeo-rhesis">
+      <div class="circle">💎</div>
+      <div class="node-label">HOMEO­RHESIS</div>
+      <div class="node-tag">[ORDEN · TIER 3]</div>
+      <div class="tooltip">
+        <div class="t-title">HOMEORHESIS</div>
+        <span class="t-cond">Dentro de ALLOSTASIS alcanzada:
+· Shock EXTREMO sobrevivido
+· Resiliencia ≥ 400
+· Ω_min ≥ 0.50
+· ≥ 5 perturbaciones sobrevividas
+· Delta > $300/s
+· Tiempo ≥ 1200s (20 min)</span>
+
+<span class="t-effect">EFECTOS:
+· Otorga Legado: TRASCENDENCIA CRISTALINA
+· Ω_min garantizado ≥ 0.55 (NG+)
+· Penalización shocks −50%</span>
+
+<span class="t-pl">PL al cerrar: 8</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 4: TIER 4 (FINALES) ══════════════ -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <div class="node col-bio" id="n-esporul">
+      <div class="circle">🌱</div>
+      <div class="node-label">ESPORU­LACIÓN</div>
+      <div class="node-tag">[BIOLOGÍA]</div>
+      <div class="tooltip">
+        <div class="t-title">ESPORULACIÓN</div>
+        <span class="t-cond">Requiere:
+· Seta Formada (hito completado)
+· Botón manual al presionar</span>
+
+<span class="t-effect">EFECTOS:
+· Biomasa colapsa al 10%
+· Genera esporas (→ PL)
+· Con Seta: esporas ×3</span>
+
+<span class="t-pl">PL al cerrar: 5</span>
+      </div>
+    </div>
+
+    <div class="node col-orden" id="n-singularidad">
+      <div class="circle">⚡</div>
+      <div class="node-label">SINGULA­RIDAD</div>
+      <div class="node-tag">[ORDEN]</div>
+      <div class="tooltip">
+        <div class="t-title">SINGULARIDAD MECÁNICA</div>
+        <span class="t-cond">Requiere:
+· Núcleo de Conciencia (hito completado)
+· Botón manual al presionar</span>
+
+<span class="t-effect">EFECTOS:
+· PL = 6 + bonus por estabilidad (ε bajo)
+· Bonus max: +5 PL si ε ≈ 0</span>
+
+<span class="t-pl">PL al cerrar: 6–11</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 5: TIER 5 (SECRETOS / NG+) ══════════════ -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <div class="node col-secreto" id="n-panspermia">
+      <div class="circle">🚀</div>
+      <div class="node-label">PANSPERMIA NEGRA</div>
+      <div class="node-tag">[BIOLOGÍA · SECRETO]</div>
+      <div class="tooltip">
+        <div class="t-title">PANSPERMIA NEGRA</div>
+        <span class="t-ng">SECRETO — Requiere:</span>
+<span class="t-cond">· last_run = ESPORULACIÓN
++ Primordio activo en run actual
++ $100.000 de dinero (se gasta)
++ Botón manual</span>
+
+<span class="t-effect">EFECTOS:
+· Otorga Legado: SEMILLA CÓSMICA
+· Las esporas llegan al espacio exterior</span>
+
+<span class="t-pl">PL al cerrar: 10</span>
+      </div>
+    </div>
+
+    <div class="node col-secreto" id="n-mente">
+      <div class="circle">🧠</div>
+      <div class="node-label">MENTE COLMENA DIST.</div>
+      <div class="node-tag">[BIOLOGÍA · NG+]</div>
+      <div class="tooltip">
+        <div class="t-title">MENTE COLMENA DISTRIBUIDA</div>
+        <span class="t-ng">PREREQUISITO: last_run = SINGULARIDAD</span>
+<span class="t-cond">
++ Rama SIMB. MECÁNICA activa
++ Ratio activo/pasivo = 50% ± 2%
++ Mantener 180s
++ ε &lt; 0.50 durante el proceso</span>
+
+<span class="t-effect">EFECTOS:
+· IA auto-click activa permanente
+· Auto-compra upgrades cada 8s
+· Otorga Legado: MENTE COLMENA
+  (Pasivo ×3 NG+)</span>
+
+<span class="t-pl">PL al cerrar: 8</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 6: TRASCENDENCIA ══════════════ -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="node col-tras" id="n-tras">
+      <div class="circle">🌀</div>
+      <div class="node-label">TRASDEN­DENCIA</div>
+      <div class="tooltip">
+        <div class="t-title">TRASCENDENCIA</div>
+        <span class="t-cond">REQUISITOS:
+· 1 ruta de FAMILIA ORDEN
+· 1 ruta de FAMILIA BIOLOGÍA
+· 1 ruta de FAMILIA COLAPSO
+· PL acumulado ≥ 50</span>
+
+<span class="t-effect">RECOMPENSA:
+· Esencia (Ξ) = PL/10 + rutas×5 + ciclos×2
+· Banco Cósmico desbloqueado (NG+)
+· Buffs cósmicos permanentes
+· Run se reinicia con buffs activos</span>
+
+<span class="t-ng">RESET: PL, buffs, esporas, total runs
+PRESERVA: Ξ, rutas completadas, cósmicos</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 7: SPACER ══════════════ -->
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 8: col0=VACÍO  col3=CARNAVAL  col5=REENCARNACIÓN ══════════════ -->
+    <!-- col 0 --> <div class="node col-ascesis" id="n-vacio">
+      <div class="circle">🔵</div>
+      <div class="node-label">VACÍO HAMBRIENTO</div>
+      <div class="node-tag">[POST-TRANS]</div>
+      <div class="tooltip">
+        <div class="t-title">VACÍO HAMBRIENTO</div>
+        <span class="t-ng">Fase preparatoria → ASCESIS PROFUNDA</span>
+        <span class="t-cond">
+Requisitos para activar:
+· Run ≥ 15 min
+· Dinero ≥ $1M</span>
+
+        <span class="t-effect">Habilita:
+· ASCESIS PROFUNDA (camino de renuncia)</span>
+      </div>
+    </div>
+    <!-- col 1 --> <div class="spacer"></div>
+    <!-- col 2 --> <div class="spacer"></div>
+    <!-- col 3 --> <div class="node col-polimorfia" id="n-carnaval">
+      <div class="circle">🎪</div>
+      <div class="node-label">CARNAVAL MUTACIONES</div>
+      <div class="node-tag">[POST-TRANS]</div>
+      <div class="tooltip">
+        <div class="t-title">CARNAVAL DE MUTACIONES</div>
+        <span class="t-ng">Bifurcación: 2 rutas posibles</span>
+        <span class="t-cond">
+ACTIVACIÓN:
+· Rotación automática cada 60s
+· Pool: homeostasis, simbiosis, red_micelial, parasitismo, hiperasimilacion</span>
+
+        <span class="t-effect">Bifurcación A→B:
+· 🎭 POLIMORFÍA TOTAL (12+ rotaciones)
+· 🎪 DOMADOR DEL CAOS (3+ rotaciones + $1M)</span>
+      </div>
+    </div>
+    <!-- col 4 --> <div class="spacer"></div>
+    <!-- col 5 --> <div class="node col-reencarn" id="n-reencarn">
+      <div class="circle">⚱️</div>
+      <div class="node-label">REENCARNACIÓN HEREDADA</div>
+      <div class="node-tag">[POST-TRANS]</div>
+      <div class="tooltip">
+        <div class="t-title">REENCARNACIÓN HEREDADA</div>
+        <span class="t-ng">Fase preparatoria → REENCARNACIÓN CONSUMADA</span>
+        <span class="t-cond">
+Requisitos para activar:
+· Snapshot de upgrades guardado
+· Costos multiplicados ×1.5</span>
+
+        <span class="t-effect">Meta final:
+· $800K + Ω≥0.40 + ε≥0.60 + n>30
+· → REENCARNACIÓN CONSUMADA (+8 PL)</span>
+      </div>
+    </div>
+    <!-- col 6 --> <div class="spacer"></div>
+
+    <!-- ══════════════ ROW 9: col0=ASCESIS  col2=POLIMORFÍA  col4=DOMADOR  col5=REENCARN CONSUMADA ══════════════ -->
+    <!-- col 0 --> <div class="node col-ascesis" id="n-ascesis">
+      <div class="circle">✨</div>
+      <div class="node-label">ASCESIS PROFUNDA</div>
+      <div class="node-tag">[FINAL]</div>
+      <div class="tooltip">
+        <div class="t-title">ASCESIS PROFUNDA</div>
+        <span class="t-ng">Meta: Renuncia absoluta</span>
+        <span class="t-cond">
+CONDICIONES:
+· Biomasa < 0.5
+· Sin auto-pasivo (auto=0, trueque=0)
+· ε_runtime < 0.25 durante 300s</span>
+
+        <span class="t-effect">EFECTOS:
+· Logro: VACÍO ABSOLUTO
+· Máxima purificación del sistema</span>
+
+        <span class="t-pl">PL al cerrar: 7</span>
+      </div>
+    </div>
+    <!-- col 1 --> <div class="spacer"></div>
+    <!-- col 2 --> <div class="node col-polimorfia" id="n-polimorfia">
+      <div class="circle">🎭</div>
+      <div class="node-label">POLIMORFÍA TOTAL</div>
+      <div class="node-tag">[FINAL]</div>
+      <div class="tooltip">
+        <div class="t-title">POLIMORFÍA TOTAL</div>
+        <span class="t-ng">META: 12+ rotaciones Carnaval</span>
+        <span class="t-cond">
+CONDICIONES:
+· Biomasa ≥ 8.0
+· Ω ≥ 0.35
+· Dinero ≥ $300K</span>
+
+        <span class="t-effect">EFECTOS:
+· Identidad trasciende clasificación
+· Legado: MEMORIA POLIMÓRFICA
+  Pasivo ×1.25, biomasa inicial +1.5</span>
+
+        <span class="t-pl">PL al cerrar: 9</span>
+      </div>
+    </div>
+    <!-- col 3 --> <div class="spacer"></div>
+    <!-- col 4 --> <div class="node col-caos" id="n-domador">
+      <div class="circle">👑</div>
+      <div class="node-label">DOMADOR DEL CAOS</div>
+      <div class="node-tag">[FINAL]</div>
+      <div class="tooltip">
+        <div class="t-title">DOMADOR DEL CAOS</div>
+        <span class="t-ng">META: Maestría mutacional</span>
+        <span class="t-cond">
+CONDICIONES:
+· 3+ rotaciones de Carnaval
+· $1M+ acumulado (pico de dinero)</span>
+
+        <span class="t-effect">EFECTOS:
+· Domina caos mutacional
+· Legado: MEMORIA DEL CAOS
+  Todos los ingresos ×1.30 (NG+)</span>
+
+        <span class="t-pl">PL al cerrar: 11</span>
+      </div>
+    </div>
+    <!-- col 5 --> <div class="node col-reencarn" id="n-reencarn-final">
+      <div class="circle">🔄</div>
+      <div class="node-label">REENCARNACIÓN CONSUMADA</div>
+      <div class="node-tag">[FINAL]</div>
+      <div class="tooltip">
+        <div class="t-title">REENCARNACIÓN CONSUMADA</div>
+        <span class="t-ng">META: Ciclo completado</span>
+        <span class="t-cond">
+CONDICIONES:
+· $800K dinero
+· Ω ≥ 0.40
+· ε_peak ≥ 0.60
+· n > 30 (upgrades estructurales)</span>
+
+        <span class="t-effect">EFECTOS:
+· Hongo supera encarnación anterior
+· Legado: MEMORIA DEL CICLO
+  Todos los upgrades −15% (NG+)</span>
+
+        <span class="t-pl">PL al cerrar: 8</span>
+      </div>
+    </div>
+    <!-- col 6 --> <div class="spacer"></div>
+
+  </div><!-- /tree -->
+</div><!-- /tree-wrap -->
+
+<!-- LEYENDA FAMILIAS -->
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="border-color:#cc4422;background:#2a0808"></div> Familia COLAPSO</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#33bb66;background:#0a1e10"></div> Familia BIOLOGÍA</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#3388cc;background:#0a1a2e"></div> Familia ORDEN</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#77cc22;background:#101e08"></div> Red Micelial (Neutro)</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#cc44aa;border-style:dashed;background:#1a0818"></div> Final Secreto / NG+</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#559933;border-style:dashed;background:#121a10"></div> Hito (no es final)</div>
+  <div class="leg-item"><div class="leg-dot" style="border-color:#8855ff;background:#1a1a3a"></div> Post-Trascendencia</div>
+</div>
+
+<!-- TRASCENDENCIA GATE INFO -->
+<div class="tras-gate">
+  <h3>PUERTA DE TRASCENDENCIA</h3>
+  <div class="tras-family">
+    <div class="fam fam-orden">
+      <div class="fam-title">⚖️ ORDEN</div>
+      <div class="fam-routes">
+        HOMEOSTASIS<br>ALLOSTASIS<br>HOMEORHESIS<br>SINGULARIDAD
+      </div>
+    </div>
+    <div class="fam fam-bio">
+      <div class="fam-title">🌿 BIOLOGÍA</div>
+      <div class="fam-routes">
+        PARASITISMO<br>SIMBIOSIS<br>ESPORULACIÓN<br>PANSPERMIA NEGRA<br>MENTE COLMENA DIST.
+      </div>
+    </div>
+    <div class="fam fam-col">
+      <div class="fam-title">🔥 COLAPSO</div>
+      <div class="fam-routes">
+        HIPERASIMILACIÓN<br>DEPREDADOR DE REALIDADES<br>METABOLISMO OSCURO
+      </div>
+    </div>
+  </div>
+  <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid #3322aa;">
+    <h3 style="font-size: 0.75rem; color: #6655ff; margin-bottom: 10px;">POST-TRASCENDENCIA — 3 CAMINOS (NG+)</h3>
+    <div class="tras-family" style="flex-direction: column; gap: 14px;">
+      <div style="padding: 10px; border-left: 2px solid #4488ff; background: rgba(68,136,255,0.1); border-radius: 4px;">
+        <div class="fam-title" style="color: #4488ff; margin-bottom: 6px;">🔵 VACÍO HAMBRIENTO</div>
+        <div class="fam-routes" style="font-size: 0.65rem;">
+          ✨ ASCESIS PROFUNDA ($1M, bio<0.5, sin pasivo) — 7 PL
+        </div>
+      </div>
+      <div style="padding: 10px; border-left: 2px solid #cc77ff; background: rgba(200,100,255,0.1); border-radius: 4px;">
+        <div class="fam-title" style="color: #cc77ff; margin-bottom: 6px;">🎪 CARNAVAL MUTACIONES</div>
+        <div class="fam-routes" style="font-size: 0.65rem;">
+          🎭 POLIMORFÍA TOTAL (12+ rotaciones, bio≥8.0) — 9 PL<br>
+          👑 DOMADOR DEL CAOS (3+ rotaciones, $1M+) — 11 PL
+        </div>
+      </div>
+      <div style="padding: 10px; border-left: 2px solid #ff44cc; background: rgba(255,68,180,0.1); border-radius: 4px;">
+        <div class="fam-title" style="color: #ff44cc; margin-bottom: 6px;">⚱️ REENCARNACIÓN HEREDADA</div>
+        <div class="fam-routes" style="font-size: 0.65rem;">
+          🔄 REENCARNACIÓN CONSUMADA ($800K, Ω≥0.40, ε≥0.60, n>30) — 8 PL
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Dibuja líneas SVG entre nodos padre → hijo
+const connections = [
+  // [from_id, to_id, color]
+  ["n-nucleo",     "n-hiper",       "#cc4422"],
+  ["n-nucleo",     "n-parasitism",  "#33bb66"],
+  ["n-nucleo",     "n-red",         "#77cc22"],
+  ["n-nucleo",     "n-simbiosis",   "#33bb66"],
+  ["n-nucleo",     "n-homeo",       "#3388cc"],
+
+  ["n-hiper",      "n-depredador",  "#cc4422"],
+  ["n-depredador", "n-met-oscuro",  "#aa3311"],
+
+  ["n-red",        "n-coloniz",     "#77cc22"],
+  ["n-red",        "n-simb-mec",    "#55aa88"],
+
+  ["n-coloniz",    "n-seta",        "#559933"],
+  ["n-simb-mec",   "n-nucleo-con",  "#3377aa"],
+
+  ["n-seta",       "n-esporul",     "#44aa55"],
+  ["n-nucleo-con", "n-singularidad","#3388cc"],
+
+  ["n-esporul",    "n-panspermia",  "#cc44aa"],
+  ["n-singularidad","n-mente",      "#cc44aa"],
+
+  ["n-homeo",      "n-allos",       "#3366bb"],
+  ["n-allos",      "n-homeo-rhesis","#2255aa"],
+
+  ["n-esporul",    "n-tras",        "#9966cc"],
+  ["n-singularidad","n-tras",       "#9966cc"],
+  ["n-met-oscuro", "n-tras",        "#9966cc"],
+  ["n-homeo-rhesis","n-tras",       "#9966cc"],
+  ["n-simbiosis",  "n-tras",        "#9966cc"],
+  ["n-mente",      "n-tras",        "#9966cc"],
+  ["n-panspermia", "n-tras",        "#9966cc"],
+];
+
+function getCenter(el) {
+  const wrap = document.querySelector('.tree-wrap');
+  const wrapRect = wrap.getBoundingClientRect();
+  const rect = el.querySelector('.circle').getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2 - wrapRect.left,
+    y: rect.top + rect.height / 2 - wrapRect.top
+  };
+}
+
+function drawLines() {
+  const svg = document.getElementById('svg-lines');
+  const wrap = document.querySelector('.tree-wrap');
+  svg.setAttribute('viewBox', `0 0 ${wrap.offsetWidth} ${wrap.offsetHeight}`);
+  svg.innerHTML = '';
+
+  connections.forEach(([fromId, toId, color]) => {
+    const fromEl = document.getElementById(fromId);
+    const toEl   = document.getElementById(toId);
+    if (!fromEl || !toEl) return;
+
+    const a = getCenter(fromEl);
+    const b = getCenter(toEl);
+
+    // Bezier suave
+    const cy = (a.y + b.y) / 2;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('d', `M${a.x},${a.y} C${a.x},${cy} ${b.x},${cy} ${b.x},${b.y}`);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '1.8');
+    line.setAttribute('opacity', '0.45');
+    svg.appendChild(line);
+  });
+
+  // Líneas POST-TRASCENDENCIA (conexiones adicionales)
+  const post_trans_connections = [
+    // Trascendencia → Bifurcaciones principales
+    ["n-tras", "n-vacio", "#4488ff"],
+    ["n-tras", "n-carnaval", "#cc77ff"],
+    ["n-tras", "n-reencarn", "#ff44cc"],
+
+    // Bifurcaciones → Finales
+    ["n-vacio", "n-ascesis", "#4488ff"],
+    ["n-carnaval", "n-polimorfia", "#cc77ff"],
+    ["n-carnaval", "n-domador", "#6644ff"],
+    ["n-reencarn", "n-reencarn-final", "#ff44cc"]
+  ];
+
+  post_trans_connections.forEach(([fromId, toId, color]) => {
+    const fromEl = document.getElementById(fromId);
+    const toEl   = document.getElementById(toId);
+    if (!fromEl || !toEl) return;
+
+    const a = getCenter(fromEl);
+    const b = getCenter(toEl);
+
+    const cy = (a.y + b.y) / 2;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('d', `M${a.x},${a.y} C${a.x},${cy} ${b.x},${cy} ${b.x},${b.y}`);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '1.6');
+    line.setAttribute('opacity', '0.35');
+    svg.appendChild(line);
+  });
+}
+
+window.addEventListener('load', drawLines);
+window.addEventListener('resize', drawLines);
+</script>
+</body>
+</html>

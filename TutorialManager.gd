@@ -271,7 +271,7 @@ func toggle_shortcuts_panel(parent: Node) -> void:
 	var title := Label.new()
 	title.text = "? Atajos de Teclado"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 	title.add_theme_color_override("font_color", Color(0.5, 0.82, 1.0))
 	vbox.add_child(title)
 
@@ -493,7 +493,7 @@ func _show_toast(title: String, body: String, border_color: Color = Color(1.0, 0
 		t_lbl.bbcode_enabled = true
 		t_lbl.fit_content = true
 		t_lbl.custom_minimum_size = Vector2(276.0, 0.0)
-		t_lbl.add_theme_font_size_override("font_size", 13)
+		t_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 		t_lbl.text = "[b]" + title + "[/b]"
 		inner.add_child(t_lbl)
 
@@ -502,7 +502,7 @@ func _show_toast(title: String, body: String, border_color: Color = Color(1.0, 0
 		b_lbl.bbcode_enabled = true
 		b_lbl.fit_content = true
 		b_lbl.custom_minimum_size = Vector2(276.0, 0.0)
-		b_lbl.add_theme_font_size_override("font_size", 11)
+		b_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		b_lbl.add_theme_color_override("default_color", Color(0.82, 0.82, 0.82))
 		b_lbl.text = body
 		inner.add_child(b_lbl)
@@ -567,7 +567,7 @@ func toggle_objectives_panel(parent: Node) -> void:
 	var title := Label.new()
 	title.text = "Progreso de la Run"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 	title.add_theme_color_override("font_color", Color(0.4, 0.92, 0.55))
 	vbox.add_child(title)
 
@@ -742,7 +742,7 @@ func _show_welcome_overlay() -> void:
 	var title := Label.new()
 	title.text = "Bienvenido a AntiIDLE"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(30))
 	title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.1))
 	vbox.add_child(title)
 
@@ -769,7 +769,7 @@ func _show_welcome_overlay() -> void:
 
 	var btn_skip := Button.new()
 	btn_skip.text = "Omitir tutorial"
-	btn_skip.add_theme_font_size_override("font_size", 13)
+	btn_skip.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	btn_skip.modulate = Color(0.65, 0.65, 0.65)
 	btn_skip.pressed.connect(func(): skip_tutorial())
 	btn_row.add_child(btn_skip)
@@ -777,7 +777,7 @@ func _show_welcome_overlay() -> void:
 	var btn_start := Button.new()
 	btn_start.text = "  Empezar  "
 	btn_start.custom_minimum_size = Vector2(0.0, 48.0)
-	btn_start.add_theme_font_size_override("font_size", 20)
+	btn_start.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 	btn_start.pressed.connect(func(): _advance())
 	btn_row.add_child(btn_start)
 
@@ -839,7 +839,7 @@ func _make_hint_bubble(hint_text: String, dismiss_fn: Callable = Callable()) -> 
 
 	var btn := Button.new()
 	btn.text = "Entendido ✓"
-	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	if dismiss_fn.is_valid():
 		btn.pressed.connect(dismiss_fn)
 	else:
@@ -866,7 +866,7 @@ func _make_tooltip_panel(text: String) -> PanelContainer:
 	label.bbcode_enabled = true
 	label.fit_content = true
 	label.custom_minimum_size = Vector2(200.0, 0.0)
-	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	label.text = text
 	container.add_child(label)
 

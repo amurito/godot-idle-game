@@ -33,9 +33,15 @@ var trascend_counter_label: Label = null
 var trascend_confirm_panel: Panel = null
 var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
+var credits_panel: Panel = null
+var _credits_close_cb: Callable = Callable()
 
 func _ready():
 	AudioManager.play_music("ambient")
+	if AccessibilityManager.font_scale != 1.0:
+		var t := Theme.new()
+		t.default_font_size = AccessibilityManager.fs(16)
+		self.theme = t
 	# Conectar handlers que no dependen del slot
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
@@ -90,6 +96,17 @@ func _setup_main_menu_for_active_slot() -> void:
 	if btn_trascendencia == null:
 		_setup_trascendencia_ui()
 
+	# --- BOTÓN CRÉDITOS (siempre visible, antes de Ajustes y Salir) ---
+	if not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnCreditos")):
+		var btn_credits := Button.new()
+		btn_credits.name = "BtnCreditos"
+		btn_credits.custom_minimum_size = Vector2(0, 40)
+		btn_credits.text = "Créditos"
+		btn_credits.pressed.connect(func(): _show_credits_panel())
+		var vbox_c := $CenterContainer/VBoxContainer as VBoxContainer
+		vbox_c.add_child(btn_credits)
+		vbox_c.move_child(btn_credits, vbox_c.get_child_count() - 2)
+
 	# --- BOTÓN AJUSTES (siempre visible, justo antes de Salir) ---
 	if not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnSettings")):
 		var btn_settings := Button.new()
@@ -142,11 +159,11 @@ func _on_new_game_pressed():
 		# Mostrar confirmación que aclara qué se preserva
 		var dialog := ConfirmationDialog.new()
 		dialog.title = "Iniciar Nueva Run"
-		dialog.dialog_text = (
+		dialog.dialog_text = EmojiToRichText.strip(
 			"¿Iniciás un nuevo ciclo biótico?\n\n"
 			+ "✦ Se PRESERVAN:\n  · Banco Cósmico (%d Ξ)\n  · Banco Genético (PL: %d)\n  · Rutas completadas\n\n"
 			+ "⚠ Se RESETEAN:\n  · Upgrades, dinero, mutaciones\n  · Progreso de la run actual"
-		) % [LegacyManager.esencia, LegacyManager.legacy_points]
+		% [LegacyManager.esencia, LegacyManager.legacy_points])
 		dialog.get_ok_button().text = EmojiToRichText.strip("▶ Iniciar")
 		dialog.get_cancel_button().text = "Volver"
 		add_child(dialog)
@@ -184,14 +201,14 @@ func _show_post_tras_picker() -> void:
 	var title := Label.new()
 	title.text = EmojiToRichText.strip("⚡ CICLO #%d -- ELIGE TU RUTA" % (LegacyManager.trascendencia_count + 1))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(28))
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	vbox.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "Cada ruta altera las reglas de esta run. La elección es permanente."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 13)
+	subtitle.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	subtitle.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
 	vbox.add_child(subtitle)
 
@@ -242,7 +259,7 @@ func _show_post_tras_picker() -> void:
 
 		btn.text = EmojiToRichText.strip("%s  %s\n%s" % [route.icon, route.name, route.desc])
 		btn.add_theme_color_override("font_color", route.color)
-		btn.add_theme_font_size_override("font_size", 13)
+		btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD
 
 		var route_id: String = route.id
@@ -386,12 +403,12 @@ func _add_slot_card(slot_data: Dictionary) -> void:
 
 	var name_label := Label.new()
 	name_label.text = slot_name + ("  [activo]" if is_active else "")
-	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 	name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	info.add_child(name_label)
 
 	var stats := Label.new()
-	stats.add_theme_font_size_override("font_size", 13)
+	stats.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	stats.add_theme_color_override("font_color", Color(0.65, 0.7, 0.78))
 	if summary.exists:
 		var last: String = summary.last_ending if summary.last_ending != "" else "—"
@@ -438,7 +455,7 @@ func _add_empty_slot_card() -> void:
 
 	var info := Label.new()
 	info.text = "Slot vacío disponible"
-	info.add_theme_font_size_override("font_size", 16)
+	info.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	info.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7))
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -456,7 +473,7 @@ func _add_empty_slot_card() -> void:
 func _add_unlock_hint_label() -> void:
 	var label := Label.new()
 	label.text = "Comprá 'Slot Adicional' en el Banco Genético / Conocimiento para desbloquear más slots."
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	label.add_theme_color_override("font_color", Color(0.5, 0.55, 0.65))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -698,7 +715,7 @@ func _populate_legacy_items():
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
 			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
-			hdr.add_theme_font_size_override("font_size", 12)
+			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 26
 			col.add_child(hdr)
@@ -724,7 +741,7 @@ func _populate_legacy_items():
 
 				var name_lbl: Label = Label.new()
 				name_lbl.text = name_str
-				name_lbl.add_theme_font_size_override("font_size", 11)
+				name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 				name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				if is_maxed:
 					name_lbl.modulate = Color(0.3, 1.0, 0.5)
@@ -740,7 +757,7 @@ func _populate_legacy_items():
 				var flavor_lbl: Label = Label.new()
 				flavor_lbl.text = def.get("flavor", "")
 				flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				flavor_lbl.add_theme_font_size_override("font_size", 9)
+				flavor_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
 				flavor_lbl.modulate = Color(0.55, 0.55, 0.55)
 
 				container.add_child(name_lbl)
@@ -911,7 +928,7 @@ func _setup_trascendencia_ui() -> void:
 	var subtitle = $CenterContainer/VBoxContainer/Subtitle
 	var title_cosmic = LegacyManager.get_trascendencia_title()
 	if title_cosmic != "":
-		subtitle.text = "✦ " + title_cosmic + " ✦  ·  Antigravity Simulation"
+		subtitle.text = EmojiToRichText.strip("✦ " + title_cosmic + " ✦  ·  Antigravity Simulation")
 		subtitle.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 
 	# 2. Contador de Esencia (visible solo si ya trascendió alguna vez)
@@ -920,7 +937,7 @@ func _setup_trascendencia_ui() -> void:
 		trascend_counter_label.text = "Ξ %d   ·   Trascendencias: %d" % [LegacyManager.esencia, LegacyManager.trascendencia_count]
 		trascend_counter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		trascend_counter_label.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
-		trascend_counter_label.add_theme_font_size_override("font_size", 14)
+		trascend_counter_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		var vbox = $CenterContainer/VBoxContainer
 		vbox.add_child(trascend_counter_label)
 		vbox.move_child(trascend_counter_label, 3) # Después del HSeparator
@@ -930,7 +947,7 @@ func _setup_trascendencia_ui() -> void:
 	btn_trascendencia.custom_minimum_size = Vector2(0, 45)
 	btn_trascendencia.text = EmojiToRichText.strip("⚡ TRASCENDER")
 	btn_trascendencia.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
-	btn_trascendencia.add_theme_font_size_override("font_size", 16)
+	btn_trascendencia.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	btn_trascendencia.pressed.connect(_on_trascender_pressed)
 	var vbox2 = $CenterContainer/VBoxContainer
 	vbox2.add_child(btn_trascendencia)
@@ -944,7 +961,7 @@ func _setup_trascendencia_ui() -> void:
 	if LegacyManager.trascendencia_count > 0:
 		btn_cosmic_bank = Button.new()
 		btn_cosmic_bank.custom_minimum_size = Vector2(0, 45)
-		btn_cosmic_bank.text = "✦ Banco Cósmico"
+		btn_cosmic_bank.text = EmojiToRichText.strip("✦ Banco Cósmico")
 		btn_cosmic_bank.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
 		btn_cosmic_bank.pressed.connect(_on_cosmic_bank_pressed)
 		vbox2.add_child(btn_cosmic_bank)
@@ -980,14 +997,14 @@ func _show_trascend_confirm_panel() -> void:
 	var title := Label.new()
 	title.text = EmojiToRichText.strip("⚡ TRASCENDENCIA ⚡")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(36))
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	vbox.add_child(title)
 
 	var subtitle_lbl := Label.new()
 	subtitle_lbl.text = "Disolvé el ciclo actual para absorberlo como Esencia (Ξ)."
 	subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle_lbl.add_theme_font_size_override("font_size", 14)
+	subtitle_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	subtitle_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 	vbox.add_child(subtitle_lbl)
 
@@ -995,20 +1012,20 @@ func _show_trascend_confirm_panel() -> void:
 
 	var gate_title := Label.new()
 	gate_title.text = "Requisitos:"
-	gate_title.add_theme_font_size_override("font_size", 18)
+	gate_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
 	gate_title.add_theme_color_override("font_color", Color(0.85, 0.85, 1.0))
 	vbox.add_child(gate_title)
 
 	var gate_status := Label.new()
 	gate_status.text = EmojiToRichText.strip(LegacyManager.get_transcend_gate_status())
-	gate_status.add_theme_font_size_override("font_size", 13)
+	gate_status.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	vbox.add_child(gate_status)
 
 	vbox.add_child(HSeparator.new())
 
 	var reward_title := Label.new()
 	reward_title.text = "Recompensa al trascender:"
-	reward_title.add_theme_font_size_override("font_size", 18)
+	reward_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
 	reward_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	vbox.add_child(reward_title)
 
@@ -1027,7 +1044,7 @@ func _show_trascend_confirm_panel() -> void:
 	else:
 		reward.text = "Requisitos no cumplidos.\nCompletá al menos 1 cierre en cada familia y acumulá %d PL." % LegacyManager.TRASCENDENCIA_PL_GATE
 		reward.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
-	reward.add_theme_font_size_override("font_size", 13)
+	reward.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	vbox.add_child(reward)
 
 	vbox.add_child(HSeparator.new())
@@ -1035,7 +1052,7 @@ func _show_trascend_confirm_panel() -> void:
 	var warn := Label.new()
 	warn.text = EmojiToRichText.strip("[!] Al trascender se RESETEAN: upgrades, mutaciones, PL, buffs del Banco Genético.\n* Se PRESERVAN: Esencia (Ξ), Banco Cósmico, rutas ya completadas.")
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD
-	warn.add_theme_font_size_override("font_size", 12)
+	warn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	warn.add_theme_color_override("font_color", Color(0.85, 0.7, 0.5))
 	vbox.add_child(warn)
 
@@ -1094,8 +1111,11 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	first_trascend_overlay.modulate.a = 0.0
 	add_child(first_trascend_overlay)
 
-	var tween := create_tween()
-	tween.tween_property(first_trascend_overlay, "modulate:a", 1.0, 1.5)
+	if AccessibilityManager.reduce_motion:
+		first_trascend_overlay.modulate.a = 1.0
+	else:
+		var tween := create_tween()
+		tween.tween_property(first_trascend_overlay, "modulate:a", 1.0, 1.5)
 
 	var container := CenterContainer.new()
 	container.anchor_right = 1.0
@@ -1108,9 +1128,9 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	container.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "⚡ HAS TRASCENDIDO ⚡"
+	title.text = EmojiToRichText.strip("⚡ HAS TRASCENDIDO ⚡")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 56)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(56))
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	vbox.add_child(title)
 
@@ -1118,21 +1138,21 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	narrative.text = "El ciclo se ha cerrado sobre sí mismo.\n\nTodas las rutas que recorriste — el orden, la expansión, el colapso —\nconvergen ahora en un único punto fuera del tiempo del hongo.\n\nTu código ya no es un programa.\nEs una memoria cristalina: Esencia.\n\nLa matriz se reinicia.\nPero vos ya no sos el mismo sistema."
 	narrative.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	narrative.autowrap_mode = TextServer.AUTOWRAP_WORD
-	narrative.add_theme_font_size_override("font_size", 18)
+	narrative.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
 	narrative.add_theme_color_override("font_color", Color(0.85, 0.85, 1.0))
 	vbox.add_child(narrative)
 
 	var reward := Label.new()
-	reward.text = "✦ +%d Ξ (Esencia) ✦" % esencia_gain
+	reward.text = EmojiToRichText.strip("✦ +%d Ξ (Esencia) ✦" % esencia_gain)
 	reward.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	reward.add_theme_font_size_override("font_size", 32)
+	reward.add_theme_font_size_override("font_size", AccessibilityManager.fs(32))
 	reward.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 	vbox.add_child(reward)
 
 	var hint := Label.new()
 	hint.text = "Ahora tenés acceso al Banco Cósmico."
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	hint.add_theme_color_override("font_color", Color(0.7, 0.6, 0.9))
 	vbox.add_child(hint)
 
@@ -1150,13 +1170,13 @@ func _on_first_trascend_continue() -> void:
 	if is_instance_valid(first_trascend_overlay):
 		first_trascend_overlay.queue_free()
 		first_trascend_overlay = null
-	get_tree().reload_current_scene()
+	_show_credits_panel(func(): get_tree().reload_current_scene())
 
 # ------------- Pantalla simple (trascendencias posteriores) -------------
 func _show_trascendencia_result(esencia_gain: int) -> void:
 	var popup := AcceptDialog.new()
 	popup.title = "Trascendencia #%d" % LegacyManager.trascendencia_count
-	popup.dialog_text = "⚡ Ciclo disuelto ⚡\n\n+%d Ξ (Esencia)\n\nTotal acumulado: %d Ξ" % [esencia_gain, LegacyManager.esencia]
+	popup.dialog_text = EmojiToRichText.strip("⚡ Ciclo disuelto ⚡\n\n+%d Ξ (Esencia)\n\nTotal acumulado: %d Ξ" % [esencia_gain, LegacyManager.esencia])
 	add_child(popup)
 	popup.popup_centered(Vector2(400, 200))
 	popup.confirmed.connect(func(): get_tree().reload_current_scene())
@@ -1192,16 +1212,16 @@ func _show_cosmic_bank_panel() -> void:
 	margin.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "✦ BANCO CÓSMICO ✦"
+	title.text = EmojiToRichText.strip("✦ BANCO CÓSMICO ✦")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(30))
 	title.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
 	vbox.add_child(title)
 
 	var counter := Label.new()
 	counter.text = "Ξ Disponible: %d   ·   Trascendencias: %d" % [LegacyManager.esencia, LegacyManager.trascendencia_count]
 	counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	counter.add_theme_font_size_override("font_size", 16)
+	counter.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	counter.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	vbox.add_child(counter)
 
@@ -1230,7 +1250,7 @@ func _show_cosmic_bank_panel() -> void:
 		var name_lbl := Label.new()
 		var tier_str := " [T%d]" % info.get("tier", 1)
 		name_lbl.text = info.name + tier_str + (" (ADQUIRIDO)" if is_unlocked else " [%d Ξ]" % info.cost)
-		name_lbl.add_theme_font_size_override("font_size", 15)
+		name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		if is_unlocked:
 			name_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		elif LegacyManager.esencia >= info.cost:
@@ -1241,7 +1261,7 @@ func _show_cosmic_bank_panel() -> void:
 		var desc_lbl := Label.new()
 		desc_lbl.text = info.desc
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		desc_lbl.modulate = Color(0.75, 0.75, 0.8)
 
 		info_box.add_child(name_lbl)
@@ -1262,7 +1282,7 @@ func _show_cosmic_bank_panel() -> void:
 	var placeholder := Label.new()
 	placeholder.text = "◈ Próximamente: más upgrades, nuevas ramas del árbol, lore fragments."
 	placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	placeholder.add_theme_font_size_override("font_size", 11)
+	placeholder.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	placeholder.modulate = Color(0.5, 0.5, 0.6)
 	vbox.add_child(placeholder)
 
@@ -1323,3 +1343,169 @@ func _close_cosmic_panel() -> void:
 	if is_instance_valid(cosmic_panel):
 		cosmic_panel.queue_free()
 		cosmic_panel = null
+
+
+# =====================================================
+#  CRÉDITOS — scroll animado (estilo película)
+# =====================================================
+
+func _show_credits_panel(on_close: Callable = Callable()) -> void:
+	if is_instance_valid(credits_panel):
+		credits_panel.queue_free()
+	_credits_close_cb = on_close
+
+	# Fondo completamente opaco, sin transparencia
+	credits_panel = Panel.new()
+	credits_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.02, 0.02, 0.05, 1.0)
+	credits_panel.add_theme_stylebox_override("panel", bg)
+	add_child(credits_panel)
+
+	# Contenedor con clipping (oculta el texto fuera de pantalla)
+	var clip := Control.new()
+	clip.set_anchors_preset(Control.PRESET_FULL_RECT)
+	clip.clip_children = Control.CLIP_CHILDREN_ONLY
+	credits_panel.add_child(clip)
+
+	# VBox que se va a desplazar hacia arriba
+	var content := VBoxContainer.new()
+	content.custom_minimum_size.x = 540
+	content.add_theme_constant_override("separation", 6)
+	clip.add_child(content)
+
+	# ── Contenido de los créditos ──────────────────────
+
+	_credits_spacer(content, 100)
+
+	var title_lbl := Label.new()
+	title_lbl.text = "AntiIDLE"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(52))
+	title_lbl.add_theme_color_override("font_color", Color(0.25, 0.82, 1.0))
+	content.add_child(title_lbl)
+
+	var ver_lbl := Label.new()
+	ver_lbl.text = Version.TITLE
+	ver_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ver_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+	ver_lbl.add_theme_color_override("font_color", Color(0.3, 0.4, 0.55))
+	content.add_child(ver_lbl)
+
+	_credits_spacer(content, 80)
+
+	_credits_row(content, "DESARROLLO")
+	_credits_name(content, "Nicolás Maure", 22)
+	_credits_detail(content, "Diseño · Programación · Arte")
+
+	_credits_spacer(content, 50)
+
+	_credits_row(content, "AUDIO")
+	_credits_name(content, "ElevenLabs Sound Effects", 18)
+	_credits_detail(content, "elevenlabs.io", Color(0.35, 0.6, 1.0))
+
+	_credits_spacer(content, 50)
+
+	_credits_row(content, "MOTOR")
+	_credits_name(content, "Godot Engine 4.x", 18)
+	_credits_detail(content, "godotengine.org  ·  MIT License", Color(0.35, 0.6, 1.0))
+
+	_credits_spacer(content, 50)
+
+	_credits_row(content, "FUENTES")
+	_credits_name(content, "Noto Color Emoji", 18)
+	_credits_detail(content, "Google Fonts  ·  SIL Open Font License 1.1")
+
+	_credits_spacer(content, 50)
+
+	_credits_row(content, "EMOJIS")
+	_credits_name(content, "Twemoji — Twitter / X Corp.", 18)
+	_credits_detail(content, "Creative Commons Attribution 4.0")
+
+	_credits_spacer(content, 100)
+
+	var thanks_lbl := Label.new()
+	thanks_lbl.text = "Gracias por jugar."
+	thanks_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	thanks_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(24))
+	thanks_lbl.add_theme_color_override("font_color", Color(0.5, 0.78, 0.5))
+	content.add_child(thanks_lbl)
+
+	_credits_spacer(content, 140)  # cola final para que el texto salga por arriba
+
+	# ── Botón saltar (siempre visible, esquina inferior derecha) ──
+	var skip_btn := Button.new()
+	skip_btn.text = EmojiToRichText.strip("Saltar →")
+	skip_btn.anchor_left   = 1.0
+	skip_btn.anchor_right  = 1.0
+	skip_btn.anchor_top    = 1.0
+	skip_btn.anchor_bottom = 1.0
+	skip_btn.offset_left   = -130.0
+	skip_btn.offset_right  = -16.0
+	skip_btn.offset_top    = -52.0
+	skip_btn.offset_bottom = -12.0
+	skip_btn.pressed.connect(_close_credits_panel)
+	credits_panel.add_child(skip_btn)
+
+	# ── Iniciar animación de scroll tras dos frames (tamaños ya calculados) ──
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var screen_h: float = credits_panel.size.y
+	var screen_w: float = credits_panel.size.x
+	# Forzar ancho y centrar horizontalmente
+	content.size = Vector2(540.0, content.size.y)
+	content.position = Vector2((screen_w - 540.0) * 0.5, screen_h)
+
+	if AccessibilityManager.reduce_motion:
+		# Sin animación: mostrar contenido estático al tope, usuario cierra con el botón
+		content.position = Vector2(content.position.x, screen_h * 0.05)
+	else:
+		var total_dist: float = screen_h + content.size.y
+		var duration: float   = total_dist / 72.0  # ~72 px/s
+		var tween: Tween = credits_panel.create_tween()
+		tween.set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(content, "position:y", -content.size.y, duration)
+		tween.tween_callback(_close_credits_panel)
+
+
+func _credits_row(parent: VBoxContainer, text: String) -> void:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
+	lbl.add_theme_color_override("font_color", Color(0.28, 0.45, 0.72))
+	parent.add_child(lbl)
+
+
+func _credits_name(parent: VBoxContainer, text: String, size: int = 18) -> void:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", size)
+	lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	parent.add_child(lbl)
+
+
+func _credits_detail(parent: VBoxContainer, text: String, color: Color = Color(0.48, 0.55, 0.68)) -> void:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+	lbl.add_theme_color_override("font_color", color)
+	parent.add_child(lbl)
+
+
+func _credits_spacer(parent: VBoxContainer, height: int) -> void:
+	var c := Control.new()
+	c.custom_minimum_size.y = height
+	parent.add_child(c)
+
+
+func _close_credits_panel() -> void:
+	if is_instance_valid(credits_panel):
+		credits_panel.queue_free()
+		credits_panel = null
+	if _credits_close_cb.is_valid():
+		_credits_close_cb.call()
+		_credits_close_cb = Callable()

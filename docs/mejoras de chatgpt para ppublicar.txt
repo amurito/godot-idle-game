@@ -1,0 +1,322 @@
+en chatgpt habiamos hablado de publicar el game y te dejo el resumen de esa charla. Que te parece? tenes acceso al estado actual del juego?
+
+Te hago un resumen **claro, estructurado y accionable**, separando ideas, decisiones y próximos pasos.
+
+---
+
+# 🧠 1. OBJETIVO GENERAL
+
+Estás desarrollando un **idle game con identidad fuerte**, basado en:
+
+* biología
+* economía
+* sistemas interconectados
+
+👉 El objetivo evolucionó de:
+**“publicar un juego”**
+a
+👉 **“crear un idle de nicho con comunidad y builds discutibles”**
+
+---
+
+# 🎯 2. DIAGNÓSTICO INICIAL
+
+Tu juego ya tenía:
+
+### ✅ Fortalezas
+
+* sistema profundo (no típico idle)
+* diferencial claro (biología + economía)
+* UI interesante (árbol + banco genético)
+
+### ❌ Problemas
+
+* onboarding confuso
+* no se entiende en 10 segundos
+* fricción inicial alta
+* baja conversión potencial
+
+👉 Conclusión:
+**buena idea, mala entrada al juego**
+
+---
+
+# 🧩 3. CAMBIO CLAVE DE ENFOQUE
+
+Se redefinió el juego como:
+
+👉 **“laboratorio de builds evolutivos”**
+
+Esto cambia todo:
+
+Antes:
+
+* progreso individual
+
+Ahora:
+
+* builds
+* comparación
+* comunidad
+* discusión
+
+---
+
+# 🏆 4. SISTEMA NUEVO: LEADERBOARD (CORE)
+
+Se diseñó un sistema que:
+
+👉 NO es un ranking clásico
+👉 ES un archivo de especies (builds)
+
+---
+
+## 🔬 Qué guarda cada jugador
+
+* genes (build)
+* árbol evolutivo
+* métricas (PL, ciclos, tiempo)
+* nombre de especie
+
+---
+
+## 🧠 Tipos de ranking
+
+1. **Dominancia** → progreso total
+2. **Eficiencia** → optimización
+3. **Especies destacadas** → builds interesantes
+
+👉 Este último es el diferencial fuerte
+
+---
+
+## 💡 Features clave
+
+* exportar/importar builds
+* nombres de especies
+* votación
+* tags
+
+👉 Resultado:
+**contenido emergente + comunidad**
+
+---
+
+# 🎮 5. PROBLEMA CRÍTICO IDENTIFICADO
+
+👉 El primer minuto del juego
+
+Se detectó que:
+
+* si no se entiende rápido → abandono
+* si no hay recompensa → abandono
+* si no hay sistema visible → abandono
+
+---
+
+# ⚙️ 6. SOLUCIÓN: DISEÑO DEL PRIMER MINUTO
+
+Se diseñó un flujo exacto:
+
+---
+
+## ⏱️ Timeline
+
+0–10s → acción simple
+10–20s → feedback claro
+20–30s → primer sistema
+30–40s → árbol evolutivo
+40–50s → banco genético
+50–60s → **momento wow**
+
+---
+
+# 🔥 7. MOMENTO WOW (EL CORAZÓN)
+
+Se definió como:
+
+👉 **“cuando el jugador entiende que está creando una especie”**
+
+No solo progresando.
+
+---
+
+## 💥 Qué pasa ahí
+
+* mutación aceptada
+* árbol se expande
+* banco guarda la build
+* aparece clasificación de especie
+
+👉 Resultado mental:
+
+> “esto es distinto”
+
+---
+
+# 🧱 8. WIREFRAME COMPLETO
+
+Se diseñaron:
+
+* 7 pantallas
+* estructura UI
+* textos exactos
+* sonidos
+* timing
+
+👉 listo para implementar en Godot
+
+---
+
+# 📈 9. IMPACTO EN NEGOCIO
+
+---
+
+## Antes
+
+* $30 – $300
+* baja retención
+* poca conversión
+
+---
+
+## Después (con todo implementado)
+
+👉 Escenario:
+
+🟢 **Bueno → 🔵 casi excelente**
+
+---
+
+## Números
+
+* 3000 – 10000 visitas
+* 10% – 18% conversión
+* 300 – 1500 compras
+* $900 – $7500 USD
+
+---
+
+## Potencial alto
+
+Si pega:
+
+* hasta $15000+
+
+---
+
+# 🚀 10. ESTRATEGIA DE LANZAMIENTO
+
+Se definió:
+
+---
+
+## Reddit
+
+* post optimizado (no promo, sino sistema)
+
+---
+
+## Itch.io
+
+* página clara + visual fuerte
+* HTML5 (baja fricción)
+
+---
+
+## Creadores
+
+* outreach directo a canales chicos
+
+---
+
+## Devlogs
+
+* updates frecuentes
+
+---
+
+# ⚠️ 11. LIMITANTES ACTUALES
+
+Para llegar a “excelente real” faltan:
+
+---
+
+## 1. Identidad visual fuerte
+
+👉 más impacto visual
+
+---
+
+## 2. Momento wow bien ejecutado
+
+👉 timing + claridad
+
+---
+
+## 3. Claridad inicial total
+
+👉 sin confusión
+
+---
+
+# 🚀 12. MEJORAS FUTURAS (HIGH IMPACT)
+
+* build of the day
+* desafíos
+* replay de builds
+* tags inteligentes
+* lore liviano
+
+---
+
+# 🧠 13. INSIGHT MÁS IMPORTANTE
+
+Tu juego no compite por:
+
+👉 “ser divertido rápido”
+
+Compite por:
+
+👉 **ser interesante y discutible**
+
+---
+
+# 🎯 CONCLUSIÓN FINAL
+
+Pasaste de:
+
+🟡 juego interesante pero confuso
+
+a:
+
+🟢 juego claro + diferenciable
+
+con potencial de:
+
+🔵 juego de nicho fuerte con comunidad
+
+---
+
+# 🚀 SIGUIENTE PASO LÓGICO
+
+No agregar más features.
+
+👉 Implementar:
+
+1. primer minuto (wireframe)
+2. momento wow
+3. leaderboard básico
+
+---
+
+Si querés, el próximo paso más potente sería:
+
+👉 auditar tu implementación real (cuando lo tengas)
+y decirte exactamente:
+
+* qué no está funcionando
+* qué cambiar
+* qué te está bajando conversiones
+
+Ahí ya entramos en nivel **producto serio**.

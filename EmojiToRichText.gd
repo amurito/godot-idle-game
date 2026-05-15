@@ -43,6 +43,12 @@ const BMP_SYMBOLS: Dictionary = {
 	"c₀": "c0",
 	"cₙ": "cn",
 	"fⁿ": "fn",
+	"⏱": "T",
+	"⏰": "T",
+	"🕳️": "",
+	"⚱️": "",
+	"⚙": "",
+	"⚙️": "",
 }
 
 var _web: bool = false

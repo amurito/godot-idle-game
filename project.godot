@@ -11,9 +11,11 @@ config_version=5
 [application]
 
 config/name="AntiIDLE"
+config/description="Simulación de sistemas adaptativos: gestioná un organismo en evolución, alcanzá la homeostasis y trascendé el ciclo biótico. Idle/incremental con mutaciones, trueque y herencia cósmica."
+config/version="1.0.0"
 run/main_scene="res://MainMenu.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://icon.png"
 
 [autoload]
 
@@ -32,6 +34,7 @@ RunManager="*res://RunManager.gd"
 EconomyManager="*res://EconomyManager.gd"
 StructuralModel="*res://StructuralModel.gd"
 EmojiToRichText="*res://EmojiToRichText.gd"
+AccessibilityManager="*res://AccessibilityManager.gd"
 AudioManager="*res://AudioManager.gd"
 TutorialManager="*res://TutorialManager.gd"
 TelemetryManager="*res://TelemetryManager.gd"

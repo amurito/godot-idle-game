@@ -1,11 +1,11 @@
 extends Node
 
-const TITLE := "IDLE Antigravity — v0.9.0"
-const VERSION := "0.9.0"
-const NAME := "Era Alostática"
+const TITLE := "AntiIDLE — v1.0.0"
+const VERSION := "1.0.0"
+const NAME := "Primera Luz"
 
-const MAJOR := 0
-const MINOR := 9
+const MAJOR := 1
+const MINOR := 0
 const PATCH := 0
 
 

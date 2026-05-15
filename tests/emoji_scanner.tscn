@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwujoq8r577nx"]
+
+[ext_resource type="Script" uid="uid://ccem7yo2t8inl" path="res://tests/emoji_scanner.gd" id="1_d7ypx"]
+[ext_resource type="Script" uid="uid://prsp3558xob6" path="res://tests/node_2d.gd" id="2_j6cmc"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_d7ypx")
+
+[node name="Node2D" type="Node2D" parent="."]
+script = ExtResource("2_j6cmc")

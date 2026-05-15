@@ -67,7 +67,7 @@ func _ready():
 	value_label = Label.new()
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.add_theme_font_size_override("font_size", 30)
+	value_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(30))
 	value_label.add_theme_color_override("font_color", Color.WHITE)
 	value_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	value_label.add_theme_constant_override("shadow_outline_size", 4)
