@@ -7,6 +7,7 @@ const NAME := "Primera Luz"
 const MAJOR := 1
 const MINOR := 0
 const PATCH := 0
+const HOTFIX := 1  # Incrementar para hotfixes: 1.0.0.1, 1.0.0.2, etc.
 
 
 func get_env(var_name: String) -> String:
@@ -20,7 +21,9 @@ const COMMIT := "local"
 
 
 func get_version_string() -> String:
-	return "%s.%s.%s-%s" % [MAJOR, MINOR, PATCH, NAME]
+	if HOTFIX > 0:
+		return "%d.%d.%d.%d-%s" % [MAJOR, MINOR, PATCH, HOTFIX, NAME]
+	return "%d.%d.%d-%s" % [MAJOR, MINOR, PATCH, NAME]
 
 
 func get_build_label() -> String:
