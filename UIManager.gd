@@ -361,7 +361,7 @@ func build_formula_text(main: Node) -> String:
 		formula_main += " · [color=#ffdd88]Λ[/color]"
 
 	# Auto-escala por longitud
-	var plain_str := formula_main
+	var plain_str: String = formula_main
 	for tag in ["[color=#ffcc00]","[color=#ff4dff]","[color=#44ee88]","[color=#bb44ff]",
 				"[color=#ffdd44]","[color=#8899ff]","[color=#ff44ff]","[color=#44ffaa]",
 				"[color=#ffaa44]","[color=#9933cc]","[color=#ffdd88]","[color=cyan]","[/color]"]:
@@ -384,7 +384,7 @@ func build_formula_text(main: Node) -> String:
 	# Información del Modelo
 	t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
 	t += "κμ = k · (1 + α · (μ - 1))\n"
-	var raw_n := main.get_structural_upgrades()
+	var raw_n: int = main.get_structural_upgrades()
 	t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
 		StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
 	]
