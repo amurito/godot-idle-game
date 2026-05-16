@@ -337,7 +337,7 @@ func build_formula_text(main: Node) -> String:
 	# --- REDIRECCIÓN + μ ---
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		formula_main += " + [color=#ffcc00]re[/color]"
-	if main.cached_mu > 1.01:
+	if main.cached_mu > 1.01 and UpgradeManager.level("cognitive") > 0:
 		formula_main = "[ " + formula_main + " ] · [color=#ff4dff]μ[/color]"
 
 	# --- MULTIPLICADORES GLOBALES DE LEGADO (Λ) ---
@@ -381,13 +381,18 @@ func build_formula_text(main: Node) -> String:
 			t += "  (mg activo si ε>0.40)"
 		t += "[/font_size][/color]\n"
 
-	# Información del Modelo
-	t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
-	t += "κμ = k · (1 + α · (μ - 1))\n"
+	# Información del Modelo — μ solo cuando Capital Cognitivo está activo
 	var raw_n: int = main.get_structural_upgrades()
-	t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
-		StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
-	]
+	if UpgradeManager.level("cognitive") > 0:
+		t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
+		t += "κμ = k · (1 + α · (μ - 1))\n"
+		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
+			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
+		]
+	else:
+		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  n = %d[/color][/center]" % [
+			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, raw_n
+		]
 
 	return t
 
@@ -459,20 +464,22 @@ func update_click_stats_panel(main: Node) -> String:
 	var k_base = EcoModel.get_k_structural(n_struct)
 	var alpha = EcoModel.get_alpha(n_struct)
 	
-	t += "μ = %.2f\n" % main.cached_mu
 	t += "k = %.2f\n" % k_base
 	t += "α = %.2f\n" % alpha
-	t += "κμ = %.2f\n" % main.get_k_eff()
+	if UpgradeManager.level("cognitive") > 0:
+		t += "μ = %.2f\n" % main.cached_mu
+		t += "κμ = %.2f\n" % main.get_k_eff()
 	t += "n = %d\n" % main.get_structural_upgrades()
-	
-	t += "\n\n--- Capital Cognitivo ---\n"
-	t += "μ = %.2f\n" % main.cached_mu
-	t += "Nivel cognitivo = %d\n" % UpgradeManager.level("cognitive")
-	var acc_lvl_d: int = UpgradeManager.level("accounting")
-	if acc_lvl_d > 0:
-		t += "Contabilidad ×μ = ×%.2f\n" % (1.0 + acc_lvl_d * 0.08)
-	if RunManager.resilience_score > 0.0:
-		t += "Resiliencia ×μ = ×%.2f (score %.0f)\n" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
+
+	if UpgradeManager.level("cognitive") > 0:
+		t += "\n\n--- Capital Cognitivo ---\n"
+		t += "μ = %.2f\n" % main.cached_mu
+		t += "Nivel cognitivo = %d\n" % UpgradeManager.level("cognitive")
+		var acc_lvl_d: int = UpgradeManager.level("accounting")
+		if acc_lvl_d > 0:
+			t += "Contabilidad ×μ = ×%.2f\n" % (1.0 + acc_lvl_d * 0.08)
+		if RunManager.resilience_score > 0.0:
+			t += "Resiliencia ×μ = ×%.2f (score %.0f)\n" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
 
 	# --- LEGADO: MULTIPLICADORES DE INGRESOS ---
 	var has_income_buff := false
@@ -610,8 +617,8 @@ func build_evo_checklist(main: Node) -> String:
 		elif tier == 2:
 			t += ok_color + "[x] Tier 1 + 2 completados[/color]\n"
 			t += "[b][color=gold]-- Tier 3: HOMEORHESIS --[/color][/b]\n"
-			ch = ok_color + "[x] " if RunManager.extreme_shock_survived else fail_color + "[ ] "
-			t += ch + "Sobrevivir SHOCK EXTREMO (ε > 0.8)[/color]\n"
+			ch = ok_color + "[x] " if RunManager.extreme_shocks_recovered >= 1 else fail_color + "[ ] "
+			t += ch + "Recuperarse de SHOCK EXTREMO (%d/1)[/color]\n" % RunManager.extreme_shocks_recovered
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 400.0 else fail_color + "[ ] "
 			t += ch + "Resiliencia >= 400 (%d)[/color]\n" % int(RunManager.resilience_score)
 			ch = ok_color + "[x] " if RunManager.omega_min_peak >= 0.50 else fail_color + "[ ] "
@@ -621,8 +628,6 @@ func build_evo_checklist(main: Node) -> String:
 			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total
 			ch = ok_color + "[x] " if delta_real3 > 300.0 else fail_color + "[ ] "
 			t += ch + "Metabolismo > 300/s (%s)[/color]\n" % snapped(delta_real3, 0.1)
-			ch = ok_color + "[x] " if main.run_time >= 1200.0 else fail_color + "[ ] "
-			t += ch + "Run >= 20min (%s)[/color]\n" % format_time(main.run_time)
 		elif tier == 3:
 			t += ok_color + "[x] Tier 3 HOMEORHESIS desbloqueado — sellá el final[/color]\n"
 		t += "\n"
@@ -788,8 +793,8 @@ func _build_run_end_lore(route: String) -> String:
 		"HOMEORHESIS": {
 			"emoji": "💎", "color": "#00ffee",
 			"lore": "Equilibrio dinámico avanzado. El sistema atravesó 5+ ciclos de perturbación sin colapso y alcanzó auto-regulación en trayectorias de cambio continuo. Más allá de la homeostasis.",
-			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+10 PL ganados"],
-			"nerfs": ["Requiere ≥5 disturbances + shock extremo + Resiliencia ≥ 400", "Run ≥ 20 min + Δ$ > 300/s + Ω_min ≥ 0.50", "Extremadamente difícil de sostener"]
+			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+8 PL ganados"],
+			"nerfs": ["Requiere ≥5 perturbaciones + recuperarse de shock extremo", "Resiliencia ≥ 400 + Δ$ > 300/s + Ω_min ≥ 0.50", "Extremadamente difícil de sostener"]
 		},
 		# ── RAMA VERDE: SIMBIOSIS / SINGULARIDAD ─────────────────────────────────
 		"SIMBIOSIS": {
@@ -1076,7 +1081,8 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if not is_instance_valid(genome_summary_label):
 			return
 	var t := build_genome_text()
-	t += build_mutation_status_text()
+	if not RunManager.run_closed:
+		t += build_mutation_status_text()
 	if RunManager.homeostasis_mode:
 		t += "\n\n⚖️ HOMEOSTASIS MODE"
 		t += "\nResiliencia = %s" % snapped(RunManager.resilience_score, 1)
@@ -1199,7 +1205,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		data["header"] = "BIFURCACIÓN DEL GENOMA"
 
 		var col_txt = "[center]🦠 COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
-			"[color=#00ff00]+ Automatización ×1.5[/color]\n" + \
+			"[color=#00ff00]+ Trabajo Manual x1.5[/color]\n" + \
 			"[color=#00ff00]+ Ciclo Primordio → Seta → Esporulación[/color]\n" + \
 			"[color=#ffaa00]Sin requisitos extra[/color][/center]"
 		data["colonization_text"] = col_txt

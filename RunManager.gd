@@ -24,7 +24,8 @@ var legacy_homeostasis := false
 var disturbances_survived: int = 0
 var disturbances_without_reset: int = 0  # Racha de perturbaciones sin reset de timer (para logro)
 var is_recovering_from_shock: bool = false
-var extreme_shock_survived: bool = false
+var is_recovering_from_extreme: bool = false  # shock de 0.8-1.0 en curso
+var extreme_shocks_recovered: int = 0         # veces que se volvió a banda tras shock extremo
 var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 
 var evolution_button: Button = null
@@ -66,7 +67,8 @@ func reset():
 	disturbances_survived = 0
 	disturbances_without_reset = 0
 	is_recovering_from_shock = false
-	extreme_shock_survived = false
+	is_recovering_from_extreme = false
+	extreme_shocks_recovered = 0
 	omega_min_peak = 0.0
 	legacy_homeostasis = false
 	vacio_hambriento_active = false
@@ -210,7 +212,8 @@ func close_run(route: String, reason: String):
 	disturbances_survived = 0
 	disturbances_without_reset = 0
 	is_recovering_from_shock = false
-	extreme_shock_survived = false
+	is_recovering_from_extreme = false
+	extreme_shocks_recovered = 0
 	homeostasis_tier_reached = 0
 
 	SaveManager.save_game(main)
@@ -266,15 +269,15 @@ func check_homeostasis_final(delta: float):
 			if not LegacyManager.get_buff_value("legado_alostasis"):
 				LegacyManager.grant_buff("legado_alostasis")
 			main.add_lap("💜 Tier 2 desbloqueado: ALLOSTASIS — podés cerrar o seguir por HOMEORHESIS")
-			main.show_system_toast("ALLOSTASIS alcanzada — aguantá 30min + shock extremo para HOMEORHESIS")
+			main.show_system_toast("ALLOSTASIS alcanzada — sobreviví shocks y acumulá Resiliencia ≥ 400 para HOMEORHESIS")
 
 	# Tier 3: HOMEORHESIS — shock extremo + larga duración
 	if homeostasis_tier_reached >= 2 and homeostasis_tier_reached < 3:
 		omega_min_peak = max(omega_min_peak, StructuralModel.omega_min)
 		var delta_real :float = EconomyManager.get_contribution_breakdown().total
-		var ok = extreme_shock_survived and resilience_score >= 400.0 \
+		var ok = extreme_shocks_recovered >= 1 and resilience_score >= 400.0 \
 			and omega_min_peak >= 0.50 and disturbances_survived >= 5 \
-			and delta_real > 300.0 and main.run_time >= 1200.0
+			and delta_real > 300.0
 		if ok:
 			homeostasis_tier_reached = 3
 			if not LegacyManager.get_buff_value("legado_homeorresis"):
@@ -420,6 +423,8 @@ func trigger_disturbance():
 
 	StructuralModel.epsilon_runtime += shock
 	is_recovering_from_shock = true
+	if is_extreme:
+		is_recovering_from_extreme = true
 	disturbances_without_reset += 1
 	AchievementManager.on_disturbance_streak(disturbances_without_reset)
 
@@ -440,14 +445,15 @@ func trigger_disturbance():
 # Llamado cada tick desde main.gd (_on_logic_tick).
 # Detecta spike extremo (epsilon_runtime > 0.8) y recovery al volver a banda homeostática.
 func check_shock_tracking():
-	# Usar epsilon_runtime (spike directo del shock) no epsilon_effective (ya absorbido por biosfera)
-	if StructuralModel.epsilon_runtime > 0.8:
-		extreme_shock_survived = true
-
 	if is_recovering_from_shock and get_en_banda_homeostatica():
 		disturbances_survived += 1
 		is_recovering_from_shock = false
-		main.add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
+		if is_recovering_from_extreme:
+			is_recovering_from_extreme = false
+			extreme_shocks_recovered += 1
+			main.add_lap("💎 SHOCK EXTREMO ABSORBIDO. Total: " + str(extreme_shocks_recovered))
+		else:
+			main.add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
 		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
 		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)

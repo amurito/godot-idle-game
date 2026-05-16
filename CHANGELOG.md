@@ -1,6 +1,6 @@
 # CHANGELOG — AntiIDLE
 
-## [v1.0.0] — "Primera Luz" — 2026-05-15
+## [v1.0.0] — "Génesis" — 2026-05-15
 
 Primera versión estable para publicación pública.
 
@@ -57,7 +57,7 @@ Nuevo autoload que persiste configuración en `user://accessibility_settings.jso
 
 #### Metadata y publishing
 
-- `version.gd`: v1.0.0 "Primera Luz".
+- `version.gd`: v1.0.0 "Génesis".
 - `project.godot`: description, version, icon seteados.
 - `export_presets.cfg`: company/product/copyright para Windows; meta tags para HTML5.
 - `icon.png`: icono fractal del juego.

@@ -184,7 +184,10 @@ const _TOOLTIP_EPSILON := (
 	"[b][color=yellow]ε — Estrés Estructural[/color][/b]\n\n"
 	+ "Tensión interna del sistema.\n"
 	+ "Sube con cada clic, baja con mejoras.\n\n"
-	+ "[color=#ff8888]ε > 0.8 → Ω colapsa hacia 0.[/color]"
+	+ "[color=#88ff88]< 0.35[/color]  Biología y orden disponibles\n"
+	+ "[color=#ffaa44]> 0.40[/color]  Hiperasimilación se despierta\n"
+	+ "[color=#ff8888]> 0.65[/color]  Expansión micelial bloqueada\n"
+	+ "[color=#ff4444]> 0.80[/color]  Ω colapsa hacia 0\n"
 )
 const _TOOLTIP_OMEGA := (
 	"[b][color=cyan]Ω — Flexibilidad Estructural[/color][/b]\n\n"
@@ -211,8 +214,16 @@ func _wire_header_tooltips() -> void:
 	_wire_tooltip(UIManager.header_omega_bar,     _TOOLTIP_OMEGA)
 	_wire_tooltip(UIManager.header_biomasa_value, _TOOLTIP_BIOMASA)
 	_wire_tooltip(UIManager.header_biomasa_bar,   _TOOLTIP_BIOMASA)
-	# μ aparece en el panel de fórmula (Lab Mode) — wire ahí donde el jugador lo ve en contexto
-	_wire_tooltip(UIManager.formula_label,        _TOOLTIP_MU)
+	# μ: tooltip solo disponible cuando Capital Cognitivo está activo
+	var fl: Variant = UIManager.formula_label
+	if fl != null and is_instance_valid(fl) and fl is Control:
+		var fctrl := fl as Control
+		fctrl.mouse_filter = Control.MOUSE_FILTER_PASS
+		fctrl.mouse_entered.connect(func():
+			if UpgradeManager.level("cognitive") > 0:
+				_show_tooltip(fctrl, _TOOLTIP_MU)
+		)
+		fctrl.mouse_exited.connect(func(): _hide_tooltip())
 
 
 func _wire_tooltip(node: Variant, text: String) -> void:
@@ -302,11 +313,12 @@ func _build_shortcuts_bbcode() -> String:
 	var t := ""
 	t += "[color=cyan][b]General[/b][/color]\n"
 	t += _shortcut_row("[L]", "Activar / desactivar Modo Laboratorio")
+	t += _shortcut_row("[K]", "Ver progreso de la run")
 	t += "\n"
 	t += "[color=cyan][b]Upgrades rápidos (teclas 1–9)[/b][/color]\n"
 	var pairs := [
 		["[1]", "Mejorar clic"],
-		["[2]", "Automatización"],
+		["[2]", "Trabajo Manual"],
 		["[3]", "Trueque"],
 		["[4]", "Mult. clic"],
 		["[5]", "Mult. auto"],
@@ -364,7 +376,7 @@ func _build_contextual_hint() -> String:
 		"trueque_net", "specialization", "cognitive", "accounting"]
 	const NAMES := {
 		"click":          "Mejorar Clic",
-		"auto":           "Automatización",
+		"auto":           "Trabajo Manual",
 		"trueque":        "Trueque",
 		"click_mult":     "Mult. Clic",
 		"auto_mult":      "Mult. Auto",
@@ -378,16 +390,17 @@ func _build_contextual_hint() -> String:
 			return ("Podés comprar [b]" + NAMES[id] + "[/b] ahora mismo.\n"
 				+ "Usá las teclas [b][1–9][/b] para compras rápidas.")
 
-	# 2. Epsilon peligroso
+	# 2. Epsilon peligroso — a 0.65 ya bloquea expansión micelial
 	var eps := StructuralModel.epsilon_effective
 	if eps > 0.65:
 		return ("[color=yellow]ε = %.2f[/color] — nivel alto.\n" % eps
-			+ "Comprá mejoras estructurales ([b]Auto[/b], [b]Trueque[/b])\npara reducir el estrés antes de que Ω colapse.")
+			+ "Comprá mejoras estructurales para bajar ε.\n"
+			+ "[color=#ff8888]Por encima de 0.65 la Red Micelial se bloquea.[/color]")
 
 	# 3. Sin automatización todavía
 	if UpgradeManager.level("auto") == 0:
-		return ("Sin [b]Automatización[/b] el ingreso solo viene de clics.\n"
-			+ "Seguí acumulando para desbloquearla.")
+		return ("Sin [b]Trabajo Manual[/b] el ingreso solo viene de clics.\n"
+			+ "Seguí acumulando para desbloquearlo.")
 
 	# 4. Biomasa alta con mutaciones disponibles
 	if BiosphereEngine.biomasa >= 10.0 and not EvoManager.mutation_sporulation:
@@ -425,7 +438,7 @@ func _check_milestones() -> void:
 			_had_passive_income = true
 			notify_milestone("first_passive_income",
 				"¡Ingreso Pasivo activo!",
-				"Automatización genera [b]$/s[/b] sin hacer clic.\nSeguí comprando mejoras para aumentarlo.",
+				"Trabajo Manual genera [b]$/s[/b] sin hacer clic.\nSeguí comprando mejoras para aumentarlo.",
 				Color(0.3, 0.85, 0.4))
 
 	# Homeostasis alcanzada
@@ -595,42 +608,64 @@ func toggle_objectives_panel(parent: Node) -> void:
 
 
 func _build_milestones_bbcode() -> String:
-	var milestones: Array = [
-		[true,                                                       "Iniciaste una run"],
-		[_any_upgrade_purchased(),                                   "Compraste tu primera mejora"],
-		[UpgradeManager.level("auto") > 0,                          "Desbloqueaste Automatización"],
-		[UpgradeManager.level("trueque") > 0,                       "Activaste Trueque"],
-		[UpgradeManager.level("trueque_net") > 0,                   "Expandiste la Red de Trueque"],
-		[UpgradeManager.level("cognitive") > 0,                     "Desarrollaste Capital Cognitivo (μ)"],
-		[StructuralModel.institution_accounting_unlocked
-			or UpgradeManager.level("accounting") > 0,              "Creaste la Institución de Contabilidad"],
-		[EvoManager.mutation_homeostasis,                            "Mutaste hacia Homeostasis"],
-		[RunManager.homeostasis_mode or RunManager.post_homeostasis, "Alcanzaste Homeostasis"],
-		[RunManager.post_homeostasis,                                "Superaste Homeostasis"],
-		[LegacyManager.trascendencia_count > 0,                     "Completaste una Trascendencia"],
+	# Secciones: [nombre, [[done_bool, label], ...]]
+	var sections: Array = [
+		["Inicio", [
+			[true,                                                        "Run iniciada"],
+			[_any_upgrade_purchased(),                                    "Primera mejora comprada"],
+			[_had_passive_income or UpgradeManager.level("auto") > 0,    "Ingreso pasivo activo ($/s)"],
+		]],
+		["Crecimiento", [
+			[UpgradeManager.level("trueque") > 0,                        "Red de produccion establecida"],
+			[UpgradeManager.level("cognitive") > 0,                      "Capital Cognitivo activado (u)"],
+			[UpgradeManager.level("trueque_net") > 0,                    "Red de trueque expandida"],
+			[UpgradeManager.level("specialization") > 0,                 "Especializacion funcional"],
+			[UpgradeManager.level("accounting") > 0,                     "Institucion de Contabilidad"],
+			[UpgradeManager.level("persistence") > 0,                    "Persistencia del sistema activa"],
+		]],
+		["Evolucion", [
+			[_any_mutation_active(),                                      "Primera mutacion activada"],
+			[_mutation_count() >= 2,                                      "Mutaciones multiples (x2+)"],
+			[EvoManager.mutation_homeostasis,                             "Homeostasis iniciada"],
+			[RunManager.homeostasis_mode or RunManager.post_homeostasis,  "Homeostasis alcanzada"],
+			[RunManager.post_homeostasis,                                 "Limite de Homeostasis superado"],
+		]],
+		["Trascendencia", [
+			[_milestones_seen.has("lab_opened"),                          "Modo Laboratorio descubierto"],
+			[LegacyManager.trascendencia_count > 0,                      "Primera Trascendencia completada"],
+			[LegacyManager.legacy_points > 0,                            "Legado acumulado"],
+			[LegacyManager.post_tras_route != "",                         "Ruta post-trascendencia activa"],
+			[LegacyManager.trascendencia_count >= 2,                     "Segunda Trascendencia"],
+		]],
 	]
 
 	var done_count := 0
-	var t := ""
+	var total := 0
 	var next_text := ""
+	var t := ""
 
-	for m in milestones:
-		var done: bool = m[0]
-		var label: String = m[1]
-		if done:
-			t += "[color=#44dd66]■[/color] " + label + "\n"
-			done_count += 1
-		else:
-			t += "[color=#333333]□[/color] [color=#666666]" + label + "[/color]\n"
-			if next_text == "":
-				next_text = label
+	for sec in sections:
+		var sec_name: String = sec[0]
+		var ms_list: Array = sec[1]
+		t += "[color=#556677]-- " + sec_name + " --[/color]\n"
+		for ms in ms_list:
+			var done: bool = ms[0]
+			var label: String = ms[1]
+			total += 1
+			if done:
+				done_count += 1
+				t += "[color=#44dd66][+][/color] " + label + "\n"
+			else:
+				t += "[color=#444444][ ][/color] [color=#666666]" + label + "[/color]\n"
+				if next_text == "":
+					next_text = label
+		t += "\n"
 
-	t += "\n"
-	var pct := int(100.0 * done_count / milestones.size())
-	t += "[color=#888888]Progreso: %d / %d  (%d%%)[/color]\n" % [done_count, milestones.size(), pct]
+	var pct := int(100.0 * done_count / total)
+	t += "[color=#888888]Progreso: %d / %d  (%d%%)[/color]\n" % [done_count, total, pct]
 
 	if next_text != "" and not RunManager.run_closed:
-		t += "\n[color=cyan]Próximo objetivo:[/color]\n  " + next_text
+		t += "\n[color=cyan]Proximo objetivo:[/color]\n  " + next_text
 
 	return t
 
@@ -641,6 +676,23 @@ func _any_upgrade_purchased() -> bool:
 		if UpgradeManager.level(id) > 0:
 			return true
 	return false
+
+
+func _any_mutation_active() -> bool:
+	for m_id: String in MUTATION_HINTS:
+		var v: Variant = EvoManager.get("mutation_" + m_id)
+		if v is bool and (v as bool):
+			return true
+	return false
+
+
+func _mutation_count() -> int:
+	var n := 0
+	for m_id: String in MUTATION_HINTS:
+		var v: Variant = EvoManager.get("mutation_" + m_id)
+		if v is bool and (v as bool):
+			n += 1
+	return n
 
 
 # ==================== FLUJO DEL TUTORIAL ====================
@@ -690,18 +742,24 @@ func _run_step(step: int) -> void:
 
 		4:
 			_show_floating_hint(
-				"[color=yellow][b]ε (estrés estructural)[/b][/color] sube con cada clic y baja con mejoras.\n\n"
-				+ "Si supera ~0.8, Ω colapsa y el sistema se rigidiza.\n"
-				+ "Pasá el cursor por los valores del header para más info."
+				"[color=yellow][b]ε — Estrés Estructural[/b][/color]\n"
+				+ "Sube con clics, baja con mejoras.\n\n"
+				+ "[color=#88ff88]< 0.35[/color]  biología y orden disponibles\n"
+				+ "[color=#ffaa44]> 0.40[/color]  Hiperasimilación se despierta\n"
+				+ "[color=#ff8888]> 0.65[/color]  expansión micelial bloqueada\n"
+				+ "[color=#ff4444]> 0.80[/color]  Ω colapsa — sistema rígido\n\n"
+				+ "[color=#888888]Hover en ε del header para más.[/color]"
 			)
+			if is_instance_valid(_hint_container):
+				_hint_container.position.y = 420.0
 
 		5:
-			# Highlight en [2] Automatización y [3] Trueque simultáneamente
+			# Highlight en [2] Trabajo Manual y [3] Trueque simultáneamente
 			var auto_btn := _find_upgrade_button("auto")
 			var trueque_btn := _find_upgrade_button("trueque")
 			var hint_text := (
 				"[color=#88ff88][b]Ingreso Pasivo[/b][/color]\n\n"
-				+ "[b][2] Automatización[/b] y [b][3] Trueque[/b]\ngeneran $/s sin hacer clic.\n\n"
+				+ "[b][2] Trabajo Manual[/b] y [b][3] Trueque[/b]\ngeneran $/s sin hacer clic.\n\n"
 				+ "Observá el indicador [b]$/s[/b] en el header."
 			)
 			if is_instance_valid(auto_btn):
@@ -716,8 +774,19 @@ func _run_step(step: int) -> void:
 		6:
 			_show_floating_hint(
 				"[color=#88ff88][b]Genoma Fúngico[/b][/color]\n\n"
-				+ "La [b]Biomasa[/b] acumulada te permite activar [b]Mutaciones[/b]\nque desbloquean rutas especializadas de crecimiento.\n\n"
-				+ "[color=#aaaaff]Explorá el panel de Genoma cuando tengas\nbio suficiente — cada mutación es única.[/color]"
+				+ "[b]Biomasa[/b] se acumula sola con el tiempo —\nel sistema fúngico la genera en segundo plano.\n"
+				+ "Mirá el indicador [color=#88ff88][b]Bio[/b][/color] arriba a la derecha.\n\n"
+				+ "[color=#aaaaff]Cuando tengas suficiente, el panel [b]Genoma[/b]\nse ilumina — ahí activás [b]Mutaciones[/b]\nque abren rutas únicas de crecimiento.[/color]"
+			)
+
+		7:
+			_show_floating_hint(
+				"[color=#88ff88][b]Mutación[/b][/color] — el sistema te ofrece caminos.\n\n"
+				+ "[color=cyan]El equilibrio[/color]   mantené ε en calma\n"
+				+ "[color=#88ff88]La biología[/color]   expandite, crecé, dispersate\n"
+				+ "[color=yellow]La cooperación[/color] construí en orden\n\n"
+				+ "[color=#ff6666]...o dejás que el caos te domine.[/color]\n\n"
+				+ "[color=#888888]La mutación no se elige. Se gana.[/color]"
 			)
 
 		_:

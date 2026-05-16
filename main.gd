@@ -51,6 +51,7 @@ const MET_OSCURO_SEAL_COOLDOWN := 120.0  # Mínimo 2min antes de poder sellar
 var _met_oscuro_seal_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
+var _reset_btn: Button = null
 var _fractura_notified: bool = false
 
 # NG+ Metabolismo Glitch
@@ -838,12 +839,12 @@ func _ready():
 	)
 	bottom_left_panel.add_child(bios_btn)
 
-	var reset_btn := Button.new()
-	reset_btn.text = EmojiToRichText.strip("⚠️ Reset")
-	reset_btn.modulate = Color(0.8, 0.4, 0.4)
-	reset_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
-	reset_btn.pressed.connect(func(): SaveManager.confirm_and_reset(self))
-	bottom_left_panel.add_child(reset_btn)
+	_reset_btn = Button.new()
+	_reset_btn.text = "Reset"
+	_reset_btn.modulate = Color(0.8, 0.4, 0.4)
+	_reset_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
+	_reset_btn.pressed.connect(func(): SaveManager.confirm_and_reset(self))
+	bottom_left_panel.add_child(_reset_btn)
 	
 	var legacy_btn := Button.new()
 	legacy_btn.text = EmojiToRichText.strip("🧬 Banco Genético")
@@ -865,12 +866,7 @@ func _ready():
 	shortcuts_btn.pressed.connect(func(): TutorialManager.toggle_shortcuts_panel(self))
 	bottom_left_panel.add_child(shortcuts_btn)
 
-	var objectives_btn := Button.new()
-	objectives_btn.text = "Obj."
-	objectives_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-	objectives_btn.tooltip_text = "Progreso de la run actual"
-	objectives_btn.pressed.connect(func(): TutorialManager.toggle_objectives_panel(self))
-	bottom_left_panel.add_child(objectives_btn)
+	# Progreso accesible via [K] — ver _input()
 
 	# === EVO MANAGER SIGNALS ===
 	EvoManager.mutation_activated.connect(_on_mutation_activated)
@@ -2225,6 +2221,9 @@ func _input(event):
 			if lab_mode:
 				TutorialManager.notify_lab_opened()
 
+		if event.keycode == KEY_K:
+			TutorialManager.toggle_objectives_panel(self)
+
 		if OS.is_debug_build() and event.keycode == KEY_F1 and is_instance_valid(_debug_panel):
 			_debug_panel.visible = not _debug_panel.visible
 
@@ -2439,6 +2438,13 @@ func update_buttons():
 	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):
 		if btn.has_method("update_appearance"):
 			btn.update_appearance(EconomyManager.money)
+	if is_instance_valid(_reset_btn):
+		if RunManager.run_closed:
+			_reset_btn.text = "Nueva Run"
+			_reset_btn.modulate = Color(0.4, 0.85, 0.55)
+		else:
+			_reset_btn.text = "Reset"
+			_reset_btn.modulate = Color(0.8, 0.4, 0.4)
 
 func is_major_lap(event: String) -> bool:
 	return LogManager.is_major(event)

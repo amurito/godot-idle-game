@@ -316,9 +316,14 @@ func delete_save_and_restart():
 ## Mantiene Legacy y Trascendencia — solo borra la run actual.
 func confirm_and_reset(parent: Node) -> void:
 	var dlg := ConfirmationDialog.new()
-	dlg.title = "Borrar run actual"
-	dlg.dialog_text = "Esto borra la run actual del slot activo.\nLegacy y Trascendencia se preservan.\n\n¿Continuar?"
-	dlg.ok_button_text = "Borrar y reiniciar"
+	if RunManager.run_closed:
+		dlg.title = "Iniciar nueva run"
+		dlg.dialog_text = "Se iniciará una nueva run en este slot.\nEl legado y la trascendencia se preservan."
+		dlg.ok_button_text = "Iniciar"
+	else:
+		dlg.title = "Borrar run actual"
+		dlg.dialog_text = "Esto borra la run actual del slot activo.\nLegacy y Trascendencia se preservan.\n\n¿Continuar?"
+		dlg.ok_button_text = "Borrar y reiniciar"
 	dlg.get_cancel_button().text = "Cancelar"
 	parent.add_child(dlg)
 	dlg.confirmed.connect(func():

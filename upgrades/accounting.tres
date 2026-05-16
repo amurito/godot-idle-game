@@ -6,10 +6,10 @@
 script = ExtResource("1_accounting")
 id = "accounting"
 label = "Contabilidad Básica"
-base_cost = 20000.0
+base_cost = 10000.0
 cost_scale = 2.0
 gain = 1.0
 is_multiplicative = false
 base_value = 0.0
-unlock_requires = ""
+unlock_requires = "trueque_net"
 one_shot = false
