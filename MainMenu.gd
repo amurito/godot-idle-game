@@ -42,6 +42,9 @@ func _ready():
 		var t := Theme.new()
 		t.default_font_size = AccessibilityManager.fs(16)
 		self.theme = t
+	# Subtitle siempre refleja la versión actual
+	$CenterContainer/VBoxContainer/Subtitle.text = "v" + Version.get_version_string()
+
 	# Conectar handlers que no dependen del slot
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
@@ -928,7 +931,7 @@ func _setup_trascendencia_ui() -> void:
 	var subtitle = $CenterContainer/VBoxContainer/Subtitle
 	var title_cosmic = LegacyManager.get_trascendencia_title()
 	if title_cosmic != "":
-		subtitle.text = EmojiToRichText.strip("✦ " + title_cosmic + " ✦  ·  Antigravity Simulation")
+		subtitle.text = EmojiToRichText.strip("✦ " + title_cosmic + " ✦  ·  v" + Version.get_version_string())
 		subtitle.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 
 	# 2. Contador de Esencia (visible solo si ya trascendió alguna vez)
