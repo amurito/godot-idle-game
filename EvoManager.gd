@@ -418,11 +418,11 @@ func is_red_micelial_ready() -> bool:
 	var eps = StructuralModel.epsilon_runtime
 	return hifas >= 11.5 and biomasa >= 5.0 and eps < 0.65 and acc >= 1 and not act_domina
 
-func is_allostasis_ready(main_node: Node) -> bool:
+func is_allostasis_ready() -> bool:
 	var ok_dist = RunManager.disturbances_survived >= 3
 	var ok_resil = RunManager.resilience_score >= 150.0
 	var ok_omega = StructuralModel.omega_min >= 0.40
-	var ok_delta = main_node.delta_per_sec >= 200.0
+	var ok_delta = EconomyManager.delta_per_sec >= 200.0
 	var ok_acc = UpgradeManager.level("accounting") >= 2
 	return ok_dist and ok_resil and ok_omega and ok_delta and ok_acc
 
