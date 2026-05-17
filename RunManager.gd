@@ -32,9 +32,15 @@ var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 var evolution_button: Button = null
 var target_evolution: String = ""
 
-# NG+ MENTE COLMENA — runtime state
+# NG+ MENTE COLMENA — runtime state + auto-buy
 var mente_colmena_active: bool = false
 var mente_colmena_timer: float = 0.0
+var _mente_colmena_buy_timer: float = 0.0
+const MENTE_COLMENA_BUY_INTERVAL := 8.0
+const MENTE_COLMENA_BUY_PRIORITY: Array = [
+	"accounting", "trueque", "auto", "trueque_net", "auto_mult",
+	"cognitive", "persistence", "specialization", "click_mult", "click",
+]
 
 # ==================== POST-TRASCENDENCIA (v0.9.8) ====================
 # VACÍO HAMBRIENTO
@@ -85,6 +91,7 @@ func reset():
 	carnaval_peak_money = 0.0
 	mente_colmena_active = false
 	mente_colmena_timer = 0.0
+	_mente_colmena_buy_timer = 0.0
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
@@ -627,3 +634,62 @@ func is_homeostasis_candidate() -> bool:
 	var red_blocks_homeostasis := EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2
 	return banda_estricta and flexibilidad_minima and control_activo and metabolismo_activo and crecimiento_controlado and redundancia and no_hyper and not red_blocks_homeostasis
 
+# =====================================================
+#  NG+ MENTE COLMENA — lógica de activación y auto-buy
+# =====================================================
+
+func activate_mente_colmena() -> void:
+	mente_colmena_active = true
+	if is_instance_valid(UIManager.big_click_button):
+		UIManager.big_click_button.disabled = true
+		UIManager.big_click_button.text = "AUTO-OVERRIDE"
+		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
+	if not LegacyManager.get_buff_value("mente_colmena"):
+		LegacyManager.grant_buff("mente_colmena")
+		UIManager.show_toast("Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
+	close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores fueron asimilados. El administrador es obsoleto. (+8 PL)")
+
+func tick_auto_buy(dt: float) -> void:
+	_mente_colmena_buy_timer += dt
+	if _mente_colmena_buy_timer < MENTE_COLMENA_BUY_INTERVAL:
+		return
+	_mente_colmena_buy_timer = 0.0
+	_mente_colmena_auto_buy()
+
+func _mente_colmena_auto_buy() -> void:
+	if run_closed:
+		return
+	var bought_id: String = ""
+	var bought_cost: float = 0.0
+
+	for id in MENTE_COLMENA_BUY_PRIORITY:
+		if not UpgradeManager.can_buy(id, EconomyManager.money):
+			continue
+		var c := UpgradeManager.cost(id)
+		if UpgradeManager.buy(id, EconomyManager.money):
+			EconomyManager.money -= c
+			bought_id = id
+			bought_cost = c
+			UpgradeManager.apply_bought_effects(id)
+			break
+
+	if bought_id == "":
+		var best_id := ""
+		var best_cost := INF
+		for id in UpgradeManager.states.keys():
+			var c := UpgradeManager.cost(id)
+			if c > 0.0 and c < best_cost and UpgradeManager.can_buy(id, EconomyManager.money):
+				best_cost = c
+				best_id = id
+		if best_id != "":
+			if UpgradeManager.buy(best_id, EconomyManager.money):
+				EconomyManager.money -= best_cost
+				bought_id = best_id
+				bought_cost = best_cost
+				UpgradeManager.apply_bought_effects(best_id)
+
+	if bought_id != "":
+		var def := UpgradeManager.get_def(bought_id)
+		var label_str := def.label if def else bought_id
+		LogManager.add("IA: Comprado [%s] ($%.0f)" % [label_str, bought_cost])
+		UIManager.show_toast("IA compró: %s" % label_str)
