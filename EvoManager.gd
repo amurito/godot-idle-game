@@ -571,19 +571,19 @@ func activate_symbiosis():
 # CICLO BIOLÓGICO: PRIMORDIO (Fase 2)
 # =============================================================
 
-func check_red_micelial_transition(main_ref: Node):
+func check_red_micelial_transition(_main_ref: Node):
 	if mutation_red_micelial and red_micelial_phase == 0:
 		# Fase A -> Fase B
 		var hifas_req = 11.5 if red_branch_selected == RedBranch.COLONIZATION else 9.5
 		var eps_req = 0.65 if red_branch_selected == RedBranch.COLONIZATION else 0.35
-		
+
 		if BiosphereEngine.hifas >= hifas_req \
 		and BiosphereEngine.biomasa >= 5.0 \
 		and StructuralModel.epsilon_runtime <= eps_req \
-		and main_ref.run_time >= 200.0:
+		and RunManager.run_time >= 200.0:
 			red_micelial_phase = 1
-			main_ref.add_lap("🕸️ Red Micelial Evolucionada (Fase B)")
-			main_ref.show_system_toast("RED MICELIAL: Iniciando integración estructural profunda")
+			LogManager.add("🕸️ Red Micelial Evolucionada (Fase B)")
+			UIManager.show_toast("RED MICELIAL: Iniciando integración estructural profunda")
 
 func update_primordio(main_ref: Node) -> void:
 	if red_branch_selected == RedBranch.COLONIZATION:
@@ -591,49 +591,48 @@ func update_primordio(main_ref: Node) -> void:
 	elif red_branch_selected == RedBranch.SYMBIOSIS:
 		_process_primordio_mechanical(main_ref)
 
-func _process_primordio_biological(main_ref: Node):
+func _process_primordio_biological(_main_ref: Node):
 	# ... (lógica anterior de primordio biológico) ...
 	if not primordio_active and not seta_formada and red_micelial_phase == 1:
 		if BiosphereEngine.hifas >= 14.5 and BiosphereEngine.biomasa >= 8.0:
 			primordio_active = true
-			main_ref.add_lap("⚠️ ADVERTENCIA: Inicio de Primordio Biológico")
+			LogManager.add("⚠️ ADVERTENCIA: Inicio de Primordio Biológico")
 			primordio_iniciado.emit()
-	
+
 	if primordio_active:
-		var dt: float = main_ref.LOGIC_TICK
-		primordio_timer += dt
-		
+		primordio_timer += RunManager.LOGIC_TICK
+
 		# Condiciones de supervivencia (Relajadas v0.8.40)
 		var reason := ""
 		if StructuralModel.epsilon_runtime >= 0.50: reason = "Estrés Crítico (>0.50)"
 		elif BiosphereEngine.hifas >= 60.0: reason = "Inestabilidad por Hifas (>60)"
-		elif main_ref.delta_per_sec < 50.0: reason = "Falta de Nutrientes (<50/$s)"
-		
+		elif EconomyManager.delta_per_sec < 50.0: reason = "Falta de Nutrientes (<50/$s)"
+
 		if reason != "":
 			_abort_primordio(reason)
 			return
-		
+
 		if primordio_timer >= PRIMORDIO_DURATION:
 			_complete_primordio()
 
-func _process_primordio_mechanical(main_ref: Node):
+func _process_primordio_mechanical(_main_ref: Node):
 	# En la rama azul, el "primordio" es un proceso de Computación Estructural
 	if not primordio_active and not nucleo_conciencia and red_micelial_phase == 1:
 		# Requisitos: Contabilidad alta y estabilidad
 		if UpgradeManager.level("accounting") >= 2 and StructuralModel.epsilon_runtime <= 0.25:
 			primordio_active = true
-			main_ref.add_lap("⚡ INICIANDO: Sincronización de Núcleo de Conciencia")
-			main_ref.show_system_toast("SISTEMA: Integrando redes bióticas en el mainframe")
-	
+			LogManager.add("⚡ INICIANDO: Sincronización de Núcleo de Conciencia")
+			UIManager.show_toast("SISTEMA: Integrando redes bióticas en el mainframe")
+
 	if primordio_active:
 		# La estabilidad acelera el proceso
 		var speed_mult = clamp(1.0 + (0.5 - StructuralModel.epsilon_runtime), 0.5, 2.0)
-		primordio_timer += main_ref.LOGIC_TICK * speed_mult
-		
+		primordio_timer += RunManager.LOGIC_TICK * speed_mult
+
 		if primordio_timer >= PRIMORDIO_DURATION:
 			primordio_active = false
 			nucleo_conciencia = true
-			main_ref.add_lap("💾 HITO: Núcleo de Conciencia Sincronizado")
+			LogManager.add("💾 HITO: Núcleo de Conciencia Sincronizado")
 			# Bonus de eficiencia tecnológica
 			EconomyManager.mutation_accounting_bonus += 0.2
 
