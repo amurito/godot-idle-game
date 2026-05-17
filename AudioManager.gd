@@ -479,7 +479,18 @@ func _build_locale_row(parent: VBoxContainer) -> void:
 		btn_en.button_pressed = true
 		var parent_ref := _settings_panel.get_parent()
 		_close_settings_panel()
-		show_settings_panel(parent_ref))
+		var wip := AcceptDialog.new()
+		wip.title = "English — Work in Progress"
+		wip.dialog_text = "The English translation is not complete yet.\nSome texts may still appear in Spanish.\n\nThank you for your patience!"
+		wip.get_ok_button().text = "Got it"
+		parent_ref.add_child(wip)
+		wip.popup_centered(Vector2(400, 160))
+		wip.confirmed.connect(func():
+			wip.queue_free()
+			show_settings_panel(parent_ref))
+		wip.canceled.connect(func():
+			wip.queue_free()
+			show_settings_panel(parent_ref)))
 
 	row.add_child(btn_es)
 	row.add_child(btn_en)
