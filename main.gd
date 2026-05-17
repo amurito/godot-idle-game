@@ -12,48 +12,16 @@ var _use_3d_reactor: bool = true
 var reactor_3d: Node = null
 var _3d_power_label: Label = null
 
-# NG+ Mente Colmena (runtime state en RunManager; timer local de compras)
-var _mente_colmena_buy_timer := 0.0
-const MENTE_COLMENA_BUY_INTERVAL := 8.0
-
-# Orden de prioridad de compra de la IA Mente Colmena
-# (primero desbloqueos estructurales, luego multiplicadores, click al final)
-const MENTE_COLMENA_BUY_PRIORITY: Array = [
-	"accounting",     # instituciones + omega boost
-	"trueque",        # habilita intercambio
-	"auto",           # habilita trabajo manual
-	"trueque_net",    # red de intercambio
-	"auto_mult",      # ritmo de trabajo
-	"cognitive",      # capital cognitivo (�)
-	"persistence",    # memoria operativa
-	"specialization", # especializaci�n
-	"click_mult",     # memoria num�rica
-	"click",          # mejorar click (menor prioridad con auto-click activo)
-]
-
-# NG+ Depredador
-var depredador_tick := 0.0
-var _depredador_status_timer := 0.0
-const DEPREDADOR_STATUS_INTERVAL := 10.0
-
 # Parasitismo � status peri�dico
 var _parasitism_status_timer := 0.0
 const PARASITISM_STATUS_INTERVAL := 45.0
 
 # NG++ Metabolismo Oscuro
-var _met_oscuro_income_accum := 0.0  # Acumulador fraccional para ingreso pasivo
-var _met_oscuro_status_timer := 0.0
-var _met_oscuro_active_time := 0.0   # Tiempo transcurrido desde activaci�n (para cooldown de sellado)
-const MET_OSCURO_STATUS_INTERVAL := 12.0
-const MET_OSCURO_SEAL_COOLDOWN := 120.0  # M�nimo 2min antes de poder sellar
 var _met_oscuro_seal_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
 var _reset_btn: Button = null
 var _fractura_notified: bool = false
-
-# NG+ Metabolismo Glitch
-var _glitch_was_active := false
 
 # CONSTANTES DE MODELO (moved to StructuralModel.gd)
 const CLICK_RATE := 1.0
@@ -108,49 +76,9 @@ const AUTOSAVE_INTERVAL := 30.0
 #  GENOMA F�NGICO � v0.1
 # ============================
 
-# =====================================================
-# MET.OSCURO � ciclo post-Depredador (bioqu�mica oscura)
-# =====================================================
-func met_oscuro_tick(dt: float):
-	_met_oscuro_active_time += dt
-
-	# 1) Ingreso pasivo = biomasa � 0.8 /s
-	var income_rate := BiosphereEngine.biomasa * 0.8
-	_met_oscuro_income_accum += income_rate * dt
-	if _met_oscuro_income_accum >= 1.0:
-		var gain: float = floor(_met_oscuro_income_accum)
-		EconomyManager.money += gain
-		_met_oscuro_income_accum -= gain
-	# 2) Biomasa se autoalimenta suavemente
-	BiosphereEngine.biomasa += 0.1 * dt
-	# 3) e_runtime decae (autorregulaci�n emergente)
-	StructuralModel.epsilon_runtime = max(0.0, StructuralModel.epsilon_runtime - 0.05 * dt)
-	# 4) O se mantiene = 0.10 v�a cap en update_epsilon_runtime / _on_logic_tick
-	# 5) Status peri�dico
-	_met_oscuro_status_timer += dt
-	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
-		_met_oscuro_status_timer = 0.0
-		add_lap("?? MET.OSCURO � Bio %.1f / 100 � Pasivo %.1f/s � $ %.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	# 6) Cierre autom�tico por saturaci�n de biomasa (+6 PL total: 4 base + 2 bonus)
-	# Guarda de 30s: evita cierre inmediato si biomasa ya era =100 al activar
-	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
-		LegacyManager.add_pl(2)  # +2 bonus; RunManager agrega +4 base al hacer close_run
-		RunManager.close_run("METABOLISMO OSCURO", "Saturaci�n Oscura: la biomasa rebas� el umbral cr�tico (+6 PL total)")
-		return
-	# 7) Cierre autom�tico por econom�a millonaria oscura (+4 PL base)
-	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-		RunManager.close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioqu�mica sostenida gener� $1M sin infraestructura (+4 PL)")
-		return
-	# 8) Mostrar bot�n voluntario de sellado (solo tras cooldown)
-	_update_met_oscuro_seal_button()
-
 func _update_met_oscuro_seal_button():
 	if RunManager.run_closed:
 		return
-	# Cooldown: no mostrar hasta haber pasado 2 minutos en Met.Oscuro
-	if _met_oscuro_active_time < MET_OSCURO_SEAL_COOLDOWN:
-		return
-
 	# PL escalonado seg�n biomasa al momento del sellado
 	var bio := BiosphereEngine.biomasa
 	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
@@ -408,11 +336,6 @@ func reset_local_state():
 	# Sólo borramos el estado efímero (timers, contadores de click, etc.)
 	AchievementManager.reset_run_state()
 	_parasitism_status_timer = 0.0
-	depredador_tick = 0.0
-	_depredador_status_timer = 0.0
-	_met_oscuro_income_accum = 0.0
-	_met_oscuro_status_timer = 0.0
-	_met_oscuro_active_time = 0.0
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.queue_free()
 		_met_oscuro_seal_btn = null
@@ -423,8 +346,6 @@ func reset_local_state():
 		_colapso_controlado_btn.queue_free()
 		_colapso_controlado_btn = null
 	_fractura_notified = false
-	_mente_colmena_buy_timer = 0.0
-	_glitch_was_active = false
 	RunManager.reset()
 	if is_instance_valid(fungi_ui):
 		fungi_ui.reset_run()
@@ -795,11 +716,7 @@ func _on_logic_tick():
 		StructuralModel.epsilon_runtime += 0.008 * 10.0 * dt
 		if is_instance_valid(UIManager.big_click_button):
 			UIManager.big_click_button.set_active_delta(sim_power)
-		# Auto-buy: compra upgrades seg�n prioridad cada MENTE_COLMENA_BUY_INTERVAL segundos
-		_mente_colmena_buy_timer += dt
-		if _mente_colmena_buy_timer >= MENTE_COLMENA_BUY_INTERVAL:
-			_mente_colmena_buy_timer = 0.0
-			_mente_colmena_auto_buy()
+		RunManager.tick_auto_buy(dt)
 	elif LegacyManager.last_run_ending == "SINGULARIDAD" and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		var ap = EconomyManager.get_active_passive_breakdown()
 		var tot = ap.activo + ap.pasivo
@@ -813,7 +730,7 @@ func _on_logic_tick():
 				if was_zero:
 					add_lap("?? SINCRON�A DETECTADA � Manteniendo ratio 50/50 durante 180s para MENTE COLMENA...")
 				if RunManager.mente_colmena_timer >= 180.0:
-					activate_mente_colmena()
+					RunManager.activate_mente_colmena()
 				else:
 					var pct := int(RunManager.mente_colmena_timer / 180.0 * 100.0)
 					var prev_pct := int((RunManager.mente_colmena_timer - dt) / 180.0 * 100.0)
@@ -830,55 +747,16 @@ func _on_logic_tick():
 
 	# NG++ Metabolismo Oscuro (Post-Depredador) � congela el devorar, metaboliza biomasa
 	if EvoManager.mutation_met_oscuro:
-		met_oscuro_tick(dt)
+		var _show_seal := EvoManager.process_met_oscuro(dt)
+		if _show_seal:
+			_update_met_oscuro_seal_button()
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
-		# check_depredador_final: colapso estructural bajo presi�n depredatoria
-		# Requiere al menos 1 devour para que no dispare en el primer frame
-		if EvoManager.met_oscuro_devoured_count >= 1 \
-			and StructuralModel.epsilon_runtime > 1.0 \
-			and BiosphereEngine.biomasa > 25.0 \
-			and EconomyManager.money < 500.0 \
-			and not RunManager.run_closed:
-			RunManager.close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: el estrés estructural colapsó bajo presión depredatoria (+8 PL)")
-			return
-		depredador_tick += dt
-		if depredador_tick >= 1.5:
-			depredador_tick = 0.0
-			var devoured = UpgradeManager.devour_random_upgrade()
-			if devoured:
-				BiosphereEngine.biomasa += 15.0 # Massive biomassa growth
-				EvoManager.met_oscuro_devoured_count += 1
-				AchievementManager.push_event("depredador_devour", {})
-				show_system_toast("?? GLITCH: El hongo ha digerido memoria estructural (%d)." % EvoManager.met_oscuro_devoured_count)
-				if is_instance_valid(UIManager.big_click_button):
-					UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
-			else:
-				RunManager.close_run("DEPREDADOR DE REALIDADES", "El hongo ha consumido todo tu c�digo fuente. Ya no existes. (+12 PL)")
-	# DEPREDADOR EN PROGRESO � Mostrar barra de progreso cada 10s
+		EvoManager.process_depredador(dt)
 	elif EvoManager.depredador_timer > 0.0 and EvoManager.depredador_timer < 30.0:
-		_depredador_status_timer += dt
-		if _depredador_status_timer >= DEPREDADOR_STATUS_INTERVAL:
-			_depredador_status_timer = 0.0
-			var pct := int((EvoManager.depredador_timer / 30.0) * 100.0)
-			var bar_len := int(pct / 5.0)  # 20 caracteres para 100%
-			var bar := ""
-			for i in range(20):
-				bar += "�" if i < bar_len else "�"
-			add_lap("?? DEPREDADOR � e %.2f/0.95 | Progreso: %s %d%% (%.0f/30s)" % [
-				StructuralModel.epsilon_runtime, bar, pct, EvoManager.depredador_timer
-			])
-			show_system_toast("?? DEPREDADOR EN PROGRESO � %d%% (%.0f/30s)" % [pct, EvoManager.depredador_timer])
+		EvoManager.process_depredador_progress(dt)
 
-	# NG+ Metabolismo Glitch � notificaci�n cuando el umbral de estr�s cambia
-	if LegacyManager.get_buff_value("metabolismo_glitch"):
-		var glitch_now := StructuralModel.epsilon_runtime > 0.40
-		if glitch_now and not _glitch_was_active:
-			add_lap("?? GLITCH ACTIVO � El sustrato parasitario prospera en el caos (click �1.5, pasivo �1.8)")
-			show_system_toast("?? Metabolismo Glitch ACTIVO � e > 0.40")
-		elif not glitch_now and _glitch_was_active:
-			show_system_toast("?? Metabolismo Glitch inactivo")
-		_glitch_was_active = glitch_now
+	EvoManager.process_glitch(dt)
 
 	# 1) Econom�a base
 	StructuralModel.apply_dynamic_persistence(dt)
@@ -1379,64 +1257,6 @@ func _on_sporulation_final_pressed() -> void:
 		LegacyManager.add_pl(10)
 		RunManager.close_run("PANSPERMIA NEGRA", "Las esporas han sido disparadas al espacio exterior. La infecci�n se vuelve interplanetaria. (+10 PL)")
 		
-# --- L�GICA DEL BANCO GEN�TICO (Legacy) ---
-func activate_mente_colmena():
-	RunManager.mente_colmena_active = true
-	if is_instance_valid(UIManager.big_click_button):
-		UIManager.big_click_button.disabled = true
-		UIManager.big_click_button.text = EmojiToRichText.strip("🧠 AUTO-OVERRIDE")
-		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
-
-	if not LegacyManager.get_buff_value("mente_colmena"):
-		LegacyManager.grant_buff("mente_colmena")
-		show_system_toast("? Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
-
-	RunManager.close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores han sido asimilados. El administrador es obsoleto. (+8 PL)")
-
-# IA Mente Colmena � compra autom�tica de upgrades cada MENTE_COLMENA_BUY_INTERVAL segundos.
-# Primero revisa la lista de prioridades; si ninguno es asequible, compra el m�s barato disponible.
-func _mente_colmena_auto_buy() -> void:
-	if RunManager.run_closed:
-		return
-
-	var bought_id: String = ""
-	var bought_cost: float = 0.0
-
-	# Fase 1 � recorrer lista de prioridades (solo si el upgrade es asequible Y desbloqueado)
-	for id in MENTE_COLMENA_BUY_PRIORITY:
-		if not UpgradeManager.can_buy(id, EconomyManager.money):
-			continue
-		var c := UpgradeManager.cost(id)
-		if UpgradeManager.buy(id, EconomyManager.money):
-			EconomyManager.money -= c
-			bought_id = id
-			bought_cost = c
-			UpgradeManager.apply_bought_effects(id)
-			break
-
-	# Fase 2 � fallback: compra el upgrade disponible m�s barato
-	if bought_id == "":
-		var best_id := ""
-		var best_cost := INF
-		for id in UpgradeManager.states.keys():
-			var c := UpgradeManager.cost(id)
-			if c > 0.0 and c < best_cost and UpgradeManager.can_buy(id, EconomyManager.money):
-				best_cost = c
-				best_id = id
-		if best_id != "":
-			if UpgradeManager.buy(best_id, EconomyManager.money):
-				EconomyManager.money -= best_cost
-				bought_id = best_id
-				bought_cost = best_cost
-				UpgradeManager.apply_bought_effects(best_id)
-
-	# Log + toast si se compr� algo
-	if bought_id != "":
-		var def := UpgradeManager.get_def(bought_id)
-		var label_str := def.label if def else bought_id
-		add_lap("🧠 IA: Comprado [%s] ($%.0f)" % [label_str, bought_cost])
-		update_ui()
-
 func _on_legacy_pressed():
 	var lp_title = legacy_panel.find_child("Title")
 	if lp_title is RichTextLabel:
