@@ -1,7 +1,9 @@
 extends Node
 
-const TITLE := "AntiIDLE — v1.0.0"
-const VERSION := "1.0.0"
+var TITLE: String:
+	get: return "AntiIDLE — v" + get_version_string()
+var VERSION: String:
+	get: return get_version_string()
 const NAME := "Génesis"
 
 const MAJOR := 1

@@ -73,9 +73,7 @@ static func from_run(main: Node) -> RunSnapshot:
 	s.hora  = "%02d:%02d" % [t.hour, t.minute]
 	s.run_id = "run_%02d-%02d-%02d_%02d-%02d" % [t.day, t.month, t.year % 100, t.hour, t.minute]
 
-	# Versión (usa propiedad de main si está disponible)
-	if main.get("VERSION"):
-		s.version = str(main.get("VERSION"))
+	s.version = Version.get_version_string()
 
 	# Tiempo
 	s.run_time_seconds = float(main.get("run_time") if main.get("run_time") != null else 0.0)
