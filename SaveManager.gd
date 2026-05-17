@@ -90,7 +90,8 @@ func build_save_data(main: Node) -> Dictionary:
 			"homeostasis_timer": RunManager.homeostasis_timer,
 			"legacy_homeostasis": RunManager.legacy_homeostasis,
 			"disturbances_survived": RunManager.disturbances_survived,
-			"extreme_shock_survived": RunManager.extreme_shock_survived,
+			"is_recovering_from_extreme": RunManager.is_recovering_from_extreme,
+			"extreme_shocks_recovered": RunManager.extreme_shocks_recovered,
 			"homeostasis_tier_reached": RunManager.homeostasis_tier_reached,
 			"omega_min_peak": RunManager.omega_min_peak
 		},
@@ -216,7 +217,8 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		RunManager.homeostasis_timer = h.get("homeostasis_timer", RunManager.homeostasis_timer)
 		RunManager.legacy_homeostasis = h.get("legacy_homeostasis", RunManager.legacy_homeostasis)
 		RunManager.disturbances_survived = h.get("disturbances_survived", RunManager.disturbances_survived)
-		RunManager.extreme_shock_survived = h.get("extreme_shock_survived", RunManager.extreme_shock_survived)
+		RunManager.is_recovering_from_extreme = h.get("is_recovering_from_extreme", RunManager.is_recovering_from_extreme)
+		RunManager.extreme_shocks_recovered = h.get("extreme_shocks_recovered", RunManager.extreme_shocks_recovered)
 		RunManager.homeostasis_tier_reached = h.get("homeostasis_tier_reached", RunManager.homeostasis_tier_reached)
 		RunManager.omega_min_peak = h.get("omega_min_peak", RunManager.omega_min_peak)
 
