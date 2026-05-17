@@ -528,7 +528,6 @@ func activate_homeostasis():
 func activate_red_micelial():
 	if mutation_homeostasis or mutation_hyperassimilation or mutation_symbiosis: return
 	mutation_red_micelial = true
-	# red_micelial_phase = 1 // This is now handled by check_red_micelial_transition
 	mutation_activated.emit("red_micelial", "RED MICELIAL (Fase A)")
 	AchievementManager.on_red_micelial_activated()
 

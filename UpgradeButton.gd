@@ -47,7 +47,6 @@ func _on_pressed() -> void:
 ## Actualiza el texto y estado del botón basándose en el manager y dinero actual
 func update_appearance(current_money: float) -> void:
 	if upgrade_id == "" or not UpgradeManager.states.has(upgrade_id):
-		# visible = false # Ocultar si no existe la def
 		return
 		
 	var def: UpgradeDef  = UpgradeManager.get_def(upgrade_id)

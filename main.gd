@@ -21,7 +21,6 @@ var _met_oscuro_seal_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
 var _reset_btn: Button = null
-var _fractura_notified: bool = false
 
 # CONSTANTES DE MODELO (moved to StructuralModel.gd)
 const CLICK_RATE := 1.0
@@ -339,7 +338,6 @@ func reset_local_state():
 	if is_instance_valid(_colapso_controlado_btn):
 		_colapso_controlado_btn.queue_free()
 		_colapso_controlado_btn = null
-	_fractura_notified = false
 	RunManager.reset()
 	if is_instance_valid(fungi_ui):
 		fungi_ui.reset_run()
