@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 # =====================================================
 # IDLE � v0.8 DLC "Fungi"
@@ -269,53 +269,10 @@ func update_click_stats_panel() -> void:
 func _on_ToggleLapViewButton_pressed():
 	toggle_lap_view()
 
-func purchase_upgrade(id: String) -> void:
-	var cost = UpgradeManager.cost(id)
-	if EconomyManager.money >= cost:
-		if UpgradeManager.buy(id, EconomyManager.money):
-			EconomyManager.money -= cost
-			_on_upgrade_bought_actions(id)
-			update_ui()
-			add_lap("Comprado: " + UpgradeManager.get_def(id).label)
-
-func _on_upgrade_bought_actions(id: String) -> void:
-	StructuralModel.structural_cooldown = StructuralModel.STRUCTURAL_COOLDOWN_TIME
-	match id:
-		"auto":
-			if not StructuralModel.unlocked_d:
-				StructuralModel.unlocked_d = true
-				add_lap("?? Desbloqueado d (Trabajo Manual)")
-		"auto_mult":
-			if not StructuralModel.unlocked_md:
-				StructuralModel.unlocked_md = true
-				add_lap("?? Desbloqueado md (Ritmo de Trabajo)")
-		"trueque":
-			if not StructuralModel.unlocked_e:
-				StructuralModel.unlocked_e = true
-				add_lap("?? Desbloqueado e (Trueque)")
-		"trueque_net":
-			if not StructuralModel.unlocked_me:
-				StructuralModel.unlocked_me = true
-				add_lap("?? Desbloqueado me (Red de Intercambio)")
-		"specialization":
-			if UpgradeManager.level("specialization") == 1:
-				add_lap("?? Especializaci�n de Oficio Activa")
-		"cognitive":
-			pass
-		"persistence":
-			StructuralModel.persistence_base = UpgradeManager.value("persistence")
-			if not StructuralModel.persistence_upgrade_unlocked:
-				StructuralModel.persistence_upgrade_unlocked = true
-				add_lap("?? Memoria Operativa: c0 incrementado un 25% (1.75)")
-		"accounting":
-			if UpgradeManager.level("accounting") == 1:
-				StructuralModel.omega = max(StructuralModel.omega, 0.45) # Subido de 0.38
-				StructuralModel.omega_min = max(StructuralModel.omega_min, 0.45) # Limpiamos historial de errores previos
-				institutions_unlocked = true
-				StructuralModel.institution_accounting_unlocked = true
-				add_lap("?? Ventana institucional � arquitectura reorganizada")
-			StructuralModel.epsilon_runtime *= 0.85
-			StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
+func _on_upgrade_bought_signal(id: String) -> void:
+	update_ui()
+	if id == "accounting" and UpgradeManager.level("accounting") == 1 and not institutions_unlocked:
+		institutions_unlocked = true
 # =====================================================
 #  RUTA FINAL DE LA RUN v0.8
 # =====================================================
@@ -496,6 +453,7 @@ func _ready():
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
+	UpgradeManager.upgrade_bought.connect(_on_upgrade_bought_signal)
 
 	update_ui()
 
@@ -1453,7 +1411,7 @@ func _mente_colmena_auto_buy() -> void:
 			EconomyManager.money -= c
 			bought_id = id
 			bought_cost = c
-			_on_upgrade_bought_actions(id)
+			UpgradeManager.apply_bought_effects(id)
 			break
 
 	# Fase 2 � fallback: compra el upgrade disponible m�s barato
@@ -1470,7 +1428,7 @@ func _mente_colmena_auto_buy() -> void:
 				EconomyManager.money -= best_cost
 				bought_id = best_id
 				bought_cost = best_cost
-				_on_upgrade_bought_actions(best_id)
+				UpgradeManager.apply_bought_effects(best_id)
 
 	# Log + toast si se compr� algo
 	if bought_id != "":
@@ -1930,7 +1888,7 @@ func _input(event):
 		if kc >= KEY_1 and kc <= KEY_9:
 			var idx :int= kc - KEY_1  # 0-based
 			if idx < HOTKEY_UPGRADES.size():
-				purchase_upgrade(HOTKEY_UPGRADES[idx])
+				UpgradeManager.purchase_upgrade(HOTKEY_UPGRADES[idx])
 
 		# DEBUG � Activar rutas post-trascendencia al vuelo (solo en debug build)
 		if OS.is_debug_build():

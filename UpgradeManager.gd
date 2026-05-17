@@ -225,6 +225,58 @@ func apply_reencarnacion_snapshot(snapshot: Dictionary) -> void:
 		s.current_cost = def.base_cost * pow(def.cost_scale, lvl) * pow(1.5, lvl)
 	print("⚱️ [UpgradeManager] Snapshot de reencarnación aplicado")
 
+# =====================================================
+#  COMPRA DE UPGRADES — con efectos post-compra y signal
+# =====================================================
+signal upgrade_bought(id: String)
+
+func purchase_upgrade(id: String) -> void:
+	var c := cost(id)
+	if EconomyManager.money >= c:
+		if buy(id, EconomyManager.money):
+			EconomyManager.money -= c
+			LogManager.add("Comprado: " + get_def(id).label)
+			apply_bought_effects(id)
+			upgrade_bought.emit(id)
+
+func apply_bought_effects(id: String) -> void:
+	StructuralModel.structural_cooldown = StructuralModel.STRUCTURAL_COOLDOWN_TIME
+	match id:
+		"auto":
+			if not StructuralModel.unlocked_d:
+				StructuralModel.unlocked_d = true
+				LogManager.add("Desbloqueado d (Trabajo Manual)")
+		"auto_mult":
+			if not StructuralModel.unlocked_md:
+				StructuralModel.unlocked_md = true
+				LogManager.add("Desbloqueado md (Ritmo de Trabajo)")
+		"trueque":
+			if not StructuralModel.unlocked_e:
+				StructuralModel.unlocked_e = true
+				LogManager.add("Desbloqueado e (Trueque)")
+		"trueque_net":
+			if not StructuralModel.unlocked_me:
+				StructuralModel.unlocked_me = true
+				LogManager.add("Desbloqueado me (Red de Intercambio)")
+		"specialization":
+			if level("specialization") == 1:
+				LogManager.add("Especializacion de Oficio Activa")
+		"cognitive":
+			pass
+		"persistence":
+			StructuralModel.persistence_base = value("persistence")
+			if not StructuralModel.persistence_upgrade_unlocked:
+				StructuralModel.persistence_upgrade_unlocked = true
+				LogManager.add("Memoria Operativa: c0 incrementado un 25% (1.75)")
+		"accounting":
+			if level("accounting") == 1:
+				StructuralModel.omega = max(StructuralModel.omega, 0.45)
+				StructuralModel.omega_min = max(StructuralModel.omega_min, 0.45)
+				StructuralModel.institution_accounting_unlocked = true
+				LogManager.add("Institucion desbloqueada — arquitectura reorganizada")
+			StructuralModel.epsilon_runtime *= 0.85
+			StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
+
 func devour_random_upgrade() -> bool:
 	var valid_keys = []
 	for k in states.keys():
