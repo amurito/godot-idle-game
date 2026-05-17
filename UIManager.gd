@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # UIManager.gd — Autoload
 # Encargado de la actualización visual y gestión de referencias de UI.
@@ -43,6 +43,7 @@ var upgrade_accounting_button
 var export_run_button
 var big_click_button
 var toggle_lap_button
+var lab_mode: bool = false
 
 # ========== HEADER BAR (Phase 2) ==========
 var header_money_value
@@ -168,6 +169,10 @@ func _find_scene(node_name: String):
 	if scene:
 		return scene.find_child(node_name, true, false)
 	return root.find_child(node_name, true, false)
+
+func show_toast(msg: String) -> void:
+	if system_message_label:
+		system_message_label.text = msg
 
 # --- Métodos de actualización ---
 
@@ -337,7 +342,8 @@ func build_formula_text(main: Node) -> String:
 	# --- REDIRECCIÓN + μ ---
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		formula_main += " + [color=#ffcc00]re[/color]"
-	if main.cached_mu > 1.01 and UpgradeManager.level("cognitive") > 0:
+
+	if EconomyManager.cached_mu > 1.01 and UpgradeManager.level("cognitive") > 0:
 		formula_main = "[ " + formula_main + " ] · [color=#ff4dff]μ[/color]"
 
 	# --- MULTIPLICADORES GLOBALES DE LEGADO (Λ) ---
@@ -382,17 +388,18 @@ func build_formula_text(main: Node) -> String:
 		t += "[/font_size][/color]\n"
 
 	# Información del Modelo — μ solo cuando Capital Cognitivo está activo
-	var raw_n: int = main.get_structural_upgrades()
+	var raw_n: int = StructuralModel.get_structural_upgrades()
 	if UpgradeManager.level("cognitive") > 0:
 		t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
 		t += "κμ = k · (1 + α · (μ - 1))\n"
 		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
-			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, main.cached_mu, raw_n
+			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, EconomyManager.cached_mu, raw_n
 		]
 	else:
 		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  n = %d[/color][/center]" % [
 			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, raw_n
 		]
+
 
 	return t
 
@@ -414,7 +421,7 @@ func update_click_stats_panel(main: Node) -> String:
 	var e_raw = UpgradeManager.value("trueque")
 	var me = UpgradeManager.value("trueque_net")
 	
-	var ap = main.get_active_passive_breakdown()
+	var ap = EconomyManager.get_active_passive_breakdown()
 	var push = ap.push_abs
 		
 	var t = "[b]Aporte actual:[/b]\n"
@@ -457,23 +464,23 @@ func update_click_stats_panel(main: Node) -> String:
 		else: t += "me = -- (estructura latente)\n"
 	
 	if LegacyManager.get_buff_value("redireccion_energia"):
-		t += "re = +%.1f/s   Redirección (10%% Click a Pasivo)\n" % (main.get_click_power() * 0.10)
+		t += "re = +%.1f/s   Redirección (10%% Click a Pasivo)\n" % (EconomyManager.get_click_power() * 0.10)
 	
 	t += "\n\n--- MODELO ESTRUCTURAL ---\n"
-	var n_struct = main.get_effective_structural_n()
+	var n_struct = StructuralModel.get_effective_structural_n()
 	var k_base = EcoModel.get_k_structural(n_struct)
 	var alpha = EcoModel.get_alpha(n_struct)
 	
 	t += "k = %.2f\n" % k_base
 	t += "α = %.2f\n" % alpha
 	if UpgradeManager.level("cognitive") > 0:
-		t += "μ = %.2f\n" % main.cached_mu
-		t += "κμ = %.2f\n" % main.get_k_eff()
-	t += "n = %d\n" % main.get_structural_upgrades()
+		t += "μ = %.2f\n" % EconomyManager.cached_mu
+		t += "κμ = %.2f\n" % StructuralModel.get_k_eff()
+	t += "n = %d\n" % StructuralModel.get_structural_upgrades()
 
 	if UpgradeManager.level("cognitive") > 0:
 		t += "\n\n--- Capital Cognitivo ---\n"
-		t += "μ = %.2f\n" % main.cached_mu
+		t += "μ = %.2f\n" % EconomyManager.cached_mu
 		t += "Nivel cognitivo = %d\n" % UpgradeManager.level("cognitive")
 		var acc_lvl_d: int = UpgradeManager.level("accounting")
 		if acc_lvl_d > 0:
@@ -628,6 +635,8 @@ func build_evo_checklist(main: Node) -> String:
 			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total
 			ch = ok_color + "[x] " if delta_real3 > 300.0 else fail_color + "[ ] "
 			t += ch + "Metabolismo > 300/s (%s)[/color]\n" % snapped(delta_real3, 0.1)
+			ch = ok_color + "[x] " if RunManager.run_time >= 1200.0 else fail_color + "[ ] "
+			t += ch + "Run >= 20min (%s)[/color]\n" % format_time(RunManager.run_time)
 		elif tier == 3:
 			t += ok_color + "[x] Tier 3 HOMEORHESIS desbloqueado — sellá el final[/color]\n"
 		t += "\n"
@@ -669,7 +678,7 @@ func build_evo_checklist(main: Node) -> String:
 					bar += "█" if i < filled else "░"
 				t += "[color=cyan]>>> Sincronía 50/50: [%s] %d%% (%.0f/180s)[/color]\n" % [bar, mc_pct, mc_timer]
 				# Mostrar ratio actual
-				var ap :Dictionary = main.get_active_passive_breakdown()
+				var ap :Dictionary = EconomyManager.get_active_passive_breakdown()
 				var r_act := int(ap.activo)
 				var r_pas := int(ap.pasivo)
 				var ratio_color := "[color=cyan]" if abs(r_act - 50) <= 2 else "[color=yellow]"
@@ -712,8 +721,8 @@ func build_evo_checklist(main: Node) -> String:
 		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
-		ch = ok_color + "[x] " if main.run_time > 200.0 else fail_color + "[ ] "
-		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(main.run_time)
+		ch = ok_color + "[x] " if RunManager.run_time > 200.0 else fail_color + "[ ] "
+		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(RunManager.run_time)
 
 	elif EvoManager.mutation_symbiosis and not EvoManager.mutation_red_micelial:
 		t += "[b][color=green]🌱 Simbiosis activa:[/color][/b]\n"
@@ -722,7 +731,7 @@ func build_evo_checklist(main: Node) -> String:
 	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
 		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism \
 		and not EvoManager.mutation_symbiosis:
-		var ap_snap = main.get_active_passive_breakdown()
+		var ap_snap = EconomyManager.get_active_passive_breakdown()
 		var pasivo_domina = ap_snap.pasivo > ap_snap.activo
 		var activo_domina = ap_snap.activo > ap_snap.pasivo
 		t += "[b]🕸️ Red Micelial (Fase A):[/b]\n"
@@ -756,8 +765,8 @@ func build_evo_checklist(main: Node) -> String:
 		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(StructuralModel.omega, 0.01)
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa < 12.0 else fail_color + "[ ] "
 		t += ch + "Biomasa < 12  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
-		ch = ok_color + "[x] " if main.delta_per_sec > 30.0 else fail_color + "[ ] "
-		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(main.delta_per_sec, 0.1)
+		ch = ok_color + "[x] " if EconomyManager.delta_per_sec > 30.0 else fail_color + "[ ] "
+		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(EconomyManager.delta_per_sec, 0.1)
 		ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
 		t += ch + "Pasivos d+e activos[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
@@ -897,7 +906,7 @@ func build_genome_text() -> String:
 		t += "[b][color=#bb44ff]🕳️ VACÍO HAMBRIENTO — producción ×100[/color][/b]\n"
 		t += "[color=#888888]Buffs cósmicos consumidos permanentemente.[/color]\n"
 		var _gen: float = EconomyManager.money
-		var _run_t: float = RunManager.main.run_time if RunManager.main else 0.0
+		var _run_t: float = RunManager.run_time
 		t += "[color=#9955dd]--- ASCESIS PROFUNDA ---[/color]\n"
 		if _gen < 1000000.0:
 			t += "[color=#666666]Acumulá $1M (%.0f/1000000)[/color]\n\n" % _gen
@@ -1101,7 +1110,7 @@ func update_mutation_center_panel(main: Node = null) -> void:
 func build_bifurcation_data(main: Control) -> Dictionary:
 	var hifas = BiosphereEngine.hifas
 	var acc_lvl = UpgradeManager.level("accounting")
-	var act_domina = main.get_active_passive_breakdown().activo > main.get_active_passive_breakdown().pasivo
+	var act_domina = EconomyManager.get_active_passive_breakdown().activo > EconomyManager.get_active_passive_breakdown().pasivo
 
 	var data := {
 		# Simbiosis sin Red Micelial → sigue siendo tier1 (no tiene sub-ramas propias)
@@ -1112,7 +1121,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		data["header"] = "MUTACIÓN DETECTADA (TIER 1)"
 
 		var h_t := LegacyManager.trascendencia_count
-		var h_ap: Dictionary = main.get_active_passive_breakdown()
+		var h_ap: Dictionary = EconomyManager.get_active_passive_breakdown()
 		var h_ok_red = StructuralModel.unlocked_d and StructuralModel.unlocked_e
 		var h_txt := "[center]⚖️ HOMEOSTASIS\nEquilibrio activo sostenido.\n\n"
 
@@ -1122,7 +1131,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 			var h_ok_eps_ng = eps_eff >= 0.05 and eps_eff <= 0.25
 			var h_ok_omega_ng = StructuralModel.omega >= 0.55
 			var h_ok_acc_ng = acc_lvl >= 2
-			var h_ok_delta_ng = main.delta_per_sec > 150.0
+			var h_ok_delta_ng = EconomyManager.delta_per_sec > 150.0
 			var total_flow: float = float(h_ap["activo"]) + float(h_ap["pasivo"])
 			var h_ok_bal = total_flow > 0 and (float(h_ap["pasivo"]) / total_flow) >= 0.30
 			var h_ok_bio_ng = BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
@@ -1137,7 +1146,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 		else:
 			var h_ok_eps = RunManager.get_en_banda_homeostatica()
 			var h_ok_omega = StructuralModel.omega >= 0.40
-			var h_ok_delta = main.delta_per_sec > 30.0
+			var h_ok_delta = EconomyManager.delta_per_sec > 30.0
 			var h_ok_bio = BiosphereEngine.biomasa < 12.0
 			var h_ok_acc = acc_lvl >= 1
 			var h_ok_dual = h_ap["pasivo"] > 0
@@ -1229,7 +1238,7 @@ func build_epsilon_sticky_text(main: Control) -> String:
 	var t := ""
 	t += "%s ε runtime = %s\n" % [epsilon_flag(StructuralModel.epsilon_runtime, 0.30), snapped(StructuralModel.epsilon_runtime, 0.01)]
 	t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
-	t += "Presión = %s" % snapped(main.get_structural_pressure(), 1)
+	t += "Presión = %s" % snapped(StructuralModel.get_structural_pressure(), 1)
 
 	# DEPREDADOR — siempre visible si venís de PARASITISMO con hiperasimilación
 	var hiper_genome: String = EvoManager.genome.get("hiperasimilacion", "")
@@ -1279,3 +1288,5 @@ func build_epsilon_sticky_text(main: Control) -> String:
 		t += "\nCierre auto: Bio≥100 o $≥1M"
 
 	return t
+
+

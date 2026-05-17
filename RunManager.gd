@@ -1,13 +1,15 @@
-extends Node
+﻿extends Node
 
 # RunManager.gd — Autoload
 # Gestiona el ciclo de vida de la run: cierres, chequeos finales, homeostasis, perturbaciones.
 
 signal disturbance_triggered(shock: float, is_extreme: bool)
 
-var main: Node = null
+# ==================== CONSTANTES ====================
+const LOGIC_TICK := 0.2
 
 # ==================== ESTADO DE RUN ====================
+var run_time: float = 0.0
 var run_closed := false
 var final_route := "NONE"
 var final_reason := ""
@@ -52,10 +54,8 @@ const CARNAVAL_INTERVAL := 60.0
 const CARNAVAL_POOL := ["homeostasis", "simbiosis", "red_micelial", "parasitismo", "hiperasimilacion"]
 
 # ==================== INICIALIZACIÓN ====================
-func set_main(m: Node):
-	main = m
-
 func reset():
+	run_time = 0.0
 	run_closed = false
 	final_route = "NONE"
 	final_reason = ""
@@ -93,11 +93,11 @@ func close_run(route: String, reason: String):
 	final_route = route
 	final_reason = reason
 	AudioManager.play_sfx("run_close")
-	main.add_lap("🚩 RUN CERRADA: " + route)
+	LogManager.add("🚩 RUN CERRADA: " + route)
 
 	LegacyManager.last_run_ending = route
 	LegacyManager.mark_ending_achieved(route) # Tracking persistente para gate de Trascendencia
-	LegacyManager.on_run_ended(main.cached_mu)  # Notificar μ final para desbloqueos
+	LegacyManager.on_run_ended(EconomyManager.cached_mu)  # Notificar μ final para desbloqueos
 	LegacyManager.save_legacy()
 
 	# Logros — notificar cierre de run (antes de resetear contadores)
@@ -126,7 +126,7 @@ func close_run(route: String, reason: String):
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
-		main.show_system_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
+		UIManager.show_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
 
 	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
 	if LegacyManager.get_buff_value("colapso_controlado"):
@@ -134,7 +134,7 @@ func close_run(route: String, reason: String):
 		var extra_pl: int = int(floor(StructuralModel.epsilon_peak * eps_bonus))
 		if extra_pl > 0:
 			LegacyManager.add_pl(extra_pl)
-			main.add_lap("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
+			LogManager.add("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
 	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
 	if LegacyManager.trascendencia_count >= 1:
@@ -147,9 +147,9 @@ func close_run(route: String, reason: String):
 				ng_bonus = min(raw, 6)
 				ng_formula = "resiliencia %.0f / 50 = %d (cap 6)" % [resilience_score, ng_bonus]
 			"SIMBIOSIS":
-				var raw := int(floor(main.run_time / 300.0))
+				var raw := int(floor(run_time / 300.0))
 				ng_bonus = min(raw, 6)
-				ng_formula = "run_time %.0fs / 300 = %d (cap 6)" % [main.run_time, ng_bonus]
+				ng_formula = "run_time %.0fs / 300 = %d (cap 6)" % [run_time, ng_bonus]
 			"HIPERASIMILACION", "HIPERASIMILACIÓN":
 				var raw := int(floor(StructuralModel.epsilon_peak * 5.0))
 				ng_bonus = min(raw, 5)
@@ -189,9 +189,9 @@ func close_run(route: String, reason: String):
 				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 6)" % [omega_min_peak, ng_bonus]
 			# ── Tier 3 (late-game) ──
 			"MENTE COLMENA DISTRIBUIDA":
-				var raw := int(floor(main.run_time / 600.0))
+				var raw := int(floor(run_time / 600.0))
 				ng_bonus = min(raw, 8)
-				ng_formula = "run_time %.0fs / 600 = %d (cap 8)" % [main.run_time, ng_bonus]
+				ng_formula = "run_time %.0fs / 600 = %d (cap 8)" % [run_time, ng_bonus]
 			"DEPREDADOR DE REALIDADES":
 				var raw := EvoManager.met_oscuro_devoured_count
 				ng_bonus = min(raw, 8)
@@ -206,7 +206,7 @@ func close_run(route: String, reason: String):
 				ng_formula = "micelio %.1f / 20 = %d (cap 6)" % [BiosphereEngine.micelio, ng_bonus]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
-			main.add_lap("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
+			LogManager.add("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -220,7 +220,7 @@ func close_run(route: String, reason: String):
 
 func enter_post_homeostasis():
 	post_homeostasis = true
-	main.add_lap("⚖️ Iniciando fase de Post-Homeostasis")
+	LogManager.add("⚖️ Iniciando fase de Post-Homeostasis")
 
 # ==================== CHEQUEOS FINALES ====================
 # HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS son tiers progresivos EN LA MISMA RUN.
@@ -238,7 +238,7 @@ func check_homeostasis_final(delta: float):
 	var banda_estricta = get_en_banda_homeostatica()
 	var flexibilidad_minima = StructuralModel.omega > 0.25
 	var control_activo = UpgradeManager.level("accounting") >= 1
-	var metabolismo_activo = main.delta_per_sec > 30.0
+	var metabolismo_activo = EconomyManager.delta_per_sec > 30.0
 	var crecimiento_controlado = BiosphereEngine.biomasa < 12.0
 	var redundancia = StructuralModel.unlocked_d and StructuralModel.unlocked_e
 
@@ -255,8 +255,8 @@ func check_homeostasis_final(delta: float):
 	if homeostasis_timer >= HOMEOSTASIS_TIME_REQUIRED and homeostasis_tier_reached < 1:
 		homeostasis_tier_reached = 1
 		post_homeostasis = true
-		main.add_lap("⚖️ Tier 1 desbloqueado: HOMEOSTASIS — podés cerrar la run o seguir")
-		main.show_system_toast("HOMEOSTASIS alcanzada — aguantá para evolucionar a ALLOSTASIS")
+		LogManager.add("⚖️ Tier 1 desbloqueado: HOMEOSTASIS — podés cerrar la run o seguir")
+		UIManager.show_toast("HOMEOSTASIS alcanzada — aguantá para evolucionar a ALLOSTASIS")
 
 	# Tier 2: ALLOSTASIS — más perturbaciones, metabolismo mayor
 	if homeostasis_tier_reached >= 1 and homeostasis_tier_reached < 2:
@@ -268,8 +268,8 @@ func check_homeostasis_final(delta: float):
 			homeostasis_tier_reached = 2
 			if not LegacyManager.get_buff_value("legado_alostasis"):
 				LegacyManager.grant_buff("legado_alostasis")
-			main.add_lap("💜 Tier 2 desbloqueado: ALLOSTASIS — podés cerrar o seguir por HOMEORHESIS")
-			main.show_system_toast("ALLOSTASIS alcanzada — sobreviví shocks y acumulá Resiliencia ≥ 400 para HOMEORHESIS")
+			LogManager.add("💜 Tier 2 desbloqueado: ALLOSTASIS — podés cerrar o seguir por HOMEORHESIS")
+			UIManager.show_toast("ALLOSTASIS alcanzada — sobreviví shocks y acumulá Resiliencia ≥ 400 para HOMEORHESIS")
 
 	# Tier 3: HOMEORHESIS — shock extremo + larga duración
 	if homeostasis_tier_reached >= 2 and homeostasis_tier_reached < 3:
@@ -277,13 +277,13 @@ func check_homeostasis_final(delta: float):
 		var delta_real :float = EconomyManager.get_contribution_breakdown().total
 		var ok = extreme_shocks_recovered >= 1 and resilience_score >= 400.0 \
 			and omega_min_peak >= 0.50 and disturbances_survived >= 5 \
-			and delta_real > 300.0
+			and delta_real > 300.0 and run_time >= 1200.0
 		if ok:
 			homeostasis_tier_reached = 3
 			if not LegacyManager.get_buff_value("legado_homeorresis"):
 				LegacyManager.grant_buff("legado_homeorresis")
-			main.add_lap("💎 Tier 3 desbloqueado: HOMEORHESIS — el sistema trasciende la regulación basal")
-			main.show_system_toast("HOMEORHESIS alcanzada — cerrá la run para sellarlo")
+			LogManager.add("💎 Tier 3 desbloqueado: HOMEORHESIS — el sistema trasciende la regulación basal")
+			UIManager.show_toast("HOMEORHESIS alcanzada — cerrá la run para sellarlo")
 
 	# Mostrar el botón del tier más alto alcanzado
 	if homeostasis_tier_reached == 3:
@@ -311,14 +311,14 @@ func check_symbiosis_final(_delta: float):
 	)
 
 	# Auto-cierre: 5 minutos en banda estable (antes 15 min)
-	if stable_band and main.run_time > 300.0:
+	if stable_band and run_time > 300.0:
 		close_run("SIMBIOSIS", "Cooperación sostenida entre estructura y biología")
 		return
 
 	# Cierre de emergencia: si omega > 0.50 (rama Simbiosis Mecánica activa) por 60s
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS \
 		and StructuralModel.omega >= 0.50 \
-		and main.run_time > 60.0:
+		and run_time > 60.0:
 		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
 
 func is_fractura_epistemica_available() -> bool:
@@ -360,7 +360,7 @@ func check_sporulation_trigger(_delta: float):
 	if EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation:
 		return
 
-	var _structural_pressure: float = main.get_structural_pressure()
+	var _structural_pressure: float = StructuralModel.get_structural_pressure()
 
 	if (
 		StructuralModel.epsilon_peak >= 0.75
@@ -368,14 +368,14 @@ func check_sporulation_trigger(_delta: float):
 		and StructuralModel.omega <= 0.30
 		and BiosphereEngine.biomasa >= 10.0
 		and BiosphereEngine.hifas >= 12.0
-		and main.run_time >= 900.0
+		and run_time >= 900.0
 	):
-		main.activate_sporulation()
+		EvoManager.activate_mutation("esporulacion")
 
 # ==================== HOMEOSTASIS DINÁMICA ====================
 func update_homeostasis_mode(delta: float):
-	var n_struct: float = main.get_effective_structural_n()
-	var complexity_impact: float = n_struct / max(main.cached_mu, 1.0)
+	var n_struct: float = StructuralModel.get_effective_structural_n()
+	var complexity_impact: float = n_struct / max(EconomyManager.cached_mu, 1.0)
 	StructuralModel.omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
 	var stability: float = clamp(1.0 - StructuralModel.epsilon_effective, 0.0, 1.0)
 	resilience_score += stability * delta
@@ -417,9 +417,9 @@ func trigger_disturbance():
 	if homeostasis_tier_reached >= 2 and randf() < 0.2:
 		shock = randf_range(0.8, 1.0)
 		is_extreme = true
-		main.add_lap("🌋 SHOCK EXTREMO DETECTADO — ε +" + str(snapped(shock, 0.01)))
+		LogManager.add("🌋 SHOCK EXTREMO DETECTADO — ε +" + str(snapped(shock, 0.01)))
 	else:
-		main.add_lap("🌪️ Perturbación externa — shock ε +" + str(snapped(shock, 0.01)))
+		LogManager.add("🌪️ Perturbación externa — shock ε +" + str(snapped(shock, 0.01)))
 
 	StructuralModel.epsilon_runtime += shock
 	is_recovering_from_shock = true
@@ -437,7 +437,7 @@ func trigger_disturbance():
 		StructuralModel.omega_min = max(0.0, StructuralModel.omega_min - penalty_omega)
 		var money_drain := EconomyManager.money * 0.20
 		EconomyManager.money = max(0.0, EconomyManager.money - money_drain)
-		main.add_lap("💸 Shock drenó Ω_min (-%s) y $%.0f" % [snapped(penalty_omega, 0.01), money_drain])
+		LogManager.add("💸 Shock drenó Ω_min (-%s) y $%.0f" % [snapped(penalty_omega, 0.01), money_drain])
 
 	disturbance_triggered.emit(shock, is_extreme)
 
@@ -451,9 +451,9 @@ func check_shock_tracking():
 		if is_recovering_from_extreme:
 			is_recovering_from_extreme = false
 			extreme_shocks_recovered += 1
-			main.add_lap("💎 SHOCK EXTREMO ABSORBIDO. Total: " + str(extreme_shocks_recovered))
+			LogManager.add("💎 SHOCK EXTREMO ABSORBIDO. Total: " + str(extreme_shocks_recovered))
 		else:
-			main.add_lap("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
+			LogManager.add("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
 		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
 		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)
@@ -511,7 +511,7 @@ func _activate_vacio_hambriento() -> void:
 	LegacyManager.save_legacy()
 	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
 	if main:
-		main.add_lap("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
+		LogManager.add("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
 
 func _activate_carnaval() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "carnaval"})
@@ -528,7 +528,7 @@ func _activate_carnaval() -> void:
 	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
 	print("🎭 [CARNAVAL] Mutaciones: %s" % str(carnaval_mutations))
 	if main:
-		main.add_lap("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
+		LogManager.add("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
 
 func _activate_reencarnacion() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "reencarnacion"})
@@ -536,7 +536,7 @@ func _activate_reencarnacion() -> void:
 	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
 	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
 	if main:
-		main.add_lap("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
+		LogManager.add("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
 
 ## Tick del Carnaval: rotar mutación cada CARNAVAL_INTERVAL segundos
 func update_carnaval(delta: float) -> void:
@@ -554,7 +554,7 @@ func update_carnaval(delta: float) -> void:
 		var next_mut :String= carnaval_mutations[carnaval_index]
 		EvoManager.carnaval_set_mutation(next_mut)
 		if main:
-			main.add_lap("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
+			LogManager.add("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
 
 		# CHEQUEO: POLIMORFÍA TOTAL
 		if carnaval_total_rotations >= 12:
@@ -575,7 +575,7 @@ func check_ascesis_profunda(delta: float) -> void:
 	if run_closed:
 		return
 	# Requisitos previos: run madura y dinero generado suficiente (clicks, no pasivo)
-	if main.run_time < 900.0 or EconomyManager.money < 1000000.0:
+	if run_time < 900.0 or EconomyManager.money < 1000000.0:
 		ascesis_timer = 0.0
 		return
 	# Condiciones simultáneas: sin biósfera, sin pasivo comprado, sistema calmo
@@ -599,8 +599,8 @@ func _show_evolution_button(target: String):
 		evolution_button.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 		evolution_button.custom_minimum_size = Vector2(0, 80)
 		evolution_button.pressed.connect(_on_evolution_button_pressed)
-		main.get_node("UIRootContainer/RightPanel").add_child(evolution_button)
-		main.get_node("UIRootContainer/RightPanel").move_child(evolution_button, 0)
+		UIManager.root.get_node("RightPanel").add_child(evolution_button)
+		UIManager.root.get_node("RightPanel").move_child(evolution_button, 0)
 
 	evolution_button.text = "🧬 SELLAR FINAL (" + target + ")"
 	match target:
@@ -623,3 +623,18 @@ func _on_evolution_button_pressed():
 			UIManager.big_click_button.modulate = Color(1.0, 0.8, 0.2)
 			close_run("HOMEORHESIS", "Evolución irreversible: el metabolismo trasciende la regulación basal")
 	evolution_button.visible = false
+
+# =====================================================
+#  HOMEOSTASIS — candidato helper (extraído de main.gd)
+# =====================================================
+func is_homeostasis_candidate() -> bool:
+	var banda_estricta := get_en_banda_homeostatica()
+	var flexibilidad_minima := StructuralModel.omega > 0.25
+	var control_activo := UpgradeManager.level("accounting") >= 1
+	var metabolismo_activo := EconomyManager.delta_per_sec > 30.0
+	var crecimiento_controlado := BiosphereEngine.biomasa < 12.0
+	var redundancia := StructuralModel.unlocked_d and StructuralModel.unlocked_e
+	var no_hyper := not EvoManager.mutation_hyperassimilation
+	var red_blocks_homeostasis := EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2
+	return banda_estricta and flexibilidad_minima and control_activo and metabolismo_activo and crecimiento_controlado and redundancia and no_hyper and not red_blocks_homeostasis
+

@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 # =====================================================
 # IDLE — v0.8 DLC "Fungi"
@@ -60,13 +60,10 @@ var _glitch_was_active := false
 # CONSTANTES DE MODELO (moved to StructuralModel.gd)
 const CLICK_RATE := 1.0
 
-# OBSERVADORES DINÁMICOS (Caché por tick)
-var cached_mu: float = 1.0
-var mu_peak_run: float = 0.0  # Pico de μ en la run actual (para historial de ciclos)
-
-var delta_per_sec: float = 0.0
+var mu_peak_run: float = 0.0
 var delta_peak_run: float = 0.0
 var _telemetry_sample_timer: float = 0.0
+
 
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
@@ -78,26 +75,15 @@ const PASSIVE_RATIO_START := 0.60
 
 # =============== SESIÓN / LAB MODE ===================
 
-var run_time: float = 0.0
-var lab_mode := false  # Oculto por defecto — tecla L para toggle
 var _debug_panel: Panel = null
 
 # RunManager.final_reason movido a RunManager.gd
 var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
 
-var RUN_EXPORT_PATH := OS.get_user_data_dir() + "/IDLE_Fungi/runs"
-
-# === VERSION INFO ===
-const VERSION := "0.8.2"
-const CODENAME := "v0.8 — “Fungi Evolution”"
-const BUILD_CHANNEL := "stable"
-
-const SAVE_PATH := "user://savegame.json"
 # Timers — tick system (no more manual accumulation in _process)
 var _logic_timer: Timer
 var _ui_timer: Timer
 var _autosave_timer: Timer
-const LOGIC_TICK := 0.2   # 5 Hz — economy, epsilon, evolution
 const UI_TICK := 0.1      # 10 Hz — labels & buttons
 const AUTOSAVE_INTERVAL := 30.0
 
@@ -119,63 +105,10 @@ const AUTOSAVE_INTERVAL := 30.0
 @onready var pl_label = %PLLabel
 
 
-# =====================================================
-#  CAPA 1 — MODELO ECONÓMICO
-# =====================================================
-
-func get_click_power() -> float:
-	return EconomyManager.get_click_power()
-
-func get_auto_income_effective() -> float:
-	return EconomyManager.get_auto_income_effective()
-
-func get_trueque_raw() -> float:
-	return EconomyManager.get_trueque_raw()
-
-func get_trueque_income_effective() -> float:
-	return EconomyManager.get_trueque_income_effective()
-
-func get_passive_total() -> float:
-	return EconomyManager.get_passive_total()
-
-func get_delta_total() -> float:
-	return EconomyManager.get_delta_total()
-
-func get_mu_structural_factor() -> float:
-	return StructuralModel.get_mu_structural_factor()
-
-
-
 # ===== BIOSFERA MOVIDA A BiosphereEngine =====
 # ============================
 #  GENOMA FÚNGICO — v0.1
 # ============================
-
-# =====================================================
-# EVOLUCIÓN BIOLÓGICA v0.8 DLC
-# =====================================================
-func update_genome():
-	EvoManager.update_genome(self)
-
-# === FUNCIONES DE LOGROS Y CICLO DE VIDA (Restauradas) ===
-func close_run(route: String, reason: String):
-	RunManager.close_run(route, reason)
-
-func enter_post_homeostasis():
-	RunManager.enter_post_homeostasis()
-
-func activate_sporulation():
-	EvoManager.activate_mutation("esporulacion")
-
-func activate_homeostasis():
-	EvoManager.activate_mutation("homeostasis")
-
-	
-# =====================================================
-# RUTA EVOLUTIVA - SEÑALES DE EVOMANAGER
-# =====================================================
-
-# === EFECTOS DE MUTACIÓN ===
 
 # =====================================================
 # MET.OSCURO — ciclo post-Depredador (bioquímica oscura)
@@ -204,11 +137,11 @@ func met_oscuro_tick(dt: float):
 	# Guarda de 30s: evita cierre inmediato si biomasa ya era ≥100 al activar
 	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 		LegacyManager.add_pl(2)  # +2 bonus; RunManager agrega +4 base al hacer close_run
-		close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
+		RunManager.close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
 		return
 	# 7) Cierre automático por economía millonaria oscura (+4 PL base)
 	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-		close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")
+		RunManager.close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")
 		return
 	# 8) Mostrar botón voluntario de sellado (solo tras cooldown)
 	_update_met_oscuro_seal_button()
@@ -252,7 +185,7 @@ func _on_met_oscuro_seal_pressed():
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
-	close_run("METABOLISMO OSCURO", "Sellado voluntario (Bio %.0f) — bioquímica oscura cristalizada (+%d PL)" % [bio, pl_total])
+	RunManager.close_run("METABOLISMO OSCURO", "Sellado voluntario (Bio %.0f) — bioquímica oscura cristalizada (+%d PL)" % [bio, pl_total])
 
 func _update_simbiosis_seal_button():
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
@@ -265,7 +198,7 @@ func _update_simbiosis_seal_button():
 			_simbiosis_seal_btn.visible = false
 		return
 	# Sólo mostrar si lleva más de 60s en SIMBIOSIS
-	if run_time < 60.0:
+	if RunManager.run_time < 60.0:
 		return
 	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn = Button.new()
@@ -283,7 +216,7 @@ func _update_simbiosis_seal_button():
 func _on_simbiosis_seal_pressed():
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.visible = false
-	close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
+	RunManager.close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
 
 func _update_colapso_controlado_btn():
 	if RunManager.run_closed:
@@ -466,76 +399,10 @@ func update_click_stats_panel() -> void:
 
 
 # =====================================================
-#  CAPA 2 — ANÁLISIS MATEMÁTICO
-# =====================================================
-
-func get_dominant_term() -> String:
-	return EconomyManager.get_dominant_term()
-
-func get_contribution_breakdown() -> Dictionary:
-	return EconomyManager.get_contribution_breakdown()
-
-func get_active_passive_breakdown() -> Dictionary:
-	return EconomyManager.get_active_passive_breakdown()
-
-
-# =====================================================
-#  CAPA 3 — fⁿ (OBSERVACIONAL) v0.6.2
-# =====================================================
-
-
-func get_n_log() -> float:
-	return StructuralModel.get_n_log()
-
-func get_n_power() -> float:
-	return StructuralModel.get_n_power()
-
-
-func apply_dynamic_persistence(delta: float) -> void:
-	StructuralModel.apply_dynamic_persistence(delta)
-
-
-# === Persistencia estructural ===
-# c₀  → baseline fijo
-# fⁿ  → objetivo teórico según n
-# cₙ  → estado dinámico observado
-
-func get_persistence_target() -> float:
-	return StructuralModel.get_persistence_target()
-
-# =====================================================
-#  MODELO ESTRUCTURAL — v0.6.4
-# =====================================================
-
-func get_k_eff() -> float:
-	return StructuralModel.get_k_eff()
-
-func register_structural_baseline():
-	StructuralModel.register_structural_baseline()
-
-# =====================================================
-#  CAPITAL COGNITIVO (μ) — v0.7
-# Gestionado vía UpgradeManager
-# =====================================================
 #  VISUALIZACIÓN DE LAPS
 # =====================================================
 func _on_ToggleLapViewButton_pressed():
 	toggle_lap_view()
-
-
-#====================================
-# INSTITUCIONES V0.8
-func get_structural_pressure() -> float:
-	return StructuralModel.get_structural_pressure()
-
-func get_accounting_effect() -> float:
-	return StructuralModel.get_accounting_effect()
-
-func get_structural_upgrades() -> int:
-	return StructuralModel.get_structural_upgrades()
-
-func get_effective_structural_n() -> float:
-	return StructuralModel.get_effective_structural_n()
 
 func purchase_upgrade(id: String) -> void:
 	var cost = UpgradeManager.cost(id)
@@ -584,36 +451,6 @@ func _on_upgrade_bought_actions(id: String) -> void:
 				add_lap("⚖️ Ventana institucional — arquitectura reorganizada")
 			StructuralModel.epsilon_runtime *= 0.85
 			StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
-# =====================================================
-#  HOMEOSTASIS TRACKING helper v0.8
-# =====================================================
-func is_homeostasis_candidate(_delta: float) -> bool:
-	# Retorna TRUE si las condiciones de equilibrio activo se cumplen (para habilitar el botón)
-	var t := LegacyManager.trascendencia_count
-	var ap: Dictionary = get_active_passive_breakdown()
-	var redundancia := StructuralModel.unlocked_d and StructuralModel.unlocked_e
-	var no_hyper := not EvoManager.mutation_hyperassimilation
-	var red_blocks := EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2
-
-	if t >= 1:
-		# NG+: equilibrio más exigente — la banda se estrecha y el sistema debe ser más maduro
-		var eps_eff := StructuralModel.epsilon_effective
-		var banda_ng := eps_eff >= 0.05 and eps_eff <= 0.25
-		var omega_ng := StructuralModel.omega >= 0.55
-		var acc_ng := UpgradeManager.level("accounting") >= 2
-		var delta_ng := delta_per_sec > 150.0
-		var total_flow: float = float(ap["activo"]) + float(ap["pasivo"])
-		var balance_ng := total_flow > 0 and (float(ap["pasivo"]) / total_flow) >= 0.30
-		var bio_ng := BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
-		return banda_ng and omega_ng and acc_ng and delta_ng and balance_ng and bio_ng and redundancia and no_hyper and not red_blocks
-	else:
-		var banda_estricta := RunManager.get_en_banda_homeostatica()
-		var equilibrio_omega := StructuralModel.omega >= 0.40
-		var control_activo := UpgradeManager.level("accounting") >= 1
-		var metabolismo_activo := delta_per_sec > 30.0
-		var produccion_dual: bool = float(ap["pasivo"]) > 0
-		var crecimiento_controlado := BiosphereEngine.biomasa < 12.0
-		return banda_estricta and equilibrio_omega and control_activo and metabolismo_activo and produccion_dual and crecimiento_controlado and redundancia and no_hyper and not red_blocks
 # =====================================================
 #  RUTA FINAL DE LA RUN v0.8
 # =====================================================
@@ -684,11 +521,11 @@ func get_hyperassimilation_tooltip() -> String:
 # =====================================================
 
 func add_lap(event: String) -> void:
-	LogManager.add(event, self)
+	LogManager.add(event)
 
 
 func check_dominance_transition():
-	LogManager.check_dominance_transition(self)
+	LogManager.check_dominance_transition()
 
 func _on_ExportRunButton_pressed():
 	LogManager.export_run(self)
@@ -699,20 +536,19 @@ func check_achievements():
 	AchievementManager.push_snapshot({
 		"epsilon":         StructuralModel.epsilon_effective,
 		"biomasa":         BiosphereEngine.biomasa,
-		"k_eff":           get_k_eff(),
-		"delta_total":     get_delta_total(),
+		"k_eff":           StructuralModel.get_k_eff(),
+		"delta_total":     EconomyManager.get_delta_total(),
 		"money":           EconomyManager.money,
 		"total_money":     EconomyManager.total_money_generated,
 		"resilience_score":RunManager.resilience_score,
-		"dominant_term":      get_dominant_term(),
+		"dominant_term":      EconomyManager.get_dominant_term(),
 		"parasitism":         EvoManager.mutation_parasitism,
 		"hifas":              BiosphereEngine.hifas,
 		"trascendencia_count":LegacyManager.trascendencia_count,
 	})
-	AchievementManager.check_tick(LOGIC_TICK)
+	AchievementManager.check_tick(RunManager.LOGIC_TICK)
 func show_system_toast(message: String) -> void:
-	if UIManager.system_message_label:
-		UIManager.system_message_label.text = message
+	UIManager.show_toast(message)
 
 func update_achievements_label():
 	# Vista resumida en el HUD. Detalles completos se ven en el menú principal.
@@ -743,10 +579,8 @@ func update_achievements_label():
 func reset_local_state():
 	EconomyManager.reset()
 	StructuralModel.reset()
-	delta_per_sec = 0.0
 	delta_peak_run = 0.0
 	_telemetry_sample_timer = 0.0
-	run_time = 0.0
 	mu_peak_run = 0.0
 	# Los logros persisten entre runs (vivían en main.gd como flags, ahora en AchievementManager).
 	# Sólo borramos el estado efímero (timers, contadores de click, etc.)
@@ -795,24 +629,11 @@ func _ready():
 		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run (disponible al cerrar run)")
 
 	# Inicializar managers con referencia a main ANTES de update_ui()
-	RunManager.set_main(self)
 	AchievementManager.set_main(self)
 	EconomyManager.set_main(self)
 	StructuralModel.set_main(self)
 
 	update_ui()
-
-	# Hotpatch: Inyectar trueque_allo si no existe (para evitar reinicio)
-	if not UpgradeManager.states.has("trueque_allo"):
-		var def = load("res://upgrades/trueque_allo.tres")
-		if def:
-			UpgradeManager._defs.append(def)
-			UpgradeManager.states["trueque_allo"] = {
-				"level": 0,
-				"current_cost": def.base_cost,
-				"current_value": def.base_value,
-				"unlocked": false
-			}
 
 	_mount_fungi_dlc()
 
@@ -877,7 +698,7 @@ func _ready():
 	
 	# === TICK SYSTEM — Timers ===
 	_logic_timer = Timer.new()
-	_logic_timer.wait_time = LOGIC_TICK
+	_logic_timer.wait_time = RunManager.LOGIC_TICK
 	_logic_timer.autostart = true
 	_logic_timer.timeout.connect(_on_logic_tick)
 	add_child(_logic_timer)
@@ -919,14 +740,6 @@ func _ready():
 			RunManager.post_homeostasis = true
 
 	call_deferred("_update_legacy_indicators")
-
-	# --- EMERGENCY RE-OPEN (v0.8.43) ---
-	# Si la run se cerró por el bug del Legado, la reabrimos
-	if RunManager.run_closed and RunManager.final_route == "ESPORULACION TOTAL" and not EvoManager.mutation_sporulation:
-		RunManager.run_closed = false
-		RunManager.final_route = "NONE"
-		RunManager.final_reason = ""
-		print("🛠️ Recuperando run cerrada por bug")
 
 	if OS.is_debug_build():
 		var dp := preload("res://DebugPanel.gd").new()
@@ -1013,7 +826,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
 	AudioManager.play_sfx("click")
 	TutorialManager.notify_reactor_clicked()
-	var power := get_click_power()
+	var power := EconomyManager.get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
 	if power >= 10000.0:
@@ -1128,17 +941,17 @@ func adjust_scroll_for_dlc():
 
 func _process(delta):
 	# Solo lo que NECESITA 60 Hz: tiempo de sesión y animaciones
-	run_time += delta
+	RunManager.run_time += delta
 	EconomyManager.time_since_last_click += delta
 	_sync_reactor_color()
 
 func _on_logic_tick():
 	# === 5 Hz — toda la lógica de simulación ===
-	var dt := LOGIC_TICK
+	var dt := RunManager.LOGIC_TICK
 
 	# Cache mu (evita 500+ calls por segundo a get_mu_structural_factor)
-	cached_mu = get_mu_structural_factor()
-	mu_peak_run = max(mu_peak_run, cached_mu)
+	EconomyManager.cached_mu = StructuralModel.get_mu_structural_factor()
+	mu_peak_run = max(mu_peak_run, EconomyManager.cached_mu)
 
 	# NG+ Mente Colmena (Juego automático por IA fúngica)
 	# Sync estado con el toggle del Banco Genético (solo cuando cambia)
@@ -1149,7 +962,7 @@ func _on_logic_tick():
 			add_lap("🧠 Mente Colmena — IA desactivada desde el Banco Genético")
 	if mente_colmena_active:
 		# Auto-click: simula 10 clicks por segundo
-		var sim_power = get_click_power() * 10.0 * dt
+		var sim_power = EconomyManager.get_click_power() * 10.0 * dt
 		EconomyManager.money += sim_power
 		StructuralModel.epsilon_runtime += 0.008 * 10.0 * dt
 		if is_instance_valid(UIManager.big_click_button):
@@ -1160,7 +973,7 @@ func _on_logic_tick():
 			_mente_colmena_buy_timer = 0.0
 			_mente_colmena_auto_buy()
 	elif LegacyManager.last_run_ending == "SINGULARIDAD" and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		var ap = get_active_passive_breakdown()
+		var ap = EconomyManager.get_active_passive_breakdown()
 		var tot = ap.activo + ap.pasivo
 		if tot > 0:
 			var ratio = ap.activo / tot
@@ -1199,7 +1012,7 @@ func _on_logic_tick():
 			and BiosphereEngine.biomasa > 25.0 \
 			and EconomyManager.money < 500.0 \
 			and not RunManager.run_closed:
-			close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: el estrés estructural colapsó bajo presión depredatoria (+8 PL)")
+			RunManager.close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: el estrés estructural colapsó bajo presión depredatoria (+8 PL)")
 			return
 		depredador_tick += dt
 		if depredador_tick >= 1.5:
@@ -1213,7 +1026,7 @@ func _on_logic_tick():
 				if is_instance_valid(UIManager.big_click_button):
 					UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 			else:
-				close_run("DEPREDADOR DE REALIDADES", "El hongo ha consumido todo tu código fuente. Ya no existes. (+12 PL)")
+				RunManager.close_run("DEPREDADOR DE REALIDADES", "El hongo ha consumido todo tu código fuente. Ya no existes. (+12 PL)")
 	# DEPREDADOR EN PROGRESO — Mostrar barra de progreso cada 10s
 	elif EvoManager.depredador_timer > 0.0 and EvoManager.depredador_timer < 30.0:
 		_depredador_status_timer += dt
@@ -1240,9 +1053,9 @@ func _on_logic_tick():
 		_glitch_was_active = glitch_now
 
 	# 1) Economía base
-	apply_dynamic_persistence(dt)
-	delta_per_sec = get_passive_total()
-	delta_peak_run = max(delta_peak_run, get_delta_total())
+	StructuralModel.apply_dynamic_persistence(dt)
+	EconomyManager.delta_per_sec = EconomyManager.get_passive_total()
+	delta_peak_run = max(delta_peak_run, EconomyManager.get_delta_total())
 	TelemetryManager.sample_metrics(self, false)
 	_telemetry_sample_timer += dt
 	if _telemetry_sample_timer >= 30.0:
@@ -1269,7 +1082,7 @@ func _on_logic_tick():
 	)
 
 	# 4) Actualizar valor del reactor
-	var power := get_click_power()
+	var power := EconomyManager.get_click_power()
 	if is_instance_valid(UIManager.big_click_button):
 		# Sincronizar tamaño del reactor 3D con el power actual (sin pulso de click)
 		if _use_3d_reactor and is_instance_valid(reactor_3d):
@@ -1297,7 +1110,7 @@ func _on_logic_tick():
 		EconomyManager.money = max(EconomyManager.money - money_drain, 0.0)
 
 	# 6) Genoma
-	update_genome()
+	EvoManager.update_genome()
 
 	# 7) Estrés post-red micelial
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2 and not EvoManager.mutation_sporulation:
@@ -1305,8 +1118,8 @@ func _on_logic_tick():
 		StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak, StructuralModel.epsilon_runtime)
 		
 	# 8) Actualizar Omega (Flexibilidad)
-	# Buff: El capital cognitivo (cached_mu) ahora ayuda a manejar la complejidad (n_struct)
-	var complexity_impact: float = get_effective_structural_n() / max(cached_mu, 1.0)
+	# Buff: El capital cognitivo (EconomyManager.cached_mu) ahora ayuda a manejar la complejidad (n_struct)
+	var complexity_impact: float = StructuralModel.get_effective_structural_n() / max(EconomyManager.cached_mu, 1.0)
 	StructuralModel.omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
 
 	# PARASITISMO: Techo duro de Ω 0.25 — aplicado aquí para no ser pisado por el cálculo de arriba
@@ -1374,7 +1187,7 @@ func _on_logic_tick():
 	if StructuralModel.structural_cooldown > 0.0:
 		StructuralModel.structural_cooldown -= dt
 		if StructuralModel.structural_cooldown <= 0.0:
-			register_structural_baseline()
+			StructuralModel.register_structural_baseline()
 
 	# 10) Instituciones y esporulación
 	check_institution_unlock()
@@ -1447,7 +1260,7 @@ func _notification(what):
 
 func _on_mutation_activated(id: String, display_name: String):
 	AudioManager.play_sfx("mutation")
-	LogManager.add("🧬 Mutación irreversible — " + display_name, self)
+	LogManager.add("🧬 Mutación irreversible — " + display_name)
 
 	# Mostrar efectos activos como lap (visible en pantalla final)
 	match id:
@@ -1455,23 +1268,23 @@ func _on_mutation_activated(id: String, display_name: String):
 			# Extra emphasis para los buffs
 			show_system_toast("🔥 HIPERASIMILACIÓN EXTREMA 🔥 — Click ×10 | Pasivo anulado | Run termina ahora")
 		"parasitismo":
-			LogManager.add("🦠 EFECTOS: Biomasa +100% / Pasivo +20% / Contabilidad -10% / Ω máx 0.25", self)
+			LogManager.add("🦠 EFECTOS: Biomasa +100% / Pasivo +20% / Contabilidad -10% / Ω máx 0.25")
 			show_system_toast("🦠 PARASITISMO ACTIVO — El hongo drena la estructura")
 		"homeostasis":
-			LogManager.add("⚖️ EFECTOS: Producción +50% / ε estabilizado / Ω_min 0.35", self)
+			LogManager.add("⚖️ EFECTOS: Producción +50% / ε estabilizado / Ω_min 0.35")
 		"red_micelial":
-			LogManager.add("🕸️ EFECTOS: Pasivo ×2.5 / Click -50% / Bifurcación evolutiva", self)
+			LogManager.add("🕸️ EFECTOS: Pasivo ×2.5 / Click -50% / Bifurcación evolutiva")
 		"simbiosis":
-			LogManager.add("🌱 EFECTOS: Click ×2.5 / Pasivo -50%", self)
+			LogManager.add("🌱 EFECTOS: Click ×2.5 / Pasivo -50%")
 		"allostasis":
-			LogManager.add("🔬 EFECTOS: Resiliencia alostática activa / Setpoint recalibrable", self)
+			LogManager.add("🔬 EFECTOS: Resiliencia alostática activa / Setpoint recalibrable")
 		"homeorhesis":
-			LogManager.add("✨ EFECTOS: Trascendencia cristalina / Metabolismo irreversible", self)
+			LogManager.add("✨ EFECTOS: Trascendencia cristalina / Metabolismo irreversible")
 		"depredador":
-			LogManager.add("☠️ EFECTOS: Devora upgrades cada 1.5s / El código se consume", self)
+			LogManager.add("☠️ EFECTOS: Devora upgrades cada 1.5s / El código se consume")
 			show_system_toast("☠️ DEPREDADOR ACTIVO — La realidad está siendo consumida")
 		"met_oscuro":
-			LogManager.add("🌑 EFECTOS: Devorar detenido · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω 0.10", self)
+			LogManager.add("🌑 EFECTOS: Devorar detenido · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω 0.10")
 			show_system_toast("🌑 METABOLISMO OSCURO — Bioquímica alternativa estabilizada")
 
 	if id == "red_micelial" and not RunManager.carnaval_active:
@@ -1681,10 +1494,10 @@ func _on_branch_selected(branch: int):
 		evo_choice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	if branch == EvoManager.RedBranch.COLONIZATION:
-		LogManager.add("🟢 RAMA ELEGIDA: COLONIZACIÓN INVASIVA", self)
+		LogManager.add("🟢 RAMA ELEGIDA: COLONIZACIÓN INVASIVA")
 		EconomyManager.mutation_auto_factor *= 1.5
 	elif branch == EvoManager.RedBranch.SYMBIOSIS:
-		LogManager.add("🔵 RAMA ELEGIDA: SIMBIOSIS MECÁNICA", self)
+		LogManager.add("🔵 RAMA ELEGIDA: SIMBIOSIS MECÁNICA")
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
 		
 	_sync_reactor_color()
@@ -1695,7 +1508,7 @@ func _on_branch_selected(branch: int):
 # === HANDLERS DE SEÑAL — CICLO BIOLÓGICO (Fase 2) ===
 
 func _on_primordio_iniciado() -> void:
-	LogManager.add("🟡 Primordio iniciado — mantené el estrés bajo por 90s", self)
+	LogManager.add("🟡 Primordio iniciado — mantené el estrés bajo por 90s")
 	update_ui()
 
 func _on_primordio_abortado(abort_count: int, reason: String) -> void:
@@ -1703,12 +1516,12 @@ func _on_primordio_abortado(abort_count: int, reason: String) -> void:
 	update_ui()
 
 func _on_seta_formada() -> void:
-	LogManager.add("🍄 ¡SETA FORMADA! — El cuerpo fructífero emerge. Esporulación disponible.", self)
+	LogManager.add("🍄 ¡SETA FORMADA! — El cuerpo fructífero emerge. Esporulación disponible.")
 	update_ui()
 
 func _on_primordio_button_pressed() -> void:
 	if not EvoManager.try_iniciar_primordio():
-		LogManager.add("⚠️ Primordio no disponible — necesitás 60%% de micelio y Colonización activa", self)
+		LogManager.add("⚠️ Primordio no disponible — necesitás 60%% de micelio y Colonización activa")
 
 func _on_sporulation_final_pressed() -> void:
 	if RunManager.run_closed: return
@@ -1720,7 +1533,7 @@ func _on_sporulation_final_pressed() -> void:
 		
 		LegacyManager.add_pl(pl)
 		show_system_toast("LEGADO: Singularidad integrada (+%d PL)" % pl)
-		close_run("SINGULARIDAD", "El hongo ha asimilado totalmente el mainframe. Conciencia total alcanzada.")
+		RunManager.close_run("SINGULARIDAD", "El hongo ha asimilado totalmente el mainframe. Conciencia total alcanzada.")
 		
 	elif EvoManager.seta_formada:
 		# FINAL: ESPORULACIÓN BIOLÓGICA
@@ -1728,7 +1541,7 @@ func _on_sporulation_final_pressed() -> void:
 		if esporas > 1.0: # Umbral mínimo bajado para asegurar PL
 			LegacyManager.add_spores(esporas)
 		
-		close_run("ESPORULACIÓN", "El ciclo biológico se ha completado. Millones de esporas han infectado el sistema. Legado fúngico asegurado.")
+		RunManager.close_run("ESPORULACIÓN", "El ciclo biológico se ha completado. Millones de esporas han infectado el sistema. Legado fúngico asegurado.")
 		
 	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and EconomyManager.money >= 100000.0:
 		# FINAL SECRETO: PANSPERMIA NEGRA
@@ -1738,7 +1551,7 @@ func _on_sporulation_final_pressed() -> void:
 			show_system_toast("✨ Has desbloqueado el legado: SEMILLA CÓSMICA")
 			
 		LegacyManager.add_pl(10)
-		close_run("PANSPERMIA NEGRA", "Las esporas han sido disparadas al espacio exterior. La infección se vuelve interplanetaria. (+10 PL)")
+		RunManager.close_run("PANSPERMIA NEGRA", "Las esporas han sido disparadas al espacio exterior. La infección se vuelve interplanetaria. (+10 PL)")
 		
 # --- LÓGICA DEL BANCO GENÉTICO (Legacy) ---
 func activate_mente_colmena():
@@ -1752,7 +1565,7 @@ func activate_mente_colmena():
 		LegacyManager.grant_buff("mente_colmena")
 		show_system_toast("✨ Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
 
-	close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores han sido asimilados. El administrador es obsoleto. (+8 PL)")
+	RunManager.close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores han sido asimilados. El administrador es obsoleto. (+8 PL)")
 
 # IA Mente Colmena — compra automática de upgrades cada MENTE_COLMENA_BUY_INTERVAL segundos.
 # Primero revisa la lista de prioridades; si ninguno es asequible, compra el más barato disponible.
@@ -2074,15 +1887,15 @@ func _update_legacy_indicators() -> void:
 
 # ESTRUCTURALES v0.7.3
 func update_epsilon_runtime():
-	if StructuralModel.baseline_delta_structural <= 0.0 or delta_per_sec <= 0.0:
+	if StructuralModel.baseline_delta_structural <= 0.0 or EconomyManager.delta_per_sec <= 0.0:
 		StructuralModel.epsilon_runtime = 0.0
 		StructuralModel.epsilon_active = 0.0
 		StructuralModel.epsilon_passive = 0.0
 		StructuralModel.epsilon_complex = 0.0
 		return
 
-	var n_struct := get_effective_structural_n()
-	var k_eff := get_k_eff()
+	var n_struct := StructuralModel.get_effective_structural_n()
+	var k_eff := StructuralModel.get_k_eff()
 
 	# =================================================
 	# 1) ε_activo — producción / composición (actual)
@@ -2094,10 +1907,10 @@ func update_epsilon_runtime():
 
 	var epsilon_prod := 0.0
 	if expected_delta > 0.0:
-		epsilon_prod = max(0.0, (delta_per_sec / expected_delta) - 1.0)
+		epsilon_prod = max(0.0, (EconomyManager.delta_per_sec / expected_delta) - 1.0)
 
-	var active := get_click_power()
-	var passive := get_passive_total()
+	var active := EconomyManager.get_click_power()
+	var passive := EconomyManager.get_passive_total()
 	var total := active + passive
 
 	var active_ratio := 0.0
@@ -2111,7 +1924,7 @@ func update_epsilon_runtime():
 	var target_active :float = lerp(0.8, 0.4, t)
 
 	var epsilon_comp :float = abs(active_ratio - target_active)
-	epsilon_comp *= (1.0 - get_accounting_effect()) # Use function
+	epsilon_comp *= (1.0 - StructuralModel.get_accounting_effect()) # Use function
 
 	# DECAY DE ESTRÉS ACTIVO (v0.8.8)
 	# Si no clickeas por más de 3s, el ruido del potencial de click se disipa.
@@ -2127,7 +1940,7 @@ func update_epsilon_runtime():
 		var excess := passive_ratio - PASSIVE_RATIO_START
 		var rigidity := (1.0 - StructuralModel.omega)
 		var size_factor := log(1.0 + n_struct) * 0.45
-		StructuralModel.epsilon_passive = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - get_accounting_effect()) # Use function
+		StructuralModel.epsilon_passive = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - StructuralModel.get_accounting_effect()) # Use function
 
 	# =================================================
 	# 3) Complejidad estructural
@@ -2209,14 +2022,14 @@ func _input(event):
 	# Lab Mode toggle con tecla L — muestra/oculta fórmulas, genoma y todos los eventos
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_L:
-			lab_mode = not lab_mode
+			UIManager.lab_mode = not UIManager.lab_mode
 			var formula = get_node_or_null("%FormulaLabel")
 			var click_scroll = get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll")
-			if formula: formula.visible = lab_mode
-			if click_scroll: click_scroll.visible = lab_mode
+			if formula: formula.visible = UIManager.lab_mode
+			if click_scroll: click_scroll.visible = UIManager.lab_mode
 			if UIManager.genome_scroll:
-				UIManager.genome_scroll.visible = lab_mode
-			if LogManager.show_all_laps != lab_mode:
+				UIManager.genome_scroll.visible = UIManager.lab_mode
+			if LogManager.show_all_laps != UIManager.lab_mode:
 				toggle_lap_view()
 			if lab_mode:
 				TutorialManager.notify_lab_opened()
@@ -2227,18 +2040,18 @@ func _input(event):
 		if OS.is_debug_build() and event.keycode == KEY_F1 and is_instance_valid(_debug_panel):
 			_debug_panel.visible = not _debug_panel.visible
 
-		# ── DEBUG TIME SKIP (solo en lab_mode) ──────────────────────
-		if lab_mode:
+		# ── DEBUG TIME SKIP (solo en UIManager.lab_mode) ──────────────────────
+		if UIManager.lab_mode:
 			match event.keycode:
 				KEY_F7:
-					run_time += 300.0   # +5 min
-					add_lap("⏩ DEBUG +5min → run_time %.0fs (%.1fmin)" % [run_time, run_time / 60.0])
+					RunManager.run_time += 300.0   # +5 min
+					add_lap("⏩ DEBUG +5min → RunManager.run_time %.0fs (%.1fmin)" % [RunManager.run_time, RunManager.run_time / 60.0])
 				KEY_F12:
-					run_time += 1800.0  # +30 min
-					add_lap("⏩ DEBUG +30min → run_time %.0fs (%.1fmin)" % [run_time, run_time / 60.0])
+					RunManager.run_time += 1800.0  # +30 min
+					add_lap("⏩ DEBUG +30min → RunManager.run_time %.0fs (%.1fmin)" % [RunManager.run_time, RunManager.run_time / 60.0])
 				KEY_BACKSPACE:
-					run_time = 0.0      # reset a 0
-					add_lap("⏩ DEBUG run_time → 0s")
+					RunManager.run_time = 0.0      # reset a 0
+					add_lap("⏩ DEBUG RunManager.run_time → 0s")
 
 		# Atajos de teclado 1-9 para comprar upgrades
 		const HOTKEY_UPGRADES := ["click", "auto", "trueque", "click_mult", "auto_mult",
@@ -2270,14 +2083,14 @@ func check_institution_unlock():
 	if StructuralModel.institution_accounting_unlocked:
 		return
 
-	var p := get_structural_pressure()
+	var p := StructuralModel.get_structural_pressure()
 	# vía 1 (ya existe): crisis
 	var inactivity_trigger = EconomyManager.time_since_last_click > 120.0 and BiosphereEngine.biomasa > 5.0 and StructuralModel.epsilon_runtime > 0.35
 	if p > 15.0 and StructuralModel.omega< 0.25 and StructuralModel.epsilon_runtime > 0.3 or inactivity_trigger:
 		unlock_accounting()
 
 	# vía 2 (NUEVA): estabilidad sostenida
-	elif run_time > 600.0 and StructuralModel.epsilon_runtime < 0.15 and get_active_passive_breakdown().pasivo > 35.0:
+	elif RunManager.run_time > 600.0 and StructuralModel.epsilon_runtime < 0.15 and EconomyManager.get_active_passive_breakdown().pasivo > 35.0:
 		unlock_accounting()
 
 func unlock_accounting():
@@ -2352,8 +2165,8 @@ func update_core_labels():
 
 
 func update_lab_metrics():
-	var contrib :Dictionary= get_contribution_breakdown()
-	var ap :Dictionary= get_active_passive_breakdown()
+	var contrib :Dictionary= EconomyManager.get_contribution_breakdown()
+	var ap :Dictionary= EconomyManager.get_active_passive_breakdown()
 
 	if UIManager.sys_delta_label:
 		UIManager.sys_delta_label.text = "Δ$ estimado / s = +%s" % snapped(contrib.total, 0.01)
@@ -2372,7 +2185,7 @@ func update_lab_metrics():
 			t_str = "+$%.2f/s" % t
 		UIManager.delta_total_label.text = t_str
 
-	UIManager.update_timer(run_time)
+	UIManager.update_timer(RunManager.run_time)
 
 	# Activo vs Pasivo — visual bar
 	if UIManager.sys_active_passive_label:
@@ -2450,13 +2263,13 @@ func is_major_lap(event: String) -> bool:
 	return LogManager.is_major(event)
 
 func update_lap_log():
-	LogManager.update_log_label(self)
+	LogManager.update_log_label()
 
 func update_lap_toggle_button():
-	LogManager.update_toggle_button(self)
+	LogManager.update_toggle_button()
 
 func toggle_lap_view():
-	LogManager.toggle_view(self)
+	LogManager.toggle_view()
 	update_lap_toggle_button()
 # =====================================================
 
@@ -2478,7 +2291,7 @@ func update_ui():
 	update_buttons()
 
 	# Header bar
-	UIManager.update_header_money(EconomyManager.money, delta_per_sec)
+	UIManager.update_header_money(EconomyManager.money, EconomyManager.delta_per_sec)
 	UIManager.update_header_metrics(
 		StructuralModel.epsilon_runtime,
 		StructuralModel.omega,
@@ -2533,3 +2346,10 @@ func update_ui():
 # =====================================================
 #  PERSISTENCIA DE DATOS (Save/Load)
 # =====================================================
+
+
+
+
+
+
+

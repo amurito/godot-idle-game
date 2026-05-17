@@ -16,6 +16,9 @@ var SAVE_PATH: String:
 var _file_existed_on_load: bool = false
 
 func build_save_data(main: Node) -> Dictionary:
+	const MAX_LAPS := 300
+	var all_laps := LogManager.get_lap_array()
+	var laps_to_save := all_laps.slice(max(0, all_laps.size() - MAX_LAPS))
 	return {
 		"economy": {
 			"money": EconomyManager.money,
@@ -37,7 +40,7 @@ func build_save_data(main: Node) -> Dictionary:
 			"epsilon_runtime": StructuralModel.epsilon_runtime,
 			"epsilon_peak": StructuralModel.epsilon_peak,
 			"total_money_generated": EconomyManager.total_money_generated,
-			"run_time": main.run_time,
+			"run_time": RunManager.run_time,
 			"baseline_delta_structural": StructuralModel.baseline_delta_structural,
 			"omega": StructuralModel.omega,
 			"omega_min": StructuralModel.omega_min,
@@ -103,22 +106,26 @@ func build_save_data(main: Node) -> Dictionary:
 			"carnaval_peak_money": RunManager.carnaval_peak_money,
 			"reencarnacion_active": RunManager.reencarnacion_active
 		},
-		"laps": LogManager.get_lap_array()
+		"laps": laps_to_save
 	}
 
 func save_game(main: Node):
-	var data = build_save_data(main)
-	var json_string = JSON.stringify(data)
-	var path := SAVE_PATH
-	# Asegurar que el directorio del slot existe antes de escribir
-	var slot_dir := SlotManager.get_slot_dir(SlotManager.active_slot)
-	if not DirAccess.dir_exists_absolute(slot_dir):
-		DirAccess.make_dir_recursive_absolute(slot_dir)
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	if file:
-		file.store_string(json_string)
-		file.close()
-		print("💾 [SaveManager] Juego guardado en:", path)
+	var data := build_save_data(main)
+	var json_string := JSON.stringify(data)
+	var tmp_path := SAVE_PATH + ".tmp"
+	var f := FileAccess.open(tmp_path, FileAccess.WRITE)
+	if not f:
+		push_error("[SaveManager] No se pudo abrir archivo temporal para guardar.")
+		return
+	f.store_string(json_string)
+	f.close()
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.copy_absolute(SAVE_PATH, SAVE_PATH + ".bak")
+	var err := DirAccess.rename_absolute(tmp_path, SAVE_PATH)
+	if err != OK:
+		push_error("[SaveManager] rename .tmp → .json falló: " + str(err))
+		return
+	print("💾 [SaveManager] Juego guardado en:", SAVE_PATH)
 
 func apply_save_data(main: Node, data: Dictionary) -> void:
 	if data.has("upgrades"):
@@ -146,7 +153,7 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		StructuralModel.epsilon_runtime = s.get("epsilon_runtime", StructuralModel.epsilon_runtime)
 		StructuralModel.epsilon_peak = s.get("epsilon_peak", StructuralModel.epsilon_peak)
 		EconomyManager.total_money_generated = s.get("total_money_generated", EconomyManager.total_money_generated)
-		main.run_time = s.get("run_time", main.run_time)
+		RunManager.run_time = s.get("run_time", RunManager.run_time)
 		StructuralModel.baseline_delta_structural = s.get("baseline_delta_structural", StructuralModel.baseline_delta_structural)
 		StructuralModel.omega = s.get("omega", StructuralModel.omega)
 		StructuralModel.omega_min = s.get("omega_min", StructuralModel.omega_min)
@@ -253,20 +260,14 @@ func load_game(main: Node):
 		return
 	_file_existed_on_load = true
 
-	var file = FileAccess.open(path, FileAccess.READ)
-	if not file:
+	var data = _try_load_json(SAVE_PATH)
+	if data == null:
+		print("⚠️ [SaveManager] Save corrupto o vacío — intentando restaurar desde .bak")
+		data = _try_load_json(SAVE_PATH + ".bak")
+	if data == null:
+		print("❌ [SaveManager] No se pudo cargar ni el save ni el backup. Iniciando run limpia.")
 		return
 
-	var json_string = file.get_as_text()
-	file.close()
-
-	var json = JSON.new()
-	var error = json.parse(json_string)
-	if error != OK:
-		print("❌ [SaveManager] Error al parsear el guardado:", json.get_error_message())
-		return
-
-	var data = json.data
 	apply_save_data(main, data)
 	print("📂 [SaveManager] Juego cargado con éxito.")
 
@@ -281,6 +282,23 @@ func _reset_for_new_slot(main: Node) -> void:
 	AchievementManager.reset_run_state()
 	main.reset_local_state()
 	print("🆕 [SaveManager] Estado reseteado para slot sin savegame.")
+
+func _try_load_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	var f := FileAccess.open(path, FileAccess.READ)
+	if not f:
+		return null
+	var text := f.get_as_text()
+	f.close()
+	if text.strip_edges().is_empty():
+		return null
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		return null
+	if not json.data is Dictionary:
+		return null
+	return json.data
 
 func delete_save_and_restart():
 	# Incrementar contador de ciclos persistentes antes de borrar la run actual

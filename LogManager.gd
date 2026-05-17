@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # LogManager.gd — Autoload
 # Gestiona la bitácora de eventos (laps), el toggle de vista,
@@ -19,22 +19,22 @@ func reset() -> void:
 # =====================================================
 #  API — Agregar eventos
 # =====================================================
-func add(event: String, main: Control) -> void:
+func add(event: String) -> void:
 	lap_events.append({
-		"time": main.format_time(main.run_time),
+		"time": UIManager.format_time(RunManager.run_time),
 		"event": event,
-		"click": snapped(main.get_click_power(), 0.01),
-		"activo_ps": snapped(main.get_click_power() * main.CLICK_RATE, 0.01),
-		"pasivo_ps": snapped(main.get_passive_total(), 0.01),
-		"dominante": main.get_dominant_term(),
-		"mu": snapped(main.cached_mu, 0.01),
+		"click": snapped(EconomyManager.get_click_power(), 0.01),
+		"activo_ps": snapped(EconomyManager.get_click_power() * EconomyManager.CLICK_RATE, 0.01),
+		"pasivo_ps": snapped(EconomyManager.get_passive_total(), 0.01),
+		"dominante": EconomyManager.get_dominant_term(),
+		"mu": snapped(EconomyManager.cached_mu, 0.01),
 		"mu_level": UpgradeManager.level("cognitive"),
 	})
 
-func check_dominance_transition(main: Control) -> void:
-	var d = main.get_dominant_term()
+func check_dominance_transition() -> void:
+	var d := EconomyManager.get_dominant_term()
 	if d != last_dominance:
-		add("Transición de dominio → " + d, main)
+		add("Transición de dominio → " + d)
 		last_dominance = d
 
 # =====================================================
@@ -48,10 +48,10 @@ func is_major(event: String) -> bool:
 		or event.find("Institución") != -1
 	)
 
-func update_log_label(main: Control) -> void:
+func update_log_label() -> void:
 	if not UIManager.lap_log_label: return
-	
-	if not main.lab_mode:
+
+	if not UIManager.lab_mode:
 		UIManager.lap_log_label.clear()
 		return
 
@@ -78,7 +78,7 @@ func update_log_label(main: Control) -> void:
 	UIManager.lap_log_label.clear()
 	UIManager.lap_log_label.append_text(EmojiToRichText.rich(txt))
 
-func update_toggle_button(_main: Control) -> void:
+func update_toggle_button() -> void:
 	if UIManager.toggle_lap_button:
 		UIManager.toggle_lap_button.text = EmojiToRichText.strip(
 			"📜 Ver todos los eventos"
@@ -86,10 +86,10 @@ func update_toggle_button(_main: Control) -> void:
 			else "📋 Ver eventos clave"
 		)
 
-func toggle_view(main: Control) -> void:
+func toggle_view() -> void:
 	show_all_laps = !show_all_laps
-	update_toggle_button(main)
-	update_log_label(main)
+	update_toggle_button()
+	update_log_label()
 
 # =====================================================
 #  API — Save / Load
@@ -130,7 +130,7 @@ func _ensure_runs_dir() -> void:
 
 func build_run_json(main: Control, meta: Dictionary) -> Dictionary:
 	return {
-		"version": main.VERSION,
+		"version": Version.VERSION,
 		"fecha": meta.fecha_humana,
 		"hora": meta.hora_humana,
 		"tiempo_sesion": UIManager.session_time_label.text if UIManager.session_time_label else "",
@@ -138,7 +138,7 @@ func build_run_json(main: Control, meta: Dictionary) -> Dictionary:
 		"activo_vs_pasivo": UIManager.sys_active_passive_label.text if UIManager.sys_active_passive_label else "",
 		"distribucion_aporte": UIManager.sys_breakdown_label.text if UIManager.sys_breakdown_label else "",
 		"lap_markers": UIManager.lap_log_label.text if UIManager.lap_log_label else "",
-		"dominio": main.get_dominant_term(),
+		"dominio": EconomyManager.get_dominant_term(),
 		"laps": lap_events,
 		"evolution": {
 			"final_route": RunManager.final_route,
@@ -170,7 +170,7 @@ func build_clipboard_text(main: Control, meta: Dictionary) -> String:
 	var t := ""
 	t += "IDLE — Modelo Económico Evolutivo\n"
 	t += "Run exportada — %s %s\n" % [meta.fecha_humana, meta.hora_humana]
-	t += "Versión: %s\n" % main.VERSION
+	t += "Versión: %s\n" % Version.VERSION
 	t += "--------------------------------\n\n"
 	t += "--- Sistema — Δ$ y dinámica ---\n"
 	t += (UIManager.sys_delta_label.text if UIManager.sys_delta_label else "") + "\n\n"
@@ -204,3 +204,4 @@ func export_run(main: Control) -> void:
 
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana, meta.hora_humana]
+
