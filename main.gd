@@ -932,7 +932,7 @@ func _update_evolution_progress_bar():
 	
 	if EvoManager.mutation_homeostasis:
 		current_val = RunManager.homeostasis_timer
-		max_val = RunManager.HOMEOSTASIS_TIME_REQUIRED
+		max_val = Balance.HOMEOSTASIS_TIME_REQUIRED
 		show_bar = true # Siempre visible si la ruta est� activa
 			
 	# En el futuro podemos a�adir aqu� Simbiosis, Esporulación, etc.

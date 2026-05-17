@@ -16,7 +16,6 @@ var final_reason := ""
 var homeostasis_mode := false
 var post_homeostasis := false
 var homeostasis_timer := 0.0
-const HOMEOSTASIS_TIME_REQUIRED := 18.0
 
 var resilience_score := 0.0
 var disturbance_timer := 0.0
@@ -37,7 +36,6 @@ var target_evolution: String = ""
 var mente_colmena_active: bool = false
 var mente_colmena_timer: float = 0.0
 var _mente_colmena_buy_timer: float = 0.0
-const MENTE_COLMENA_BUY_INTERVAL := 8.0
 const MENTE_COLMENA_BUY_PRIORITY: Array = [
 	"accounting", "trueque", "auto", "trueque_net", "auto_mult",
 	"cognitive", "persistence", "specialization", "click_mult", "click",
@@ -48,7 +46,6 @@ const MENTE_COLMENA_BUY_PRIORITY: Array = [
 var vacio_hambriento_active: bool = false
 var vacio_hambriento_mult: float = 1.0   # ×100 si activo
 var ascesis_timer: float = 0.0
-const ASCESIS_DURATION := 300.0
 
 # REENCARNACIÓN HEREDADA
 var reencarnacion_active: bool = false
@@ -60,7 +57,6 @@ var carnaval_index: int = 0
 var carnaval_timer: float = 0.0
 var carnaval_total_rotations: int = 0    # Cuenta rotaciones para POLIMORFÍA TOTAL
 var carnaval_peak_money: float = 0.0     # Pico de dinero alcanzado en carnaval
-const CARNAVAL_INTERVAL := 60.0
 const CARNAVAL_POOL := ["homeostasis", "simbiosis", "red_micelial", "parasitismo", "hiperasimilacion"]
 
 # ==================== INICIALIZACIÓN ====================
@@ -116,26 +112,8 @@ func close_run(route: String, reason: String):
 	# Logros — notificar cierre de run (antes de resetear contadores)
 	AchievementManager.on_run_closed(route)
 
-	var pl_to_add := 0
-	match route:
-		"HOMEOSTASIS": pl_to_add = 3
-		"ALLOSTASIS": pl_to_add = 4
-		"HOMEORHESIS": pl_to_add = 8
-		"SIMBIOSIS": pl_to_add = 4
-		# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
-		# No agregar aquí para evitar doble award
-		"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL": pl_to_add = 5
-		"PARASITISMO": pl_to_add = 2
-		"HIPERASIMILACION", "HIPERASIMILACIÓN": pl_to_add = 1
-		"MUTACION_FINAL", "METABOLISMO OSCURO": pl_to_add = 4
-		"MENTE COLMENA DISTRIBUIDA": pl_to_add = 8
-		"DEPREDADOR DE REALIDADES": pl_to_add = 12
-		"COLAPSO DEPREDATORIO": pl_to_add = 8
-		"PANSPERMIA NEGRA": pl_to_add = 0 # PL ya otorgado explícitamente en main.gd
-		"COLAPSO CONTROLADO": pl_to_add = 6 # Fractura Epistémica (Banco Cósmico T3)
-		"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL": pl_to_add = 9
-		"DOMADOR DEL CAOS": pl_to_add = 11
-		"ASCESIS_PROFUNDA": pl_to_add = 7
+	# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
+	var pl_to_add: int = Balance.PL_REWARDS.get(route, 0)
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
@@ -153,70 +131,71 @@ func close_run(route: String, reason: String):
 	if LegacyManager.trascendencia_count >= 1:
 		var ng_bonus := 0
 		var ng_formula := ""
+		var cap: int = Balance.NG_CAPS.get(route, 0)
 		match route:
 			# ── Tier 1 ──
 			"HOMEOSTASIS":
 				var raw := int(floor(resilience_score / 50.0))
-				ng_bonus = min(raw, 6)
-				ng_formula = "resiliencia %.0f / 50 = %d (cap 6)" % [resilience_score, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "resiliencia %.0f / 50 = %d (cap %d)" % [resilience_score, ng_bonus, cap]
 			"SIMBIOSIS":
 				var raw := int(floor(run_time / 300.0))
-				ng_bonus = min(raw, 6)
-				ng_formula = "run_time %.0fs / 300 = %d (cap 6)" % [run_time, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "run_time %.0fs / 300 = %d (cap %d)" % [run_time, ng_bonus, cap]
 			"HIPERASIMILACION", "HIPERASIMILACIÓN":
 				var raw := int(floor(StructuralModel.epsilon_peak * 5.0))
-				ng_bonus = min(raw, 5)
-				ng_formula = "ε_peak %.2f × 5 = %d (cap 5)" % [StructuralModel.epsilon_peak, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "ε_peak %.2f × 5 = %d (cap %d)" % [StructuralModel.epsilon_peak, ng_bonus, cap]
 			"PARASITISMO":
 				var raw := int(floor(BiosphereEngine.biomasa / 8.0))
-				ng_bonus = min(raw, 4)
-				ng_formula = "biomasa %.1f / 8 = %d (cap 4)" % [BiosphereEngine.biomasa, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "biomasa %.1f / 8 = %d (cap %d)" % [BiosphereEngine.biomasa, ng_bonus, cap]
 			# ── Red micelial ──
 			"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL":
 				var raw := int(floor(BiosphereEngine.micelio / 20.0))
-				ng_bonus = min(raw, 5)
-				ng_formula = "micelio %.1f / 20 = %d (cap 5)" % [BiosphereEngine.micelio, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
 			# ── Tier 2 ──
 			"ALLOSTASIS":
-				ng_bonus = min(disturbances_survived, 5)
-				ng_formula = "perturbaciones %d (cap 5)" % disturbances_survived
+				ng_bonus = min(disturbances_survived, cap)
+				ng_formula = "perturbaciones %d (cap %d)" % [disturbances_survived, cap]
 			"HOMEORHESIS":
 				var raw := int(floor(omega_min_peak * 10.0))
-				ng_bonus = min(raw, 7)
-				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 7)" % [omega_min_peak, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap %d)" % [omega_min_peak, ng_bonus, cap]
 			"MUTACION_FINAL", "METABOLISMO OSCURO":
 				var raw := EvoManager.met_oscuro_devoured_count * 2
-				ng_bonus = min(raw, 8)
-				ng_formula = "devoured %d × 2 = %d (cap 8)" % [EvoManager.met_oscuro_devoured_count, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 				var raw := int(floor(carnaval_total_rotations / 2.0))
-				ng_bonus = min(raw, 8)
-				ng_formula = "rotaciones %d / 2 = %d (cap 8)" % [carnaval_total_rotations, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "rotaciones %d / 2 = %d (cap %d)" % [carnaval_total_rotations, ng_bonus, cap]
 			"DOMADOR DEL CAOS":
 				var raw := int(floor(carnaval_peak_money / 500_000.0))
-				ng_bonus = min(raw, 8)
-				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap 8)" % [carnaval_peak_money / 1_000_000.0, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap %d)" % [carnaval_peak_money / 1_000_000.0, ng_bonus, cap]
 			"ASCESIS_PROFUNDA":
 				var raw := int(floor(omega_min_peak * 10.0))
-				ng_bonus = min(raw, 6)
-				ng_formula = "omega_min_peak %.2f × 10 = %d (cap 6)" % [omega_min_peak, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "omega_min_peak %.2f × 10 = %d (cap %d)" % [omega_min_peak, ng_bonus, cap]
 			# ── Tier 3 (late-game) ──
 			"MENTE COLMENA DISTRIBUIDA":
 				var raw := int(floor(run_time / 600.0))
-				ng_bonus = min(raw, 8)
-				ng_formula = "run_time %.0fs / 600 = %d (cap 8)" % [run_time, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "run_time %.0fs / 600 = %d (cap %d)" % [run_time, ng_bonus, cap]
 			"DEPREDADOR DE REALIDADES":
 				var raw := EvoManager.met_oscuro_devoured_count
-				ng_bonus = min(raw, 8)
-				ng_formula = "devoured %d (cap 8)" % EvoManager.met_oscuro_devoured_count
+				ng_bonus = min(raw, cap)
+				ng_formula = "devoured %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, cap]
 			"COLAPSO DEPREDATORIO":
 				var raw := EvoManager.met_oscuro_devoured_count * 2
-				ng_bonus = min(raw, 5)
-				ng_formula = "devoured %d × 2 = %d (cap 5)" % [EvoManager.met_oscuro_devoured_count, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
 			"PANSPERMIA NEGRA":
 				var raw := int(floor(BiosphereEngine.micelio / 20.0))
-				ng_bonus = min(raw, 6)
-				ng_formula = "micelio %.1f / 20 = %d (cap 6)" % [BiosphereEngine.micelio, ng_bonus]
+				ng_bonus = min(raw, cap)
+				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			LogManager.add("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
@@ -265,7 +244,7 @@ func check_homeostasis_final(delta: float):
 			homeostasis_timer = max(homeostasis_timer - delta, 0.0)
 
 	# Tier 1: HOMEOSTASIS — 18s en banda
-	if homeostasis_timer >= HOMEOSTASIS_TIME_REQUIRED and homeostasis_tier_reached < 1:
+	if homeostasis_timer >= Balance.HOMEOSTASIS_TIME_REQUIRED and homeostasis_tier_reached < 1:
 		homeostasis_tier_reached = 1
 		post_homeostasis = true
 		LogManager.add("⚖️ Tier 1 desbloqueado: HOMEOSTASIS — podés cerrar la run o seguir")
@@ -520,7 +499,7 @@ func _activate_vacio_hambriento() -> void:
 			consumed += 1
 
 	vacio_hambriento_active = true
-	vacio_hambriento_mult = 100.0
+	vacio_hambriento_mult = Balance.VACIO_HAMBRIENTO_MULT
 	LegacyManager.save_legacy()
 	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
 	LogManager.add("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
@@ -548,7 +527,7 @@ func _activate_reencarnacion() -> void:
 	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
 	LogManager.add("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
 
-## Tick del Carnaval: rotar mutación cada CARNAVAL_INTERVAL segundos
+## Tick del Carnaval: rotar mutación cada Balance.CARNAVAL_INTERVAL segundos
 func update_carnaval(delta: float) -> void:
 	if run_closed or not carnaval_active or carnaval_mutations.is_empty():
 		return
@@ -557,7 +536,7 @@ func update_carnaval(delta: float) -> void:
 	# Actualizar pico de dinero alcanzado en carnaval
 	carnaval_peak_money = max(carnaval_peak_money, EconomyManager.money)
 
-	if carnaval_timer >= CARNAVAL_INTERVAL:
+	if carnaval_timer >= Balance.CARNAVAL_INTERVAL:
 		carnaval_timer = 0.0
 		carnaval_index = (carnaval_index + 1) % carnaval_mutations.size()
 		carnaval_total_rotations += 1
@@ -593,7 +572,7 @@ func check_ascesis_profunda(delta: float) -> void:
 	var epsilon_ok := StructuralModel.epsilon_runtime < 0.25
 	if biomasa_ok and sin_pasivo and epsilon_ok:
 		ascesis_timer += delta
-		if ascesis_timer >= ASCESIS_DURATION:
+		if ascesis_timer >= Balance.ASCESIS_DURATION:
 			close_run("ASCESIS_PROFUNDA", "La renuncia absoluta genera más estabilidad que cualquier acumulación")
 	# Si fallan las condiciones el timer se pausa (no se resetea)
 
@@ -664,7 +643,7 @@ func activate_mente_colmena() -> void:
 
 func tick_auto_buy(dt: float) -> void:
 	_mente_colmena_buy_timer += dt
-	if _mente_colmena_buy_timer < MENTE_COLMENA_BUY_INTERVAL:
+	if _mente_colmena_buy_timer < Balance.MENTE_COLMENA_BUY_INTERVAL:
 		return
 	_mente_colmena_buy_timer = 0.0
 	_mente_colmena_auto_buy()

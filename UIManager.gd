@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # UIManager.gd — Autoload
 # Encargado de la actualización visual y gestión de referencias de UI.
@@ -624,7 +624,7 @@ func build_evo_checklist(_main: Node) -> String:
 			t += ch + "Trabajo Manual + Trueque desbloqueados[/color]\n"
 			ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 			t += ch + "Contabilidad nvl 1 (%d)[/color]\n" % acc
-			var pct := int(min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0)
+			var pct := int(min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0)
 			t += "[color=cyan]Estabilizando: %d%% (%.0f/18s)[/color]\n" % [pct, RunManager.homeostasis_timer]
 		# Tier 2 — ALLOSTASIS
 		elif tier == 1:
@@ -672,7 +672,7 @@ func build_evo_checklist(_main: Node) -> String:
 
 		# Hito 2: Sincronización (Primordio normal O Mente Colmena NG+)
 		if EvoManager.primordio_active:
-			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / EvoManager.PRIMORDIO_DURATION * 100.0))
+			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / Balance.PRIMORDIO_DURATION * 100.0))
 		elif EvoManager.nucleo_conciencia:
 			t += ok_color + "[x] Núcleo de Conciencia Sincronizado[/color]\n"
 		else:
@@ -941,16 +941,16 @@ func build_genome_text() -> String:
 			var pas_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if sin_p else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var eps_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if eps_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			t += "Bio: " + bio_s + "  Pasivo: " + pas_s + "  e: " + eps_s + "\n"
-			var prog: float = clamp(RunManager.ascesis_timer / float(RunManager.ASCESIS_DURATION), 0.0, 1.0)
+			var prog: float = clamp(RunManager.ascesis_timer / float(Balance.ASCESIS_DURATION), 0.0, 1.0)
 			var filled: int = int(prog * 20)
 			var bar: String = "[" + "X".repeat(filled) + ".".repeat(20 - filled) + "]"
-			t += bar + " %ds/%ds\n\n" % [int(RunManager.ascesis_timer), RunManager.ASCESIS_DURATION]
+			t += bar + " %ds/%ds\n\n" % [int(RunManager.ascesis_timer), Balance.ASCESIS_DURATION]
 	elif RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
 		var idx := RunManager.carnaval_index
 		var muts := RunManager.carnaval_mutations
 		t += "[b][color=#ff8833]🎭 CARNAVAL DE MUTACIONES[/color][/b]\n"
 		t += "Rotación: [color=#ffaa55]%s[/color] → %s → %s\n" % [muts[idx], muts[(idx+1)%3], muts[(idx+2)%3]]
-		var secs_left := int(RunManager.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
+		var secs_left := int(Balance.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
 		t += "[color=#888888]Próxima rotación en %ds[/color]\n" % secs_left
 		var rot := RunManager.carnaval_total_rotations
 		var peak := RunManager.carnaval_peak_money
@@ -1180,7 +1180,7 @@ func build_bifurcation_data() -> Dictionary:
 			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"]
 
 		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
-			var ratio = min(RunManager.homeostasis_timer / RunManager.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
+			var ratio = min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
 			h_txt += "\n[color=#ffff00]Estabilizando... %d%%[/color][/center]" % int(ratio)
 		else:
 			h_txt += "\n[color=#555555]Requiere sostenerse por 18s tras activarse.[/color][/center]"
@@ -1286,7 +1286,7 @@ func build_epsilon_sticky_text(_main: Control) -> String:
 		var bio := BiosphereEngine.biomasa
 		var dev := EvoManager.met_oscuro_devoured_count
 		var mt := EvoManager.met_oscuro_timer
-		var req := EvoManager.MET_OSCURO_REQUIRED_TIME
+		var req := Balance.MET_OSCURO_REQUIRED_TIME
 		if mt > 0.0:
 			var pct := mt / req
 			var filled := int(pct * 16)
@@ -1374,7 +1374,7 @@ func update_fungal_cycle_bar() -> void:
 					bar.tooltip_text = "CICLO COMPLETADO: SETA MADURA"
 					bar.value = 100.0
 				elif EvoManager.primordio_active:
-					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
+					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
 					bar.tooltip_text = "PRIMORDIO ACTIVO — %.0fs restantes" % t_left
 				else:
 					bar.tooltip_text = "Micelio: %d%%  — Ciclo Biológico Activo" % int(BiosphereEngine.micelio)
@@ -1385,7 +1385,7 @@ func update_fungal_cycle_bar() -> void:
 				primordio_button.visible = not EvoManager.seta_formada
 				primordio_button.disabled = not puede_iniciar
 				if EvoManager.primordio_active:
-					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
+					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
 					primordio_button.text = "Primordio activo — %.0fs" % t_left
 					primordio_button.disabled = true
 				elif puede_iniciar:

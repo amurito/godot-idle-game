@@ -40,7 +40,6 @@ enum RedBranch { NONE, COLONIZATION, SYMBIOSIS }
 var red_branch_selected: int = RedBranch.NONE
 
 # === CICLO BIOLÓGICO: PRIMORDIO ===
-const PRIMORDIO_DURATION := 90.0
 var primordio_active: bool = false
 var primordio_timer: float = 0.0
 var primordio_abort_count: int = 0
@@ -59,14 +58,12 @@ const DEPREDADOR_STATUS_INTERVAL := 10.0
 # === NG+ METABOLISMO OSCURO (Post-Depredador) ===
 var mutation_met_oscuro := false
 var met_oscuro_timer: float = 0.0  # Progreso de activación (0→15s)
-const MET_OSCURO_REQUIRED_TIME := 15.0
 var met_oscuro_devoured_count: int = 0  # Upgrades devorados durante la run
 # Runtime process vars (fase activa)
 var _met_oscuro_income_accum: float = 0.0
 var _met_oscuro_status_timer: float = 0.0
 var _met_oscuro_active_time: float = 0.0
 const MET_OSCURO_STATUS_INTERVAL := 12.0
-const MET_OSCURO_SEAL_COOLDOWN := 120.0
 
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
@@ -235,9 +232,9 @@ func _update_met_oscuro(ctx: Dictionary) -> void:
 		met_oscuro_timer += RunManager.LOGIC_TICK
 		if prev_mt == 0.0 and met_oscuro_timer > 0.0:
 			LogManager.add("🌑 BIOQUÍMICA OSCURA — Recursos críticos detectados ($%.0f). Estabilizando en %ds… (devours: %d, bio %.1f)" \
-				% [EconomyManager.money, int(MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa])
+				% [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa])
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
-		var threshold := MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		var threshold := Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		_set_genome_state("met_oscuro", "activo" if met_oscuro_timer >= threshold else "latente")
 	else:
 		met_oscuro_timer = max(0.0, met_oscuro_timer - RunManager.LOGIC_TICK * 1.5)
@@ -611,7 +608,7 @@ func _process_primordio_biological(_main_ref: Node):
 			_abort_primordio(reason)
 			return
 
-		if primordio_timer >= PRIMORDIO_DURATION:
+		if primordio_timer >= Balance.PRIMORDIO_DURATION:
 			_complete_primordio()
 
 func _process_primordio_mechanical(_main_ref: Node):
@@ -628,7 +625,7 @@ func _process_primordio_mechanical(_main_ref: Node):
 		var speed_mult = clamp(1.0 + (0.5 - StructuralModel.epsilon_runtime), 0.5, 2.0)
 		primordio_timer += RunManager.LOGIC_TICK * speed_mult
 
-		if primordio_timer >= PRIMORDIO_DURATION:
+		if primordio_timer >= Balance.PRIMORDIO_DURATION:
 			primordio_active = false
 			nucleo_conciencia = true
 			LogManager.add("💾 HITO: Núcleo de Conciencia Sincronizado")
@@ -781,7 +778,7 @@ func process_met_oscuro(dt: float) -> bool:
 	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
 		RunManager.close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")
 		return false
-	return _met_oscuro_active_time >= MET_OSCURO_SEAL_COOLDOWN
+	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func process_depredador(dt: float) -> void:
 	if met_oscuro_devoured_count >= 1 \
