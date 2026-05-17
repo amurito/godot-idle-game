@@ -1393,7 +1393,7 @@ func _update_legacy_indicators() -> void:
 	if bio_mult > 1.01 or absorb > 0.0:
 		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
 	if RunManager.mente_colmena_active:
-		_add_chip.call(EmojiToRichText.strip("🧠IA"), "Mente Colmena activa\nAuto-click x10 por segundo", Color(0.9, 0.3, 0.9))
+		_add_chip.call(EmojiToRichText.strip("🧠IA"), "Mente Colmena activa\nClick ×10/s + compra automática de upgrades", Color(0.9, 0.3, 0.9))
 
 
 
