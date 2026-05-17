@@ -67,8 +67,15 @@ var structural_omg_value     # OmgValue label
 var structural_pers_value    # PersValue label
 var structural_acc_value     # AccValue label
 
-
-
+var evo_choice_panel         # Panel de elección evolutiva
+var opt_homeostasis          # Opción Homeostasis
+var opt_colonization         # Opción Colonización
+var opt_symbiosis            # Opción Simbiosis
+var btn_homeostasis          # Botón Homeostasis
+var btn_colonization         # Botón Colonización
+var btn_symbiosis            # Botón Simbiosis
+var primordio_button         # Botón Primordio (Ciclo Biológico)
+var sporulation_final_button # Botón final (Seta/Singularidad/Panspermia)
 
 func setup(ui_root: Control):
 	root = ui_root
@@ -159,6 +166,17 @@ func setup(ui_root: Control):
 		# Insertar antes del spacer derecho (último hijo)
 		header_content.add_child(route_badge_label)
 		header_content.move_child(route_badge_label, header_content.get_child_count() - 2)
+
+	# Panel evolutivo y botones de ramificación (hijos de la escena raíz)
+	evo_choice_panel = _find_scene("EvoChoicePanel")
+	opt_homeostasis = _find_scene("OptHomeostasis")
+	opt_colonization = _find_scene("OptColonization")
+	opt_symbiosis = _find_scene("OptSymbiosis")
+	btn_homeostasis = _find_scene("BtnHomeostasis")
+	btn_colonization = _find_scene("BtnColonization")
+	btn_symbiosis = _find_scene("BtnSymbiosis")
+	primordio_button = _find_scene("PrimordioButton")
+	sporulation_final_button = _find_scene("SporulationFinalButton")
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
 
@@ -1107,7 +1125,7 @@ func update_mutation_center_panel(main: Node = null) -> void:
 # =====================================================
 # BIFURCATION PANEL DATA BUILDER
 # =====================================================
-func build_bifurcation_data(main: Control) -> Dictionary:
+func build_bifurcation_data() -> Dictionary:
 	var hifas = BiosphereEngine.hifas
 	var acc_lvl = UpgradeManager.level("accounting")
 	var act_domina = EconomyManager.get_active_passive_breakdown().activo > EconomyManager.get_active_passive_breakdown().pasivo
@@ -1199,7 +1217,7 @@ func build_bifurcation_data(main: Control) -> Dictionary:
 
 	elif EvoManager.mutation_homeostasis:
 		data["header"] = "TRANSICIÓN ALOSTÁTICA (TIER 2)"
-		var works = EvoManager.is_allostasis_ready(main)
+		var works = EvoManager.is_allostasis_ready()
 
 		var h_txt = "[center]🌪️ ALLOSTASIS\nRegulación Dinámica del Sistema.\n\n"
 		h_txt += "[color=#00ff00]+ Ingresos Globales x3.0[/color]\n"
@@ -1288,5 +1306,115 @@ func build_epsilon_sticky_text(main: Control) -> String:
 		t += "\nCierre auto: Bio≥100 o $≥1M"
 
 	return t
+
+# =====================================================
+# PANEL DE BIFURCACIÓN Y BARRA DE CICLO FÚNGICO
+# =====================================================
+
+func update_bifurcation_panel() -> void:
+	if not is_instance_valid(evo_choice_panel) or not evo_choice_panel.visible:
+		return
+
+	var data := build_bifurcation_data()
+
+	evo_choice_panel.get_node("Margin/VBox/TopBar/Header").text = data["header"]
+
+	if data["tier_mode"] == "tier1":
+		opt_homeostasis.visible = true
+		opt_colonization.visible = true
+		opt_symbiosis.visible = true
+
+		opt_homeostasis.find_child("Desc").text = data["homeostasis_text"]
+		btn_homeostasis.text = "Equilibrar"
+		btn_homeostasis.disabled = not data["homeostasis_ready"]
+
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["red_micelial_text"]
+		btn_colonization.text = "Ramificar"
+		btn_colonization.disabled = not data["red_micelial_ready"]
+
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["simbiosis_text"]
+		btn_symbiosis.text = "Fusionar"
+		btn_symbiosis.disabled = not data["simbiosis_ready"]
+
+	elif data["tier_mode"] == "tier2_homeostasis":
+		opt_homeostasis.visible = true
+		opt_colonization.visible = false
+		opt_symbiosis.visible = false
+
+		opt_homeostasis.find_child("Desc").text = data["allostasis_text"]
+		btn_homeostasis.text = "¡EVOLUCIONAR!" if data["allostasis_ready"] else "[REQUISITOS NO MET]"
+		btn_homeostasis.disabled = not data["allostasis_ready"]
+		btn_homeostasis.modulate = Color(0, 1, 1)
+
+	else:
+		opt_homeostasis.visible = false
+		opt_colonization.visible = true
+		opt_symbiosis.visible = true
+
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["colonization_text"]
+		btn_colonization.text = "Colonizar"
+		btn_colonization.disabled = not data["colonization_ready"]
+
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["symbiosis_text"]
+		btn_symbiosis.disabled = not data["symbiosis_ready"]
+		btn_symbiosis.text = "Integrar Hardware [req. Cont. 2]" if not data["symbiosis_ready"] else "Integrar Hardware"
+
+func update_fungal_cycle_bar() -> void:
+	var bar = fungal_cycle_bar
+
+	if EvoManager.red_branch_selected != EvoManager.RedBranch.NONE:
+		if is_instance_valid(bar):
+			bar.visible = (EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION)
+			if bar.visible:
+				bar.value = BiosphereEngine.micelio
+				if EvoManager.seta_formada:
+					bar.tooltip_text = "CICLO COMPLETADO: SETA MADURA"
+					bar.value = 100.0
+				elif EvoManager.primordio_active:
+					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
+					bar.tooltip_text = "PRIMORDIO ACTIVO — %.0fs restantes" % t_left
+				else:
+					bar.tooltip_text = "Micelio: %d%%  — Ciclo Biológico Activo" % int(BiosphereEngine.micelio)
+
+		if is_instance_valid(primordio_button):
+			if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+				var puede_iniciar := BiosphereEngine.micelio >= 60.0 and not EvoManager.primordio_active and not EvoManager.seta_formada
+				primordio_button.visible = not EvoManager.seta_formada
+				primordio_button.disabled = not puede_iniciar
+				if EvoManager.primordio_active:
+					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
+					primordio_button.text = "Primordio activo — %.0fs" % t_left
+					primordio_button.disabled = true
+				elif puede_iniciar:
+					var costo := 20.0 * (1.0 + EvoManager.primordio_abort_count * 0.2)
+					primordio_button.text = "Iniciar Primordio (%.0f%% micelio)" % costo
+				else:
+					primordio_button.text = "Iniciar Primordio (micelio < 60%%)"
+			else:
+				primordio_button.visible = false
+
+		if is_instance_valid(sporulation_final_button):
+			var show_panspermia = LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION and EvoManager.primordio_active
+			sporulation_final_button.visible = EvoManager.seta_formada or EvoManager.nucleo_conciencia or show_panspermia
+			sporulation_final_button.disabled = false
+
+			if EvoManager.nucleo_conciencia:
+				sporulation_final_button.text = "CONECTAR SINGULARIDAD (Final)"
+				sporulation_final_button.modulate = Color(0.1, 1.0, 1.0)
+			elif EvoManager.seta_formada:
+				sporulation_final_button.text = "DISPERSAR ESPORAS (Final)"
+				sporulation_final_button.modulate = Color(0.4, 1.0, 0.2)
+			elif show_panspermia:
+				if EconomyManager.money >= 100000.0:
+					sporulation_final_button.text = "PANSPERMIA NEGRA ($100k) (Final)"
+					sporulation_final_button.modulate = Color(0.8, 0.2, 1.0)
+				else:
+					sporulation_final_button.text = "REQUIERE $100k PARA PANSPERMIA"
+					sporulation_final_button.disabled = true
+					sporulation_final_button.modulate = Color(0.4, 0.1, 0.5)
+	else:
+		if is_instance_valid(bar): bar.visible = false
+		if is_instance_valid(primordio_button): primordio_button.visible = false
+		if is_instance_valid(sporulation_final_button): sporulation_final_button.visible = false
 
 

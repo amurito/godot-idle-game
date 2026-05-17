@@ -59,13 +59,7 @@ const AUTOSAVE_INTERVAL := 30.0
 @onready var evolution_bar = $UIRootContainer/LeftPanel/CenterPanel/EvolutionProgressBar
 @onready var bottom_left_panel = $BottomLeftControls
 @onready var evo_choice_panel = $EvoChoicePanel
-@onready var btn_colonization = %BtnColonization
-@onready var btn_symbiosis = %BtnSymbiosis
-@onready var btn_homeostasis = %BtnHomeostasis
 @onready var btn_evolve = %BtnEvolve
-@onready var opt_homeostasis = %OptHomeostasis
-@onready var opt_colonization = %OptColonization
-@onready var opt_symbiosis = %OptSymbiosis
 @onready var legacy_panel = $LegacyPanel
 @onready var legacy_list = %LegacyList
 @onready var pl_label = %PLLabel
@@ -996,142 +990,14 @@ func _on_mutation_activated(id: String, display_name: String):
 		# CARNAVAL: no mostrar panel � red_micelial rota temporalmente, sin bifurcaci�n
 		dimmer.visible = true
 		evo_choice_panel.visible = true
-		update_bifurcation_panel()
+		UIManager.update_bifurcation_panel()
 	
 	update_ui()
-
-func update_bifurcation_panel():
-	if not is_instance_valid(evo_choice_panel) or not evo_choice_panel.visible:
-		return
-
-	var data := UIManager.build_bifurcation_data(self)
-
-	# Asignar header
-	evo_choice_panel.get_node("Margin/VBox/TopBar/Header").text = data["header"]
-
-	# MODO TIER 1: Selecci�n inicial
-	if data["tier_mode"] == "tier1":
-		opt_homeostasis.visible = true
-		opt_colonization.visible = true
-		opt_symbiosis.visible = true
-
-		opt_homeostasis.find_child("Icon").text = EmojiToRichText.strip("⚖️")
-		var _hd = opt_homeostasis.find_child("Desc")
-		_hd.clear(); _hd.append_text(EmojiToRichText.rich(data["homeostasis_text"]))
-		btn_homeostasis.text = "Equilibrar"
-		btn_homeostasis.disabled = not data["homeostasis_ready"]
-
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = EmojiToRichText.strip("🕸️")
-		var _cd1 = evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc")
-		_cd1.clear(); _cd1.append_text(EmojiToRichText.rich(data["red_micelial_text"]))
-		btn_colonization.text = "Ramificar"
-		btn_colonization.disabled = not data["red_micelial_ready"]
-
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = EmojiToRichText.strip("🌱")
-		var _sd1 = evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc")
-		_sd1.clear(); _sd1.append_text(EmojiToRichText.rich(data["simbiosis_text"]))
-		btn_symbiosis.text = "Fusionar"
-		btn_symbiosis.disabled = not data["simbiosis_ready"]
-
-	# MODO TIER 2: Homeostasis
-	elif data["tier_mode"] == "tier2_homeostasis":
-		opt_homeostasis.visible = true
-		opt_colonization.visible = false
-		opt_symbiosis.visible = false
-
-		opt_homeostasis.find_child("Icon").text = EmojiToRichText.strip("💎")
-		var _ad = opt_homeostasis.find_child("Desc")
-		_ad.clear(); _ad.append_text(EmojiToRichText.rich(data["allostasis_text"]))
-		btn_homeostasis.text = "¡EVOLUCIONAR!" if data["allostasis_ready"] else "[REQUISITOS NO MET]"
-		btn_homeostasis.disabled = not data["allostasis_ready"]
-		btn_homeostasis.modulate = Color(0, 1, 1)  # Cyan
-
-	# MODO TIER 2: Sub-ramas de Red Micelial
-	else:
-		opt_homeostasis.visible = false
-		opt_colonization.visible = true
-		opt_symbiosis.visible = true
-
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon").text = EmojiToRichText.strip("🌿")
-		var _cd2 = evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc")
-		_cd2.clear(); _cd2.append_text(EmojiToRichText.rich(data["colonization_text"]))
-		btn_colonization.text = "Colonizar"
-		btn_colonization.disabled = not data["colonization_ready"]
-
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon").text = EmojiToRichText.strip("💾")
-		var _sd2 = evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc")
-		_sd2.clear(); _sd2.append_text(EmojiToRichText.rich(data["symbiosis_text"]))
-		btn_symbiosis.disabled = not data["symbiosis_ready"]
-		btn_symbiosis.text = "Integrar Hardware [req. Cont. 2]" if not data["symbiosis_ready"] else "Integrar Hardware"
-
-func update_fungal_cycle_bar() -> void:
-	var bar = UIManager.fungal_cycle_bar
-	var btn_p = get_node_or_null("%PrimordioButton")
-	var btn_f = get_node_or_null("%SporulationFinalButton")
-	
-	if EvoManager.red_branch_selected != EvoManager.RedBranch.NONE:
-		# --- Barra de Micelio (Solo en Colonizaci�n) ---
-		if is_instance_valid(bar):
-			bar.visible = (EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION)
-			if bar.visible:
-				bar.value = BiosphereEngine.micelio
-				if EvoManager.seta_formada:
-					bar.tooltip_text = "?? CICLO COMPLETADO: SETA MADURA"
-					bar.value = 100.0
-				elif EvoManager.primordio_active:
-					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					bar.tooltip_text = "?? PRIMORDIO ACTIVO � %.0fs restantes" % t_left
-				else:
-					bar.tooltip_text = "Micelio: %d%%  � Ciclo Biol�gico Activo" % int(BiosphereEngine.micelio)
-		
-		# --- Bot�n Primordio (Solo en Colonizaci�n) ---
-		if is_instance_valid(btn_p):
-			if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-				var puede_iniciar := BiosphereEngine.micelio >= 60.0 and not EvoManager.primordio_active and not EvoManager.seta_formada
-				btn_p.visible = not EvoManager.seta_formada
-				btn_p.disabled = not puede_iniciar
-				if EvoManager.primordio_active:
-					var t_left := EvoManager.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					btn_p.text = EmojiToRichText.strip("🟡 Primordio activo — %.0fs" % t_left)
-					btn_p.disabled = true
-				elif puede_iniciar:
-					var costo := 20.0 * (1.0 + EvoManager.primordio_abort_count * 0.2)
-					btn_p.text = EmojiToRichText.strip("🟡 Iniciar Primordio (%.0f%% micelio)" % costo)
-				else:
-					btn_p.text = EmojiToRichText.strip("🟡 Iniciar Primordio (micelio < 60%%)")
-			else:
-				btn_p.visible = false
-
-		# --- Botón Final (Seta o Núcleo o Panspermia) ---
-		if is_instance_valid(btn_f):
-			var show_panspermia = LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION and EvoManager.primordio_active
-			btn_f.visible = EvoManager.seta_formada or EvoManager.nucleo_conciencia or show_panspermia
-			btn_f.disabled = false
-			
-			if EvoManager.nucleo_conciencia:
-				btn_f.text = EmojiToRichText.strip("⚡ CONECTAR SINGULARIDAD (Final)")
-				btn_f.modulate = Color(0.1, 1.0, 1.0) # Cian neón
-			elif EvoManager.seta_formada:
-				btn_f.text = EmojiToRichText.strip("🔵 DISPERSAR ESPORAS (Final)")
-				btn_f.modulate = Color(0.4, 1.0, 0.2) # Verde neón
-			elif show_panspermia:
-				if EconomyManager.money >= 100000.0:
-					btn_f.text = EmojiToRichText.strip("🚀 PANSPERMIA NEGRA ($100k) (Final)")
-					btn_f.modulate = Color(0.8, 0.2, 1.0) # Magenta brillante
-				else:
-					btn_f.text = EmojiToRichText.strip("🚀 REQUIERE $100k PARA PANSPERMIA")
-					btn_f.disabled = true
-					btn_f.modulate = Color(0.4, 0.1, 0.5)
-			
-	else:
-		if is_instance_valid(bar): bar.visible = false
-		if is_instance_valid(btn_p): btn_p.visible = false
-		if is_instance_valid(btn_f): btn_f.visible = false
 
 func _on_btn_evolve_pressed():
 	evo_choice_panel.visible = true
 	$DimmerBackground.visible = true
-	update_bifurcation_panel()
+	UIManager.update_bifurcation_panel()
 
 func _on_close_evo_button_pressed():
 	evo_choice_panel.visible = false
@@ -1929,8 +1795,8 @@ func toggle_lap_view():
 
 func update_ui():
 	update_epsilon_sticky()
-	update_bifurcation_panel()
-	update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biol�gico)
+	UIManager.update_bifurcation_panel()
+	UIManager.update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biol�gico)
 
 	check_dominance_transition()
 	check_achievements()
