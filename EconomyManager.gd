@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # EconomyManager.gd — Autoload
 # Gestiona dinero, ingresos (click, auto, trueque) y economía del juego.
@@ -286,4 +286,3 @@ func update_economy(delta: float):
 	var delta_money = delta_per_sec * delta
 	money += delta_money
 	total_money_generated += delta_money
-
