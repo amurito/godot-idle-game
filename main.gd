@@ -398,7 +398,7 @@ func _ready():
 	bottom_left_panel.add_child(bios_btn)
 
 	_reset_btn = Button.new()
-	_reset_btn.text = "Reset"
+	_reset_btn.text = tr("GAME_BTN_RESET")
 	_reset_btn.modulate = Color(0.8, 0.4, 0.4)
 	_reset_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	_reset_btn.pressed.connect(func(): SaveManager.confirm_and_reset(self))
@@ -411,7 +411,7 @@ func _ready():
 	bottom_left_panel.add_child(legacy_btn)
 
 	var settings_btn := Button.new()
-	settings_btn.text = "Ajustes"
+	settings_btn.text = tr("GAME_BTN_SETTINGS")
 	settings_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	settings_btn.pressed.connect(func(): AudioManager.show_settings_panel(self))
 	bottom_left_panel.add_child(settings_btn)
@@ -419,7 +419,7 @@ func _ready():
 	var shortcuts_btn := Button.new()
 	shortcuts_btn.text = "?"
 	shortcuts_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
-	shortcuts_btn.tooltip_text = "Atajos de teclado e indicadores"
+	shortcuts_btn.tooltip_text = tr("GAME_SHORTCUTS_TOOLTIP")
 	shortcuts_btn.custom_minimum_size = Vector2(32.0, 0.0)
 	shortcuts_btn.pressed.connect(func(): TutorialManager.toggle_shortcuts_panel(self))
 	bottom_left_panel.add_child(shortcuts_btn)
@@ -1147,7 +1147,7 @@ func _refresh_legacy_store():
 	_update_legacy_indicators()
 	var pl := LegacyManager.legacy_points
 	var buffer := LegacyManager.internal_spores_total
-	pl_label.text = "PL Disponibles: %d    Reserva biótica: %.1f / 50 esporas" % [pl, buffer]
+	pl_label.text = tr("GAME_PL_COUNTER") % [pl, buffer]
 	for child in legacy_list.get_children():
 		child.queue_free()
 
@@ -1241,7 +1241,7 @@ func _build_legacy_item(id: String) -> Control:
 		var is_on: bool = LegacyManager.buff_enabled.get(id, true)
 		var toggle_btn: Button = Button.new()
 		toggle_btn.custom_minimum_size.y = 22
-		toggle_btn.text = "OK ACTIVO" if is_on else "X INACTIVO"
+		toggle_btn.text = tr("GAME_BUFF_ACTIVE") if is_on else tr("GAME_BUFF_INACTIVE")
 		toggle_btn.modulate = Color(0.4, 1.0, 0.5) if is_on else Color(0.6, 0.6, 0.6)
 		toggle_btn.pressed.connect(func():
 			var new_state: bool = LegacyManager.toggle_buff_enabled(id)
@@ -1256,7 +1256,7 @@ func _build_legacy_item(id: String) -> Control:
 		if not is_maxed:
 			var lvl_btn: Button = Button.new()
 			lvl_btn.custom_minimum_size.y = 22
-			lvl_btn.text = "Nv.%d  %d PL" % [lvl + 1, cost]
+			lvl_btn.text = tr("GAME_BTN_LEVEL") % [lvl + 1, cost]
 			lvl_btn.disabled = not LegacyManager.can_afford(id)
 			lvl_btn.pressed.connect(func():
 				if LegacyManager.purchase_legacy(id):
@@ -1268,10 +1268,10 @@ func _build_legacy_item(id: String) -> Control:
 		var btn: Button = Button.new()
 		btn.custom_minimum_size.y = 22
 		if not LegacyManager.is_unlockable(id):
-			btn.text = "BLOQUEADO"
+			btn.text = tr("GAME_BTN_LOCKED")
 			btn.disabled = true
 		elif def.get("cost", 0) == 0:
-			btn.text = "GRATIS"
+			btn.text = tr("GAME_BTN_FREE")
 		else:
 			btn.text = "%d PL" % cost
 			btn.disabled = not LegacyManager.can_afford(id)
@@ -1767,10 +1767,10 @@ func update_buttons():
 			btn.update_appearance(EconomyManager.money)
 	if is_instance_valid(_reset_btn):
 		if RunManager.run_closed:
-			_reset_btn.text = "Nueva Run"
+			_reset_btn.text = tr("GAME_BTN_NEW_RUN")
 			_reset_btn.modulate = Color(0.4, 0.85, 0.55)
 		else:
-			_reset_btn.text = "Reset"
+			_reset_btn.text = tr("GAME_BTN_RESET")
 			_reset_btn.modulate = Color(0.8, 0.4, 0.4)
 
 func is_major_lap(event: String) -> bool:

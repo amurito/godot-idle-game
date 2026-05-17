@@ -66,6 +66,68 @@ const TRANSLATIONS := {
 		"SET_HIGH_CONTRAST": "Alto contraste",
 		"SET_COLORBLIND": "Daltonismo:",
 		"SET_COLORBLIND_OFF": "Desactivado",
+
+		# === NUEVA RUN ===
+		"MM_NEW_RUN": "Nueva Run",
+		"MM_NEW_RUN_TOOLTIP": "Inicia una nueva run preservando tu Banco Genético y Banco Cósmico.",
+		"MM_TRANSCEND_COUNTER": "Ξ %d   ·   Trascendencias: %d",
+		"MM_NEW_RUN_TITLE": "Iniciar Nueva Run",
+		"MM_NEW_RUN_TEXT": "¿Iniciás un nuevo ciclo biótico?\n\n✦ Se PRESERVAN:\n  · Banco Cósmico (%d Ξ)\n  · Banco Genético (PL: %d)\n  · Rutas completadas\n\n⚠ Se RESETEAN:\n  · Upgrades, dinero, mutaciones\n  · Progreso de la run actual",
+		"MM_NEW_RUN_OK": "▶ Iniciar",
+		"MM_ROUTE_PICKER_SUBTITLE": "Cada ruta altera las reglas de esta run. La elección es permanente.",
+
+		# === SLOTS ===
+		"SLOT_START": "Iniciar",
+		"SLOT_RENAME_BTN": "Renombrar",
+		"SLOT_DELETE_BTN": "Borrar",
+		"SLOT_NO_DELETE_LAST": "No se puede borrar el último slot",
+		"SLOT_EMPTY_LABEL": "Slot vacío disponible",
+		"SLOT_CREATE_BTN": "Crear nuevo",
+		"SLOT_UNLOCK_HINT": "Comprá 'Slot Adicional' en el Banco Genético / Conocimiento para desbloquear más slots.",
+		"SLOT_STATS_EMPTY": "Slot vacío — sin runs registradas",
+		"SLOT_ACTIVE_TAG": "  [activo]",
+		"SLOT_NEW_TITLE": "Nuevo slot",
+		"SLOT_NEW_NAME_LABEL": "Nombre del slot:",
+		"SLOT_RENAME_TITLE": "Renombrar slot",
+		"SLOT_RENAME_NAME_LABEL": "Nuevo nombre:",
+		"SLOT_DELETE_TITLE": "Borrar slot",
+		"SLOT_DELETE_TEXT": "¿Borrar el slot '%s'?\nEste universo paralelo se perderá: legado, esencia, trascendencias y run actual.\nEsta acción es irreversible.",
+		"SLOT_DELETE_OK": "Borrar",
+		"BTN_CANCEL": "Cancelar",
+		"SLOT_STATS_FORMAT": "T%d · %d ciclos · Ξ %d · último: %s",
+
+		# === BANCO GENÉTICO ===
+		"BANK_LEGACY_COUNTER": "Legado acumulado: %d PL\nCiclos Bióticos completados: %d",
+		"BANK_BTN_MAX": "MAXIMO",
+		"BANK_BTN_LOCKED": "BLOQUEADO",
+		"BANK_BTN_ACQUIRE": "ADQUIRIR",
+		"BANK_BTN_LEVEL": "Nv%d  %d PL",
+
+		# === PANEL TRASCENDENCIA ===
+		"TRAS_SUBTITLE": "Disolvé el ciclo actual para absorberlo como Esencia (Ξ).",
+		"TRAS_GATE_TITLE": "Requisitos:",
+		"TRAS_REWARD_TITLE": "Recompensa al trascender:",
+		"TRAS_REWARD_TEXT": "Ganás +%d Ξ (Esencia)\nPL actual: %d -> convertido\nRutas únicas: %d × 5 Ξ\nTier bonus: +%d Ξ",
+		"TRAS_LOCKED_TEXT": "Requisitos no cumplidos.\nCompletá al menos 1 cierre en cada familia y acumulá %d PL.",
+
+		# === PRIMERA TRASCENDENCIA ===
+		"TRAS_FIRST_NARRATIVE": "El ciclo se ha cerrado sobre sí mismo.\n\nTodas las rutas que recorriste — el orden, la expansión, el colapso —\nconvergen ahora en un único punto fuera del tiempo del hongo.\n\nTu código ya no es un programa.\nEs una memoria cristalina: Esencia.\n\nLa matriz se reinicia.\nPero vos ya no sos el mismo sistema.",
+		"TRAS_FIRST_HINT": "Ahora tenés acceso al Banco Cósmico.",
+
+		# === CRÉDITOS ===
+		"CREDITS_THANKS": "Gracias por jugar.",
+
+		# === IN-GAME UI ===
+		"GAME_BTN_RESET": "Reset",
+		"GAME_BTN_NEW_RUN": "Nueva Run",
+		"GAME_BTN_SETTINGS": "Ajustes",
+		"GAME_SHORTCUTS_TOOLTIP": "Atajos de teclado e indicadores",
+		"GAME_PL_COUNTER": "PL Disponibles: %d    Reserva biótica: %.1f / 50 esporas",
+		"GAME_BUFF_ACTIVE": "OK ACTIVO",
+		"GAME_BUFF_INACTIVE": "X INACTIVO",
+		"GAME_BTN_LEVEL": "Nv.%d  %d PL",
+		"GAME_BTN_LOCKED": "BLOQUEADO",
+		"GAME_BTN_FREE": "GRATIS",
 	},
 	"en": {
 		"UI_LANG_NAME": "English",
@@ -112,6 +174,68 @@ const TRANSLATIONS := {
 		"SET_HIGH_CONTRAST": "High contrast",
 		"SET_COLORBLIND": "Color blindness:",
 		"SET_COLORBLIND_OFF": "Disabled",
+
+		# === NEW RUN ===
+		"MM_NEW_RUN": "New Run",
+		"MM_NEW_RUN_TOOLTIP": "Starts a new run preserving your Genetic Bank and Cosmic Bank.",
+		"MM_TRANSCEND_COUNTER": "Ξ %d   ·   Transcendences: %d",
+		"MM_NEW_RUN_TITLE": "Start New Run",
+		"MM_NEW_RUN_TEXT": "Start a new biotic cycle?\n\n✦ PRESERVED:\n  · Cosmic Bank (%d Ξ)\n  · Genetic Bank (PL: %d)\n  · Completed routes\n\n⚠ RESET:\n  · Upgrades, money, mutations\n  · Current run progress",
+		"MM_NEW_RUN_OK": "▶ Start",
+		"MM_ROUTE_PICKER_SUBTITLE": "Each route changes this run's rules. The choice is permanent.",
+
+		# === SLOTS ===
+		"SLOT_START": "Start",
+		"SLOT_RENAME_BTN": "Rename",
+		"SLOT_DELETE_BTN": "Delete",
+		"SLOT_NO_DELETE_LAST": "Cannot delete the last slot",
+		"SLOT_EMPTY_LABEL": "Empty slot available",
+		"SLOT_CREATE_BTN": "Create new",
+		"SLOT_UNLOCK_HINT": "Buy 'Additional Slot' in the Genetic Bank / Knowledge to unlock more slots.",
+		"SLOT_STATS_EMPTY": "Empty slot — no runs recorded",
+		"SLOT_ACTIVE_TAG": "  [active]",
+		"SLOT_NEW_TITLE": "New slot",
+		"SLOT_NEW_NAME_LABEL": "Slot name:",
+		"SLOT_RENAME_TITLE": "Rename slot",
+		"SLOT_RENAME_NAME_LABEL": "New name:",
+		"SLOT_DELETE_TITLE": "Delete slot",
+		"SLOT_DELETE_TEXT": "Delete slot '%s'?\nThis parallel universe will be lost: legacy, essence, transcendences and current run.\nThis action is irreversible.",
+		"SLOT_DELETE_OK": "Delete",
+		"BTN_CANCEL": "Cancel",
+		"SLOT_STATS_FORMAT": "T%d · %d cycles · Ξ %d · last: %s",
+
+		# === GENETIC BANK ===
+		"BANK_LEGACY_COUNTER": "Accumulated legacy: %d PL\nBiotic Cycles completed: %d",
+		"BANK_BTN_MAX": "MAXED",
+		"BANK_BTN_LOCKED": "LOCKED",
+		"BANK_BTN_ACQUIRE": "ACQUIRE",
+		"BANK_BTN_LEVEL": "Lv%d  %d PL",
+
+		# === TRANSCENDENCE PANEL ===
+		"TRAS_SUBTITLE": "Dissolve the current cycle to absorb it as Essence (Ξ).",
+		"TRAS_GATE_TITLE": "Requirements:",
+		"TRAS_REWARD_TITLE": "Reward on transcending:",
+		"TRAS_REWARD_TEXT": "You gain +%d Ξ (Essence)\nCurrent PL: %d -> converted\nUnique routes: %d × 5 Ξ\nTier bonus: +%d Ξ",
+		"TRAS_LOCKED_TEXT": "Requirements not met.\nComplete at least 1 close in each family and accumulate %d PL.",
+
+		# === FIRST TRANSCENDENCE ===
+		"TRAS_FIRST_NARRATIVE": "The cycle has closed upon itself.\n\nAll the routes you traveled — order, expansion, collapse —\nnow converge at a single point outside the fungus's time.\n\nYour code is no longer a program.\nIt is a crystalline memory: Essence.\n\nThe matrix resets.\nBut you are no longer the same system.",
+		"TRAS_FIRST_HINT": "You now have access to the Cosmic Bank.",
+
+		# === CREDITS ===
+		"CREDITS_THANKS": "Thanks for playing.",
+
+		# === IN-GAME UI ===
+		"GAME_BTN_RESET": "Reset",
+		"GAME_BTN_NEW_RUN": "New Run",
+		"GAME_BTN_SETTINGS": "Settings",
+		"GAME_SHORTCUTS_TOOLTIP": "Keyboard shortcuts and indicators",
+		"GAME_PL_COUNTER": "PL Available: %d    Biotic reserve: %.1f / 50 spores",
+		"GAME_BUFF_ACTIVE": "OK ACTIVE",
+		"GAME_BUFF_INACTIVE": "X INACTIVE",
+		"GAME_BTN_LEVEL": "Lv.%d  %d PL",
+		"GAME_BTN_LOCKED": "LOCKED",
+		"GAME_BTN_FREE": "FREE",
 	}
 }
 

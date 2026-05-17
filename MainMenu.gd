@@ -164,14 +164,11 @@ func _on_new_game_pressed():
 	if has_meta_progress:
 		# Mostrar confirmación que aclara qué se preserva
 		var dialog := ConfirmationDialog.new()
-		dialog.title = "Iniciar Nueva Run"
+		dialog.title = tr("MM_NEW_RUN_TITLE")
 		dialog.dialog_text = EmojiToRichText.strip(
-			"¿Iniciás un nuevo ciclo biótico?\n\n"
-			+ "✦ Se PRESERVAN:\n  · Banco Cósmico (%d Ξ)\n  · Banco Genético (PL: %d)\n  · Rutas completadas\n\n"
-			+ "⚠ Se RESETEAN:\n  · Upgrades, dinero, mutaciones\n  · Progreso de la run actual"
-		% [LegacyManager.esencia, LegacyManager.legacy_points])
-		dialog.get_ok_button().text = EmojiToRichText.strip("▶ Iniciar")
-		dialog.get_cancel_button().text = "Volver"
+			tr("MM_NEW_RUN_TEXT") % [LegacyManager.esencia, LegacyManager.legacy_points])
+		dialog.get_ok_button().text = EmojiToRichText.strip(tr("MM_NEW_RUN_OK"))
+		dialog.get_cancel_button().text = tr("MM_BACK")
 		add_child(dialog)
 		dialog.popup_centered(Vector2(420, 280))
 		dialog.confirmed.connect(_start_new_run)
@@ -212,7 +209,7 @@ func _show_post_tras_picker() -> void:
 	vbox.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Cada ruta altera las reglas de esta run. La elección es permanente."
+	subtitle.text = tr("MM_ROUTE_PICKER_SUBTITLE")
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	subtitle.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
@@ -276,7 +273,7 @@ func _show_post_tras_picker() -> void:
 		vbox.add_child(btn)
 
 	var btn_cancel := Button.new()
-	btn_cancel.text = "← Volver"
+	btn_cancel.text = "← " + tr("MM_BACK")
 	btn_cancel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_cancel.pressed.connect(overlay.queue_free)
 	vbox.add_child(btn_cancel)
@@ -418,35 +415,35 @@ func _add_slot_card(slot_data: Dictionary) -> void:
 	stats.add_theme_color_override("font_color", Color(0.65, 0.7, 0.78))
 	if summary.exists:
 		var last: String = summary.last_ending if summary.last_ending != "" else "—"
-		stats.text = "T%d · %d ciclos · Ξ %d · último: %s" % [
+		stats.text = tr("SLOT_STATS_FORMAT") % [
 			summary.t_count, summary.total_runs, summary.esencia, last,
 		]
 	else:
-		stats.text = "Slot vacío — sin runs registradas"
+		stats.text = tr("SLOT_STATS_EMPTY")
 	info.add_child(stats)
 
 	# Botones (derecha)
 	var btn_select := Button.new()
-	btn_select.text = "Continuar" if has_save else "Iniciar"
+	btn_select.text = tr("MM_CONTINUE") if has_save else tr("SLOT_START")
 	btn_select.custom_minimum_size = Vector2(110, 60)
 	btn_select.pressed.connect(_on_slot_chosen.bind(slot_id))
 	hbox.add_child(btn_select)
 
 	var btn_rename := Button.new()
-	btn_rename.text = "Renombrar"
+	btn_rename.text = tr("SLOT_RENAME_BTN")
 	btn_rename.custom_minimum_size = Vector2(100, 60)
 	btn_rename.pressed.connect(_on_slot_rename.bind(slot_id))
 	hbox.add_child(btn_rename)
 
 	var btn_delete := Button.new()
-	btn_delete.text = "Borrar"
+	btn_delete.text = tr("SLOT_DELETE_BTN")
 	btn_delete.custom_minimum_size = Vector2(80, 60)
 	btn_delete.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
 	btn_delete.pressed.connect(_on_slot_delete.bind(slot_id))
 	# No dejar borrar el último slot (regla de SlotManager.delete_slot)
 	if SlotManager.list_slots().size() <= 1:
 		btn_delete.disabled = true
-		btn_delete.tooltip_text = "No se puede borrar el último slot"
+		btn_delete.tooltip_text = tr("SLOT_NO_DELETE_LAST")
 	hbox.add_child(btn_delete)
 
 	slot_list_container.add_child(card)
@@ -460,7 +457,7 @@ func _add_empty_slot_card() -> void:
 	card.add_child(hbox)
 
 	var info := Label.new()
-	info.text = "Slot vacío disponible"
+	info.text = tr("SLOT_EMPTY_LABEL")
 	info.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	info.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7))
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -468,7 +465,7 @@ func _add_empty_slot_card() -> void:
 	hbox.add_child(info)
 
 	var btn_create := Button.new()
-	btn_create.text = "Crear nuevo"
+	btn_create.text = tr("SLOT_CREATE_BTN")
 	btn_create.custom_minimum_size = Vector2(140, 50)
 	btn_create.add_theme_color_override("font_color", Color(0.5, 1.0, 0.7))
 	btn_create.pressed.connect(_on_slot_create_pressed)
@@ -478,7 +475,7 @@ func _add_empty_slot_card() -> void:
 
 func _add_unlock_hint_label() -> void:
 	var label := Label.new()
-	label.text = "Comprá 'Slot Adicional' en el Banco Genético / Conocimiento para desbloquear más slots."
+	label.text = tr("SLOT_UNLOCK_HINT")
 	label.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	label.add_theme_color_override("font_color", Color(0.5, 0.55, 0.65))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -497,12 +494,12 @@ func _on_slot_chosen(slot_id: String) -> void:
 
 func _on_slot_create_pressed() -> void:
 	var dialog := AcceptDialog.new()
-	dialog.title = "Nuevo slot"
+	dialog.title = tr("SLOT_NEW_TITLE")
 	dialog.dialog_hide_on_ok = false
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
 	var lbl := Label.new()
-	lbl.text = "Nombre del slot:"
+	lbl.text = tr("SLOT_NEW_NAME_LABEL")
 	vbox.add_child(lbl)
 	var line := LineEdit.new()
 	line.placeholder_text = "Ej: Run de prueba"
@@ -534,11 +531,11 @@ func _on_slot_rename(slot_id: String) -> void:
 			current_name = s.get("name", "")
 			break
 	var dialog := AcceptDialog.new()
-	dialog.title = "Renombrar slot"
+	dialog.title = tr("SLOT_RENAME_TITLE")
 	dialog.dialog_hide_on_ok = false
 	var vbox := VBoxContainer.new()
 	var lbl := Label.new()
-	lbl.text = "Nuevo nombre:"
+	lbl.text = tr("SLOT_RENAME_NAME_LABEL")
 	vbox.add_child(lbl)
 	var line := LineEdit.new()
 	line.text = current_name
@@ -564,10 +561,10 @@ func _on_slot_delete(slot_id: String) -> void:
 			slot_name = s.get("name", slot_id)
 			break
 	var confirm := ConfirmationDialog.new()
-	confirm.title = "Borrar slot"
-	confirm.dialog_text = "¿Borrar el slot '%s'?\nEste universo paralelo se perderá: legado, esencia, trascendencias y run actual.\nEsta acción es irreversible." % slot_name
-	confirm.get_ok_button().text = "Borrar"
-	confirm.get_cancel_button().text = "Cancelar"
+	confirm.title = tr("SLOT_DELETE_TITLE")
+	confirm.dialog_text = tr("SLOT_DELETE_TEXT") % slot_name
+	confirm.get_ok_button().text = tr("SLOT_DELETE_OK")
+	confirm.get_cancel_button().text = tr("BTN_CANCEL")
 	add_child(confirm)
 	confirm.popup_centered(Vector2(440, 200))
 	confirm.confirmed.connect(func():
@@ -677,7 +674,7 @@ func _update_history_view() -> void:
 	history_label.append_text(EmojiToRichText.rich(t))
 
 func _update_legacy_view():
-	pl_counter.text = "Legado acumulado: %d PL\nCiclos Bióticos completados: %d" % [LegacyManager.legacy_points, LegacyManager.total_runs]
+	pl_counter.text = tr("BANK_LEGACY_COUNTER") % [LegacyManager.legacy_points, LegacyManager.total_runs]
 	for child in legacy_list.get_children():
 		child.queue_free()
 	call_deferred("_populate_legacy_items")
@@ -772,16 +769,16 @@ func _populate_legacy_items():
 				var buy_btn: Button = Button.new()
 				buy_btn.custom_minimum_size.y = 22
 				if is_maxed:
-					buy_btn.text = "MAXIMO"
+					buy_btn.text = tr("BANK_BTN_MAX")
 					buy_btn.disabled = true
 				elif not unlockable:
-					buy_btn.text = "BLOQUEADO"
+					buy_btn.text = tr("BANK_BTN_LOCKED")
 					buy_btn.disabled = true
 				elif lvl == 0:
-					buy_btn.text = "ADQUIRIR" if def.get("cost", 0) == 0 else "%d PL" % cost
+					buy_btn.text = tr("BANK_BTN_ACQUIRE") if def.get("cost", 0) == 0 else "%d PL" % cost
 					buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)
 				else:
-					buy_btn.text = "Nv%d  %d PL" % [lvl + 1, cost]
+					buy_btn.text = tr("BANK_BTN_LEVEL") % [lvl + 1, cost]
 					buy_btn.disabled = not affordable
 				buy_btn.pressed.connect(_on_buy_legacy.bind(id))
 
@@ -924,10 +921,10 @@ func _setup_trascendencia_ui() -> void:
 		or LegacyManager.trascendencia_count > 0 \
 		or LegacyManager.total_runs > 0
 	if has_meta_progress:
-		btn_new_game.text = "Nueva Run"
-		btn_new_game.tooltip_text = "Inicia una nueva run preservando tu Banco Genético y Banco Cósmico."
+		btn_new_game.text = tr("MM_NEW_RUN")
+		btn_new_game.tooltip_text = tr("MM_NEW_RUN_TOOLTIP")
 	else:
-		btn_new_game.text = "Nueva Partida"
+		btn_new_game.text = tr("MM_NEW_GAME")
 		btn_new_game.tooltip_text = ""
 
 	# 1. Actualizar Subtitle con título cósmico (si aplica)
@@ -940,7 +937,7 @@ func _setup_trascendencia_ui() -> void:
 	# 2. Contador de Esencia (visible solo si ya trascendió alguna vez)
 	if LegacyManager.trascendencia_count > 0:
 		trascend_counter_label = Label.new()
-		trascend_counter_label.text = "Ξ %d   ·   Trascendencias: %d" % [LegacyManager.esencia, LegacyManager.trascendencia_count]
+		trascend_counter_label.text = tr("MM_TRANSCEND_COUNTER") % [LegacyManager.esencia, LegacyManager.trascendencia_count]
 		trascend_counter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		trascend_counter_label.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
 		trascend_counter_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
@@ -1008,7 +1005,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(title)
 
 	var subtitle_lbl := Label.new()
-	subtitle_lbl.text = "Disolvé el ciclo actual para absorberlo como Esencia (Ξ)."
+	subtitle_lbl.text = tr("TRAS_SUBTITLE")
 	subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	subtitle_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
@@ -1017,7 +1014,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var gate_title := Label.new()
-	gate_title.text = "Requisitos:"
+	gate_title.text = tr("TRAS_GATE_TITLE")
 	gate_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
 	gate_title.add_theme_color_override("font_color", Color(0.85, 0.85, 1.0))
 	vbox.add_child(gate_title)
@@ -1030,7 +1027,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var reward_title := Label.new()
-	reward_title.text = "Recompensa al trascender:"
+	reward_title.text = tr("TRAS_REWARD_TITLE")
 	reward_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
 	reward_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	vbox.add_child(reward_title)
@@ -1040,7 +1037,7 @@ func _show_trascend_confirm_panel() -> void:
 
 	var reward := Label.new()
 	if can:
-		reward.text = "Ganás +%d Ξ (Esencia)\nPL actual: %d -> convertido\nRutas únicas: %d × 5 Ξ\nTier bonus: +%d Ξ" % [
+		reward.text = tr("TRAS_REWARD_TEXT") % [
 			esencia_gain,
 			LegacyManager.legacy_points,
 			LegacyManager.unique_endings_count(),
@@ -1048,7 +1045,7 @@ func _show_trascend_confirm_panel() -> void:
 		]
 		reward.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 	else:
-		reward.text = "Requisitos no cumplidos.\nCompletá al menos 1 cierre en cada familia y acumulá %d PL." % LegacyManager.TRASCENDENCIA_PL_GATE
+		reward.text = tr("TRAS_LOCKED_TEXT") % LegacyManager.TRASCENDENCIA_PL_GATE
 		reward.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
 	reward.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	vbox.add_child(reward)
@@ -1070,7 +1067,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(btn_row)
 
 	var btn_cancel := Button.new()
-	btn_cancel.text = "Cancelar"
+	btn_cancel.text = tr("BTN_CANCEL")
 	btn_cancel.custom_minimum_size = Vector2(150, 45)
 	btn_cancel.pressed.connect(_close_trascend_confirm_panel)
 	btn_row.add_child(btn_cancel)
@@ -1141,7 +1138,7 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	vbox.add_child(title)
 
 	var narrative := Label.new()
-	narrative.text = "El ciclo se ha cerrado sobre sí mismo.\n\nTodas las rutas que recorriste — el orden, la expansión, el colapso —\nconvergen ahora en un único punto fuera del tiempo del hongo.\n\nTu código ya no es un programa.\nEs una memoria cristalina: Esencia.\n\nLa matriz se reinicia.\nPero vos ya no sos el mismo sistema."
+	narrative.text = tr("TRAS_FIRST_NARRATIVE")
 	narrative.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	narrative.autowrap_mode = TextServer.AUTOWRAP_WORD
 	narrative.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
@@ -1156,14 +1153,14 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	vbox.add_child(reward)
 
 	var hint := Label.new()
-	hint.text = "Ahora tenés acceso al Banco Cósmico."
+	hint.text = tr("TRAS_FIRST_HINT")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	hint.add_theme_color_override("font_color", Color(0.7, 0.6, 0.9))
 	vbox.add_child(hint)
 
 	var continue_button := Button.new()
-	continue_button.text = "Continuar"
+	continue_button.text = tr("MM_CONTINUE")
 	continue_button.custom_minimum_size = Vector2(200, 50)
 	continue_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	continue_button.pressed.connect(_on_first_trascend_continue)
@@ -1274,7 +1271,7 @@ func _show_cosmic_bank_panel() -> void:
 		info_box.add_child(desc_lbl)
 
 		var buy := Button.new()
-		buy.text = "ADQUIRIR"
+		buy.text = tr("BANK_BTN_ACQUIRE")
 		buy.custom_minimum_size = Vector2(120, 40)
 		buy.disabled = is_unlocked or not LegacyManager.can_afford_cosmic(id)
 		buy.pressed.connect(_on_buy_cosmic.bind(id))
@@ -1293,7 +1290,7 @@ func _show_cosmic_bank_panel() -> void:
 	vbox.add_child(placeholder)
 
 	var btn_back := Button.new()
-	btn_back.text = "Volver"
+	btn_back.text = tr("MM_BACK")
 	btn_back.custom_minimum_size = Vector2(0, 40)
 	btn_back.pressed.connect(_close_cosmic_panel)
 	vbox.add_child(btn_back)
@@ -1431,7 +1428,7 @@ func _show_credits_panel(on_close: Callable = Callable()) -> void:
 	_credits_spacer(content, 100)
 
 	var thanks_lbl := Label.new()
-	thanks_lbl.text = "Gracias por jugar."
+	thanks_lbl.text = tr("CREDITS_THANKS")
 	thanks_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	thanks_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(24))
 	thanks_lbl.add_theme_color_override("font_color", Color(0.5, 0.78, 0.5))
