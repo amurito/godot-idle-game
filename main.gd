@@ -789,11 +789,14 @@ func _on_logic_tick():
 		if _use_3d_reactor and is_instance_valid(_3d_power_label):
 			var sz := int(clamp(log(1.0 + power) * 3.0 + 8.0, 8.0, 26.0))
 			_3d_power_label.add_theme_font_size_override("font_size", sz)
-			_3d_power_label.text = "+%.1f" % power
+			if RunManager.mente_colmena_active:
+				_3d_power_label.text = "AUTO\n+%.1f" % power
+			else:
+				_3d_power_label.text = "+%.1f" % power
 		elif not _use_3d_reactor:
 			UIManager.big_click_button.set_display_delta(power)
-		if RunManager.mente_colmena_active:
-			UIManager.big_click_button.text = EmojiToRichText.strip("🧠 AUTO-OVERRIDE")
+			if RunManager.mente_colmena_active:
+				UIManager.big_click_button.text = EmojiToRichText.strip("🧠 AUTO-OVERRIDE")
 
 	# 5) Parasitismo: drenaje masivo de ingresos (Corrosi�n Estructural)
 	if EvoManager.mutation_parasitism:
