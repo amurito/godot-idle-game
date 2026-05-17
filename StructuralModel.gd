@@ -142,7 +142,7 @@ func get_structural_epsilon() -> float:
 	return m.eps_model
 
 func get_k_eff() -> float:
-	var mu :float = main.cached_mu
+	var mu :float = EconomyManager.cached_mu
 	var n_struct := get_effective_structural_n()
 	var alpha := EcoModel.get_alpha(int(n_struct))
 	var k_base := EcoModel.get_k_structural(int(n_struct))
@@ -150,7 +150,7 @@ func get_k_eff() -> float:
 
 # ==================== BASELINE ESTRUCTURAL ====================
 func register_structural_baseline():
-	baseline_delta_structural = main.delta_per_sec
+	baseline_delta_structural = EconomyManager.delta_per_sec
 	last_stable_structural_upgrades = get_structural_upgrades()
 
 # ==================== OMEGA (FLEXIBILIDAD) ====================

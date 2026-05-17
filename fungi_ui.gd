@@ -90,7 +90,7 @@ func _process(delta):
 			_hifas_establish_timer = 0.0
 
 		if StructuralModel.epsilon_runtime > 0.38 \
-		and main.get_delta_total() > 5.0:
+		and EconomyManager.get_delta_total() > 5.0:
 			hifas_unlocked = true
 			update_ui()
 		return  # ⬅️ todavía no procesamos metabolismo
@@ -101,7 +101,7 @@ func _process(delta):
 	var biomass = BiosphereEngine.biomasa
 
 	# metabolismo = qué tan bien el sistema digiere su propia producción
-	var delta_money := float(main.get_delta_total())
+	var delta_money := float(EconomyManager.get_delta_total())
 	if delta_money > 0:
 		metabolism = biomass / delta_money
 	else:

@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # AchievementManager.gd — Autoload (v0.9.4)
 # 50 logros en 4 tiers. Arquitectura híbrida:
@@ -650,7 +650,7 @@ func unlock(id: String) -> void:
 	AudioManager.play_sfx("achievement")
 	_show_toast(id, def)
 	if main:
-		main.add_lap("🏁 Logro — " + def["name"])
+		LogManager.add("🏁 Logro — " + def["name"])
 	LegacyManager.save_achievement_data(unlocked)
 	_check_meta_achievements()
 
@@ -834,7 +834,7 @@ func _eval_arbol_productivo(_s: Dictionary) -> bool:
 
 func _eval_click_dominance(_s: Dictionary) -> bool:
 	if not (StructuralModel.unlocked_d or StructuralModel.unlocked_e): return false
-	return main != null and main.get_dominant_term() == "CLICK domina el sistema"
+	return main != null and EconomyManager.get_dominant_term() == "CLICK domina el sistema"
 
 func _eval_tension_productiva(_s: Dictionary) -> bool:
 	return EvoManager.genome.get("homeostasis", "dormido") == "latente" \
@@ -1205,3 +1205,4 @@ func reset_run_state() -> void:
 func hard_reset() -> void:
 	unlocked.clear()
 	reset_run_state()
+

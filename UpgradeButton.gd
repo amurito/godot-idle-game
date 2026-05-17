@@ -42,11 +42,7 @@ func _ready() -> void:
 	update_appearance(0.0) # Inicial sin dinero para solo poner el texto
 
 func _on_pressed() -> void:
-	var main = get_tree().get_first_node_in_group("main")
-	if not main: return
-	
-	if main.has_method("purchase_upgrade"):
-		main.purchase_upgrade(upgrade_id)
+	UpgradeManager.purchase_upgrade(upgrade_id)
 
 ## Actualiza el texto y estado del botón basándose en el manager y dinero actual
 func update_appearance(current_money: float) -> void:
