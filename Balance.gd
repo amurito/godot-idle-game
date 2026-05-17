@@ -15,6 +15,9 @@ const PRIMORDIO_DURATION         := 90.0   # s por ciclo biológico primordio
 const MET_OSCURO_REQUIRED_TIME   := 15.0   # s de activación met. oscuro
 const MET_OSCURO_SEAL_COOLDOWN   := 120.0  # s de cooldown tras sellado
 
+# ── LogManager ──────────────────────────────────────────────────
+const MAX_LAPS := 200  # máximo de eventos en lap_events (FIFO, descarta el más viejo)
+
 # ── Multiplicadores de ruta ──────────────────────────────────────
 const VACIO_HAMBRIENTO_MULT      := 100.0  # producción ×100 en VACÍO HAMBRIENTO
 const REENCARNACION_COST_MULT    := 1.5    # costos de upgrades ×1.5 en REENCARNACIÓN HEREDADA

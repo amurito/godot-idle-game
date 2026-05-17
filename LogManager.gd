@@ -20,6 +20,8 @@ func reset() -> void:
 #  API — Agregar eventos
 # =====================================================
 func add(event: String) -> void:
+	if lap_events.size() >= Balance.MAX_LAPS:
+		lap_events.pop_front()
 	lap_events.append({
 		"time": UIManager.format_time(RunManager.run_time),
 		"event": event,
@@ -100,6 +102,8 @@ func get_lap_array() -> Array:
 func load_laps(arr) -> void:
 	if arr is Array:
 		lap_events = arr
+		if lap_events.size() > Balance.MAX_LAPS:
+			lap_events = lap_events.slice(lap_events.size() - Balance.MAX_LAPS)
 
 # =====================================================
 #  API — Export Run
