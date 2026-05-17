@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # EconomyManager.gd — Autoload
 # Gestiona dinero, ingresos (click, auto, trueque) y economía del juego.
@@ -9,6 +9,8 @@ var main: Node = null
 var money: float = 0.0
 var total_money_generated: float = 0.0
 var time_since_last_click: float = 0.0
+var cached_mu: float = 1.0
+var delta_per_sec: float = 0.0
 
 # ==================== DINÁMICAS ECONÓMICAS ====================
 var trueque_base_income: float = 8.0
@@ -29,6 +31,8 @@ func reset():
 	money = 0.0
 	total_money_generated = 0.0
 	time_since_last_click = 0.0
+	cached_mu = 1.0
+	delta_per_sec = 0.0
 	mutation_auto_factor = 1.0
 	mutation_trueque_factor = 1.0
 	mutation_accounting_bonus = 0.0
@@ -45,7 +49,7 @@ func get_click_power() -> float:
 		base,
 		UpgradeManager.value("click_mult"),
 		StructuralModel.persistence_dynamic,
-		main.cached_mu
+		cached_mu
 	)
 
 	# LEGADO: Sincronía Total (Beta afecta al click)
@@ -115,7 +119,7 @@ func get_auto_income_effective() -> float:
 		UpgradeManager.value("auto"),
 		auto_mult,
 		UpgradeManager.value("specialization"),
-		main.cached_mu,
+		cached_mu,
 		BiosphereEngine.get_biomass_beta(),
 		UpgradeManager.level("accounting")
 	)
@@ -134,7 +138,7 @@ func get_trueque_income_effective() -> float:
 	var base := EcoModel.get_trueque_income_effective(
 		get_trueque_raw(),
 		UpgradeManager.value("trueque_net") * mutation_trueque_factor * allo_mult,
-		main.cached_mu,
+		cached_mu,
 		BiosphereEngine.get_biomass_beta(),
 		UpgradeManager.level("accounting")
 	)
@@ -262,6 +266,7 @@ func get_active_passive_breakdown() -> Dictionary:
 
 # ==================== ACTUALIZACIÓN ECONÓMICA ====================
 func update_economy(delta: float):
-	var delta_money = main.delta_per_sec * delta
+	var delta_money = delta_per_sec * delta
 	money += delta_money
 	total_money_generated += delta_money
+

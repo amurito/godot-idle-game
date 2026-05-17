@@ -1,4 +1,4 @@
-extends Panel
+﻿extends Panel
 # DebugPanel.gd — Solo activo en OS.is_debug_build(). F1 para toggle.
 
 var _main: Node
@@ -64,7 +64,7 @@ func _build_recursos(parent: VBoxContainer) -> void:
 	_add_resource_row(grid, "Hifas", func(): BiosphereEngine.hifas = min(BiosphereEngine.hifas + 3.0, 12.0), func(): BiosphereEngine.hifas = 12.0)
 	_add_resource_row(grid, "Micelio", func(): BiosphereEngine.micelio = min(BiosphereEngine.micelio + 2.0, 12.0), func(): BiosphereEngine.micelio = 12.0)
 	_add_resource_row(grid, "ε runtime", func(): StructuralModel.epsilon_runtime = min(StructuralModel.epsilon_runtime + 0.1, 1.0), func(): StructuralModel.epsilon_runtime = 0.5)
-	_add_resource_row(grid, "Run time", func(): _main.run_time += 300.0, func(): _main.run_time += 1800.0)
+	_add_resource_row(grid, "Run time", func(): RunManager.run_time += 300.0, func(): RunManager.run_time += 1800.0)
 
 
 func _add_resource_row(grid: GridContainer, label: String, fn_small: Callable, fn_big: Callable) -> void:
@@ -111,7 +111,7 @@ func _build_mutaciones(parent: VBoxContainer) -> void:
 		btn.add_theme_font_size_override("font_size", 10)
 		btn.pressed.connect(func():
 			EvoManager.activate_mutation(id)
-			_main.show_system_toast("DEBUG: Mutación %s activada" % id)
+			UIManager.show_toast("DEBUG: Mutación %s activada" % id)
 			_main.update_ui()
 		)
 		flow.add_child(btn)
@@ -129,8 +129,8 @@ func _build_eventos(parent: VBoxContainer) -> void:
 
 	_add_event_btn(hbox, "Perturbación", func(): RunManager.trigger_disturbance())
 	_add_event_btn(hbox, "Primordio", func(): EvoManager.try_iniciar_primordio())
-	_add_event_btn(hbox, "+5 min", func(): _main.run_time += 300.0)
-	_add_event_btn(hbox, "+30 min", func(): _main.run_time += 1800.0)
+	_add_event_btn(hbox, "+5 min", func(): RunManager.run_time += 300.0)
+	_add_event_btn(hbox, "+30 min", func(): RunManager.run_time += 1800.0)
 
 
 func _add_event_btn(parent: HBoxContainer, label: String, fn: Callable) -> void:
@@ -172,7 +172,7 @@ func _build_zona_peligrosa(parent: VBoxContainer) -> void:
 	btn_reset.modulate = Color(1.0, 0.5, 0.2)
 	btn_reset.pressed.connect(func():
 		_main.reset_local_state()
-		_main.show_system_toast("DEBUG: Run reseteada")
+		UIManager.show_toast("DEBUG: Run reseteada")
 	)
 	hbox.add_child(btn_reset)
 
@@ -191,16 +191,17 @@ func refresh_info() -> void:
 		return
 	var t := ""
 	t += "[b]Economía[/b]\n"
-	t += "  money=%.0f  delta=%.2f/s  mu=%.3f\n" % [EconomyManager.money, _main.get_passive_total(), _main.cached_mu]
+	t += "  money=%.0f  delta=%.2f/s  mu=%.3f\n" % [EconomyManager.money, EconomyManager.get_passive_total(), EconomyManager.cached_mu]
 	t += "[b]Biosfera[/b]\n"
 	t += "  biomasa=%.2f  hifas=%.2f  micelio=%.2f\n" % [BiosphereEngine.biomasa, BiosphereEngine.hifas, BiosphereEngine.micelio]
 	t += "[b]Estructura[/b]\n"
 	t += "  ε=%.3f  Ω=%.3f  persist=%.3f\n" % [StructuralModel.epsilon_runtime, StructuralModel.omega, StructuralModel.persistence_dynamic]
 	t += "[b]Run[/b]\n"
-	t += "  run_time=%.0fs  PL=%d  tras=%d  cerrada=%s\n" % [_main.run_time, LegacyManager.legacy_points, LegacyManager.trascendencia_count, str(RunManager.run_closed)]
+	t += "  run_time=%.0fs  PL=%d  tras=%d  cerrada=%s\n" % [RunManager.run_time, LegacyManager.legacy_points, LegacyManager.trascendencia_count, str(RunManager.run_closed)]
 	t += "[b]Genoma[/b]\n"
 	for k in EvoManager.genome:
 		var s: String = EvoManager.genome[k]
 		if s != "dormido":
 			t += "  %s → %s\n" % [k, s]
 	_info_label.text = t
+
