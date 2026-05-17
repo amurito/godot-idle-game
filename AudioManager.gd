@@ -294,7 +294,7 @@ func show_settings_panel(parent: Node) -> void:
 	vbox.add_child(top_spacer)
 
 	var title := Label.new()
-	title.text = EmojiToRichText.strip("⚙ AJUSTES")
+	title.text = EmojiToRichText.strip(tr("SET_TITLE"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(28))
 	title.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
@@ -302,16 +302,18 @@ func show_settings_panel(parent: Node) -> void:
 
 	vbox.add_child(HSeparator.new())
 
-	_build_volume_row(vbox, "Música", music_volume, music_muted,
+	_build_volume_row(vbox, tr("SET_MUSIC"), music_volume, music_muted,
 		Callable(self, "set_music_volume"),
 		Callable(self, "set_music_muted"),
 		"")  # sin SFX de prueba (la música ya suena)
 
-	_build_volume_row(vbox, "Efectos (SFX)", sfx_volume, sfx_muted,
+	_build_volume_row(vbox, tr("SET_SFX"), sfx_volume, sfx_muted,
 		Callable(self, "set_sfx_volume"),
 		Callable(self, "set_sfx_muted"),
 		"click")
 
+	vbox.add_child(HSeparator.new())
+	_build_locale_row(vbox)
 	vbox.add_child(HSeparator.new())
 	_build_telemetry_row(vbox)
 	vbox.add_child(HSeparator.new())
@@ -320,7 +322,7 @@ func show_settings_panel(parent: Node) -> void:
 
 	# ── Exportar / Importar save ──────────────────────────────────────
 	var btn_export := Button.new()
-	btn_export.text = "Exportar save (.json)"
+	btn_export.text = tr("SET_EXPORT_SAVE")
 	btn_export.custom_minimum_size = Vector2(0, 36)
 	btn_export.pressed.connect(func():
 		var main_node: Node = get_tree().get_first_node_in_group("main")
@@ -331,7 +333,7 @@ func show_settings_panel(parent: Node) -> void:
 	if OS.get_name() == "Web":
 		# En web también ofrecemos importar (para cargar un save exportado desde desktop)
 		var btn_import := Button.new()
-		btn_import.text = "Importar save (.json)"
+		btn_import.text = tr("SET_IMPORT_SAVE")
 		btn_import.custom_minimum_size = Vector2(0, 36)
 		btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
 		btn_import.pressed.connect(func():
@@ -341,14 +343,14 @@ func show_settings_panel(parent: Node) -> void:
 		vbox.add_child(btn_import)
 
 		var import_hint := Label.new()
-		import_hint.text = "Carga un save exportado desde desktop. Recarga la partida al terminar."
+		import_hint.text = tr("SET_IMPORT_HINT")
 		import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
 		vbox.add_child(import_hint)
 	else:
 		var export_hint := Label.new()
-		export_hint.text = "Se guarda en la carpeta de datos del juego y se abre el explorador."
+		export_hint.text = tr("SET_EXPORT_HINT")
 		export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
@@ -357,7 +359,7 @@ func show_settings_panel(parent: Node) -> void:
 	vbox.add_child(HSeparator.new())
 
 	var btn_tutorial := Button.new()
-	btn_tutorial.text = "Reiniciar tutorial"
+	btn_tutorial.text = tr("SET_RESET_TUTORIAL")
 	btn_tutorial.custom_minimum_size = Vector2(0, 36)
 	btn_tutorial.pressed.connect(func():
 		_close_settings_panel()
@@ -366,7 +368,7 @@ func show_settings_panel(parent: Node) -> void:
 	vbox.add_child(btn_tutorial)
 
 	var btn_reset := Button.new()
-	btn_reset.text = "Borrar run actual"
+	btn_reset.text = tr("SET_RESET_RUN")
 	btn_reset.custom_minimum_size = Vector2(0, 36)
 	btn_reset.add_theme_color_override("font_color", Color(1.0, 0.55, 0.55))
 	btn_reset.pressed.connect(func():
@@ -377,7 +379,7 @@ func show_settings_panel(parent: Node) -> void:
 	vbox.add_child(btn_reset)
 
 	var btn_close := Button.new()
-	btn_close.text = "Cerrar"
+	btn_close.text = tr("SET_CLOSE")
 	btn_close.custom_minimum_size = Vector2(0, 40)
 	btn_close.pressed.connect(_close_settings_panel)
 	vbox.add_child(btn_close)
@@ -431,6 +433,56 @@ func _build_volume_row(parent: VBoxContainer, label_text: String,
 			play_sfx(preview_sfx_id))
 	mute_btn.toggled.connect(func(pressed: bool):
 		on_mute_change.call(pressed))
+
+
+func _build_locale_row(parent: VBoxContainer) -> void:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	parent.add_child(box)
+
+	var lbl := Label.new()
+	lbl.text = tr("SET_LANGUAGE")
+	lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
+	box.add_child(lbl)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	box.add_child(row)
+
+	var btn_es := Button.new()
+	btn_es.text = tr("SET_LANG_ES")
+	btn_es.custom_minimum_size = Vector2(0, 34)
+	btn_es.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_es.toggle_mode = true
+	btn_es.button_pressed = LocaleManager.current_locale == "es"
+
+	var btn_en := Button.new()
+	btn_en.text = tr("SET_LANG_EN")
+	btn_en.custom_minimum_size = Vector2(0, 34)
+	btn_en.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_en.toggle_mode = true
+	btn_en.button_pressed = LocaleManager.current_locale == "en"
+
+	btn_es.pressed.connect(func():
+		LocaleManager.set_locale("es")
+		btn_es.button_pressed = true
+		btn_en.button_pressed = false
+		# Rebuild para reflejar el cambio inmediato
+		var parent_ref := _settings_panel.get_parent()
+		_close_settings_panel()
+		show_settings_panel(parent_ref))
+
+	btn_en.pressed.connect(func():
+		LocaleManager.set_locale("en")
+		btn_es.button_pressed = false
+		btn_en.button_pressed = true
+		var parent_ref := _settings_panel.get_parent()
+		_close_settings_panel()
+		show_settings_panel(parent_ref))
+
+	row.add_child(btn_es)
+	row.add_child(btn_en)
 
 
 func _build_telemetry_row(parent: VBoxContainer) -> void:

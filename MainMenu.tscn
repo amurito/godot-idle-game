@@ -54,32 +54,32 @@ theme_override_constants/separation = 20
 [node name="BtnContinue" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Continuar"
+text = "MM_CONTINUE"
 
 [node name="BtnNewGame" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Nueva Partida"
+text = "MM_NEW_GAME"
 
 [node name="BtnAchievements" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Logros"
+text = "MM_ACHIEVEMENTS"
 
 [node name="BtnLegacy" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Banco Genético"
+text = "MM_LEGACY_BANK"
 
 [node name="BtnHistory" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Historial de Ciclos"
+text = "MM_HISTORY"
 
 [node name="BtnQuit" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
-text = "Salir"
+text = "MM_QUIT"
 
 [node name="AchievementsPanel" type="ColorRect" parent="."]
 visible = false
