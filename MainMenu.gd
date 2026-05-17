@@ -45,6 +45,9 @@ func _ready():
 	# Subtitle siempre refleja la versión actual
 	$CenterContainer/VBoxContainer/Subtitle.text = "v" + Version.get_version_string()
 
+	# Refrescar UI cuando el usuario cambia idioma
+	LocaleManager.locale_changed.connect(_on_locale_changed)
+
 	# Conectar handlers que no dependen del slot
 	btn_new_game.pressed.connect(_on_new_game_pressed)
 	btn_achievements.pressed.connect(_on_achievements_pressed)
@@ -81,10 +84,10 @@ func _setup_main_menu_for_active_slot() -> void:
 	var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
 
 	if has_save:
-		btn_continue.text = "Continuar"
+		btn_continue.text = tr("MM_CONTINUE")
 		btn_continue.pressed.connect(_on_continue_pressed)
 	elif post_transcendence:
-		btn_continue.text = EmojiToRichText.strip("▶ Nueva Run (buffs cósmicos activos)")
+		btn_continue.text = EmojiToRichText.strip(tr("MM_NEW_RUN_POSTRANSCEND"))
 		btn_continue.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		btn_continue.pressed.connect(_start_new_run)
 	else:
@@ -104,7 +107,7 @@ func _setup_main_menu_for_active_slot() -> void:
 		var btn_credits := Button.new()
 		btn_credits.name = "BtnCreditos"
 		btn_credits.custom_minimum_size = Vector2(0, 40)
-		btn_credits.text = "Créditos"
+		btn_credits.text = tr("MM_CREDITS")
 		btn_credits.pressed.connect(func(): _show_credits_panel())
 		var vbox_c := $CenterContainer/VBoxContainer as VBoxContainer
 		vbox_c.add_child(btn_credits)
@@ -115,7 +118,7 @@ func _setup_main_menu_for_active_slot() -> void:
 		var btn_settings := Button.new()
 		btn_settings.name = "BtnSettings"
 		btn_settings.custom_minimum_size = Vector2(0, 45)
-		btn_settings.text = "Ajustes"
+		btn_settings.text = tr("MM_SETTINGS")
 		btn_settings.pressed.connect(func(): AudioManager.show_settings_panel(self))
 		var vbox_s = $CenterContainer/VBoxContainer
 		vbox_s.add_child(btn_settings)
@@ -126,7 +129,7 @@ func _setup_main_menu_for_active_slot() -> void:
 		var btn_tools := Button.new()
 		btn_tools.name = "BtnTools"
 		btn_tools.custom_minimum_size = Vector2(0, 40)
-		btn_tools.text = "Telemetria"
+		btn_tools.text = tr("MM_TOOLS")
 		btn_tools.add_theme_color_override("font_color", Color(0.4, 0.85, 1.0))
 		btn_tools.pressed.connect(_on_tools_analyze_pressed)
 		var vbox_t = $CenterContainer/VBoxContainer
@@ -1512,3 +1515,31 @@ func _close_credits_panel() -> void:
 	if _credits_close_cb.is_valid():
 		_credits_close_cb.call()
 		_credits_close_cb = Callable()
+
+
+# ─────────────────────────────────────────────────────────────
+# LOCALE — refrescar UI cuando cambia el idioma
+# ─────────────────────────────────────────────────────────────
+func _on_locale_changed(_new_locale: String) -> void:
+	# Los botones estáticos de la escena se auto-traducen vía NOTIFICATION_TRANSLATION_CHANGED
+	# (auto_translate_mode = ALWAYS por defecto). Sólo necesitamos re-asignar el texto en los
+	# botones creados dinámicamente desde código.
+	if is_instance_valid(btn_continue):
+		var has_save := FileAccess.file_exists(SaveManager.SAVE_PATH)
+		var post_transcendence := not has_save and LegacyManager.trascendencia_count > 0
+		if has_save:
+			btn_continue.text = tr("MM_CONTINUE")
+		elif post_transcendence:
+			btn_continue.text = EmojiToRichText.strip(tr("MM_NEW_RUN_POSTRANSCEND"))
+
+	var btn_credits := get_node_or_null("CenterContainer/VBoxContainer/BtnCreditos")
+	if is_instance_valid(btn_credits):
+		btn_credits.text = tr("MM_CREDITS")
+
+	var btn_settings := get_node_or_null("CenterContainer/VBoxContainer/BtnSettings")
+	if is_instance_valid(btn_settings):
+		btn_settings.text = tr("MM_SETTINGS")
+
+	var btn_tools := get_node_or_null("CenterContainer/VBoxContainer/BtnTools")
+	if is_instance_valid(btn_tools):
+		btn_tools.text = tr("MM_TOOLS")
