@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # AchievementManager.gd — Autoload (v0.9.4)
 # 50 logros en 4 tiers. Arquitectura híbrida:
@@ -1051,7 +1051,7 @@ func _get_toast_container() -> VBoxContainer:
 	return _toast_container
 
 
-func _show_toast(id: String, def: Dictionary) -> void:
+func _show_toast(_id: String, def: Dictionary) -> void:
 	var level: String = def.get("toast", "full")
 	if level == "silent":
 		return
@@ -1205,4 +1205,3 @@ func reset_run_state() -> void:
 func hard_reset() -> void:
 	unlocked.clear()
 	reset_run_state()
-

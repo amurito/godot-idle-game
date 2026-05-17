@@ -511,8 +511,8 @@ func _on_slot_create_pressed() -> void:
 	dialog.popup_centered(Vector2(360, 140))
 	line.grab_focus.call_deferred()
 	dialog.confirmed.connect(func():
-		var name :String = line.text
-		var new_id: String = SlotManager.create_slot(name)
+		var slot_name: String = line.text
+		var new_id: String = SlotManager.create_slot(slot_name)
 		if new_id != "":
 			SlotManager.switch_slot(new_id)
 			LegacyManager.reload_for_slot()
@@ -616,8 +616,8 @@ const _HISTORY_DEFAULT_COLORS := {"card": "#1a1a22", "title": "#cccccc"}
 
 func _format_run_time(seconds: float) -> String:
 	var s: int = int(seconds)
-	var h: int = s / 3600
-	var m: int = (s % 3600) / 60
+	var h: int = int(s / 3600.0)
+	var m: int = int((s % 3600) / 60.0)
 	var sec: int = s % 60
 	if h > 0:
 		return "%d:%02d:%02d" % [h, m, sec]
@@ -1481,11 +1481,11 @@ func _credits_row(parent: VBoxContainer, text: String) -> void:
 	parent.add_child(lbl)
 
 
-func _credits_name(parent: VBoxContainer, text: String, size: int = 18) -> void:
+func _credits_name(parent: VBoxContainer, text: String, font_size: int = 18) -> void:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", size)
+	lbl.add_theme_font_size_override("font_size", font_size)
 	lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	parent.add_child(lbl)
 

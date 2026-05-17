@@ -271,13 +271,13 @@ func _remove_dir_recursive(path: String) -> void:
 	if not dir:
 		return
 	dir.list_dir_begin()
-	var name := dir.get_next()
-	while name != "":
-		var full := path + "/" + name
+	var entry := dir.get_next()
+	while entry != "":
+		var full := path + "/" + entry
 		if dir.current_is_dir():
 			_remove_dir_recursive(full)
 		else:
 			DirAccess.remove_absolute(full)
-		name = dir.get_next()
+		entry = dir.get_next()
 	dir.list_dir_end()
 	DirAccess.remove_absolute(path)

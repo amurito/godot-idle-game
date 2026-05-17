@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # LogManager.gd — Autoload
 # Gestiona la bitácora de eventos (laps), el toggle de vista,
@@ -128,7 +128,7 @@ func _ensure_runs_dir() -> void:
 	if not DirAccess.dir_exists_absolute(path):
 		DirAccess.make_dir_absolute(path)
 
-func build_run_json(main: Control, meta: Dictionary) -> Dictionary:
+func build_run_json(_main: Control, meta: Dictionary) -> Dictionary:
 	return {
 		"version": Version.VERSION,
 		"fecha": meta.fecha_humana,
@@ -166,7 +166,7 @@ func build_run_csv(meta: Dictionary) -> String:
 	csv += "%s;%s;\n" % [meta.fecha_humana, meta.hora_humana]
 	return csv
 
-func build_clipboard_text(main: Control, meta: Dictionary) -> String:
+func build_clipboard_text(_main: Control, meta: Dictionary) -> String:
 	var t := ""
 	t += "IDLE — Modelo Económico Evolutivo\n"
 	t += "Run exportada — %s %s\n" % [meta.fecha_humana, meta.hora_humana]
@@ -204,4 +204,3 @@ func export_run(main: Control) -> void:
 
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = "Run exportada — %s %s\nGuardada en /runs" % [meta.fecha_humana, meta.hora_humana]
-

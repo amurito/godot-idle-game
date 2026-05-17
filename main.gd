@@ -1,4 +1,4 @@
-﻿extends Control
+extends Control
 
 # =====================================================
 # IDLE � v0.8 DLC "Fungi"
@@ -428,7 +428,8 @@ func _ready():
 
 	# === EVO MANAGER SIGNALS ===
 	EvoManager.mutation_activated.connect(_on_mutation_activated)
-	EvoManager.run_ended_by_mutation.connect(close_run)
+	if not EvoManager.run_ended_by_mutation.is_connected(RunManager.close_run):
+		EvoManager.run_ended_by_mutation.connect(RunManager.close_run)
 	EvoManager.primordio_iniciado.connect(_on_primordio_iniciado)
 	EvoManager.primordio_abortado.connect(_on_primordio_abortado)
 	EvoManager.seta_formada_signal.connect(_on_seta_formada)
@@ -645,10 +646,7 @@ func _sync_reactor_viewport() -> void:
 		"UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer/Reactor3DViewport"
 	) as SubViewport
 	if is_instance_valid(cont) and is_instance_valid(vp):
-		var sz := cont.size
-		if sz.x > 10.0 and sz.y > 10.0:
-			vp.size = Vector2i(int(sz.x), int(sz.y))
-			print("🔲 Viewport sincronizado: %s" % vp.size)
+		pass  # stretch=true en SubViewportContainer maneja el resize automáticamente
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame
@@ -728,7 +726,7 @@ func _on_logic_tick():
 				else:
 					var pct := int(RunManager.mente_colmena_timer / 180.0 * 100.0)
 					var prev_pct := int((RunManager.mente_colmena_timer - dt) / 180.0 * 100.0)
-					if pct / 25 > prev_pct / 25: # lap cada 25%
+					if int(pct / 25.0) > int(prev_pct / 25.0): # lap cada 25%
 						add_lap("?? MENTE COLMENA � Sincron�a %d%% (%.0f/180s)" % [pct, RunManager.mente_colmena_timer])
 					show_system_toast("?? MENTE COLMENA � %d%% (%.0f/180s) � ratio %.1f%%/%.1f%%" % [pct, RunManager.mente_colmena_timer, ap.activo, ap.pasivo])
 			else:
@@ -871,7 +869,6 @@ func _on_logic_tick():
 		RunManager.check_parasitism_final(dt)
 	# FRACTURA EPISTÉMICA: mostrar botón manual de colapso controlado
 	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
-		_update_colapso_controlado_btn()
 		_parasitism_status_timer += dt
 		if _parasitism_status_timer >= PARASITISM_STATUS_INTERVAL:
 			_parasitism_status_timer = 0.0
@@ -1006,7 +1003,7 @@ func _on_close_evo_button_pressed():
 
 func _on_btn_homeostasis_pressed():
 	if EvoManager.mutation_homeostasis:
-		if EvoManager.is_allostasis_ready(self):
+		if EvoManager.is_allostasis_ready():
 			_trigger_allostasis()
 			evo_choice_panel.visible = false
 			$DimmerBackground.visible = false
@@ -1082,7 +1079,7 @@ func _on_primordio_iniciado() -> void:
 	update_ui()
 
 func _on_primordio_abortado(abort_count: int, reason: String) -> void:
-	LogManager.add("?? Primordio P-%02d ABORTADO: %s (-40%% micelio)" % [abort_count, reason], self)
+	LogManager.add("?? Primordio P-%02d ABORTADO: %s (-40%% micelio)" % [abort_count, reason])
 	update_ui()
 
 func _on_seta_formada() -> void:
@@ -1545,7 +1542,7 @@ func _input(event):
 				UIManager.genome_scroll.visible = UIManager.lab_mode
 			if LogManager.show_all_laps != UIManager.lab_mode:
 				toggle_lap_view()
-			if lab_mode:
+			if UIManager.lab_mode:
 				TutorialManager.notify_lab_opened()
 
 		if event.keycode == KEY_K:
@@ -1841,7 +1838,7 @@ func update_ui():
 			btn_evolve.modulate = Color(1.0, 0.4, 0.2) # Naranja parásito
 		else:
 			var any_tier1 = EvoManager.is_any_latent_tier1()
-			var any_tier2 = EvoManager.mutation_homeostasis and EvoManager.is_allostasis_ready(self)
+			var any_tier2 = EvoManager.mutation_homeostasis and EvoManager.is_allostasis_ready()
 
 			btn_evolve.visible = any_tier1 or any_tier2
 			btn_evolve.disabled = false
@@ -1860,10 +1857,3 @@ func update_ui():
 # =====================================================
 #  PERSISTENCIA DE DATOS (Save/Load)
 # =====================================================
-
-
-
-
-
-
-

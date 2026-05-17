@@ -820,7 +820,7 @@ func process_depredador_progress(dt: float) -> void:
 		UIManager.show_toast("DEPREDADOR EN PROGRESO — %d%% (%.0f/30s)" % [pct, depredador_timer])
 
 ## Retorna 1 si glitch se activó, -1 si se desactivó, 0 si sin cambio
-func process_glitch(dt: float) -> int:
+func process_glitch(_dt: float) -> int:
 	if not LegacyManager.get_buff_value("metabolismo_glitch"):
 		return 0
 	var glitch_now := StructuralModel.epsilon_runtime > 0.40

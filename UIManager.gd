@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # UIManager.gd — Autoload
 # Encargado de la actualización visual y gestión de referencias de UI.
@@ -321,7 +321,7 @@ func _toggle_collapsible_panel(panel: Control, btn: Button, pressed: bool, label
 
 # --- Generación de Textos de HUD ---
 
-func build_formula_text(main: Node) -> String:
+func build_formula_text(_main: Node) -> String:
 	var has_abc = UpgradeManager.level("click_mult") > 0
 
 	# --- TÉRMINO ACTIVO (Clicks) ---
@@ -367,18 +367,16 @@ func build_formula_text(main: Node) -> String:
 	# --- MULTIPLICADORES GLOBALES DE LEGADO (Λ) ---
 	# Aplican a click + pasivo simultáneamente
 	var lambda_parts: Array = []
-	var lambda_total := 1.0
 	# aura_dorada es solo click — se muestra en el término activo como rs/im, no en Λ
 	if LegacyManager.get_buff_value("semilla_cosmica"):
-		lambda_parts.append("[color=#8899ff]sc[/color]"); lambda_total *= 2.0
+		lambda_parts.append("[color=#8899ff]sc[/color]")
 	if LegacyManager.get_buff_value("mente_colmena"):
-		lambda_parts.append("[color=#ff44ff]mc[/color]"); lambda_total *= 3.0
+		lambda_parts.append("[color=#ff44ff]mc[/color]")
 	var eco_v: float = LegacyManager.get_effect_value("all_income_mult")
 	if eco_v > 0.0:
-		lambda_parts.append("[color=#44ffaa]ep[/color]"); lambda_total *= (1.0 + eco_v)
+		lambda_parts.append("[color=#44ffaa]ep[/color]")
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
 		lambda_parts.append("[color=#ffaa44]cc[/color]")
-		lambda_total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		lambda_parts.append("[color=#9933cc]mg?[/color]")  # condicional ε>0.40
 	if lambda_parts.size() > 0:
@@ -427,7 +425,7 @@ func build_formula_values(_main: Node) -> String:
 func build_marginal_contribution(_main: Node) -> String:
 	return ""
 
-func update_click_stats_panel(main: Node) -> String:
+func update_click_stats_panel(_main: Node) -> String:
 	var a = UpgradeManager.value("click")
 	var b = UpgradeManager.value("click_mult")
 	var c_n = StructuralModel.persistence_dynamic
@@ -444,8 +442,8 @@ func update_click_stats_panel(main: Node) -> String:
 		
 	var t = "[b]Aporte actual:[/b]\n"
 	t += "[color=#cccccc]• Click PUSH = +%.2f\n" % push
-	if StructuralModel.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % main.get_auto_income_effective()
-	if StructuralModel.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % main.get_trueque_income_effective()
+	if StructuralModel.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % EconomyManager.get_auto_income_effective()
+	if StructuralModel.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % EconomyManager.get_trueque_income_effective()
 	
 	t += "[b]Δ$ total = +%.2f[/b]\n" % ap.total
 	if ap.total > 0:
@@ -599,7 +597,7 @@ func format_compact(v: float) -> String:
 func epsilon_flag(v: float, limit: float) -> String:
 	return "⚠️" if v > limit else "✅"
 
-func build_evo_checklist(main: Node) -> String:
+func build_evo_checklist(_main: Node) -> String:
 	# Si la run ya cerró, mostrar lore/resumen del final alcanzado en vez de la checklist
 	if RunManager.run_closed:
 		return _build_run_end_lore(RunManager.final_route)
@@ -690,7 +688,7 @@ func build_evo_checklist(main: Node) -> String:
 				t += ok_color + "[x] MENTE COLMENA DISTRIBUIDA — IA activa[/color]\n"
 			elif mc_timer > 0.0:
 				var mc_pct := int(mc_timer / 180.0 * 100.0)
-				var filled := int(mc_pct / 5)   # 20 bloques = 100%
+				var filled := int(mc_pct / 5.0)   # 20 bloques = 100%
 				var bar := ""
 				for i in range(20):
 					bar += "█" if i < filled else "░"
@@ -1041,7 +1039,7 @@ func build_mutation_status_text() -> String:
 		# Progress bar de saturación hacia el cierre automático (+6 PL)
 		var bio_now: float = BiosphereEngine.biomasa
 		var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
-		var bar_filled: int = int(bio_pct / 5)  # 20 segmentos
+		var bar_filled: int = int(bio_pct / 5.0)  # 20 segmentos
 		var bio_bar: String = "█".repeat(bar_filled) + "░".repeat(20 - bar_filled)
 		var pl_label: String = "+6 PL" if bio_now >= 100.0 else ("+4 PL" if bio_now >= 50.0 else "+2 PL")
 		t += "\n[color=#aa66cc]◈ SATURACIÓN (sellado manual: %s):[/color]\n" % pl_label
@@ -1089,7 +1087,7 @@ func build_mutation_status_text() -> String:
 		t += "  [color=%s]  ó Bio ≥ 25 → %.1f[/color]\n" % ["#00ff88" if b3 else "#ff5555", bio]
 	return t
 
-func build_institution_panel_text(main: Node) -> String:
+func build_institution_panel_text(_main: Node) -> String:
 	var t := "--- Contabilidad Básica ---\n"
 	t += "\n--- ε desglosado (Homeostasis) ---\n"
 	t += "%s ε activo = %s\n" % [epsilon_flag(StructuralModel.epsilon_active, 0.15), snapped(StructuralModel.epsilon_active, 0.01)]
@@ -1252,7 +1250,7 @@ func build_bifurcation_data() -> Dictionary:
 # =====================================================
 # EPSILON STICKY LABEL BUILDER
 # =====================================================
-func build_epsilon_sticky_text(main: Control) -> String:
+func build_epsilon_sticky_text(_main: Control) -> String:
 	var t := ""
 	t += "%s ε runtime = %s\n" % [epsilon_flag(StructuralModel.epsilon_runtime, 0.30), snapped(StructuralModel.epsilon_runtime, 0.01)]
 	t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
@@ -1416,5 +1414,3 @@ func update_fungal_cycle_bar() -> void:
 		if is_instance_valid(bar): bar.visible = false
 		if is_instance_valid(primordio_button): primordio_button.visible = false
 		if is_instance_valid(sporulation_final_button): sporulation_final_button.visible = false
-
-
