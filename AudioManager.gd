@@ -491,21 +491,21 @@ func _build_telemetry_row(parent: VBoxContainer) -> void:
 	parent.add_child(telemetry_box)
 
 	var checkbox := CheckBox.new()
-	checkbox.text = "Enviar datos anonimos de uso (ayuda a mejorar el juego)"
+	checkbox.text = tr("SET_TELEMETRY_CHECKBOX")
 	checkbox.button_pressed = TelemetryManager.is_enabled()
 	checkbox.toggled.connect(func(pressed: bool):
 		TelemetryManager.set_enabled(pressed))
 	telemetry_box.add_child(checkbox)
 
 	var hint := Label.new()
-	hint.text = "Local y opt-in: guarda JSON anonimos en user://telemetry/runs al cerrar una run."
+	hint.text = tr("SET_TELEMETRY_HINT")
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
 	telemetry_box.add_child(hint)
 
 	var open_btn := Button.new()
-	open_btn.text = "Abrir carpeta de telemetria"
+	open_btn.text = tr("SET_TELEMETRY_OPEN")
 	open_btn.custom_minimum_size = Vector2(0, 34)
 	open_btn.disabled = OS.get_name() == "HTML5"
 	open_btn.pressed.connect(func():
@@ -519,7 +519,7 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 	parent.add_child(box)
 
 	var sec_lbl := Label.new()
-	sec_lbl.text = "Accesibilidad"
+	sec_lbl.text = tr("SET_ACCESSIBILITY")
 	sec_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	sec_lbl.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
 	box.add_child(sec_lbl)
@@ -530,13 +530,13 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 	box.add_child(scale_row)
 
 	var scale_lbl := Label.new()
-	scale_lbl.text = "Tamaño de texto:"
+	scale_lbl.text = tr("SET_FONT_SIZE")
 	scale_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scale_row.add_child(scale_lbl)
 
 	var scale_opt := OptionButton.new()
 	scale_opt.add_item("85%",  0)
-	scale_opt.add_item("Normal (100%)", 1)
+	scale_opt.add_item(tr("SET_FONT_NORMAL"), 1)
 	scale_opt.add_item("115%", 2)
 	scale_opt.add_item("130%", 3)
 	# Seleccionar el índice correspondiente al scale actual
@@ -551,7 +551,7 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 	scale_row.add_child(scale_opt)
 
 	var scale_hint := Label.new()
-	scale_hint.text = "Requiere reinicio de escena al cambiar."
+	scale_hint.text = tr("SET_FONT_HINT")
 	scale_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scale_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	scale_hint.add_theme_color_override("font_color", Color(0.45, 0.50, 0.60))
@@ -559,7 +559,7 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 
 	# ── Reducir movimiento ───────────────────────────
 	var motion_cb := CheckBox.new()
-	motion_cb.text = "Reducir movimiento (sin animaciones)"
+	motion_cb.text = tr("SET_REDUCE_MOTION")
 	motion_cb.button_pressed = AccessibilityManager.reduce_motion
 	motion_cb.toggled.connect(func(pressed: bool):
 		AccessibilityManager.set_reduce_motion(pressed))
@@ -567,7 +567,7 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 
 	# ── Alto contraste ───────────────────────────────
 	var contrast_cb := CheckBox.new()
-	contrast_cb.text = "Alto contraste"
+	contrast_cb.text = tr("SET_HIGH_CONTRAST")
 	contrast_cb.button_pressed = AccessibilityManager.high_contrast
 	contrast_cb.toggled.connect(func(pressed: bool):
 		AccessibilityManager.set_high_contrast(pressed))
@@ -579,12 +579,12 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 	box.add_child(cb_row)
 
 	var cb_lbl := Label.new()
-	cb_lbl.text = "Daltonismo:"
+	cb_lbl.text = tr("SET_COLORBLIND")
 	cb_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cb_row.add_child(cb_lbl)
 
 	var cb_opt := OptionButton.new()
-	cb_opt.add_item("Desactivado", 0)
+	cb_opt.add_item(tr("SET_COLORBLIND_OFF"), 0)
 	cb_opt.add_item("Deuteranopia (R-G)", 1)
 	cb_opt.add_item("Protanopia (R-G)", 2)
 	cb_opt.add_item("Tritanopia (B-A)", 3)

@@ -51,6 +51,21 @@ const TRANSLATIONS := {
 		"SET_RESET_TUTORIAL": "Reiniciar tutorial",
 		"SET_RESET_RUN": "Borrar run actual",
 		"SET_CLOSE": "Cerrar",
+
+		# Telemetría
+		"SET_TELEMETRY_CHECKBOX": "Enviar datos anónimos de uso (ayuda a mejorar el juego)",
+		"SET_TELEMETRY_HINT": "Local y opt-in: guarda JSON anónimos en user://telemetry/runs al cerrar una run.",
+		"SET_TELEMETRY_OPEN": "Abrir carpeta de telemetría",
+
+		# Accesibilidad
+		"SET_ACCESSIBILITY": "Accesibilidad",
+		"SET_FONT_SIZE": "Tamaño de texto:",
+		"SET_FONT_NORMAL": "Normal (100%)",
+		"SET_FONT_HINT": "Requiere reinicio de escena al cambiar.",
+		"SET_REDUCE_MOTION": "Reducir movimiento (sin animaciones)",
+		"SET_HIGH_CONTRAST": "Alto contraste",
+		"SET_COLORBLIND": "Daltonismo:",
+		"SET_COLORBLIND_OFF": "Desactivado",
 	},
 	"en": {
 		"UI_LANG_NAME": "English",
@@ -82,6 +97,21 @@ const TRANSLATIONS := {
 		"SET_RESET_TUTORIAL": "Reset tutorial",
 		"SET_RESET_RUN": "Delete current run",
 		"SET_CLOSE": "Close",
+
+		# Telemetry
+		"SET_TELEMETRY_CHECKBOX": "Send anonymous usage data (helps improve the game)",
+		"SET_TELEMETRY_HINT": "Local and opt-in: saves anonymous JSON in user://telemetry/runs on run close.",
+		"SET_TELEMETRY_OPEN": "Open telemetry folder",
+
+		# Accessibility
+		"SET_ACCESSIBILITY": "Accessibility",
+		"SET_FONT_SIZE": "Text size:",
+		"SET_FONT_NORMAL": "Normal (100%)",
+		"SET_FONT_HINT": "Requires scene restart to apply.",
+		"SET_REDUCE_MOTION": "Reduce motion (no animations)",
+		"SET_HIGH_CONTRAST": "High contrast",
+		"SET_COLORBLIND": "Color blindness:",
+		"SET_COLORBLIND_OFF": "Disabled",
 	}
 }
 
