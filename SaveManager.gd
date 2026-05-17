@@ -16,10 +16,10 @@ var SAVE_PATH: String:
 var _file_existed_on_load: bool = false
 
 func build_save_data(main: Node) -> Dictionary:
-	const MAX_LAPS := 300
 	var all_laps := LogManager.get_lap_array()
-	var laps_to_save := all_laps.slice(max(0, all_laps.size() - MAX_LAPS))
+	var laps_to_save := all_laps.slice(max(0, all_laps.size() - Balance.MAX_LAPS))
 	return {
+		"save_version": Version.get_version_string(),
 		"economy": {
 			"money": EconomyManager.money,
 			"persistence_dynamic": StructuralModel.persistence_dynamic,
@@ -170,20 +170,10 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		RunManager.run_closed = f.get("run_closed", RunManager.run_closed)
 		RunManager.final_route = f.get("final_route", RunManager.final_route)
 		RunManager.final_reason = f.get("final_reason", RunManager.final_reason)
-		# MIGRACIÓN v0.9.3: importar logros viejos del savegame al nuevo sistema.
-		# Si f tiene flags legacy (unlocked_tree, achievement_*), los pasamos al AchievementManager.
-		var has_legacy_flags :bool = f.has("unlocked_tree") or f.has("achievement_millionaire")
-		var old_achievements: Dictionary = data.get("achievements", {})
-		if has_legacy_flags or not old_achievements.is_empty():
-			AchievementManager.migrate_from_legacy_save(f, old_achievements)
 
 	if data.has("evolution"):
 		var ev = data.evolution
 		EvoManager.genome = ev.get("genome", EvoManager.genome)
-		# Agregar esto para migrar saves viejos:
-		for key in ["allostasis", "homeorhesis", "depredador"]:
-			if not EvoManager.genome.has(key):
-				EvoManager.genome[key] = "dormido"
 		EvoManager.mutation_homeostasis = ev.get("mutation_homeostasis", EvoManager.mutation_homeostasis)
 		EvoManager.mutation_hyperassimilation = ev.get("mutation_hyperassimilation", EvoManager.mutation_hyperassimilation)
 		EvoManager.mutation_symbiosis = ev.get("mutation_symbiosis", EvoManager.mutation_symbiosis)
@@ -238,19 +228,42 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		if RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
 			EvoManager.carnaval_set_mutation(RunManager.carnaval_mutations[RunManager.carnaval_index])
 
-	# Los logros ahora viven en legacy_bank.json y se cargan desde LegacyManager.load_legacy().
-	# Si el save viejo tenía data["achievements"], ya se migró en el bloque de flags de arriba.
-
 	# Bitácora de eventos
 	if data.has("laps"):
 		LogManager.load_laps(data["laps"])
 
-	# Migración
-	if not RunManager.run_closed and (EvoManager.mutation_hyperassimilation or EvoManager.mutation_sporulation):
-		RunManager.run_closed = true
-		RunManager.final_route = RunManager.final_route if RunManager.final_route != "" else "MUTACION_FINAL"
-
 	main.update_ui()
+
+## Aplica migraciones de formato a data antes de deserializar.
+## Cada migración es idempotente: si el campo ya existe, no lo toca.
+func _migrate(data: Dictionary) -> Dictionary:
+	# v0.9.3 — logros viejos embebidos en flags/achievements → AchievementManager
+	var flags: Dictionary = data.get("flags", {})
+	var old_achievements: Dictionary = data.get("achievements", {})
+	if flags.has("unlocked_tree") or flags.has("achievement_millionaire") or not old_achievements.is_empty():
+		AchievementManager.migrate_from_legacy_save(flags, old_achievements)
+
+	# v0.9.x — genome anterior sin claves NG+ → rellena con "dormido"
+	var ev: Dictionary = data.get("evolution", {})
+	var genome: Dictionary = ev.get("genome", {})
+	for key in ["allostasis", "homeorhesis", "depredador"]:
+		if not genome.has(key):
+			genome[key] = "dormido"
+	if not genome.is_empty():
+		ev["genome"] = genome
+		data["evolution"] = ev
+
+	# v0.9.x — saves con mutaciones finales activas sin run_closed
+	if flags.has("run_closed") and not flags["run_closed"]:
+		var hyper: bool = data.get("evolution", {}).get("mutation_hyperassimilation", false)
+		var spor: bool = data.get("evolution", {}).get("mutation_sporulation", false)
+		if hyper or spor:
+			flags["run_closed"] = true
+			if flags.get("final_route", "") == "":
+				flags["final_route"] = "MUTACION_FINAL"
+			data["flags"] = flags
+
+	return data
 
 func load_game(main: Node):
 	var path := SAVE_PATH
@@ -270,6 +283,7 @@ func load_game(main: Node):
 		print("❌ [SaveManager] No se pudo cargar ni el save ni el backup. Iniciando run limpia.")
 		return
 
+	data = _migrate(data)
 	apply_save_data(main, data)
 	print("📂 [SaveManager] Juego cargado con éxito.")
 
