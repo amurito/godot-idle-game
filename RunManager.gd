@@ -32,6 +32,10 @@ var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 var evolution_button: Button = null
 var target_evolution: String = ""
 
+# NG+ MENTE COLMENA — runtime state
+var mente_colmena_active: bool = false
+var mente_colmena_timer: float = 0.0
+
 # ==================== POST-TRASCENDENCIA (v0.9.8) ====================
 # VACÍO HAMBRIENTO
 var vacio_hambriento_active: bool = false
@@ -79,6 +83,8 @@ func reset():
 	carnaval_timer = 0.0
 	carnaval_total_rotations = 0
 	carnaval_peak_money = 0.0
+	mente_colmena_active = false
+	mente_colmena_timer = 0.0
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:

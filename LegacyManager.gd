@@ -935,3 +935,107 @@ func purchase_cosmic(cosmic_id: String) -> bool:
 
 func has_cosmic_buff(cosmic_id: String) -> bool:
 	return cosmic_unlocked.get(cosmic_id, false)
+
+# =====================================================
+#  APLICACIÓN DE BUFFS AL INICIO DE RUN
+# =====================================================
+
+func apply_legacy_buffs() -> void:
+	# LEGADO METABÓLICO: dinero inicial (150 × level, escala con cost_growth)
+	var run_start_money: float = get_effect_value("run_start_money")
+	if run_start_money > 0.0 and not SaveManager._file_existed_on_load:
+		EconomyManager.money += run_start_money
+		LogManager.add("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
+
+	# PLASTICIDAD ADAPTATIVA: omega_min floor 0.30
+	if get_buff_value("plasticidad_adaptativa"):
+		var floor_val: float = get_effect_value("omega_min_floor")
+		if StructuralModel.omega_min < floor_val:
+			StructuralModel.omega_min = floor_val
+			LogManager.add("✦ [Legado] Plasticidad Adaptativa: Ω_min → %.2f" % floor_val)
+
+	# UMBRAL COGNITIVO / RESONANCIA COGNITIVA: nivel cognitivo inicial +1
+	var cog_bonus: float = get_effect_value("start_nivel_cognitivo_bonus")
+	if cog_bonus >= 1.0 and not SaveManager._file_existed_on_load:
+		var bonus_int: int = int(cog_bonus)
+		if UpgradeManager.states.has("cognitive"):
+			UpgradeManager.states["cognitive"].level += bonus_int
+			LogManager.add("✦ [Legado] Bonus Cognitivo: nivel_cognitivo +%d" % bonus_int)
+
+	# NG+ MENTE COLMENA: activa el auto-click permanente si el buff está activo
+	if get_buff_value("mente_colmena"):
+		RunManager.mente_colmena_active = true
+		LogManager.add("🧠 [NG+] Mente Colmena — IA distribuida activa desde el inicio (auto-click ×10)")
+
+	# LEGADO ALOSTASIS: Ω_min garantizado ≥ 0.45
+	if get_buff_value("legado_alostasis"):
+		if StructuralModel.omega_min < 0.45:
+			StructuralModel.omega_min = 0.45
+		LogManager.add("✦ [NG+] Resiliencia Alostática — Ω_min garantizado ≥ 0.45")
+
+	# LEGADO HOMEORRESIS: Ω_min garantizado ≥ 0.55
+	if get_buff_value("legado_homeorresis"):
+		if StructuralModel.omega_min < 0.55:
+			StructuralModel.omega_min = 0.55
+		LogManager.add("✦ [NG+] Trascendencia Cristalina — Ω_min garantizado ≥ 0.55")
+
+	# SANGRE NEGRA: biomasa inicial ×1.30 si viene de ruta Parasitismo
+	if get_buff_value("sangre_negra"):
+		var parasitism_done: bool = endings_achieved.get("PARASITISMO", false)
+		if parasitism_done and not SaveManager._file_existed_on_load:
+			var mult: float = get_effect_value("parasitism_biomasa_start_mult")
+			BiosphereEngine.biomasa *= mult
+			LogManager.add("✦ [Legado] Sangre Negra: Biomasa inicial ×%.2f" % mult)
+
+	# NG+ NOTIFICACIONES al inicio de run
+	if get_buff_value("aura_dorada"):
+		LogManager.add("✦ [NG+] Aura Dorada activa — click ×1.5, pasivo ×1.5")
+	if get_buff_value("semilla_cosmica"):
+		LogManager.add("✦ [NG+] Semilla Cósmica activa — click ×2.0, pasivo ×2.0")
+	if get_buff_value("mente_colmena"):
+		LogManager.add("✦ [NG+] Mente Colmena activa — pasivo ×3.0 (la singularidad se distribuyó)")
+	if get_buff_value("metabolismo_glitch"):
+		LogManager.add("✦ [NG+] Metabolismo Glitch presente — se activa con ε > 0.40 (click ×1.5, pasivo ×1.8)")
+
+func apply_cosmic_buffs() -> void:
+	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)
+	if trascendencia_count == 0:
+		return
+
+	# IMPULSO INICIAL (T1): +$500 al empezar la run
+	if has_cosmic_buff("impulso_inicial"):
+		if not SaveManager._file_existed_on_load:
+			EconomyManager.money += 500.0
+			LogManager.add("✦ [Cósmico] Impulso Inicial: +$500")
+
+	# OMEGA PRIMORDIAL (T1): Ω_min +0.05
+	if has_cosmic_buff("omega_primordial"):
+		StructuralModel.omega_min = max(StructuralModel.omega_min, StructuralModel.omega_min + 0.05)
+		LogManager.add("✦ [Cósmico] Omega Primordial: Ω_min +0.05")
+
+	# RESONANCIA BIÓTICA (T1): Biomasa inicial 1.5
+	if has_cosmic_buff("resonancia_biotica"):
+		if BiosphereEngine.biomasa < 1.5:
+			BiosphereEngine.biomasa = 1.5
+			LogManager.add("✦ [Cósmico] Resonancia Biótica: Biomasa → 1.5")
+
+	# ECO DE LEGADO (T1): +5 PL al inicio de run
+	if has_cosmic_buff("eco_de_legado"):
+		if not SaveManager._file_existed_on_load:
+			add_pl(5)
+			LogManager.add("✦ [Cósmico] Eco de Legado: +5 PL")
+
+	# MEMORIA PERSISTENTE (T2): Accounting y Trueque nivel 1 gratis
+	if has_cosmic_buff("memoria_persistente"):
+		if UpgradeManager.level("accounting") == 0:
+			UpgradeManager.states["accounting"].level = 1
+			var def_acc = UpgradeManager.get_def("accounting")
+			if def_acc:
+				UpgradeManager.states["accounting"].current_value = def_acc.base_value + def_acc.gain
+				UpgradeManager.states["accounting"].unlocked = true
+			LogManager.add("✦ [Cósmico] Memoria Persistente: Contabilidad nivel 1 gratis")
+		# Desbloquear dependientes de accounting
+		for other_id in UpgradeManager.states.keys():
+			var other_def = UpgradeManager.get_def(other_id)
+			if other_def and other_def.unlock_requires == "accounting":
+				UpgradeManager.states[other_id].unlocked = true
