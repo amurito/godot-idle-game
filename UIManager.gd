@@ -666,8 +666,8 @@ func build_evo_checklist(main: Node) -> String:
 		# NG+ MENTE COLMENA — ruta alternativa cuando last_run == "SINGULARIDAD"
 		if LegacyManager.last_run_ending == "SINGULARIDAD" or LegacyManager.last_run_ending == "MENTE COLMENA DISTRIBUIDA":
 			t += "\n[color=magenta][b]🧠 Ruta NG+: MENTE COLMENA[/b][/color]\n"
-			var mc_timer: float = main.mente_colmena_timer if main else 0.0
-			var mc_active: bool = main.mente_colmena_active if main else false
+			var mc_timer: float = RunManager.mente_colmena_timer
+			var mc_active: bool = RunManager.mente_colmena_active
 			if mc_active:
 				t += ok_color + "[x] MENTE COLMENA DISTRIBUIDA — IA activa[/color]\n"
 			elif mc_timer > 0.0:
