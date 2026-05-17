@@ -1714,8 +1714,8 @@ func update_lab_metrics():
 		var pas_col := "[color=#ffcc00]" if pct_pas > pct_act else "[color=#aaaaaa]"
 		var push_str := UIManager.format_compact(ap.push_abs)
 		var pass_str := UIManager.format_compact(ap.passive_abs)
-		var txt := act_col + "? ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
-		txt += pas_col + "? PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
+		var txt := act_col + "▲ ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
+		txt += pas_col + "▼ PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
 		txt += "[color=#555555][%s][/color]" % bar
 		UIManager.sys_active_passive_label.clear()
 		UIManager.sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
@@ -1735,9 +1735,9 @@ func update_lab_metrics():
 		var click_str := UIManager.format_compact(ap.push_abs)
 		var auto_str  := UIManager.format_compact(EconomyManager.get_auto_income_effective())
 		var trueq_str := UIManager.format_compact(EconomyManager.get_trueque_income_effective())
-		var txt := "[color=#ff8844]? Click %d%% +%s/s[/color]  " % [c_pct, click_str]
-		txt += "[color=#44aaff]? Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
-		txt += "[color=#00ffcc]? Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
+		var txt := "[color=#ff8844]● Click %d%% +%s/s[/color]  " % [c_pct, click_str]
+		txt += "[color=#44aaff]● Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
+		txt += "[color=#00ffcc]● Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
 		txt += "[color=#555555][%s][/color]" % bar
 		UIManager.sys_breakdown_label.clear()
 		UIManager.sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
