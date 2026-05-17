@@ -229,7 +229,7 @@ func close_run(route: String, reason: String):
 	extreme_shocks_recovered = 0
 	homeostasis_tier_reached = 0
 
-	SaveManager.save_game(main)
+	SaveManager.save_game(get_tree().get_first_node_in_group("main"))
 
 func enter_post_homeostasis():
 	post_homeostasis = true
@@ -472,13 +472,13 @@ func check_shock_tracking():
 		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)
 		if LegacyManager.get_buff_value("legado_alostasis"):
 			StructuralModel.omega_min = min(StructuralModel.omega_min + 0.02, 0.70)
-			main.add_lap("✦ [NG+] Resiliencia Alostática — Ω_min +0.02 → %.2f" % StructuralModel.omega_min)
+			LogManager.add("✦ [NG+] Resiliencia Alostática — Ω_min +0.02 → %.2f" % StructuralModel.omega_min)
 
 		# EQUILIBRIO HEREDADO: +0.04 Ω_min en burst por shock estabilizado (cap 0.70)
 		var eq_bonus: float = LegacyManager.get_effect_value("omega_min_per_disturbance")
 		if eq_bonus > 0.0:
 			StructuralModel.omega_min = min(StructuralModel.omega_min + eq_bonus, 0.70)
-			main.add_lap("✦ [Legado] Equilibrio Heredado — Ω_min +%.2f → %.2f" % [eq_bonus, StructuralModel.omega_min])
+			LogManager.add("✦ [Legado] Equilibrio Heredado — Ω_min +%.2f → %.2f" % [eq_bonus, StructuralModel.omega_min])
 
 func check_perfect_homeostasis():
 	if not post_homeostasis or AchievementManager.is_unlocked("homeostasis_perfecta"):
@@ -523,8 +523,7 @@ func _activate_vacio_hambriento() -> void:
 	vacio_hambriento_mult = 100.0
 	LegacyManager.save_legacy()
 	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
-	if main:
-		LogManager.add("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
+	LogManager.add("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
 
 func _activate_carnaval() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "carnaval"})
@@ -540,16 +539,14 @@ func _activate_carnaval() -> void:
 	# Aplicar la primera inmediatamente
 	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
 	print("🎭 [CARNAVAL] Mutaciones: %s" % str(carnaval_mutations))
-	if main:
-		LogManager.add("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
+	LogManager.add("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
 
 func _activate_reencarnacion() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "reencarnacion"})
 	reencarnacion_active = true
 	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
 	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
-	if main:
-		LogManager.add("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
+	LogManager.add("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
 
 ## Tick del Carnaval: rotar mutación cada CARNAVAL_INTERVAL segundos
 func update_carnaval(delta: float) -> void:
@@ -566,8 +563,7 @@ func update_carnaval(delta: float) -> void:
 		carnaval_total_rotations += 1
 		var next_mut :String= carnaval_mutations[carnaval_index]
 		EvoManager.carnaval_set_mutation(next_mut)
-		if main:
-			LogManager.add("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
+		LogManager.add("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
 
 		# CHEQUEO: POLIMORFÍA TOTAL
 		if carnaval_total_rotations >= 12:
