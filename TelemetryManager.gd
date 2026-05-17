@@ -306,10 +306,8 @@ func _timestamp_for_filename() -> String:
 
 
 func _get_run_time() -> float:
-	if is_instance_valid(_main_ref):
-		var value = _main_ref.get("run_time")
-		if value != null:
-			return float(value)
+	if RunManager.run_time > 0.0:
+		return RunManager.run_time
 	if _run_started_at > 0:
 		return float(int(Time.get_unix_time_from_system()) - _run_started_at)
 	return 0.0
