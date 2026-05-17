@@ -357,6 +357,9 @@ func _ready():
 		self.theme = t
 	AudioManager.play_music("ambient")
 	UIManager.setup(ui_root)
+	# Fallback Safari/iOS: botón físico visible garantiza gesto de usuario válido para AudioContext
+	if is_instance_valid(UIManager.big_click_button):
+		UIManager.big_click_button.pressed.connect(AudioManager._unlock_audio)
 	LogManager.show_all_laps = false
 	update_lap_toggle_button()
 	update_lap_toggle_button()

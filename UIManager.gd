@@ -157,15 +157,20 @@ func setup(ui_root: Control):
 			_toggle_collapsible_panel(structural_content, structural_btn, pressed, "Estructura")
 		)
 
-	# Route badge — label dinámico en el header para ruta post-trascendencia
+	# Route badge — RichTextLabel para soporte de emojis en web (Label rompería en HTML5)
 	var header_content = _find_scene("HeaderContent")
 	if header_content:
-		route_badge_label = Label.new()
-		route_badge_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
-		route_badge_label.visible = false
+		var _rtl := RichTextLabel.new()
+		_rtl.bbcode_enabled = true
+		_rtl.fit_content = true
+		_rtl.scroll_active = false
+		_rtl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		_rtl.add_theme_font_size_override("normal_font_size", AccessibilityManager.fs(13))
+		_rtl.visible = false
 		# Insertar antes del spacer derecho (último hijo)
-		header_content.add_child(route_badge_label)
-		header_content.move_child(route_badge_label, header_content.get_child_count() - 2)
+		header_content.add_child(_rtl)
+		header_content.move_child(_rtl, header_content.get_child_count() - 2)
+		route_badge_label = _rtl
 
 	# Panel evolutivo y botones de ramificación (hijos de la escena raíz)
 	evo_choice_panel = _find_scene("EvoChoicePanel")
@@ -213,8 +218,8 @@ func update_route_badge() -> void:
 	if text == "":
 		route_badge_label.visible = false
 		return
-	route_badge_label.text = text
-	route_badge_label.add_theme_color_override("font_color", color)
+	var hex := "#%s" % color.to_html(false)
+	route_badge_label.text = "[color=%s]%s[/color]" % [hex, EmojiToRichText.rich(text)]
 	route_badge_label.visible = true
 
 func update_money(amount: float):
