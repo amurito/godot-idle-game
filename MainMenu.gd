@@ -333,10 +333,12 @@ func _hard_reset() -> void:
 
 func _refresh_nav_badges() -> void:
 	var has_new_ach: bool = AchievementManager.has_unseen()
-	btn_achievements.text = EmojiToRichText.strip("★ LOGROS" if has_new_ach else "Logros")
+	var ach_name := tr("MM_ACHIEVEMENTS")
+	btn_achievements.text = EmojiToRichText.strip("★ " + ach_name.to_upper() if has_new_ach else ach_name)
 
 	var has_new_buff: bool = LegacyManager.has_unseen_buff()
-	btn_legacy.text = EmojiToRichText.strip("★ BANCO GENÉTICO" if has_new_buff else "Banco Genético")
+	var legacy_name := tr("MM_LEGACY_BANK")
+	btn_legacy.text = EmojiToRichText.strip("★ " + legacy_name.to_upper() if has_new_buff else legacy_name)
 
 func _on_achievements_pressed():
 	achievements_panel.visible = true
@@ -948,7 +950,7 @@ func _setup_trascendencia_ui() -> void:
 	# 3. Botón TRASCENDER (entre Legacy y Quit)
 	btn_trascendencia = Button.new()
 	btn_trascendencia.custom_minimum_size = Vector2(0, 45)
-	btn_trascendencia.text = EmojiToRichText.strip("⚡ TRASCENDER")
+	btn_trascendencia.text = EmojiToRichText.strip(tr("MM_TRANSCEND_BTN"))
 	btn_trascendencia.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	btn_trascendencia.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	btn_trascendencia.pressed.connect(_on_trascender_pressed)
@@ -1053,7 +1055,7 @@ func _show_trascend_confirm_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var warn := Label.new()
-	warn.text = EmojiToRichText.strip("[!] Al trascender se RESETEAN: upgrades, mutaciones, PL, buffs del Banco Genético.\n* Se PRESERVAN: Esencia (Ξ), Banco Cósmico, rutas ya completadas.")
+	warn.text = EmojiToRichText.strip(tr("TRAS_WARN"))
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD
 	warn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	warn.add_theme_color_override("font_color", Color(0.85, 0.7, 0.5))
@@ -1073,7 +1075,7 @@ func _show_trascend_confirm_panel() -> void:
 	btn_row.add_child(btn_cancel)
 
 	var btn_confirm := Button.new()
-	btn_confirm.text = EmojiToRichText.strip("⚡ CONFIRMAR TRASCENDENCIA ⚡" if can else "REQUISITOS NO CUMPLIDOS")
+	btn_confirm.text = EmojiToRichText.strip(tr("MM_TRANSCEND_CONFIRM") if can else tr("MM_TRANSCEND_LOCKED_BTN"))
 	btn_confirm.custom_minimum_size = Vector2(280, 45)
 	btn_confirm.disabled = not can
 	btn_confirm.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
@@ -1528,6 +1530,19 @@ func _on_locale_changed(_new_locale: String) -> void:
 			btn_continue.text = tr("MM_CONTINUE")
 		elif post_transcendence:
 			btn_continue.text = EmojiToRichText.strip(tr("MM_NEW_RUN_POSTRANSCEND"))
+
+	if is_instance_valid(btn_new_game):
+		var has_meta := LegacyManager.legacy_points > 0 or LegacyManager.trascendencia_count > 0 or LegacyManager.total_runs > 0
+		btn_new_game.text = tr("MM_NEW_RUN") if has_meta else tr("MM_NEW_GAME")
+		btn_new_game.tooltip_text = tr("MM_NEW_RUN_TOOLTIP") if has_meta else ""
+
+	_refresh_nav_badges()
+
+	if is_instance_valid(btn_trascendencia):
+		btn_trascendencia.text = EmojiToRichText.strip(tr("MM_TRANSCEND_BTN"))
+
+	if is_instance_valid(trascend_counter_label):
+		trascend_counter_label.text = tr("MM_TRANSCEND_COUNTER") % [LegacyManager.esencia, LegacyManager.trascendencia_count]
 
 	var btn_credits := get_node_or_null("CenterContainer/VBoxContainer/BtnCreditos")
 	if is_instance_valid(btn_credits):

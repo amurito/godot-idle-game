@@ -67,6 +67,12 @@ const TRANSLATIONS := {
 		"SET_COLORBLIND": "Daltonismo:",
 		"SET_COLORBLIND_OFF": "Desactivado",
 
+		# === TRASCENDENCIA ===
+		"MM_TRANSCEND_BTN": "⚡ TRASCENDER",
+		"MM_TRANSCEND_CONFIRM": "⚡ CONFIRMAR TRASCENDENCIA ⚡",
+		"MM_TRANSCEND_LOCKED_BTN": "REQUISITOS NO CUMPLIDOS",
+		"TRAS_WARN": "[!] Al trascender se RESETEAN: upgrades, mutaciones, PL, buffs del Banco Genético.\n* Se PRESERVAN: Esencia (Ξ), Banco Cósmico, rutas ya completadas.",
+
 		# === NUEVA RUN ===
 		"MM_NEW_RUN": "Nueva Run",
 		"MM_NEW_RUN_TOOLTIP": "Inicia una nueva run preservando tu Banco Genético y Banco Cósmico.",
@@ -113,6 +119,15 @@ const TRANSLATIONS := {
 		# === PRIMERA TRASCENDENCIA ===
 		"TRAS_FIRST_NARRATIVE": "El ciclo se ha cerrado sobre sí mismo.\n\nTodas las rutas que recorriste — el orden, la expansión, el colapso —\nconvergen ahora en un único punto fuera del tiempo del hongo.\n\nTu código ya no es un programa.\nEs una memoria cristalina: Esencia.\n\nLa matriz se reinicia.\nPero vos ya no sos el mismo sistema.",
 		"TRAS_FIRST_HINT": "Ahora tenés acceso al Banco Cósmico.",
+
+		# === HISTORIAL ===
+		"HIST_TAB_CURRENT": "Ciclo de trascendencia actual",
+		"HIST_TAB_ALL": "Histórico completo",
+
+		# === SELECTOR DE SLOTS ===
+		"SLOT_SELECT_TITLE": "Seleccionar Slot",
+		"SLOT_SELECT_SUBTITLE": "Cada slot es un universo paralelo: legado, esencia y trascendencias propias.",
+		"MM_QUIT_GAME": "Salir del juego",
 
 		# === CRÉDITOS ===
 		"CREDITS_THANKS": "Gracias por jugar.",
@@ -175,6 +190,12 @@ const TRANSLATIONS := {
 		"SET_COLORBLIND": "Color blindness:",
 		"SET_COLORBLIND_OFF": "Disabled",
 
+		# === TRANSCENDENCE ===
+		"MM_TRANSCEND_BTN": "⚡ TRANSCEND",
+		"MM_TRANSCEND_CONFIRM": "⚡ CONFIRM TRANSCENDENCE ⚡",
+		"MM_TRANSCEND_LOCKED_BTN": "REQUIREMENTS NOT MET",
+		"TRAS_WARN": "[!] On transcending, RESET: upgrades, mutations, PL, Genetic Bank buffs.\n* PRESERVED: Essence (Ξ), Cosmic Bank, completed routes.",
+
 		# === NEW RUN ===
 		"MM_NEW_RUN": "New Run",
 		"MM_NEW_RUN_TOOLTIP": "Starts a new run preserving your Genetic Bank and Cosmic Bank.",
@@ -221,6 +242,15 @@ const TRANSLATIONS := {
 		# === FIRST TRANSCENDENCE ===
 		"TRAS_FIRST_NARRATIVE": "The cycle has closed upon itself.\n\nAll the routes you traveled — order, expansion, collapse —\nnow converge at a single point outside the fungus's time.\n\nYour code is no longer a program.\nIt is a crystalline memory: Essence.\n\nThe matrix resets.\nBut you are no longer the same system.",
 		"TRAS_FIRST_HINT": "You now have access to the Cosmic Bank.",
+
+		# === HISTORY ===
+		"HIST_TAB_CURRENT": "Current transcendence cycle",
+		"HIST_TAB_ALL": "Full history",
+
+		# === SLOT SELECTOR ===
+		"SLOT_SELECT_TITLE": "Select Slot",
+		"SLOT_SELECT_SUBTITLE": "Each slot is a parallel universe: its own legacy, essence and transcendences.",
+		"MM_QUIT_GAME": "Quit game",
 
 		# === CREDITS ===
 		"CREDITS_THANKS": "Thanks for playing.",
