@@ -292,11 +292,13 @@ func toggle_shortcuts_panel(parent: Node) -> void:
 	vbox.add_theme_constant_override("separation", 12)
 	panel.add_child(vbox)
 
-	var title := Label.new()
-	title.text = "? Atajos de Teclado"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
-	title.add_theme_color_override("font_color", Color(0.5, 0.82, 1.0))
+	var title := RichTextLabel.new()
+	title.bbcode_enabled = true
+	title.fit_content = true
+	title.custom_minimum_size = Vector2(420.0, 0.0)
+	title.add_theme_font_size_override("normal_font_size", AccessibilityManager.fs(22))
+	title.add_theme_color_override("default_color", Color(0.5, 0.82, 1.0))
+	title.text = EmojiToRichText.rich("[center]" + tr("TUTO_SC_TITLE") + "[/center]")
 	vbox.add_child(title)
 
 	vbox.add_child(HSeparator.new())
@@ -326,6 +328,7 @@ func _build_shortcuts_bbcode() -> String:
 	t += "[color=cyan][b]" + tr("TUTO_SC_GENERAL") + "[/b][/color]\n"
 	t += _shortcut_row("[L]", tr("TUTO_SC_L"))
 	t += _shortcut_row("[K]", tr("TUTO_SC_K"))
+	t += _shortcut_row("[B]", tr("TUTO_SC_B"))
 	t += "\n"
 	t += "[color=cyan][b]" + tr("TUTO_SC_UPGRADES") + "[/b][/color]\n"
 	var pairs := [
@@ -345,7 +348,7 @@ func _build_shortcuts_bbcode() -> String:
 	t += "[color=cyan][b]" + tr("TUTO_SC_HEADER_IND") + "[/b][/color]\n"
 	t += "  [color=yellow][b]ε[/b][/color]   " + tr("TUTO_SC_EPS") + "\n"
 	t += "  [color=cyan][b]Ω[/b][/color]   " + tr("TUTO_SC_OMG") + "\n"
-	t += "  [color=#88ff88][b]Bio[/b][/color] Biomasa — recurso del sistema fúngico\n"
+	t += "  [color=#88ff88][b]Bio[/b][/color] " + tr("TUTO_SC_BIO") + "\n"
 	return t
 
 
@@ -365,7 +368,7 @@ func _give_idle_push() -> void:
 	var passive: float = EconomyManager.get_passive_total()
 	var gift: float = 10.0 * max(1.0, passive)
 	EconomyManager.money += gift
-	_show_antistuck_hint("Sistema detecta inactividad.\n[color=#aaffaa]+$%.0f de impulso[/color]" % gift)
+	_show_antistuck_hint(tr("TUTO_AS_IDLE_PUSH") % gift)
 
 
 func _check_antistuck() -> void:
@@ -913,7 +916,7 @@ func _make_hint_bubble(hint_text: String, dismiss_fn: Callable = Callable()) -> 
 	vbox.add_child(label)
 
 	var btn := Button.new()
-	btn.text = EmojiToRichText.strip("Entendido ✓")
+	btn.text = EmojiToRichText.strip(tr("TUTO_BTN_UNDERSTOOD"))
 	btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	if dismiss_fn.is_valid():
 		btn.pressed.connect(dismiss_fn)
