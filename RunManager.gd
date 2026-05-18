@@ -114,6 +114,7 @@ func close_run(route: String, reason: String):
 
 	# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
 	var pl_to_add: int = Balance.PL_REWARDS.get(route, 0)
+	var _total_pl := pl_to_add
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
@@ -125,6 +126,7 @@ func close_run(route: String, reason: String):
 		var extra_pl: int = int(floor(StructuralModel.epsilon_peak * eps_bonus))
 		if extra_pl > 0:
 			LegacyManager.add_pl(extra_pl)
+			_total_pl += extra_pl
 			LogManager.add("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
 	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
@@ -198,7 +200,10 @@ func close_run(route: String, reason: String):
 				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
+			_total_pl += ng_bonus
 			LogManager.add("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
+
+	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0

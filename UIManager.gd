@@ -57,6 +57,8 @@ var header_epsilon_value
 var header_omega_value
 var header_biomasa_value
 var header_hifas_value
+var _epsilon_fill_style: StyleBoxFlat
+var _omega_fill_style: StyleBoxFlat
 var header_nutrientes_value
 
 # ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
@@ -195,6 +197,15 @@ func setup(ui_root: Control):
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
 
+func _make_fill_style(color: Color) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = color
+	s.corner_radius_top_left = 2
+	s.corner_radius_top_right = 2
+	s.corner_radius_bottom_right = 2
+	s.corner_radius_bottom_left = 2
+	return s
+
 func _apply_bio_header_style() -> void:
 	var bio_color := Color(0.78, 0.3, 1.0, 0.9)
 	var bio_bars := [header_biomasa_bar, header_hifas_bar, header_nutrientes_bar]
@@ -203,18 +214,34 @@ func _apply_bio_header_style() -> void:
 		_find_scene("HifasLabel"),   _find_scene("HifasValue"),
 		_find_scene("NutrientesLabel"), _find_scene("NutrientesValue"),
 	]
-	var fill_style := StyleBoxFlat.new()
-	fill_style.bg_color = bio_color
-	fill_style.corner_radius_top_left = 2
-	fill_style.corner_radius_top_right = 2
-	fill_style.corner_radius_bottom_right = 2
-	fill_style.corner_radius_bottom_left = 2
 	for bar in bio_bars:
 		if bar:
-			bar.add_theme_stylebox_override("fill", fill_style.duplicate())
+			bar.add_theme_stylebox_override("fill", _make_fill_style(bio_color))
 	for lbl in bio_labels:
 		if lbl:
 			lbl.add_theme_color_override("font_color", bio_color)
+
+	# StyleBoxes mutables para ε y Ω (se actualizan cada tick con color dinámico)
+	_epsilon_fill_style = _make_fill_style(Color.GREEN)
+	_omega_fill_style   = _make_fill_style(Color.GREEN)
+	if header_epsilon_bar:
+		header_epsilon_bar.add_theme_stylebox_override("fill", _epsilon_fill_style)
+	if header_omega_bar:
+		header_omega_bar.add_theme_stylebox_override("fill", _omega_fill_style)
+
+	# Tooltips — necesitan mouse_filter = STOP para recibir hover
+	var tooltip_nodes := {
+		"EpsilonLabel":    "ε — Estrés estructural\nBanda saludable: 0.03–0.30\nVerde: en banda | Amarillo: elevado | Rojo: crítico",
+		"OmegaLabel":      "Ω — Estabilidad del sistema (1 = perfecto)\nVerde: >0.75 | Amarillo: 0.40–0.75 | Rojo: <0.40",
+		"BiomasaLabel":    "Biomasa — tejido fúngico acumulado\nAlta biomasa absorbe ε; dispara cierres por parasitismo/esporulación",
+		"HifasLabel":      "Hifas — red de hilos fúngicos (cap ~40)\nMotor del crecimiento de biomasa",
+		"NutrientesLabel": "Nutrientes — combustible para crecer biomasa\nSe ganan absorbiendo ε; si son negativos el crecimiento se detiene",
+	}
+	for node_name in tooltip_nodes:
+		var n = _find_scene(node_name)
+		if n:
+			n.tooltip_text = tooltip_nodes[node_name]
+			n.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _find(node_name: String):
 	return root.find_child(node_name, true, false)
@@ -291,11 +318,28 @@ func update_header_money(amount: float, delta_per_sec: float):
 		delta_text += "/s"
 		header_money_delta.text = delta_text
 
+static func _epsilon_color(e: float) -> Color:
+	if e < 0.03:   return Color(0.3, 0.6, 1.0)   # azul — muy bajo
+	if e <= 0.30:  return Color(0.2, 0.9, 0.3)   # verde — banda homeostática
+	if e <= 0.60:  return Color(1.0, 0.85, 0.1)  # amarillo
+	if e <= 1.00:  return Color(1.0, 0.45, 0.1)  # naranja
+	return Color(1.0, 0.15, 0.15)                 # rojo — crítico
+
+static func _omega_color(w: float) -> Color:
+	if w >= 0.75:  return Color(0.2, 0.9, 0.3)   # verde
+	if w >= 0.40:  return Color(1.0, 0.85, 0.1)  # amarillo
+	if w >= 0.20:  return Color(1.0, 0.45, 0.1)  # naranja
+	return Color(1.0, 0.15, 0.15)                 # rojo
+
 func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa_max: float = 10.0, hifas: float = 0.0, nutrientes: float = 0.0):
 	if header_epsilon_bar:
 		header_epsilon_bar.value = clamp(epsilon, 0.0, 1.0)
+		if _epsilon_fill_style:
+			_epsilon_fill_style.bg_color = _epsilon_color(epsilon)
 	if header_omega_bar:
 		header_omega_bar.value = clamp(omega, 0.0, 1.0)
+		if _omega_fill_style:
+			_omega_fill_style.bg_color = _omega_color(omega)
 	if header_biomasa_bar:
 		header_biomasa_bar.value = clamp(biomasa / biomasa_max, 0.0, 1.0)
 	if header_hifas_bar:
