@@ -711,7 +711,7 @@ func build_evo_checklist(_main: Node) -> String:
 	if RunManager.run_closed:
 		return _build_run_end_lore(RunManager.final_route)
 
-	var t := "[color=cyan][b]--- Próxima transición ---[/b][/color]\n"
+	var t := "[color=cyan][b]" + tr("EVO_NEXT_TRANS") + "[/b][/color]\n"
 	var acc := UpgradeManager.level("accounting")
 	var ch : String
 	var ok_color := "[color=%s]" % AccessibilityManager.cok_hex()
@@ -721,53 +721,53 @@ func build_evo_checklist(_main: Node) -> String:
 		var tier := RunManager.homeostasis_tier_reached
 		# Tier 1 — HOMEOSTASIS
 		if tier == 0:
-			t += "[b][color=cyan]-- Tier 1: HOMEOSTASIS --[/color][/b]\n"
+			t += "[b][color=cyan]" + tr("EVO_TIER1_TITLE") + "[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
-			t += ch + "En banda ε (0.03–0.30)[/color]\n"
+			t += ch + tr("EVO_BAND_EPS") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
 			ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
-			t += ch + "Trabajo Manual + Trueque desbloqueados[/color]\n"
+			t += ch + tr("EVO_UNLOCKED_DE") + "[/color]\n"
 			ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-			t += ch + "Contabilidad nvl 1 (%d)[/color]\n" % acc
+			t += ch + tr("EVO_ACCOUNTING_N1") % acc + "[/color]\n"
 			var pct := int(min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0)
-			t += "[color=cyan]Estabilizando: %d%% (%.0f/18s)[/color]\n" % [pct, RunManager.homeostasis_timer]
+			t += "[color=cyan]" + tr("EVO_STABILIZING") % [pct, RunManager.homeostasis_timer] + "[/color]\n"
 		# Tier 2 — ALLOSTASIS
 		elif tier == 1:
-			t += ok_color + "[x] Tier 1 HOMEOSTASIS completado[/color]\n"
-			t += "[b][color=aquamarine]-- Tier 2: ALLOSTASIS --[/color][/b]\n"
+			t += ok_color + "[x] " + tr("EVO_TIER1_DONE") + "[/color]\n"
+			t += "[b][color=aquamarine]" + tr("EVO_TIER2_TITLE") + "[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 3 else fail_color + "[ ] "
-			t += ch + "Perturbaciones (%d/3)[/color]\n" % RunManager.disturbances_survived
+			t += ch + tr("EVO_DISTURBANCES") % [RunManager.disturbances_survived, 3] + "[/color]\n"
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 150.0 else fail_color + "[ ] "
-			t += ch + "Resiliencia >= 150 (%d)[/color]\n" % int(RunManager.resilience_score)
+			t += ch + tr("EVO_RESILIENCE_GE") % [150, int(RunManager.resilience_score)] + "[/color]\n"
 			ch = ok_color + "[x] " if StructuralModel.omega_min >= 0.40 else fail_color + "[ ] "
-			t += ch + "Ω_min >= 0.40 (%s)[/color]\n" % snapped(StructuralModel.omega_min, 0.01)
+			t += ch + tr("EVO_OMEGA_MIN_GE") % [snapped(0.40, 0.01), snapped(StructuralModel.omega_min, 0.01)] + "[/color]\n"
 			var delta_real2 :float = EconomyManager.get_contribution_breakdown().total
 			ch = ok_color + "[x] " if delta_real2 > 200.0 else fail_color + "[ ] "
-			t += ch + "Metabolismo > 200/s (%s)[/color]\n" % snapped(delta_real2, 0.1)
+			t += ch + tr("EVO_METABOLISM_GT") % [200, snapped(delta_real2, 0.1)] + "[/color]\n"
 			ch = ok_color + "[x] " if acc >= 2 else fail_color + "[ ] "
-			t += ch + "Contabilidad nvl 2 (%d)[/color]\n" % acc
+			t += ch + tr("EVO_ACCOUNTING_N2") % acc + "[/color]\n"
 		# Tier 3 — HOMEORHESIS
 		elif tier == 2:
-			t += ok_color + "[x] Tier 1 + 2 completados[/color]\n"
-			t += "[b][color=gold]-- Tier 3: HOMEORHESIS --[/color][/b]\n"
+			t += ok_color + "[x] " + tr("EVO_TIER12_DONE") + "[/color]\n"
+			t += "[b][color=gold]" + tr("EVO_TIER3_TITLE") + "[/color][/b]\n"
 			ch = ok_color + "[x] " if RunManager.extreme_shocks_recovered >= 1 else fail_color + "[ ] "
-			t += ch + "Recuperarse de SHOCK EXTREMO (%d/1)[/color]\n" % RunManager.extreme_shocks_recovered
+			t += ch + tr("EVO_SHOCK_EXTREME") % RunManager.extreme_shocks_recovered + "[/color]\n"
 			ch = ok_color + "[x] " if RunManager.resilience_score >= 400.0 else fail_color + "[ ] "
-			t += ch + "Resiliencia >= 400 (%d)[/color]\n" % int(RunManager.resilience_score)
+			t += ch + tr("EVO_RESILIENCE_GE") % [400, int(RunManager.resilience_score)] + "[/color]\n"
 			ch = ok_color + "[x] " if RunManager.omega_min_peak >= 0.50 else fail_color + "[ ] "
-			t += ch + "Ω_min pico >= 0.50 (%s)[/color]\n" % snapped(RunManager.omega_min_peak, 0.01)
+			t += ch + tr("EVO_OMEGA_PEAK_GE") % [snapped(0.50, 0.01), snapped(RunManager.omega_min_peak, 0.01)] + "[/color]\n"
 			ch = ok_color + "[x] " if RunManager.disturbances_survived >= 5 else fail_color + "[ ] "
-			t += ch + "Perturbaciones (%d/5)[/color]\n" % RunManager.disturbances_survived
+			t += ch + tr("EVO_DISTURBANCES") % [RunManager.disturbances_survived, 5] + "[/color]\n"
 			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total
 			ch = ok_color + "[x] " if delta_real3 > 300.0 else fail_color + "[ ] "
-			t += ch + "Metabolismo > 300/s (%s)[/color]\n" % snapped(delta_real3, 0.1)
+			t += ch + tr("EVO_METABOLISM_GT") % [300, snapped(delta_real3, 0.1)] + "[/color]\n"
 			ch = ok_color + "[x] " if RunManager.run_time >= 1200.0 else fail_color + "[ ] "
-			t += ch + "Run >= 20min (%s)[/color]\n" % format_time(RunManager.run_time)
+			t += ch + tr("EVO_RUN_GE_TIME") % format_time(RunManager.run_time) + "[/color]\n"
 		elif tier == 3:
-			t += ok_color + "[x] Tier 3 HOMEORHESIS desbloqueado — sellá el final[/color]\n"
+			t += ok_color + "[x] " + tr("EVO_TIER3_DONE") + "[/color]\n"
 		t += "\n"
 
 	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		t += "[b]Objetivo: Integración Mecánica[/b]\n"
+		t += "[b]" + tr("EVO_RED_OBJ_MECH") + "[/b]\n"
 
 		# Hito 1: Estabilidad
 		var eps_ok: bool = StructuralModel.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
@@ -776,25 +776,25 @@ func build_evo_checklist(_main: Node) -> String:
 
 		# Hito 2: Sincronización (Primordio normal O Mente Colmena NG+)
 		if EvoManager.primordio_active:
-			t += "[color=cyan]>>> SINCRONIZACIÓN: %s%%[/color]\n" % str(int(EvoManager.primordio_timer / Balance.PRIMORDIO_DURATION * 100.0))
+			t += "[color=cyan]" + tr("EVO_SYNC_PCT") % str(int(EvoManager.primordio_timer / Balance.PRIMORDIO_DURATION * 100.0)) + "[/color]\n"
 		elif EvoManager.nucleo_conciencia:
-			t += ok_color + "[x] Núcleo de Conciencia Sincronizado[/color]\n"
+			t += ok_color + "[x] " + tr("EVO_NUCLEUS_SYNC") + "[/color]\n"
 		else:
 			var acc_ok := acc >= 2
 			ch = ok_color + "[x] " if acc_ok else fail_color + "[ ] "
-			t += ch + "Integrar redes en Mainframe (Contabilidad nvl 2)[/color]\n"
+			t += ch + tr("EVO_MAINFRAME_ACC") + "[/color]\n"
 
 		# Hito 3: Núcleo
 		ch = ok_color + "[x] " if EvoManager.nucleo_conciencia else fail_color + "[ ] "
-		t += ch + "Singularidad Biomecánica lista[/color]\n"
+		t += ch + tr("EVO_SINGULARITY_RDY") + "[/color]\n"
 
 		# NG+ MENTE COLMENA — ruta alternativa cuando last_run == "SINGULARIDAD"
 		if LegacyManager.last_run_ending == "SINGULARIDAD" or LegacyManager.last_run_ending == "MENTE COLMENA DISTRIBUIDA":
-			t += "\n[color=magenta][b]🧠 Ruta NG+: MENTE COLMENA[/b][/color]\n"
+			t += "\n[color=magenta][b]🧠 " + tr("EVO_MC_ROUTE") + "[/b][/color]\n"
 			var mc_timer: float = RunManager.mente_colmena_timer
 			var mc_active: bool = RunManager.mente_colmena_active
 			if mc_active:
-				t += ok_color + "[x] MENTE COLMENA DISTRIBUIDA — IA activa[/color]\n"
+				t += ok_color + "[x] " + tr("EVO_MC_ACTIVE") + "[/color]\n"
 			elif mc_timer > 0.0:
 				var mc_pct := int(mc_timer / 180.0 * 100.0)
 				var filled := int(mc_pct / 5.0)   # 20 bloques = 100%
@@ -809,35 +809,35 @@ func build_evo_checklist(_main: Node) -> String:
 				var ratio_color := "[color=cyan]" if abs(r_act - 50) <= 2 else "[color=yellow]"
 				t += ratio_color + "    Ratio: %d%% Activo / %d%% Pasivo[/color]\n" % [r_act, r_pas]
 			else:
-				t += "[color=#aaaaaa]Mantené ratio 50%% Activo / 50%% Pasivo durante 180s[/color]\n"
-				t += "[color=#aaaaaa](requiere ε ≤ 0.50)[/color]\n"
+				t += "[color=#aaaaaa]" + tr("EVO_MC_RATIO_REQ") + "[/color]\n"
+				t += "[color=#aaaaaa]" + tr("EVO_MC_EPS_REQ") + "[/color]\n"
 
 	elif EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		t += "[b]Objetivo: Ciclo de Vida Biológico[/b]\n"
+		t += "[b]" + tr("EVO_RED_OBJ_BIO") + "[/b]\n"
 
 		# Hito 1: Micelio
 		var mic_ok: bool = BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
 		ch = ok_color + "[x] " if mic_ok else fail_color + "[ ] "
-		t += ch + "Micelio desarrollado (>60%) (" + str(int(BiosphereEngine.micelio)) + "%) [/color]\n"
+		t += ch + tr("EVO_MICELIO_DEV") % int(BiosphereEngine.micelio) + "[/color]\n"
 
 		# Hito 2: Primordio
 		if EvoManager.primordio_active:
-			t += "[color=yellow]>>> PRIMORDIO EN CURSO: %ds / 90s[/color]\n" % int(EvoManager.primordio_timer)
+			t += "[color=yellow]" + tr("EVO_PRIMORDIO_CURSO") % int(EvoManager.primordio_timer) + "[/color]\n"
 		elif EvoManager.seta_formada:
-			t += ok_color + "[x] Ciclo biológico completado exitosamente[/color]\n"
+			t += ok_color + "[x] " + tr("EVO_BIO_CYCLE_DONE") + "[/color]\n"
 		else:
 			ch = fail_color + "[ ] "
-			t += ch + "Sobrevivir fase Primordio (90s)[/color]\n"
+			t += ch + tr("EVO_SURVIVE_PRIM") + "[/color]\n"
 
 		# Hito 3: Seta
 		ch = ok_color + "[x] " if EvoManager.seta_formada else fail_color + "[ ] "
-		t += ch + "Seta Fructífera madura[/color]\n"
+		t += ch + tr("EVO_SETA_MADURA") + "[/color]\n"
 
 		if EvoManager.seta_formada:
-			t += "[color=cyan][b]¡LISTO PARA ESPORULACIÓN TOTAL![/b][/color]\n"
+			t += "[color=cyan][b]" + tr("EVO_READY_ESPOR") + "[/b][/color]\n"
 
 	elif EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 1:
-		t += "[b]Red Micelial → Fase B:[/b]\n"
+		t += "[b]" + tr("EVO_RED_PHASE_B") + "[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas > 10.0 else fail_color + "[ ] "
 		t += ch + "Hifas > 10  (%s)[/color]\n" % snapped(BiosphereEngine.hifas, 0.1)
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
@@ -845,13 +845,13 @@ func build_evo_checklist(_main: Node) -> String:
 		ch = ok_color + "[x] " if StructuralModel.epsilon_effective < 0.32 else fail_color + "[ ] "
 		t += ch + "ε_ef < 0.32  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
+		t += ch + tr("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if RunManager.run_time > 200.0 else fail_color + "[ ] "
 		t += ch + "Tiempo > 200 s  (%s)[/color]\n" % format_time(RunManager.run_time)
 
 	elif EvoManager.mutation_symbiosis and not EvoManager.mutation_red_micelial:
-		t += "[b][color=green]🌱 Simbiosis activa:[/color][/b]\n"
-		t += "[color=gray]Sellá la run con el botón SELLAR SIMBIOSIS\no avanzá a Red Micelial para continuar.[/color]\n"
+		t += "[b][color=green]" + tr("EVO_SIM_ACTIVE_TITLE") + "[/color][/b]\n"
+		t += "[color=gray]" + tr("EVO_SIM_SEAL_HINT") + "[/color]\n"
 
 	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
 		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism \
@@ -859,53 +859,53 @@ func build_evo_checklist(_main: Node) -> String:
 		var ap_snap = EconomyManager.get_active_passive_breakdown()
 		var pasivo_domina = ap_snap.pasivo > ap_snap.activo
 		var activo_domina = ap_snap.activo > ap_snap.pasivo
-		t += "[b]🕸️ Red Micelial (Fase A):[/b]\n"
+		t += "[b]" + tr("EVO_RED_TITLE") + "[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 11.5 else fail_color + "[ ] "
 		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
 		t += ch + "Biomasa >= 5  (" + str(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.epsilon_runtime < 0.65 else fail_color + "[ ] "
-		t += ch + "ε_runtime < 0.65  (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
+		t += ch + tr("EVO_EPS_RT_LT65") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
+		t += ch + tr("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if pasivo_domina else fail_color + "[ ] "
-		t += ch + "Pasivos > Activos  (" + str(int(ap_snap.pasivo)) + "% vs " + str(int(ap_snap.activo)) + "%)[/color]\n"
-		t += "\n[b]🌱 Simbiosis:[/b]\n"
+		t += ch + tr("EVO_PASSIVE_DOM") % [int(ap_snap.pasivo), int(ap_snap.activo)] + "[/color]\n"
+		t += "\n[b]" + tr("EVO_SIM_TITLE") + "[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 5.0 else fail_color + "[ ] "
 		t += ch + "Hifas >= 5  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.omega >= 0.40 else fail_color + "[ ] "
 		t += ch + "Ω >= 0.40  (" + str(snapped(StructuralModel.omega, 0.01)) + ")[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: " + str(acc) + ")[/color]\n"
+		t += ch + tr("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if activo_domina else fail_color + "[ ] "
-		t += ch + "Activos > Pasivos  (" + str(int(ap_snap.activo)) + "% vs " + str(int(ap_snap.pasivo)) + "%)[/color]\n"
+		t += ch + tr("EVO_ACTIVE_DOM") % [int(ap_snap.activo), int(ap_snap.pasivo)] + "[/color]\n"
 
 	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
 		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial \
 		and not EvoManager.mutation_symbiosis:
-		t += "\n[color=gray]Homeostasis (Tier 1):[/color]\n"
+		t += "\n[color=gray]" + tr("EVO_HOME_HINT_LABEL") + "[/color]\n"
 		ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
-		t += ch + "Banda 0.03 < ε < 0.30  (%s)[/color]\n" % snapped(StructuralModel.epsilon_effective, 0.01)
+		t += ch + tr("EVO_BAND_VALUE") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.omega > 0.25 else fail_color + "[ ] "
-		t += ch + "Flexib. Ω > 0.25  (%s)[/color]\n" % snapped(StructuralModel.omega, 0.01)
+		t += ch + tr("EVO_OMEGA_025") % snapped(StructuralModel.omega, 0.01) + "[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa < 12.0 else fail_color + "[ ] "
-		t += ch + "Biomasa < 12  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		t += ch + tr("EVO_BIOMASA_LT12") % snapped(BiosphereEngine.biomasa, 0.1) + "[/color]\n"
 		ch = ok_color + "[x] " if EconomyManager.delta_per_sec > 30.0 else fail_color + "[ ] "
-		t += ch + "Metabolismo > 30/s (%s)[/color]\n" % snapped(EconomyManager.delta_per_sec, 0.1)
+		t += ch + tr("EVO_METABOLISM_GT") % [30, snapped(EconomyManager.delta_per_sec, 0.1)] + "[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.unlocked_d and StructuralModel.unlocked_e else fail_color + "[ ] "
-		t += ch + "Pasivos d+e activos[/color]\n"
+		t += ch + tr("EVO_PASSIVES_DE") + "[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
-		t += ch + "Contabilidad >= 1  (nivel: %d)[/color]\n" % acc
+		t += ch + tr("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 
 	if EvoManager.mutation_parasitism:
-		t += "\n[color=#ffaa00]--- Objetivos de Colapso ---[/color]\n"
+		t += "\n[color=#ffaa00]" + tr("EVO_COLLAPSE_OBJ") + "[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 15.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 15 (Succión)  (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		t += ch + tr("EVO_BIO_DRAIN") % snapped(BiosphereEngine.biomasa, 0.1) + "[/color]\n"
 		ch = ok_color + "[x] " if EconomyManager.money < 1000.0 else fail_color + "[ ] "
-		t += ch + "Liquidez < $1000  ($%s)[/color]\n" % snapped(EconomyManager.money, 1)
-		t += "\nÓ\n"
+		t += ch + tr("EVO_LIQUID_LT1K") % snapped(EconomyManager.money, 1) + "[/color]\n"
+		t += "\n" + tr("EVO_OR_SEP") + "\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 25.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 25 (Masa Crítica) (%s)[/color]\n" % snapped(BiosphereEngine.biomasa, 0.1)
+		t += ch + tr("EVO_BIO_CRITICAL") % snapped(BiosphereEngine.biomasa, 0.1) + "[/color]\n"
 
 	return t
 
@@ -1244,16 +1244,16 @@ func build_bifurcation_data() -> Dictionary:
 	}
 
 	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_homeostasis):
-		data["header"] = "MUTACIÓN DETECTADA (TIER 1)"
+		data["header"] = tr("EVO_BIF_TIER1_HEADER")
 
 		var h_t := LegacyManager.trascendencia_count
 		var h_ap: Dictionary = EconomyManager.get_active_passive_breakdown()
 		var h_ok_red = StructuralModel.unlocked_d and StructuralModel.unlocked_e
-		var h_txt := "[center]⚖️ HOMEOSTASIS\nEquilibrio activo sostenido.\n\n"
+		var h_txt := "[center]" + tr("EVO_HOME_DESC_TITLE")
 
 		if h_t >= 1:
 			# NG+: condiciones más exigentes
-			var eps_eff := StructuralModel.epsilon_effective
+			var eps_eff := StructuralModel.epsilon_runtime
 			var h_ok_eps_ng = eps_eff >= 0.05 and eps_eff <= 0.25
 			var h_ok_omega_ng = StructuralModel.omega >= 0.55
 			var h_ok_acc_ng = acc_lvl >= 2
@@ -1261,14 +1261,14 @@ func build_bifurcation_data() -> Dictionary:
 			var total_flow: float = float(h_ap["activo"]) + float(h_ap["pasivo"])
 			var h_ok_bal = total_flow > 0 and (float(h_ap["pasivo"]) / total_flow) >= 0.30
 			var h_ok_bio_ng = BiosphereEngine.biomasa >= 1.0 and BiosphereEngine.biomasa < 10.0
-			h_txt += "[color=#ff8800][NG+] Requisitos de equilibrio estrictos[/color]\n\n"
-			h_txt += "[color=%s]%s 0.05 < ε < 0.25 (banda NG+)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_eps_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps_ng else "[ ]"]
-			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.55[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_omega_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega_ng else "[ ]"]
-			h_txt += "[color=%s]%s Balance pasivo ≥ 30%% del flujo[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bal else AccessibilityManager.cno_hex(), "[x]" if h_ok_bal else "[ ]"]
-			h_txt += "[color=%s]%s Producción > 150/s[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_delta_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta_ng else "[ ]"]
-			h_txt += "[color=%s]%s Biomasa 1.0–10.0[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bio_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio_ng else "[ ]"]
-			h_txt += "[color=%s]%s Contabilidad >= 2[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_acc_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc_ng else "[ ]"]
-			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"]
+			h_txt += "[color=#ff8800]" + tr("EVO_HOME_NG_REQ") + "[/color]\n\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_eps_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps_ng else "[ ]"] + tr("EVO_HOME_EPS_NG") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_omega_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega_ng else "[ ]"] + tr("EVO_HOME_OMEGA55") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_bal else AccessibilityManager.cno_hex(), "[x]" if h_ok_bal else "[ ]"] + tr("EVO_HOME_PASSIVE30") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_delta_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta_ng else "[ ]"] + tr("EVO_HOME_PROD150") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_bio_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio_ng else "[ ]"] + tr("EVO_HOME_BIO_NG") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_acc_ng else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc_ng else "[ ]"] + tr("EVO_HOME_ACC2") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"] + tr("EVO_HOME_DE") + "[/color]\n"
 		else:
 			var h_ok_eps = RunManager.get_en_banda_homeostatica()
 			var h_ok_omega = StructuralModel.omega >= 0.40
@@ -1276,19 +1276,19 @@ func build_bifurcation_data() -> Dictionary:
 			var h_ok_bio = BiosphereEngine.biomasa < 12.0
 			var h_ok_acc = acc_lvl >= 1
 			var h_ok_dual = h_ap["pasivo"] > 0
-			h_txt += "[color=%s]%s 0.03 < ε < 0.30 (banda)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_eps else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps else "[ ]"]
-			h_txt += "[color=%s]%s Equilibrio Ω ≥ 0.40[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_omega else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega else "[ ]"]
-			h_txt += "[color=%s]%s Flujos duales (activo + pasivo)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_dual else AccessibilityManager.cno_hex(), "[x]" if h_ok_dual else "[ ]"]
-			h_txt += "[color=%s]%s Metabolismo > 30/s[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_delta else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta else "[ ]"]
-			h_txt += "[color=%s]%s Biomasa < 12[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_bio else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio else "[ ]"]
-			h_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_acc else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc else "[ ]"]
-			h_txt += "[color=%s]%s Trabajo y Trueque (d+e)[/color]\n" % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"]
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_eps else AccessibilityManager.cno_hex(), "[x]" if h_ok_eps else "[ ]"] + tr("EVO_HOME_EPS_BASE") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_omega else AccessibilityManager.cno_hex(), "[x]" if h_ok_omega else "[ ]"] + tr("EVO_HOME_OMEGA40") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_dual else AccessibilityManager.cno_hex(), "[x]" if h_ok_dual else "[ ]"] + tr("EVO_HOME_DUAL") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_delta else AccessibilityManager.cno_hex(), "[x]" if h_ok_delta else "[ ]"] + tr("EVO_HOME_META30") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_bio else AccessibilityManager.cno_hex(), "[x]" if h_ok_bio else "[ ]"] + tr("EVO_HOME_BIO12") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_acc else AccessibilityManager.cno_hex(), "[x]" if h_ok_acc else "[ ]"] + tr("EVO_HOME_ACC1") + "[/color]\n"
+			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"] + tr("EVO_HOME_DE") + "[/color]\n"
 
 		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
 			var ratio = min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
-			h_txt += "\n[color=#ffff00]Estabilizando... %d%%[/color][/center]" % int(ratio)
+			h_txt += "\n[color=#ffff00]" + tr("EVO_HOME_STAB_PCT") % int(ratio) + "[/color][/center]"
 		else:
-			h_txt += "\n[color=#555555]Requiere sostenerse por 18s tras activarse.[/color][/center]"
+			h_txt += "\n[color=#555555]" + tr("EVO_HOME_STAB_REQ") + "[/color][/center]"
 
 		data["homeostasis_text"] = h_txt
 		data["homeostasis_ready"] = EvoManager.is_homeostasis_ready()
@@ -1299,12 +1299,12 @@ func build_bifurcation_data() -> Dictionary:
 		var r_ok_acc = acc_lvl >= 1
 		var r_ok_dom = not act_domina
 
-		var r_txt = "[center]🕸️ RED MICELIAL\nExpansión pasiva.\n\n"
-		r_txt += "[color=%s]%s Hifas >= 11.5[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if r_ok_hifas else "[ ]"]
-		r_txt += "[color=%s]%s Biomasa >= 5.0[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_bio else AccessibilityManager.cno_hex(), "[x]" if r_ok_bio else "[ ]"]
-		r_txt += "[color=%s]%s ε < 0.65[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_eps else AccessibilityManager.cno_hex(), "[x]" if r_ok_eps else "[ ]"]
-		r_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if r_ok_acc else AccessibilityManager.cno_hex(), "[x]" if r_ok_acc else "[ ]"]
-		r_txt += "[color=%s]%s Dominio Pasivo[/color][/center]" % [AccessibilityManager.cok_hex() if r_ok_dom else AccessibilityManager.cno_hex(), "[x]" if r_ok_dom else "[ ]"]
+		var r_txt = "[center]" + tr("EVO_RED_DESC_TITLE")
+		r_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if r_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if r_ok_hifas else "[ ]"] + tr("EVO_RED_HIFAS115") + "[/color]\n"
+		r_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if r_ok_bio else AccessibilityManager.cno_hex(), "[x]" if r_ok_bio else "[ ]"] + tr("EVO_RED_BIO5") + "[/color]\n"
+		r_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if r_ok_eps else AccessibilityManager.cno_hex(), "[x]" if r_ok_eps else "[ ]"] + tr("EVO_RED_EPS065") + "[/color]\n"
+		r_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if r_ok_acc else AccessibilityManager.cno_hex(), "[x]" if r_ok_acc else "[ ]"] + tr("EVO_RED_ACC1") + "[/color]\n"
+		r_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if r_ok_dom else AccessibilityManager.cno_hex(), "[x]" if r_ok_dom else "[ ]"] + tr("EVO_RED_DOM_PAS") + "[/color][/center]"
 
 		data["red_micelial_text"] = r_txt
 		data["red_micelial_ready"] = EvoManager.is_red_micelial_ready()
@@ -1314,43 +1314,43 @@ func build_bifurcation_data() -> Dictionary:
 		var s_ok_acc = acc_lvl >= 1
 		var s_ok_dom = act_domina
 
-		var s_txt = "[center]🌱 SIMBIOSIS\nFusión activa.\n\n"
-		s_txt += "[color=%s]%s Hifas >= 5.0[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if s_ok_hifas else "[ ]"]
-		s_txt += "[color=%s]%s ε (0.15 - 0.45)[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_eps else AccessibilityManager.cno_hex(), "[x]" if s_ok_eps else "[ ]"]
-		s_txt += "[color=%s]%s Contabilidad >= 1[/color]\n" % [AccessibilityManager.cok_hex() if s_ok_acc else AccessibilityManager.cno_hex(), "[x]" if s_ok_acc else "[ ]"]
-		s_txt += "[color=%s]%s Dominio Click[/color][/center]" % [AccessibilityManager.cok_hex() if s_ok_dom else AccessibilityManager.cno_hex(), "[x]" if s_ok_dom else "[ ]"]
+		var s_txt = "[center]" + tr("EVO_SIM_DESC_TITLE")
+		s_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if s_ok_hifas else AccessibilityManager.cno_hex(), "[x]" if s_ok_hifas else "[ ]"] + tr("EVO_SIM_HIFAS5") + "[/color]\n"
+		s_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if s_ok_eps else AccessibilityManager.cno_hex(), "[x]" if s_ok_eps else "[ ]"] + tr("EVO_SIM_EPS_RANGE") + "[/color]\n"
+		s_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if s_ok_acc else AccessibilityManager.cno_hex(), "[x]" if s_ok_acc else "[ ]"] + tr("EVO_SIM_ACC1") + "[/color]\n"
+		s_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if s_ok_dom else AccessibilityManager.cno_hex(), "[x]" if s_ok_dom else "[ ]"] + tr("EVO_SIM_DOM_CLICK") + "[/color][/center]"
 
 		data["simbiosis_text"] = s_txt
 		data["simbiosis_ready"] = EvoManager.is_simbiosis_ready()
 
 	elif EvoManager.mutation_homeostasis:
-		data["header"] = "TRANSICIÓN ALOSTÁTICA (TIER 2)"
+		data["header"] = tr("EVO_TIER2_HEADER")
 		var works = EvoManager.is_allostasis_ready()
 
-		var h_txt = "[center]🌪️ ALLOSTASIS\nRegulación Dinámica del Sistema.\n\n"
-		h_txt += "[color=#00ff00]+ Ingresos Globales x3.0[/color]\n"
-		h_txt += "[color=#00ff00]+ Estabilidad Adaptativa (Ω buffer)[/color]\n"
-		h_txt += "[color=#ff4444]- Exige Metabolismo > 200/s[/color]\n"
-		h_txt += "[color=#ff4444]- Fragilidad por Complejidad[/color][/center]"
+		var h_txt = "[center]" + tr("EVO_ALOS_DESC_TITLE")
+		h_txt += "[color=#00ff00]" + tr("EVO_ALOS_BUFF1") + "[/color]\n"
+		h_txt += "[color=#00ff00]" + tr("EVO_ALOS_BUFF2") + "[/color]\n"
+		h_txt += "[color=#ff4444]" + tr("EVO_ALOS_NERF1") + "[/color]\n"
+		h_txt += "[color=#ff4444]" + tr("EVO_ALOS_NERF2") + "[/color][/center]"
 
 		data["allostasis_text"] = h_txt
 		data["allostasis_ready"] = works
 
 	else:
-		data["header"] = "BIFURCACIÓN DEL GENOMA"
+		data["header"] = tr("EVO_BIF_HEADER")
 
-		var col_txt = "[center]🦠 COLONIZACIÓN INVASIVA\nRama biológica.\n\n" + \
-			"[color=#00ff00]+ Trabajo Manual x1.5[/color]\n" + \
-			"[color=#00ff00]+ Ciclo Primordio → Seta → Esporulación[/color]\n" + \
-			"[color=#ffaa00]Sin requisitos extra[/color][/center]"
+		var col_txt = "[center]" + tr("EVO_COL_DESC_TITLE") + \
+			"[color=#00ff00]" + tr("EVO_COL_BUFF1") + "[/color]\n" + \
+			"[color=#00ff00]" + tr("EVO_COL_BUFF2") + "[/color]\n" + \
+			"[color=#ffaa00]" + tr("EVO_COL_NOTE") + "[/color][/center]"
 		data["colonization_text"] = col_txt
 		data["colonization_ready"] = true
 
 		var has_mechanics = UpgradeManager.level("accounting") >= 2
-		var mec_txt = "[center]🔬 SIMBIOSIS MECÁNICA\nRama hardware.\n\n" + \
-			"[color=#00ff00]+ Ω_min 0.50 (estabilidad)[/color]\n" + \
-			"[color=#00ff00]+ Núcleo de Conciencia → SINGULARIDAD[/color]\n" + \
-			("[color=%s]✓ Contabilidad ≥ 2[/color]" % AccessibilityManager.cok_hex() if has_mechanics else "[color=%s]✗ Requiere Contabilidad nvl 2[/color]" % AccessibilityManager.cno_hex()) + \
+		var mec_txt = "[center]" + tr("EVO_MEC_DESC_TITLE") + \
+			"[color=#00ff00]" + tr("EVO_MEC_BUFF1") + "[/color]\n" + \
+			"[color=#00ff00]" + tr("EVO_MEC_BUFF2") + "[/color]\n" + \
+			("[color=%s]" % AccessibilityManager.cok_hex() + tr("EVO_MEC_ACC_OK") + "[/color]" if has_mechanics else "[color=%s]" % AccessibilityManager.cno_hex() + tr("EVO_MEC_ACC_FAIL") + "[/color]") + \
 			"[/center]"
 		data["symbiosis_text"] = mec_txt
 		data["symbiosis_ready"] = has_mechanics
@@ -1433,15 +1433,15 @@ func update_bifurcation_panel() -> void:
 		opt_symbiosis.visible = true
 
 		opt_homeostasis.find_child("Desc").text = data["homeostasis_text"]
-		btn_homeostasis.text = "Equilibrar"
+		btn_homeostasis.text = tr("EVO_BTN_EQUIL")
 		btn_homeostasis.disabled = not data["homeostasis_ready"]
 
 		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["red_micelial_text"]
-		btn_colonization.text = "Ramificar"
+		btn_colonization.text = tr("EVO_BTN_RAMIF")
 		btn_colonization.disabled = not data["red_micelial_ready"]
 
 		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["simbiosis_text"]
-		btn_symbiosis.text = "Fusionar"
+		btn_symbiosis.text = tr("EVO_BTN_FUSION")
 		btn_symbiosis.disabled = not data["simbiosis_ready"]
 
 	elif data["tier_mode"] == "tier2_homeostasis":
@@ -1450,7 +1450,7 @@ func update_bifurcation_panel() -> void:
 		opt_symbiosis.visible = false
 
 		opt_homeostasis.find_child("Desc").text = data["allostasis_text"]
-		btn_homeostasis.text = "¡EVOLUCIONAR!" if data["allostasis_ready"] else "[REQUISITOS NO MET]"
+		btn_homeostasis.text = tr("EVO_BTN_EVOLVE") if data["allostasis_ready"] else tr("EVO_BTN_REQS_FAIL")
 		btn_homeostasis.disabled = not data["allostasis_ready"]
 		btn_homeostasis.modulate = Color(0, 1, 1)
 
@@ -1460,12 +1460,12 @@ func update_bifurcation_panel() -> void:
 		opt_symbiosis.visible = true
 
 		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["colonization_text"]
-		btn_colonization.text = "Colonizar"
+		btn_colonization.text = tr("EVO_BTN_COLONIZE")
 		btn_colonization.disabled = not data["colonization_ready"]
 
 		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["symbiosis_text"]
 		btn_symbiosis.disabled = not data["symbiosis_ready"]
-		btn_symbiosis.text = "Integrar Hardware [req. Cont. 2]" if not data["symbiosis_ready"] else "Integrar Hardware"
+		btn_symbiosis.text = tr("EVO_BTN_INTEG_REQ") if not data["symbiosis_ready"] else tr("EVO_BTN_INTEG")
 
 func update_fungal_cycle_bar() -> void:
 	var bar = fungal_cycle_bar
@@ -1491,13 +1491,13 @@ func update_fungal_cycle_bar() -> void:
 				primordio_button.disabled = not puede_iniciar
 				if EvoManager.primordio_active:
 					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					primordio_button.text = "Primordio activo — %.0fs" % t_left
+					primordio_button.text = tr("EVO_PRIM_ACTIVE") % t_left
 					primordio_button.disabled = true
 				elif puede_iniciar:
 					var costo := 20.0 * (1.0 + EvoManager.primordio_abort_count * 0.2)
-					primordio_button.text = "Iniciar Primordio (%.0f%% micelio)" % costo
+					primordio_button.text = tr("EVO_PRIM_INIT_FULL") % costo
 				else:
-					primordio_button.text = "Iniciar Primordio (micelio < 60%%)"
+					primordio_button.text = tr("EVO_PRIM_INIT_LOW")
 			else:
 				primordio_button.visible = false
 
@@ -1507,17 +1507,17 @@ func update_fungal_cycle_bar() -> void:
 			sporulation_final_button.disabled = false
 
 			if EvoManager.nucleo_conciencia:
-				sporulation_final_button.text = "CONECTAR SINGULARIDAD (Final)"
+				sporulation_final_button.text = tr("EVO_BTN_CONNECT_SIN")
 				sporulation_final_button.modulate = Color(0.1, 1.0, 1.0)
 			elif EvoManager.seta_formada:
-				sporulation_final_button.text = "DISPERSAR ESPORAS (Final)"
+				sporulation_final_button.text = tr("EVO_BTN_DISPERSE")
 				sporulation_final_button.modulate = Color(0.4, 1.0, 0.2)
 			elif show_panspermia:
 				if EconomyManager.money >= 100000.0:
-					sporulation_final_button.text = "PANSPERMIA NEGRA ($100k) (Final)"
+					sporulation_final_button.text = tr("EVO_BTN_PANSPERMIA")
 					sporulation_final_button.modulate = Color(0.8, 0.2, 1.0)
 				else:
-					sporulation_final_button.text = "REQUIERE $100k PARA PANSPERMIA"
+					sporulation_final_button.text = tr("EVO_BTN_PAN_REQ")
 					sporulation_final_button.disabled = true
 					sporulation_final_button.modulate = Color(0.4, 0.1, 0.5)
 	else:
