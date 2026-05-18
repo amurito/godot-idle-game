@@ -869,7 +869,7 @@ func _on_logic_tick():
 		RunManager.update_homeostasis_mode(dt)
 	if RunManager.post_homeostasis:
 		RunManager.check_perfect_homeostasis()
-	if EvoManager.mutation_parasitism:
+	if EvoManager.mutation_parasitism and not RunManager.carnaval_active:
 		RunManager.check_parasitism_final(dt)
 	# FRACTURA EPISTÉMICA: mostrar botón manual de colapso controlado
 	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
