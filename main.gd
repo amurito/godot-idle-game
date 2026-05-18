@@ -911,7 +911,9 @@ func _on_ui_tick():
 		StructuralModel.epsilon_runtime,
 		StructuralModel.omega,
 		BiosphereEngine.biomasa,
-		12.0  # biomasa_max for progress bar
+		12.0,
+		BiosphereEngine.hifas,
+		BiosphereEngine.nutrientes
 	)
 
 	# Update structural metrics panel (Phase 4)
@@ -1812,7 +1814,9 @@ func update_ui():
 		StructuralModel.epsilon_runtime,
 		StructuralModel.omega,
 		BiosphereEngine.biomasa,
-		20.0
+		20.0,
+		BiosphereEngine.hifas,
+		BiosphereEngine.nutrientes
 	)
 
 

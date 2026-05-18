@@ -26,19 +26,8 @@ var pulse := 0.0
 var _hifas_establish_timer := 0.0
 const HIFAS_ESTABLISH_TIME := 40.0
 
-# --- Salidas físicas hacia el sistema ---
-var metabolism := 0.0
-
 func apply_fungi_color():
-	var labels = [
-		lbl_status,
-		lbl_nutrients,
-		lbl_biomass,
-		$Panel/VBoxContainer/Metabolismo,
-		$Panel/VBoxContainer/EpsilonEff,
-		$Panel/VBoxContainer/Esporas
-	]
-
+	var labels = [lbl_status, lbl_nutrients, lbl_biomass]
 	for l in labels:
 		if l:
 			l.add_theme_color_override("font_color", fungi_color)
@@ -96,16 +85,6 @@ func _process(delta):
 		return  # ⬅️ todavía no procesamos metabolismo
 
 	# --- A partir de acá, hifas activas ---
-	# La UI solo lee datos de BiosphereEngine, ya no los calcula ella misma
-	
-	var biomass = BiosphereEngine.biomasa
-
-	# metabolismo = qué tan bien el sistema digiere su propia producción
-	var delta_money := float(EconomyManager.get_delta_total())
-	if delta_money > 0:
-		metabolism = biomass / delta_money
-	else:
-		metabolism = 0.0
 	pulse += delta * 2.5
 	var breathe = 0.6 + sin(pulse) * 0.15
 	
@@ -125,7 +104,6 @@ func reset_run():
 	hifas_unlocked = false
 	_hifas_establish_timer = 0.0
 	pulse = 0.0
-	metabolism = 0.0
 	update_ui()
 
 
@@ -162,17 +140,9 @@ func update_ui():
 
 	lbl_status.modulate = current_color
 	
-	# Aplicar el color actual a todos los labels del panel
-	for l in [lbl_nutrients, lbl_biomass, $Panel/VBoxContainer/Metabolismo, $Panel/VBoxContainer/EpsilonEff, $Panel/VBoxContainer/Esporas]:
+	for l in [lbl_nutrients, lbl_biomass]:
 		if l:
 			l.modulate = current_color
 
 	lbl_nutrients.text = "Nutrientes: " + str(snapped(BiosphereEngine.nutrientes, 0.1))
 	lbl_biomass.text   = "Biomasa: " + str(snapped(BiosphereEngine.biomasa, 0.1))
-	$Panel/VBoxContainer/Metabolismo.text = "Metabolismo: " + str(snapped(metabolism, 0.001))
-	$Panel/VBoxContainer/EpsilonEff.text = "ε efectivo: " + str(snapped(BiosphereEngine.epsilon_effective, 0.01))
-	
-	# Estimación de esporas
-	var est_spores = BiosphereEngine.biomasa * 0.8
-	if EvoManager.seta_formada: est_spores *= 3.0
-	$Panel/VBoxContainer/Esporas.text = "Esporas est.: " + str(snapped(est_spores, 0.1))

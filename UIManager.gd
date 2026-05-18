@@ -51,9 +51,13 @@ var header_money_delta
 var header_epsilon_bar
 var header_omega_bar
 var header_biomasa_bar
+var header_hifas_bar
+var header_nutrientes_bar
 var header_epsilon_value
 var header_omega_value
 var header_biomasa_value
+var header_hifas_value
+var header_nutrientes_value
 
 # ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
 var genome_scroll            # GenomeScroll ScrollContainer (togglable)
@@ -124,9 +128,13 @@ func setup(ui_root: Control):
 	header_epsilon_bar = _find_scene("EpsilonBar")
 	header_omega_bar = _find_scene("OmegaBar")
 	header_biomasa_bar = _find_scene("BiomasaBar")
+	header_hifas_bar = _find_scene("HifasBar")
+	header_nutrientes_bar = _find_scene("NutrientesBar")
 	header_epsilon_value = _find_scene("EpsilonValue")
 	header_omega_value = _find_scene("OmegaValue")
 	header_biomasa_value = _find_scene("BiomasaValue")
+	header_hifas_value = _find_scene("HifasValue")
+	header_nutrientes_value = _find_scene("NutrientesValue")
 
 	# Center panel collapsible — Genoma Fúngico
 	genome_scroll = _find("GenomeScroll")
@@ -260,19 +268,27 @@ func update_header_money(amount: float, delta_per_sec: float):
 		delta_text += "/s"
 		header_money_delta.text = delta_text
 
-func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa_max: float = 10.0):
+func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa_max: float = 10.0, hifas: float = 0.0, nutrientes: float = 0.0):
 	if header_epsilon_bar:
 		header_epsilon_bar.value = clamp(epsilon, 0.0, 1.0)
 	if header_omega_bar:
 		header_omega_bar.value = clamp(omega, 0.0, 1.0)
 	if header_biomasa_bar:
 		header_biomasa_bar.value = clamp(biomasa / biomasa_max, 0.0, 1.0)
+	if header_hifas_bar:
+		header_hifas_bar.value = clamp(hifas / 40.0, 0.0, 1.0)
+	if header_nutrientes_bar:
+		header_nutrientes_bar.value = clamp(nutrientes / 50.0, 0.0, 1.0)
 	if header_epsilon_value:
 		header_epsilon_value.text = "%.2f" % epsilon
 	if header_omega_value:
 		header_omega_value.text = "%.2f" % omega
 	if header_biomasa_value:
 		header_biomasa_value.text = "%.1f/%.0f" % [biomasa, biomasa_max]
+	if header_hifas_value:
+		header_hifas_value.text = "%.1f" % hifas
+	if header_nutrientes_value:
+		header_nutrientes_value.text = "%.1f" % nutrientes
 
 func update_structural_metrics(epsilon: float, omega: float, persistence: float, accounting: int):
 	if structural_eps_value:
