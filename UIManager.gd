@@ -229,19 +229,27 @@ func _apply_bio_header_style() -> void:
 	if header_omega_bar:
 		header_omega_bar.add_theme_stylebox_override("fill", _omega_fill_style)
 
-	# Tooltips — necesitan mouse_filter = STOP para recibir hover
-	var tooltip_nodes := {
-		"EpsilonLabel":    "ε — Estrés estructural\nBanda saludable: 0.03–0.30\nVerde: en banda | Amarillo: elevado | Rojo: crítico",
-		"OmegaLabel":      "Ω — Estabilidad del sistema (1 = perfecto)\nVerde: >0.75 | Amarillo: 0.40–0.75 | Rojo: <0.40",
-		"BiomasaLabel":    "Biomasa — tejido fúngico acumulado\nAlta biomasa absorbe ε; dispara cierres por parasitismo/esporulación",
-		"HifasLabel":      "Hifas — red de hilos fúngicos (cap ~40)\nMotor del crecimiento de biomasa",
-		"NutrientesLabel": "Nutrientes — combustible para crecer biomasa\nSe ganan absorbiendo ε; si son negativos el crecimiento se detiene",
+	# Tooltips: se ponen en el VBoxContainer + ProgressBar porque la barra
+	# es el área más grande bajo el cursor (Label solo ocupa el texto "ε").
+	var metric_tooltips := {
+		"EpsilonMetric": ["EpsilonBar",    "ε — Estrés estructural\nBanda saludable: 0.03–0.30\nVerde=en banda | Amarillo=elevado | Rojo=crítico"],
+		"OmegaMetric":   ["OmegaBar",      "Ω — Estabilidad del sistema (1=perfecto)\nVerde >0.75 | Amarillo 0.40–0.75 | Rojo <0.40"],
+		"BiomasaMetric": ["BiomasaBar",    "Biomasa — tejido fúngico acumulado\nModifica ε efectivo; >12 bloquea homeostasis; >15 parasitismo colapsa"],
+		"HifasMetric":   ["HifasBar",      "Hifas — red de hilos fúngicos (cap ~40)\nMotor del crecimiento de biomasa; escalan con ingreso pasivo"],
+		"NutrientesMetric": ["NutrientesBar", "Nutrientes — combustible para crecer biomasa\nAbsorben ε; negativos detienen el crecimiento; altos dan descuento en upgrades"],
 	}
-	for node_name in tooltip_nodes:
-		var n = _find_scene(node_name)
-		if n:
-			n.tooltip_text = tooltip_nodes[node_name]
-			n.mouse_filter = Control.MOUSE_FILTER_STOP
+	for container_name in metric_tooltips:
+		var bar_name: String = metric_tooltips[container_name][0]
+		var tip: String      = metric_tooltips[container_name][1]
+		var container = _find_scene(container_name)
+		var bar       = _find_scene(bar_name)
+		if container:
+			container.tooltip_text = tip
+			container.mouse_filter = Control.MOUSE_FILTER_STOP
+		if bar:
+			bar.tooltip_text = tip
+			# ProgressBar puede tener PASS por defecto — asegurar STOP
+			bar.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _find(node_name: String):
 	return root.find_child(node_name, true, false)

@@ -1280,6 +1280,8 @@ func _build_legacy_item(id: String) -> Control:
 func _update_legacy_indicators() -> void:
 	if not is_instance_valid(_legacy_indicators):
 		return
+	# PASS: los eventos pasan al chip Label hijo que tiene STOP y tooltip
+	_legacy_indicators.mouse_filter = Control.MOUSE_FILTER_PASS
 	for c in _legacy_indicators.get_children():
 		c.queue_free()
 
