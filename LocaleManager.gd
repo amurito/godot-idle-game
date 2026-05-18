@@ -251,6 +251,52 @@ const TRANSLATIONS := {
 		"ROUTE_VACIO_HAMBRIENTO": "VACÍO HAMBRIENTO",
 		"ROUTE_CARNAVAL": "CARNAVAL DE MUTACIONES",
 		"ROUTE_REENCARNACION": "REENCARNACIÓN HEREDADA",
+
+		# === UPGRADE LABELS ===
+		"UPG_CLICK": "Mejorar click",
+		"UPG_AUTO": "Trabajo Manual",
+		"UPG_TRUEQUE": "Trueque",
+		"UPG_CLICK_MULT": "Memoria Numérica",
+		"UPG_AUTO_MULT": "Ritmo de Trabajo",
+		"UPG_TRUEQUE_NET": "Red de Intercambio",
+		"UPG_SPECIALIZATION": "Especialización de Oficio",
+		"UPG_COGNITIVE": "Capital Cognitivo (μ)",
+		"UPG_ACCOUNTING": "Contabilidad Básica",
+		"UPG_PERSISTENCE": "Memoria Operativa del Sistema (c₀ +25%)",
+		"UPG_TRUEQUE_ALLO": "Escalado Alostático",
+		"UPG_ACQUIRED": "✓ ADQUIRIDO",
+
+		# === MUTATION NAMES ===
+		"MUT_ALLOSTASIS": "Resiliencia Alostática",
+		"MUT_HOMEORHESIS": "Trascendencia Cristalina",
+		"MUT_DEPREDADOR": "Depredador de Realidades",
+		"MUT_MET_OSCURO": "METABOLISMO OSCURO",
+		"MUT_HIPERASIMILACION": "HIPERASIMILACIÓN",
+		"MUT_HOMEOSTASIS": "HOMEOSTASIS",
+		"MUT_RED_MICELIAL": "RED MICELIAL (Fase A)",
+		"MUT_ESPORULACION": "ESPORULACIÓN",
+		"MUT_PARASITISMO": "PARASITISMO",
+		"MUT_SIMBIOSIS": "SIMBIOSIS ESTRUCTURAL",
+
+		# === GENOME PANEL ===
+		"MUT_LABEL_HIPERAS": "Hiperasimilación",
+		"MUT_LABEL_PARASIT": "Parasitismo",
+		"MUT_LABEL_RED": "Red micelial",
+		"MUT_LABEL_ESPOR": "Esporulación",
+		"MUT_LABEL_SIMBIO": "Simbiosis",
+		"MUT_LABEL_DEP": "Depredador",
+		"MUT_LABEL_MO": "Met.Oscuro",
+		"MUT_STATE_DORMIDO": "dormido",
+		"MUT_STATE_LATENTE": "latente",
+		"MUT_STATE_ACTIVO": "activo",
+		"MUT_STATE_BLOQUEADO": "bloqueado",
+		"MUT_ROUTE_PREFIX": "Ruta evolutiva",
+
+		# === MUTATION TOASTS ===
+		"MUT_TOAST_HIPERAS": "HIPERASIMILACIÓN EXTREMA — Click ×10 | Pasivo anulado | Run termina ahora",
+		"MUT_TOAST_PARASIT": "PARASITISMO ACTIVO — El hongo drena la estructura",
+		"MUT_TOAST_DEP": "DEPREDADOR ACTIVO — La realidad está siendo consumida",
+		"MUT_TOAST_MO": "METABOLISMO OSCURO — Bioquímica alternativa estabilizada",
 	},
 	"en": {
 		"UI_LANG_NAME": "English",
@@ -482,6 +528,52 @@ const TRANSLATIONS := {
 		"ROUTE_VACIO_HAMBRIENTO": "HUNGRY VOID",
 		"ROUTE_CARNAVAL": "CARNIVAL OF MUTATIONS",
 		"ROUTE_REENCARNACION": "INHERITED REINCARNATION",
+
+		# === UPGRADE LABELS ===
+		"UPG_CLICK": "Improve Click",
+		"UPG_AUTO": "Manual Labor",
+		"UPG_TRUEQUE": "Exchange",
+		"UPG_CLICK_MULT": "Numeric Memory",
+		"UPG_AUTO_MULT": "Work Rhythm",
+		"UPG_TRUEQUE_NET": "Exchange Network",
+		"UPG_SPECIALIZATION": "Trade Specialization",
+		"UPG_COGNITIVE": "Cognitive Capital (μ)",
+		"UPG_ACCOUNTING": "Basic Accounting",
+		"UPG_PERSISTENCE": "System Operative Memory (c₀ +25%)",
+		"UPG_TRUEQUE_ALLO": "Allostatic Scaling",
+		"UPG_ACQUIRED": "✓ ACQUIRED",
+
+		# === MUTATION NAMES ===
+		"MUT_ALLOSTASIS": "Allostatic Resilience",
+		"MUT_HOMEORHESIS": "Crystalline Transcendence",
+		"MUT_DEPREDADOR": "Reality Predator",
+		"MUT_MET_OSCURO": "DARK METABOLISM",
+		"MUT_HIPERASIMILACION": "HYPERASSIMILATION",
+		"MUT_HOMEOSTASIS": "HOMEOSTASIS",
+		"MUT_RED_MICELIAL": "MYCELIAL NETWORK (Phase A)",
+		"MUT_ESPORULACION": "SPORULATION",
+		"MUT_PARASITISMO": "PARASITISM",
+		"MUT_SIMBIOSIS": "STRUCTURAL SYMBIOSIS",
+
+		# === GENOME PANEL ===
+		"MUT_LABEL_HIPERAS": "Hyperassimilation",
+		"MUT_LABEL_PARASIT": "Parasitism",
+		"MUT_LABEL_RED": "Mycelial network",
+		"MUT_LABEL_ESPOR": "Sporulation",
+		"MUT_LABEL_SIMBIO": "Symbiosis",
+		"MUT_LABEL_DEP": "Predator",
+		"MUT_LABEL_MO": "Dark Met.",
+		"MUT_STATE_DORMIDO": "dormant",
+		"MUT_STATE_LATENTE": "latent",
+		"MUT_STATE_ACTIVO": "active",
+		"MUT_STATE_BLOQUEADO": "locked",
+		"MUT_ROUTE_PREFIX": "Evolutionary route",
+
+		# === MUTATION TOASTS ===
+		"MUT_TOAST_HIPERAS": "EXTREME HYPERASSIMILATION — Click ×10 | Passive nulled | Run ends now",
+		"MUT_TOAST_PARASIT": "PARASITISM ACTIVE — The fungus drains the structure",
+		"MUT_TOAST_DEP": "PREDATOR ACTIVE — Reality is being consumed",
+		"MUT_TOAST_MO": "DARK METABOLISM — Alternative biochemistry stabilized",
 	}
 }
 

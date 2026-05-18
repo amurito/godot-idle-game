@@ -954,11 +954,10 @@ func _on_mutation_activated(id: String, display_name: String):
 	# Mostrar efectos activos como lap (visible en pantalla final)
 	match id:
 		"hiperasimilacion":
-			# Extra emphasis para los buffs
-			show_system_toast("?? HIPERASIMILACIÓN EXTREMA ?? — Click ×10 | Pasivo anulado | Run termina ahora")
+			show_system_toast(tr("MUT_TOAST_HIPERAS"))
 		"parasitismo":
 			LogManager.add("?? EFECTOS: Biomasa +100% / Pasivo +20% / Contabilidad -10% / Ω máx 0.25")
-			show_system_toast("?? PARASITISMO ACTIVO — El hongo drena la estructura")
+			show_system_toast(tr("MUT_TOAST_PARASIT"))
 		"homeostasis":
 			LogManager.add("?? EFECTOS: Producción +50% / e estabilizado / O_min 0.35")
 		"red_micelial":
@@ -971,10 +970,10 @@ func _on_mutation_activated(id: String, display_name: String):
 			LogManager.add("? EFECTOS: Trascendencia cristalina / Metabolismo irreversible")
 		"depredador":
 			LogManager.add("?? EFECTOS: Devora upgrades cada 1.5s / El código se consume")
-			show_system_toast("?? DEPREDADOR ACTIVO — La realidad está siendo consumida")
+			show_system_toast(tr("MUT_TOAST_DEP"))
 		"met_oscuro":
-			LogManager.add("?? EFECTOS: Devorar detenido — Pasivo = Bio×0.8/s — Click ×3 — ε decae � O 0.10")
-			show_system_toast("?? METABOLISMO OSCURO — Bioquímica alternativa estabilizada")
+			LogManager.add("?? EFECTOS: Devorar detenido — Pasivo = Bio×0.8/s — Click ×3 — ε decae ? O 0.10")
+			show_system_toast(tr("MUT_TOAST_MO"))
 
 	if id == "red_micelial" and not RunManager.carnaval_active:
 		# Activar el popup de elección (v0.8.32 - Modular)

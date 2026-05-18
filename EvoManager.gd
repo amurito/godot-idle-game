@@ -509,21 +509,21 @@ func activate_allostasis():
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
 	LogManager.add("🔬 ALOSTASIS ALCANZADA: El sistema ha aprendido a recalibrar su setpoint estructural tras la crisis.")
 	mutation_allostasis = true
-	mutation_activated.emit("allostasis", "Resiliencia Alostática")
+	mutation_activated.emit("allostasis", tr("MUT_ALLOSTASIS"))
 	AchievementManager.on_mutation_activated("allostasis")
 	
 func activate_homeorhesis():
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
 	LogManager.add("✨ HOMEORRESIS ALCANZADA: Evolución irreversible. El metabolismo trasciende la regulación basal.")
 	mutation_homeorhesis = true
-	mutation_activated.emit("homeorhesis", "Trascendencia Cristalina")
+	mutation_activated.emit("homeorhesis", tr("MUT_HOMEORHESIS"))
 	AchievementManager.on_mutation_activated("homeorhesis")
 
 func activate_depredador():
 	if mutation_homeostasis or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
 	LogManager.add("⚠️ ALERTA: EL CÓDIGO FUENTE HA SIDO VULNERADO. EL HONGO SE ALIMENTA DE LA REALIDAD.")
 	mutation_depredador = true
-	mutation_activated.emit("depredador", "Depredador de Realidades")
+	mutation_activated.emit("depredador", tr("MUT_DEPREDADOR"))
 	AchievementManager.on_depredador_activated()
 
 	if not LegacyManager.get_buff_value("metabolismo_glitch"):
@@ -537,7 +537,7 @@ func activate_met_oscuro():
 	LogManager.add("🌑 METABOLISMO OSCURO ACTIVADO — La bioquímica no documentada reemplaza la economía estructural.")
 	LogManager.add("🌑 EFECTOS: Devorar DETENIDO · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω bloqueado 0.10")
 	LogManager.add("🌑 CIERRES: Voluntario (2min cooldown, PL escalonado) · Saturación Bio≥100 (+6PL) · $1M (+4PL)")
-	mutation_activated.emit("met_oscuro", "METABOLISMO OSCURO")
+	mutation_activated.emit("met_oscuro", tr("MUT_MET_OSCURO"))
 	AchievementManager.on_met_oscuro_activated()
 	# Recalcular estrés/omega tras aplicar los nerfs permanentes
 	StructuralModel.omega = 0.10
@@ -547,7 +547,7 @@ func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
 	mutation_hyperassimilation = true
 	LogManager.add("⚡⚡⚡ EFECTOS ACTIVOS: Click PUSH ×10 | Pasivo ×0.25 (-75%) | Fragilidad Ω total ⚡⚡⚡")
-	mutation_activated.emit("hiperasimilacion", "HIPERASIMILACIÓN")
+	mutation_activated.emit("hiperasimilacion", tr("MUT_HIPERASIMILACION"))
 	AchievementManager.on_mutation_activated("hiperasimilacion")
 	# No cerrar si Depredador puede cargarse: venimos de PARASITISMO O trascendencia_count > 1
 	var depredador_gate: bool = LegacyManager.last_run_ending == "PARASITISMO" \
@@ -559,13 +559,13 @@ func activate_homeostasis():
 	if mutation_homeostasis or mutation_symbiosis: return
 	mutation_homeostasis = true
 	mutation_hyperassimilation = false # bloqueo cruzado
-	mutation_activated.emit("homeostasis", "HOMEOSTASIS")
+	mutation_activated.emit("homeostasis", tr("MUT_HOMEOSTASIS"))
 	AchievementManager.on_mutation_activated("homeostasis")
 
 func activate_red_micelial():
 	if mutation_homeostasis or mutation_hyperassimilation or mutation_symbiosis: return
 	mutation_red_micelial = true
-	mutation_activated.emit("red_micelial", "RED MICELIAL (Fase A)")
+	mutation_activated.emit("red_micelial", tr("MUT_RED_MICELIAL"))
 	AchievementManager.on_red_micelial_activated()
 
 func activate_sporulation():
@@ -574,7 +574,7 @@ func activate_sporulation():
 	if mutation_homeostasis or mutation_hyperassimilation: return
 
 	mutation_sporulation = true
-	mutation_activated.emit("esporulacion", "ESPORULACIÓN")
+	mutation_activated.emit("esporulacion", tr("MUT_ESPORULACION"))
 	AchievementManager.on_mutation_activated("esporulacion")
 	run_ended_by_mutation.emit("ESPORULACION", "El sistema abandona la coherencia local y se dispersa en esporas")
 
@@ -583,7 +583,7 @@ func activate_parasitism():
 	mutation_parasitism = true
 	mutation_hyperassimilation = false
 	BiosphereEngine.apply_parasitism_buffs()
-	mutation_activated.emit("parasitismo", "PARASITISMO")
+	mutation_activated.emit("parasitismo", tr("MUT_PARASITISMO"))
 	AchievementManager.on_mutation_activated("parasitismo")
 	# El parasitismo no cierra la run inmediatamente, requiere un hito de drenaje o colapso.
 
@@ -601,7 +601,7 @@ func check_parasitism_final(_main: Control):
 func activate_symbiosis():
 	if mutation_homeostasis or mutation_hyperassimilation or mutation_red_micelial: return
 	mutation_symbiosis = true
-	mutation_activated.emit("simbiosis", "SIMBIOSIS ESTRUCTURAL")
+	mutation_activated.emit("simbiosis", tr("MUT_SIMBIOSIS"))
 
 # =============================================================
 # CICLO BIOLÓGICO: PRIMORDIO (Fase 2)

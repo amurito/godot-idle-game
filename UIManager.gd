@@ -1063,17 +1063,17 @@ func build_genome_text() -> String:
 		t += "[b][color=#44ee99]⚱️ REENCARNACIÓN HEREDADA[/color][/b]\n"
 		t += "[color=#888888]Upgrades heredados del ciclo anterior. Costos escalan ×1.5 extra.[/color]\n\n"
 	t += "🧬 GENOMA FÚNGICO\n"
-	t += "Hiperasimilación: " + EvoManager.genome.hiperasimilacion + "\n"
-	t += "Parasitismo: " + EvoManager.genome.parasitismo + "\n"
-	t += "Red micelial: " + EvoManager.genome.red_micelial + "\n"
-	t += "Esporulación: " + EvoManager.genome.esporulacion + "\n"
-	t += "Simbiosis: " + EvoManager.genome.simbiosis + "\n"
+	t += tr("MUT_LABEL_HIPERAS") + ": " + tr("MUT_STATE_" + EvoManager.genome.hiperasimilacion.to_upper()) + "\n"
+	t += tr("MUT_LABEL_PARASIT") + ": " + tr("MUT_STATE_" + EvoManager.genome.parasitismo.to_upper()) + "\n"
+	t += tr("MUT_LABEL_RED") + ": " + tr("MUT_STATE_" + EvoManager.genome.red_micelial.to_upper()) + "\n"
+	t += tr("MUT_LABEL_ESPOR") + ": " + tr("MUT_STATE_" + EvoManager.genome.esporulacion.to_upper()) + "\n"
+	t += tr("MUT_LABEL_SIMBIO") + ": " + tr("MUT_STATE_" + EvoManager.genome.simbiosis.to_upper()) + "\n"
 	var dep_state: String = EvoManager.genome.get("depredador", "dormido")
 	if dep_state != "dormido" or EvoManager.mutation_depredador:
-		t += "Depredador: " + dep_state + "\n"
+		t += tr("MUT_LABEL_DEP") + ": " + tr("MUT_STATE_" + dep_state.to_upper()) + "\n"
 	var mo_state: String = EvoManager.genome.get("met_oscuro", "dormido")
 	if mo_state != "dormido" or EvoManager.mutation_met_oscuro:
-		t += "Met.Oscuro: " + mo_state + "\n"
+		t += tr("MUT_LABEL_MO") + ": " + tr("MUT_STATE_" + mo_state.to_upper()) + "\n"
 
 	if EvoManager.mutation_met_oscuro:
 		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO (Post-Depredador):[/color][/b]\n"
@@ -1091,18 +1091,19 @@ func build_genome_text() -> String:
 	elif EvoManager.genome.hiperasimilacion == "latente":
 		t += "\n[color=gray]• Hiperasimilación (LATENTE)[/color]"
 
+	var _route_prefix: String = tr("MUT_ROUTE_PREFIX") + ": "
 	if EvoManager.mutation_met_oscuro:
-		t += "\n🌑 Ruta evolutiva: METABOLISMO OSCURO"
+		t += "\n🌑 " + _route_prefix + tr("MUT_MET_OSCURO")
 	elif EvoManager.mutation_depredador:
-		t += "\n☠️ Ruta evolutiva: DEPREDADOR DE REALIDADES"
+		t += "\n☠️ " + _route_prefix + tr("MUT_DEPREDADOR")
 	elif EvoManager.mutation_homeostasis:
-		t += "\n⚖️ Ruta evolutiva: HOMEOSTASIS"
+		t += "\n⚖️ " + _route_prefix + tr("MUT_HOMEOSTASIS")
 	elif EvoManager.mutation_hyperassimilation:
-		t += "\n⚠️ Ruta evolutiva: HIPERASIMILACIÓN"
+		t += "\n⚠️ " + _route_prefix + tr("MUT_HIPERASIMILACION")
 	elif EvoManager.mutation_symbiosis:
-		t += "\n🌱 Ruta evolutiva: SIMBIOSIS"
+		t += "\n🌱 " + _route_prefix + tr("MUT_SIMBIOSIS")
 	elif EvoManager.mutation_parasitism:
-		t += "\n🦠 Ruta evolutiva: PARASITISMO"
+		t += "\n🦠 " + _route_prefix + tr("MUT_PARASITISMO")
 
 	if RunManager.run_closed:
 		t += "\n\n🏁 FINAL ALCANZADO: " + RunManager.final_route

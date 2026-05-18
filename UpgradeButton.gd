@@ -57,8 +57,9 @@ func update_appearance(current_money: float) -> void:
 	# Visibilidad basada en desbloqueo
 	visible = state.unlocked
 	
+	var _label := tr("UPG_" + upgrade_id.to_upper())
 	if def.one_shot and state.level > 0:
-		text = EmojiToRichText.strip(def.label + "\n✓ ADQUIRIDO")
+		text = EmojiToRichText.strip(_label + "\n" + tr("UPG_ACQUIRED"))
 		disabled = true
 		_apply_acquired_style()
 		return
@@ -89,9 +90,9 @@ func update_appearance(current_money: float) -> void:
 		hk_prefix = "[%d] " % HOTKEY_MAP[upgrade_id]
 
 	if def.one_shot:
-		text = EmojiToRichText.strip("%s%s\n%s" % [hk_prefix, def.label, cost_str])
+		text = EmojiToRichText.strip("%s%s\n%s" % [hk_prefix, _label, cost_str])
 	else:
-		text = EmojiToRichText.strip("%s%s%s (%s)\n%s" % [hk_prefix, def.label, level_str, gain_str, cost_str])
+		text = EmojiToRichText.strip("%s%s%s (%s)\n%s" % [hk_prefix, _label, level_str, gain_str, cost_str])
 	
 	# Desactivar si no alcanza el dinero
 	var can_afford = current_money >= cost
