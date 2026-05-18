@@ -269,7 +269,7 @@ func check_homeostasis_final(delta: float):
 		var delta_real :float = EconomyManager.get_contribution_breakdown().total
 		var ok = extreme_shocks_recovered >= 1 and resilience_score >= 400.0 \
 			and omega_min_peak >= 0.50 and disturbances_survived >= 5 \
-			and delta_real > 300.0 and run_time >= 1200.0
+			and delta_real > 300.0 and run_time >= Balance.HOMEORHESIS_MIN_RUN_TIME
 		if ok:
 			homeostasis_tier_reached = 3
 			if not LegacyManager.get_buff_value("legado_homeorresis"):
