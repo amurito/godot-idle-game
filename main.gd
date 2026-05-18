@@ -386,19 +386,6 @@ func _ready():
 	)
 	bottom_left_panel.add_child(menu_btn)
 
-	var bios_btn := Button.new()
-	bios_btn.text = EmojiToRichText.strip("🌱 Biosfera")
-	bios_btn.toggle_mode = true
-	bios_btn.button_pressed = true
-	bios_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-	bios_btn.toggled.connect(func(pressed):
-		if is_instance_valid(fungi_ui):
-			fungi_ui.visible = pressed
-	)
-	var _header_content := $HeaderBar/HeaderContent
-	_header_content.add_child(bios_btn)
-	_header_content.move_child(bios_btn, _header_content.get_child_count() - 2)
-
 	_reset_btn = Button.new()
 	_reset_btn.text = tr("GAME_BTN_RESET")
 	_reset_btn.modulate = Color(0.8, 0.4, 0.4)
@@ -659,7 +646,7 @@ func _mount_fungi_dlc():
 	# ?? AHORA VA DIRECTO AL STACK
 	get_node("UIRootContainer/RightPanel").add_child(fungi_ui)
 
-	fungi_ui.visible = true
+	fungi_ui.visible = false
 	fungi_ui.set_main(self)
 
 	# Opcional pero recomendado
@@ -1554,6 +1541,10 @@ func _input(event):
 
 		if event.keycode == KEY_K:
 			TutorialManager.toggle_objectives_panel(self)
+
+		if event.keycode == KEY_B:
+			if is_instance_valid(fungi_ui):
+				fungi_ui.visible = not fungi_ui.visible
 
 		if OS.is_debug_build() and event.keycode == KEY_F1 and is_instance_valid(_debug_panel):
 			_debug_panel.visible = not _debug_panel.visible

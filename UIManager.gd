@@ -136,6 +136,8 @@ func setup(ui_root: Control):
 	header_hifas_value = _find_scene("HifasValue")
 	header_nutrientes_value = _find_scene("NutrientesValue")
 
+	_apply_bio_header_style()
+
 	# Center panel collapsible — Genoma Fúngico
 	genome_scroll = _find("GenomeScroll")
 	var mutation_toggle_btn = _find("MutationToggleBtn")
@@ -192,6 +194,27 @@ func setup(ui_root: Control):
 	sporulation_final_button = _find_scene("SporulationFinalButton")
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
+
+func _apply_bio_header_style() -> void:
+	var bio_color := Color(0.78, 0.3, 1.0, 0.9)
+	var bio_bars := [header_biomasa_bar, header_hifas_bar, header_nutrientes_bar]
+	var bio_labels := [
+		_find_scene("BiomasaLabel"), _find_scene("BiomasaValue"),
+		_find_scene("HifasLabel"),   _find_scene("HifasValue"),
+		_find_scene("NutrientesLabel"), _find_scene("NutrientesValue"),
+	]
+	var fill_style := StyleBoxFlat.new()
+	fill_style.bg_color = bio_color
+	fill_style.corner_radius_top_left = 2
+	fill_style.corner_radius_top_right = 2
+	fill_style.corner_radius_bottom_right = 2
+	fill_style.corner_radius_bottom_left = 2
+	for bar in bio_bars:
+		if bar:
+			bar.add_theme_stylebox_override("fill", fill_style.duplicate())
+	for lbl in bio_labels:
+		if lbl:
+			lbl.add_theme_color_override("font_color", bio_color)
 
 func _find(node_name: String):
 	return root.find_child(node_name, true, false)
