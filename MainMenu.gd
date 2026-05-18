@@ -720,7 +720,7 @@ func _populate_legacy_items():
 			if col_has_items:
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
-			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.text = "-- %s --" % tr("LEGACY_CAT_" + cat.to_upper())
 			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 26
@@ -739,11 +739,11 @@ func _populate_legacy_items():
 				var container: VBoxContainer = VBoxContainer.new()
 				container.add_theme_constant_override("separation", 1)
 
-				var name_str: String = def.get("name", id)
+				var name_str: String = tr("LEGACY_" + id.to_upper() + "_NAME")
 				if max_lvl > 1:
 					name_str += "  [%d/%d]" % [lvl, max_lvl]
 				if is_new:
-					name_str += "  NUEVO"
+					name_str += "  " + tr("ACH_BADGE_NEW")
 
 				var name_lbl: Label = Label.new()
 				name_lbl.text = name_str
@@ -761,7 +761,7 @@ func _populate_legacy_items():
 					name_lbl.modulate = Color(0.65, 0.65, 0.65)
 
 				var flavor_lbl: Label = Label.new()
-				flavor_lbl.text = def.get("flavor", "")
+				flavor_lbl.text = tr("LEGACY_" + id.to_upper() + "_FLAVOR")
 				flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				flavor_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
 				flavor_lbl.modulate = Color(0.55, 0.55, 0.55)

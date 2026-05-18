@@ -102,7 +102,7 @@ func close_run(route: String, reason: String):
 	final_route = route
 	final_reason = reason
 	AudioManager.play_sfx("run_close")
-	LogManager.add("🚩 RUN CERRADA: " + route)
+	LogManager.add(tr("LOG_RUN_CLOSED") % route)
 
 	LegacyManager.last_run_ending = route
 	LegacyManager.mark_ending_achieved(route) # Tracking persistente para gate de Trascendencia
@@ -119,7 +119,7 @@ func close_run(route: String, reason: String):
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		UIManager.show_toast(tr("MSG_PL_GAINED") % [pl_to_add, route])
-	LogManager.add("✦ [PL] Base: +%d (%s)" % [pl_to_add, route])
+	LogManager.add(tr("LOG_PL_BASE") % [pl_to_add, route])
 
 	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
 	if LegacyManager.get_buff_value("colapso_controlado"):
@@ -128,7 +128,7 @@ func close_run(route: String, reason: String):
 		if extra_pl > 0:
 			LegacyManager.add_pl(extra_pl)
 			_total_pl += extra_pl
-			LogManager.add("✦ [Legado] Colapso Controlado: +%d PL (ε_peak %.2f × %.1f)" % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
+			LogManager.add(tr("LOG_PL_COLAPSO") % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
 	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
 	if LegacyManager.trascendencia_count >= 1:
@@ -202,7 +202,7 @@ func close_run(route: String, reason: String):
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
-		LogManager.add("✦ [NG+] Bonus: +%d PL (%s)" % [ng_bonus, ng_formula])
+		LogManager.add(tr("LOG_PL_NG") % [ng_bonus, ng_formula])
 
 	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
 
@@ -219,7 +219,7 @@ func close_run(route: String, reason: String):
 
 func enter_post_homeostasis():
 	post_homeostasis = true
-	LogManager.add("⚖️ Iniciando fase de Post-Homeostasis")
+	LogManager.add(tr("LOG_POST_HOMEOSTASIS"))
 
 # ==================== CHEQUEOS FINALES ====================
 # HOMEOSTASIS → ALLOSTASIS → HOMEORHESIS son tiers progresivos EN LA MISMA RUN.
@@ -254,8 +254,8 @@ func check_homeostasis_final(delta: float):
 	if homeostasis_timer >= Balance.HOMEOSTASIS_TIME_REQUIRED and homeostasis_tier_reached < 1:
 		homeostasis_tier_reached = 1
 		post_homeostasis = true
-		LogManager.add("⚖️ Tier 1 desbloqueado: HOMEOSTASIS — podés cerrar la run o seguir")
-		UIManager.show_toast("HOMEOSTASIS alcanzada — aguantá para evolucionar a ALLOSTASIS")
+		LogManager.add(tr("LOG_TIER1_HOMEOSTASIS"))
+		UIManager.show_toast(tr("TOAST_HOMEOSTASIS"))
 
 	# Tier 2: ALLOSTASIS — más perturbaciones, metabolismo mayor
 	if homeostasis_tier_reached >= 1 and homeostasis_tier_reached < 2:
@@ -267,8 +267,8 @@ func check_homeostasis_final(delta: float):
 			homeostasis_tier_reached = 2
 			if not LegacyManager.get_buff_value("legado_alostasis"):
 				LegacyManager.grant_buff("legado_alostasis")
-			LogManager.add("💜 Tier 2 desbloqueado: ALLOSTASIS — podés cerrar o seguir por HOMEORHESIS")
-			UIManager.show_toast("ALLOSTASIS alcanzada — sobreviví shocks y acumulá Resiliencia ≥ 400 para HOMEORHESIS")
+			LogManager.add(tr("LOG_TIER2_ALLOSTASIS"))
+			UIManager.show_toast(tr("TOAST_ALLOSTASIS"))
 
 	# Tier 3: HOMEORHESIS — shock extremo + larga duración
 	if homeostasis_tier_reached >= 2 and homeostasis_tier_reached < 3:
@@ -281,8 +281,8 @@ func check_homeostasis_final(delta: float):
 			homeostasis_tier_reached = 3
 			if not LegacyManager.get_buff_value("legado_homeorresis"):
 				LegacyManager.grant_buff("legado_homeorresis")
-			LogManager.add("💎 Tier 3 desbloqueado: HOMEORHESIS — el sistema trasciende la regulación basal")
-			UIManager.show_toast("HOMEORHESIS alcanzada — cerrá la run para sellarlo")
+			LogManager.add(tr("LOG_TIER3_HOMEORHESIS"))
+			UIManager.show_toast(tr("TOAST_HOMEORHESIS"))
 
 	# Mostrar el botón del tier más alto alcanzado
 	if homeostasis_tier_reached == 3:
@@ -416,9 +416,9 @@ func trigger_disturbance():
 	if homeostasis_tier_reached >= 2 and randf() < 0.2:
 		shock = randf_range(0.8, 1.0)
 		is_extreme = true
-		LogManager.add("🌋 SHOCK EXTREMO DETECTADO — ε +" + str(snapped(shock, 0.01)))
+		LogManager.add(tr("LOG_SHOCK_EXTREME") % str(snapped(shock, 0.01)))
 	else:
-		LogManager.add("🌪️ Perturbación externa — shock ε +" + str(snapped(shock, 0.01)))
+		LogManager.add(tr("LOG_SHOCK_NORMAL") % str(snapped(shock, 0.01)))
 
 	StructuralModel.epsilon_runtime += shock
 	is_recovering_from_shock = true
@@ -436,7 +436,7 @@ func trigger_disturbance():
 		StructuralModel.omega_min = max(0.0, StructuralModel.omega_min - penalty_omega)
 		var money_drain := EconomyManager.money * 0.20
 		EconomyManager.money = max(0.0, EconomyManager.money - money_drain)
-		LogManager.add("💸 Shock drenó Ω_min (-%s) y $%.0f" % [snapped(penalty_omega, 0.01), money_drain])
+		LogManager.add(tr("LOG_SHOCK_DRAIN") % [snapped(penalty_omega, 0.01), money_drain])
 
 	disturbance_triggered.emit(shock, is_extreme)
 
@@ -450,21 +450,21 @@ func check_shock_tracking():
 		if is_recovering_from_extreme:
 			is_recovering_from_extreme = false
 			extreme_shocks_recovered += 1
-			LogManager.add("💎 SHOCK EXTREMO ABSORBIDO. Total: " + str(extreme_shocks_recovered))
+			LogManager.add(tr("LOG_SHOCK_ABSORBED") % extreme_shocks_recovered)
 		else:
-			LogManager.add("💚 SHOCK ESTABILIZADO. Total: " + str(disturbances_survived))
+			LogManager.add(tr("LOG_SHOCK_STABILIZED") % disturbances_survived)
 		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
 
 		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)
 		if LegacyManager.get_buff_value("legado_alostasis"):
 			StructuralModel.omega_min = min(StructuralModel.omega_min + 0.02, 0.70)
-			LogManager.add("✦ [NG+] Resiliencia Alostática — Ω_min +0.02 → %.2f" % StructuralModel.omega_min)
+			LogManager.add(tr("LOG_NG_ALOSTASIS") % StructuralModel.omega_min)
 
 		# EQUILIBRIO HEREDADO: +0.04 Ω_min en burst por shock estabilizado (cap 0.70)
 		var eq_bonus: float = LegacyManager.get_effect_value("omega_min_per_disturbance")
 		if eq_bonus > 0.0:
 			StructuralModel.omega_min = min(StructuralModel.omega_min + eq_bonus, 0.70)
-			LogManager.add("✦ [Legado] Equilibrio Heredado — Ω_min +%.2f → %.2f" % [eq_bonus, StructuralModel.omega_min])
+			LogManager.add(tr("LOG_NG_EQ_HEREDADO") % [eq_bonus, StructuralModel.omega_min])
 
 func check_perfect_homeostasis():
 	if not post_homeostasis or AchievementManager.is_unlocked("homeostasis_perfecta"):
@@ -509,7 +509,7 @@ func _activate_vacio_hambriento() -> void:
 	vacio_hambriento_mult = Balance.VACIO_HAMBRIENTO_MULT
 	LegacyManager.save_legacy()
 	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
-	LogManager.add("🕳️ VACÍO HAMBRIENTO — %d buffs consumidos, producción ×100" % consumed)
+	LogManager.add(tr("LOG_VACIO") % consumed)
 
 func _activate_carnaval() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "carnaval"})
@@ -525,14 +525,14 @@ func _activate_carnaval() -> void:
 	# Aplicar la primera inmediatamente
 	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
 	print("🎭 [CARNAVAL] Mutaciones: %s" % str(carnaval_mutations))
-	LogManager.add("🎭 CARNAVAL — mutaciones: %s → %s → %s" % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
+	LogManager.add(tr("LOG_CARNAVAL_START") % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
 
 func _activate_reencarnacion() -> void:
 	AchievementManager.push_event("post_tras_route", {"route": "reencarnacion"})
 	reencarnacion_active = true
 	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
 	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
-	LogManager.add("⚱️ REENCARNACIÓN HEREDADA — upgrades del ciclo anterior restaurados (costos ×1.5)")
+	LogManager.add(tr("LOG_REENCARNACION"))
 
 ## Tick del Carnaval: rotar mutación cada Balance.CARNAVAL_INTERVAL segundos
 func update_carnaval(delta: float) -> void:
@@ -549,7 +549,7 @@ func update_carnaval(delta: float) -> void:
 		carnaval_total_rotations += 1
 		var next_mut :String= carnaval_mutations[carnaval_index]
 		EvoManager.carnaval_set_mutation(next_mut)
-		LogManager.add("🎭 CARNAVAL — rotación %d → %s" % [carnaval_total_rotations, next_mut])
+		LogManager.add(tr("LOG_CARNAVAL_ROT") % [carnaval_total_rotations, next_mut])
 
 		# CHEQUEO: POLIMORFÍA TOTAL
 		if carnaval_total_rotations >= 12:
@@ -645,7 +645,7 @@ func activate_mente_colmena() -> void:
 		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
 	if not LegacyManager.get_buff_value("mente_colmena"):
 		LegacyManager.grant_buff("mente_colmena")
-		UIManager.show_toast("Has desbloqueado el legado: MENTE COLMENA DISTRIBUIDA")
+		UIManager.show_toast(tr("TOAST_MC_UNLOCKED"))
 	close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores fueron asimilados. El administrador es obsoleto. (+8 PL)")
 
 func tick_auto_buy(dt: float) -> void:
@@ -690,5 +690,5 @@ func _mente_colmena_auto_buy() -> void:
 	if bought_id != "":
 		var def := UpgradeManager.get_def(bought_id)
 		var label_str := def.label if def else bought_id
-		LogManager.add("IA: Comprado [%s] ($%.0f)" % [label_str, bought_cost])
-		UIManager.show_toast("IA compró: %s" % label_str)
+		LogManager.add(tr("LOG_AI_BOUGHT") % [label_str, bought_cost])
+		UIManager.show_toast(tr("TOAST_AI_BOUGHT") % label_str)

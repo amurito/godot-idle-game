@@ -249,8 +249,7 @@ func _update_met_oscuro(ctx: Dictionary) -> void:
 		var prev_mt := met_oscuro_timer
 		met_oscuro_timer += RunManager.LOGIC_TICK
 		if prev_mt == 0.0 and met_oscuro_timer > 0.0:
-			LogManager.add("🌑 BIOQUÍMICA OSCURA — Recursos críticos detectados ($%.0f). Estabilizando en %ds… (devours: %d, bio %.1f)" \
-				% [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa])
+			LogManager.add(tr("LOG_BIOQUIMICA") % [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa])
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
 		var threshold := Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		_set_genome_state("met_oscuro", "activo" if met_oscuro_timer >= threshold else "latente")
@@ -284,8 +283,7 @@ func _update_depredador(ctx: Dictionary) -> void:
 		depredador_timer += RunManager.LOGIC_TICK
 		# Notificar al iniciar la carga
 		if prev_timer == 0.0 and depredador_timer > 0.0:
-			LogManager.add("☠️ DEPREDADOR DETECTADO — ε %.2f > 0.95. Cargando 30s... La hiperasimilación está bloqueada." \
-				% ctx.epsilon)
+			LogManager.add(tr("LOG_DEPREDADOR_DETECTED") % ctx.epsilon)
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
 		var threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		_set_genome_state("depredador", "activo" if depredador_timer >= threshold else "latente")
@@ -307,7 +305,7 @@ func _update_depredador(ctx: Dictionary) -> void:
 		if secs_left in [30, 20, 10, 5, 4, 3, 2, 1]:
 			UIManager.show_countdown(secs_left, "HIPERASIMILACIÓN (colapso)")
 		if _hyper_active_timer >= timeout:
-			LogManager.add("⚡ Hiperasimilación agotada — ε no alcanzó 0.95 en %ds. Cerrando." % int(timeout))
+			LogManager.add(tr("LOG_HIPER_TIMEOUT") % int(timeout))
 			run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema colapsó por saturación — ε insuficiente para Depredador")
 
 
@@ -507,36 +505,36 @@ func _set_genome_state(mutation: String, new_state: String):
 
 func activate_allostasis():
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
-	LogManager.add("🔬 ALOSTASIS ALCANZADA: El sistema ha aprendido a recalibrar su setpoint estructural tras la crisis.")
+	LogManager.add(tr("LOG_ALOSTASIS_EVO"))
 	mutation_allostasis = true
 	mutation_activated.emit("allostasis", tr("MUT_ALLOSTASIS"))
 	AchievementManager.on_mutation_activated("allostasis")
 	
 func activate_homeorhesis():
 	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
-	LogManager.add("✨ HOMEORRESIS ALCANZADA: Evolución irreversible. El metabolismo trasciende la regulación basal.")
+	LogManager.add(tr("LOG_HOMEORRESIS_EVO"))
 	mutation_homeorhesis = true
 	mutation_activated.emit("homeorhesis", tr("MUT_HOMEORHESIS"))
 	AchievementManager.on_mutation_activated("homeorhesis")
 
 func activate_depredador():
 	if mutation_homeostasis or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
-	LogManager.add("⚠️ ALERTA: EL CÓDIGO FUENTE HA SIDO VULNERADO. EL HONGO SE ALIMENTA DE LA REALIDAD.")
+	LogManager.add(tr("LOG_GLITCH_ALERT"))
 	mutation_depredador = true
 	mutation_activated.emit("depredador", tr("MUT_DEPREDADOR"))
 	AchievementManager.on_depredador_activated()
 
 	if not LegacyManager.get_buff_value("metabolismo_glitch"):
 		LegacyManager.grant_buff("metabolismo_glitch")
-		UIManager.show_toast("✨ Has desbloqueado el legado oculto: METABOLISMO GLITCH")
+		UIManager.show_toast(tr("TOAST_MG_UNLOCKED"))
 
 func activate_met_oscuro():
 	if mutation_met_oscuro: return
 	if not mutation_depredador: return  # Solo post-Depredador
 	mutation_met_oscuro = true
-	LogManager.add("🌑 METABOLISMO OSCURO ACTIVADO — La bioquímica no documentada reemplaza la economía estructural.")
-	LogManager.add("🌑 EFECTOS: Devorar DETENIDO · Pasivo = Bio×0.8/s · Click ×3 · ε decae · Ω bloqueado 0.10")
-	LogManager.add("🌑 CIERRES: Voluntario (2min cooldown, PL escalonado) · Saturación Bio≥100 (+6PL) · $1M (+4PL)")
+	LogManager.add(tr("LOG_MO_ACTIVATED"))
+	LogManager.add(tr("LOG_MO_EFFECTS"))
+	LogManager.add(tr("LOG_MO_CLOSE"))
 	mutation_activated.emit("met_oscuro", tr("MUT_MET_OSCURO"))
 	AchievementManager.on_met_oscuro_activated()
 	# Recalcular estrés/omega tras aplicar los nerfs permanentes
@@ -546,7 +544,7 @@ func activate_met_oscuro():
 func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
 	mutation_hyperassimilation = true
-	LogManager.add("⚡⚡⚡ EFECTOS ACTIVOS: Click PUSH ×10 | Pasivo ×0.25 (-75%) | Fragilidad Ω total ⚡⚡⚡")
+	LogManager.add(tr("LOG_HIPER_EFFECTS"))
 	mutation_activated.emit("hiperasimilacion", tr("MUT_HIPERASIMILACION"))
 	AchievementManager.on_mutation_activated("hiperasimilacion")
 	# No cerrar si Depredador puede cargarse: venimos de PARASITISMO O trascendencia_count > 1
@@ -618,8 +616,8 @@ func check_red_micelial_transition(_main_ref: Node):
 		and StructuralModel.epsilon_runtime <= eps_req \
 		and RunManager.run_time >= 200.0:
 			red_micelial_phase = 1
-			LogManager.add("🕸️ Red Micelial Evolucionada (Fase B)")
-			UIManager.show_toast("RED MICELIAL: Iniciando integración estructural profunda")
+			LogManager.add(tr("LOG_RED_FASE_B"))
+			UIManager.show_toast(tr("TOAST_RED_INTEGRACION"))
 
 func update_primordio(main_ref: Node) -> void:
 	if red_branch_selected == RedBranch.COLONIZATION:
@@ -632,7 +630,7 @@ func _process_primordio_biological(_main_ref: Node):
 	if not primordio_active and not seta_formada and red_micelial_phase == 1:
 		if BiosphereEngine.hifas >= 14.5 and BiosphereEngine.biomasa >= 8.0:
 			primordio_active = true
-			LogManager.add("⚠️ ADVERTENCIA: Inicio de Primordio Biológico")
+			LogManager.add(tr("LOG_PRIMORDIO_ALERT"))
 			primordio_iniciado.emit()
 
 	if primordio_active:
@@ -657,8 +655,8 @@ func _process_primordio_mechanical(_main_ref: Node):
 		# Requisitos: Contabilidad alta y estabilidad
 		if UpgradeManager.level("accounting") >= 2 and StructuralModel.epsilon_runtime <= 0.25:
 			primordio_active = true
-			LogManager.add("⚡ INICIANDO: Sincronización de Núcleo de Conciencia")
-			UIManager.show_toast("SISTEMA: Integrando redes bióticas en el mainframe")
+			LogManager.add(tr("LOG_MC_SYNC_START"))
+			UIManager.show_toast(tr("TOAST_MC_SISTEMA"))
 
 	if primordio_active:
 		# La estabilidad acelera el proceso
@@ -668,7 +666,7 @@ func _process_primordio_mechanical(_main_ref: Node):
 		if primordio_timer >= Balance.PRIMORDIO_DURATION:
 			primordio_active = false
 			nucleo_conciencia = true
-			LogManager.add("💾 HITO: Núcleo de Conciencia Sincronizado")
+			LogManager.add(tr("LOG_MC_HITO"))
 			# Bonus de eficiencia tecnológica
 			EconomyManager.mutation_accounting_bonus += 0.2
 
@@ -810,7 +808,7 @@ func process_met_oscuro(dt: float) -> bool:
 	_met_oscuro_status_timer += dt
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
-		LogManager.add("MET.OSCURO — Bio %.1f/100 — Pasivo %.1f/s — $%.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
+		LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 		LegacyManager.add_pl(2)
 		RunManager.close_run("METABOLISMO OSCURO", "Saturacion Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
@@ -836,7 +834,7 @@ func process_depredador(dt: float) -> void:
 			BiosphereEngine.biomasa += 15.0
 			met_oscuro_devoured_count += 1
 			AchievementManager.push_event("depredador_devour", {})
-			UIManager.show_toast("GLITCH: El hongo digerió memoria estructural (%d)." % met_oscuro_devoured_count)
+			UIManager.show_toast(tr("TOAST_MO_DIGEST") % met_oscuro_devoured_count)
 			if is_instance_valid(UIManager.big_click_button):
 				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 		else:
@@ -851,8 +849,8 @@ func process_depredador_progress(dt: float) -> void:
 		var bar := ""
 		for i in range(20):
 			bar += "|" if i < bar_len else "."
-		LogManager.add("DEPREDADOR — e %.2f/0.95 | Progreso: %s %d%% (%.0f/30s)" % [StructuralModel.epsilon_runtime, bar, pct, depredador_timer])
-		UIManager.show_toast("DEPREDADOR EN PROGRESO — %d%% (%.0f/30s)" % [pct, depredador_timer])
+		LogManager.add(tr("LOG_DEP_TICK") % [StructuralModel.epsilon_runtime, bar, pct, depredador_timer])
+		UIManager.show_toast(tr("TOAST_DEP_PROGRESS") % [pct, depredador_timer])
 
 ## Retorna 1 si glitch se activó, -1 si se desactivó, 0 si sin cambio
 func process_glitch(_dt: float) -> int:
@@ -861,11 +859,11 @@ func process_glitch(_dt: float) -> int:
 	var glitch_now := StructuralModel.epsilon_runtime > 0.40
 	var result := 0
 	if glitch_now and not _glitch_was_active:
-		LogManager.add("GLITCH ACTIVO — el sustrato parasitario prospera en el caos (click ×1.5, pasivo ×1.8)")
-		UIManager.show_toast("Metabolismo Glitch ACTIVO — e > 0.40")
+		LogManager.add(tr("LOG_GLITCH_ACTIVO"))
+		UIManager.show_toast(tr("TOAST_MG_ACTIVO"))
 		result = 1
 	elif not glitch_now and _glitch_was_active:
-		UIManager.show_toast("Metabolismo Glitch inactivo")
+		UIManager.show_toast(tr("TOAST_MG_INACTIVO"))
 		result = -1
 	_glitch_was_active = glitch_now
 	return result

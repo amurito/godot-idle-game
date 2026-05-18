@@ -689,7 +689,7 @@ func _on_logic_tick():
 		var buff_on := LegacyManager.get_buff_value("mente_colmena")
 		if RunManager.mente_colmena_active and not buff_on:
 			RunManager.mente_colmena_active = false
-			add_lap("?? Mente Colmena — IA desactivada desde el Banco Genético")
+			add_lap(tr("LAP_MC_IA_DISABLED"))
 	if RunManager.mente_colmena_active:
 		# Auto-click: simula 10 clicks por segundo
 		var sim_power = EconomyManager.get_click_power() * 10.0 * dt
@@ -709,21 +709,21 @@ func _on_logic_tick():
 				var was_zero := RunManager.mente_colmena_timer == 0.0
 				RunManager.mente_colmena_timer += dt
 				if was_zero:
-					add_lap("?? SINCRONÍA DETECTADA — Manteniendo ratio 50/50 durante 180s para MENTE COLMENA...")
+					add_lap(tr("LAP_MC_SINCRONIA"))
 				if RunManager.mente_colmena_timer >= 180.0:
 					RunManager.activate_mente_colmena()
 				else:
 					var pct := int(RunManager.mente_colmena_timer / 180.0 * 100.0)
 					var prev_pct := int((RunManager.mente_colmena_timer - dt) / 180.0 * 100.0)
 					if int(pct / 25.0) > int(prev_pct / 25.0): # lap cada 25%
-						add_lap("?? MENTE COLMENA — Sincronía %d%% (%.0f/180s)" % [pct, RunManager.mente_colmena_timer])
+						add_lap(tr("LAP_MC_SYNC_PCT") % [pct, RunManager.mente_colmena_timer])
 					show_system_toast("?? MENTE COLMENA — %d%% (%.0f/180s) — ratio %.1f%%/%.1f%%" % [pct, RunManager.mente_colmena_timer, ap.activo, ap.pasivo])
 			else:
 				if RunManager.mente_colmena_timer > 0.0:
 					if stress_too_high:
-						add_lap("?? Sincronía rota — estrés demasiado alto (%.2f > 0.50)" % StructuralModel.epsilon_runtime)
+						add_lap(tr("LAP_MC_BROKEN_STRESS") % StructuralModel.epsilon_runtime)
 					else:
-						add_lap("?? Sincronía rota — timer MENTE COLMENA reiniciado (ratio: %.1f%%/%.1f%%)" % [ap.activo, ap.pasivo])
+						add_lap(tr("LAP_MC_BROKEN_RATIO") % [ap.activo, ap.pasivo])
 				RunManager.mente_colmena_timer = 0.0
 
 	# NG++ Metabolismo Oscuro (Post-Depredador) � congela el devorar, metaboliza biomasa
@@ -868,7 +868,7 @@ func _on_logic_tick():
 			var omg := StructuralModel.omega
 			var eps := StructuralModel.epsilon_effective
 			var money_now := EconomyManager.money
-			add_lap("?? PARASITISMO — Bio:%.1f/18 | O:%.2f/0.22 | e:%.2f/0.45 | $%.0f" % [bio, omg, eps, money_now])
+			add_lap(tr("LAP_PARASITISMO") % [bio, omg, eps, money_now])
 
 	# 9) Cooldown estructural
 	if StructuralModel.structural_cooldown > 0.0:
@@ -949,30 +949,30 @@ func _notification(what):
 
 func _on_mutation_activated(id: String, display_name: String):
 	AudioManager.play_sfx("mutation")
-	LogManager.add("?? Mutación irreversible — " + display_name)
+	LogManager.add(tr("LOG_MUT_IRREVERSIBLE") % display_name)
 
 	# Mostrar efectos activos como lap (visible en pantalla final)
 	match id:
 		"hiperasimilacion":
 			show_system_toast(tr("MUT_TOAST_HIPERAS"))
 		"parasitismo":
-			LogManager.add("?? EFECTOS: Biomasa +100% / Pasivo +20% / Contabilidad -10% / Ω máx 0.25")
+			LogManager.add(tr("LOG_MUT_PARASITISMO"))
 			show_system_toast(tr("MUT_TOAST_PARASIT"))
 		"homeostasis":
-			LogManager.add("?? EFECTOS: Producción +50% / e estabilizado / O_min 0.35")
+			LogManager.add(tr("LOG_MUT_HOMEOSTASIS"))
 		"red_micelial":
-			LogManager.add("??? EFECTOS: Pasivo ×2.5 / Click -50% / Bifurcación evolutiva")
+			LogManager.add(tr("LOG_MUT_RED"))
 		"simbiosis":
-			LogManager.add("?? EFECTOS: Click ×2.5 / Pasivo -50%")
+			LogManager.add(tr("LOG_MUT_SIMBIOSIS"))
 		"allostasis":
-			LogManager.add("?? EFECTOS: Resiliencia alostática activa / Setpoint recalibrable")
+			LogManager.add(tr("LOG_MUT_ALLOSTASIS"))
 		"homeorhesis":
-			LogManager.add("? EFECTOS: Trascendencia cristalina / Metabolismo irreversible")
+			LogManager.add(tr("LOG_MUT_HOMEORHESIS"))
 		"depredador":
-			LogManager.add("?? EFECTOS: Devora upgrades cada 1.5s / El código se consume")
+			LogManager.add(tr("LOG_MUT_DEPREDADOR"))
 			show_system_toast(tr("MUT_TOAST_DEP"))
 		"met_oscuro":
-			LogManager.add("?? EFECTOS: Devorar detenido — Pasivo = Bio×0.8/s — Click ×3 — ε decae ? O 0.10")
+			LogManager.add(tr("LOG_MUT_MET_OSCURO"))
 			show_system_toast(tr("MUT_TOAST_MO"))
 
 	if id == "red_micelial" and not RunManager.carnaval_active:
@@ -1027,7 +1027,7 @@ func _trigger_allostasis() -> void:
 	EconomyManager.money += 50000.0
 	StructuralModel.epsilon_runtime *= 0.5 # Reset de estrés para que pueda respirar
 	
-	add_lap("?? ERA ALOSTÁTICA ALCANZADA (Metabolismo > 200/s)")
+	add_lap(tr("LAP_ERA_ALOSTATICA"))
 	update_ui()
 
 func _on_btn_symbiosis_pressed() -> void:
@@ -1054,10 +1054,10 @@ func _on_branch_selected(branch: int):
 		evo_choice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	if branch == EvoManager.RedBranch.COLONIZATION:
-		LogManager.add("🟢 RAMA ELEGIDA: COLONIZACIÓN INVASIVA")
+		LogManager.add(tr("LOG_RAMA_COLONIZACION"))
 		EconomyManager.mutation_auto_factor *= 1.5
 	elif branch == EvoManager.RedBranch.SYMBIOSIS:
-		LogManager.add("?? RAMA ELEGIDA: SIMBIOSIS MECÁNICA")
+		LogManager.add(tr("LOG_RAMA_SIMBIOSIS"))
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
 		
 	_sync_reactor_color()
@@ -1068,20 +1068,20 @@ func _on_branch_selected(branch: int):
 # === HANDLERS DE SE�AL � CICLO BIOL�GICO (Fase 2) ===
 
 func _on_primordio_iniciado() -> void:
-	LogManager.add("?? Primordio iniciado — mantené el estrés bajo por 90s")
+	LogManager.add(tr("LOG_PRIMORDIO_START"))
 	update_ui()
 
 func _on_primordio_abortado(abort_count: int, reason: String) -> void:
-	LogManager.add("?? Primordio P-%02d ABORTADO: %s (-40%% micelio)" % [abort_count, reason])
+	LogManager.add(tr("LOG_PRIMORDIO_ABORT") % [abort_count, reason])
 	update_ui()
 
 func _on_seta_formada() -> void:
-	LogManager.add("?? ¡SETA FORMADA! — El cuerpo fructífero emerge. Esporulación disponible.")
+	LogManager.add(tr("LOG_SETA"))
 	update_ui()
 
 func _on_primordio_button_pressed() -> void:
 	if not EvoManager.try_iniciar_primordio():
-		LogManager.add("?? Primordio no disponible — necesitás 60%% de micelio y Colonización activa")
+		LogManager.add(tr("LOG_PRIMORDIO_NA"))
 
 func _on_sporulation_final_pressed() -> void:
 	if RunManager.run_closed: return
@@ -1092,7 +1092,7 @@ func _on_sporulation_final_pressed() -> void:
 		var pl := 6 + int(bonus_efficiency)
 		
 		LegacyManager.add_pl(pl)
-		show_system_toast("LEGADO: Singularidad integrada (+%d PL)" % pl)
+		show_system_toast(tr("TOAST_SINGULARIDAD_PL") % pl)
 		RunManager.close_run("SINGULARIDAD", "El hongo ha asimilado totalmente el mainframe. Conciencia total alcanzada.")
 		
 	elif EvoManager.seta_formada:
@@ -1237,7 +1237,7 @@ func _build_legacy_item(id: String) -> Control:
 			var new_state: bool = LegacyManager.toggle_buff_enabled(id)
 			if id == "mente_colmena" and not RunManager.run_closed:
 				RunManager.mente_colmena_active = new_state
-				add_lap("Mente Colmena — IA %s manualmente" % ("activada" if new_state else "desactivada"))
+				add_lap(tr("LAP_MC_IA_MANUAL") % (tr("GAME_BUFF_ACTIVE").to_lower() if new_state else tr("GAME_BUFF_INACTIVE").to_lower()))
 			_refresh_legacy_store()
 			show_system_toast(def.get("name", id) + (": ACTIVADO" if new_state else ": DESACTIVADO"))
 			update_ui()
@@ -1610,7 +1610,7 @@ func unlock_accounting():
 	institutions_unlocked = true
 	if UpgradeManager.level("accounting") == 0:
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.30)
-	add_lap("??? Institución desbloqueada — Contabilidad Básica")
+	add_lap(tr("LAP_INSTITUCION"))
 	if UIManager.system_message_label:
 		UIManager.system_message_label.text = tr("MSG_INSTITUTIONS_UNLOCKED")
 	on_institutions_unlocked()
@@ -1663,7 +1663,7 @@ func on_institutions_unlocked():
 	StructuralModel.epsilon_runtime *= 0.85 # baja 15% el estrés
 	StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
 
-	add_lap("??? Contabilidad — Nivel %d (e amortiguado)" % UpgradeManager.level("accounting"))
+	add_lap(tr("LAP_CONTABILIDAD") % UpgradeManager.level("accounting"))
 
 # =====================================================
 # UI HELPERS � v0.8

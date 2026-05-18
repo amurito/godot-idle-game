@@ -509,7 +509,7 @@ func build_formula_text(_main: Node) -> String:
 	if lambda_parts.size() > 0:
 		t += "[color=#ffdd88][font_size=11]Λ = " + " · ".join(lambda_parts)
 		if LegacyManager.get_buff_value("metabolismo_glitch"):
-			t += "  (mg activo si ε>0.40)"
+			t += tr("FORMULA_MG_ACTIVE")
 		t += "[/font_size][/color]\n"
 
 	# Información del Modelo — μ solo cuando Capital Cognitivo está activo
