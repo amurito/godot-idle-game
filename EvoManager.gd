@@ -57,6 +57,7 @@ const DEPREDADOR_STATUS_INTERVAL := 10.0
 var _depredador_countdown_last: int = -1
 var _met_oscuro_countdown_last: int = -1
 var _parasitismo_countdown_last: int = -1
+var _hyper_active_timer: float = 0.0   # tiempo activo en hiperasimilación sin depredador
 
 # === NG+ METABOLISMO OSCURO (Post-Depredador) ===
 var mutation_met_oscuro := false
@@ -112,6 +113,7 @@ func reset() -> void:
 	_depredador_countdown_last = -1
 	_met_oscuro_countdown_last = -1
 	_parasitismo_countdown_last = -1
+	_hyper_active_timer = 0.0
 	_met_oscuro_income_accum = 0.0
 	_met_oscuro_status_timer = 0.0
 	_met_oscuro_active_time = 0.0
@@ -295,6 +297,18 @@ func _update_depredador(ctx: Dictionary) -> void:
 		depredador_timer = max(0.0, depredador_timer - RunManager.LOGIC_TICK * 2.0)
 		_set_genome_state("depredador", "dormido" if depredador_timer == 0.0 else "latente")
 		_depredador_countdown_last = -1
+
+	# Timeout de seguridad: si Depredador nunca arrancó a cargar tras HYPER_TIMEOUT s,
+	# la run cierra normalmente con HIPERASIMILACION (evita run atrapada).
+	if depredador_timer == 0.0:
+		_hyper_active_timer += RunManager.LOGIC_TICK
+		var timeout := Balance.HYPER_TIMEOUT
+		var secs_left := int(timeout - _hyper_active_timer)
+		if secs_left in [30, 20, 10, 5, 4, 3, 2, 1]:
+			UIManager.show_countdown(secs_left, "HIPERASIMILACIÓN (colapso)")
+		if _hyper_active_timer >= timeout:
+			LogManager.add("⚡ Hiperasimilación agotada — ε no alcanzó 0.95 en %ds. Cerrando." % int(timeout))
+			run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema colapsó por saturación — ε insuficiente para Depredador")
 
 
 ## SIMBIOSIS (v0.8.5 — Camino del Hardware): Ω ≥ 0.40 con clic dominante.

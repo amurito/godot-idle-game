@@ -8,7 +8,8 @@ extends Node
 
 # ── Timers de mecánicas ──────────────────────────────────────────
 const HOMEOSTASIS_TIME_REQUIRED  := 18.0   # s en banda homeostática para desbloquear Tier 1
-const HOMEORHESIS_MIN_RUN_TIME   := 1200.0 # s mínimos de run para desbloquear Tier 3
+const HOMEORHESIS_MIN_RUN_TIME   := 600.0 # s mínimos de run para desbloquear Tier 3
+const HYPER_TIMEOUT              := 180.0 # s máximos en Hiperasimilación sin Depredador antes de cerrar
 const MENTE_COLMENA_BUY_INTERVAL := 8.0    # s entre auto-compras de IA
 const ASCESIS_DURATION           := 300.0  # s de ascesis profunda para cierre
 const CARNAVAL_INTERVAL          := 60.0   # s entre rotaciones de mutación
