@@ -229,27 +229,36 @@ func _apply_bio_header_style() -> void:
 	if header_omega_bar:
 		header_omega_bar.add_theme_stylebox_override("fill", _omega_fill_style)
 
-	# Tooltips: se ponen en el VBoxContainer + ProgressBar porque la barra
-	# es el área más grande bajo el cursor (Label solo ocupa el texto "ε").
+	# Tooltips: tooltip_text + señal mouse_entered como backup.
+	# HeaderBar pasó a MOUSE_FILTER_PASS en el TSCN para que hijos reciban hover.
 	var metric_tooltips := {
-		"EpsilonMetric": ["EpsilonBar",    "ε — Estrés estructural\nBanda saludable: 0.03–0.30\nVerde=en banda | Amarillo=elevado | Rojo=crítico"],
-		"OmegaMetric":   ["OmegaBar",      "Ω — Estabilidad del sistema (1=perfecto)\nVerde >0.75 | Amarillo 0.40–0.75 | Rojo <0.40"],
-		"BiomasaMetric": ["BiomasaBar",    "Biomasa — tejido fúngico acumulado\nModifica ε efectivo; >12 bloquea homeostasis; >15 parasitismo colapsa"],
-		"HifasMetric":   ["HifasBar",      "Hifas — red de hilos fúngicos (cap ~40)\nMotor del crecimiento de biomasa; escalan con ingreso pasivo"],
-		"NutrientesMetric": ["NutrientesBar", "Nutrientes — combustible para crecer biomasa\nAbsorben ε; negativos detienen el crecimiento; altos dan descuento en upgrades"],
+		"EpsilonMetric": ["EpsilonBar",       "ε — Estrés estructural | banda sana 0.03–0.30 | Verde=en banda / Amarillo=alto / Rojo=crítico"],
+		"OmegaMetric":   ["OmegaBar",         "Ω — Estabilidad (1=perfecto) | Verde >0.75 / Amarillo 0.40 / Rojo <0.20"],
+		"BiomasaMetric": ["BiomasaBar",       "Biomasa — tejido fúngico | >12 bloquea homeostasis | >15 parasitismo colapsa"],
+		"HifasMetric":   ["HifasBar",         "Hifas — motor de crecimiento (cap ~40) | escalan con ingreso pasivo"],
+		"NutrientesMetric": ["NutrientesBar", "Nutrientes — combustible para biomasa | cada 50 = 15% descuento en upgrades"],
 	}
 	for container_name in metric_tooltips:
 		var bar_name: String = metric_tooltips[container_name][0]
 		var tip: String      = metric_tooltips[container_name][1]
 		var container = _find_scene(container_name)
 		var bar       = _find_scene(bar_name)
-		if container:
-			container.tooltip_text = tip
-			container.mouse_filter = Control.MOUSE_FILTER_STOP
-		if bar:
-			bar.tooltip_text = tip
-			# ProgressBar puede tener PASS por defecto — asegurar STOP
-			bar.mouse_filter = Control.MOUSE_FILTER_STOP
+		for node in [container, bar]:
+			if node:
+				node.tooltip_text = tip
+				node.mouse_filter = Control.MOUSE_FILTER_STOP
+				node.mouse_entered.connect(func(): _show_header_tip(tip))
+				node.mouse_exited.connect(func(): _clear_header_tip())
+
+var _header_tip_prev := ""
+func _show_header_tip(text: String) -> void:
+	if system_message_label:
+		_header_tip_prev = system_message_label.text
+		system_message_label.text = text
+
+func _clear_header_tip() -> void:
+	if system_message_label:
+		system_message_label.text = _header_tip_prev
 
 func _find(node_name: String):
 	return root.find_child(node_name, true, false)
@@ -363,7 +372,8 @@ func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa
 	if header_hifas_value:
 		header_hifas_value.text = "%.1f" % hifas
 	if header_nutrientes_value:
-		header_nutrientes_value.text = "%.1f" % nutrientes
+		var nut_disc := int(clamp(nutrientes / 50.0, 0.0, 0.15) * 100.0)
+		header_nutrientes_value.text = "%.1f%s" % [nutrientes, " (-%d%%)" % nut_disc if nut_disc > 0 else ""]
 
 func update_structural_metrics(epsilon: float, omega: float, persistence: float, accounting: int):
 	if structural_eps_value:

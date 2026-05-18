@@ -1292,6 +1292,8 @@ func _update_legacy_indicators() -> void:
 		chip.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		chip.modulate = color
 		chip.mouse_filter = Control.MOUSE_FILTER_STOP
+		chip.mouse_entered.connect(func(): UIManager._show_header_tip(tooltip))
+		chip.mouse_exited.connect(func(): UIManager._clear_header_tip())
 		_legacy_indicators.add_child(chip)
 
 	# -- Click multiplier (buffs permanentes) --

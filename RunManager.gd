@@ -119,6 +119,7 @@ func close_run(route: String, reason: String):
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		UIManager.show_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
+	LogManager.add("✦ [PL] Base: +%d (%s)" % [pl_to_add, route])
 
 	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
 	if LegacyManager.get_buff_value("colapso_controlado"):
@@ -201,7 +202,7 @@ func close_run(route: String, reason: String):
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
-			LogManager.add("✦ [NG+] Bonus variable: +%d PL (%s)" % [ng_bonus, ng_formula])
+		LogManager.add("✦ [NG+] Bonus: +%d PL (%s)" % [ng_bonus, ng_formula])
 
 	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
 

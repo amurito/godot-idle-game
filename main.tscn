@@ -58,7 +58,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 60.0
 grow_horizontal = 2
-mouse_filter = 2
+mouse_filter = 1
 
 [node name="HeaderContent" type="HBoxContainer" parent="HeaderBar"]
 layout_mode = 2
