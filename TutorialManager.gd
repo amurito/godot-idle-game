@@ -42,7 +42,9 @@ var _antistuck_panel: PanelContainer = null
 
 var _time_idle: float = 0.0
 var _antistuck_cooldown: float = 0.0
-const ANTISTUCK_THRESHOLD := 90.0   # segundos sin acción para disparar hint
+var _push_given: bool = false
+const ANTISTUCK_THRESHOLD := 50.0   # segundos sin acción para disparar hint
+const ANTISTUCK_PUSH      := 60.0   # segundos sin acción para push + regalo
 const ANTISTUCK_COOLDOWN  := 150.0  # segundos entre hints consecutivos
 
 
@@ -97,6 +99,8 @@ func _process(dt: float) -> void:
 	if (_step >= 3 or _completed) and is_instance_valid(_main):
 		_time_idle += dt
 		_antistuck_cooldown -= dt
+		if _time_idle >= ANTISTUCK_PUSH and not _push_given and _antistuck_cooldown <= 0.0:
+			_give_idle_push()
 		if _time_idle >= ANTISTUCK_THRESHOLD and _antistuck_cooldown <= 0.0:
 			_check_antistuck()
 
@@ -345,6 +349,15 @@ func _shortcut_row(key: String, desc: String) -> String:
 
 func _reset_idle() -> void:
 	_time_idle = 0.0
+	_push_given = false
+
+
+func _give_idle_push() -> void:
+	_push_given = true
+	var passive: float = EconomyManager.get_passive_total()
+	var gift: float = 10.0 * max(1.0, passive)
+	EconomyManager.money += gift
+	_show_antistuck_hint("Sistema detecta inactividad.\n[color=#aaffaa]+$%.0f de impulso[/color]" % gift)
 
 
 func _check_antistuck() -> void:

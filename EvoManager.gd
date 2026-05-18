@@ -54,6 +54,8 @@ var depredador_timer: float = 0.0
 var _depredador_active_tick: float = 0.0
 var _depredador_status_timer: float = 0.0
 const DEPREDADOR_STATUS_INTERVAL := 10.0
+var _depredador_countdown_last: int = -1
+var _met_oscuro_countdown_last: int = -1
 
 # === NG+ METABOLISMO OSCURO (Post-Depredador) ===
 var mutation_met_oscuro := false
@@ -106,6 +108,8 @@ func reset() -> void:
 	depredador_timer = 0.0
 	_depredador_active_tick = 0.0
 	_depredador_status_timer = 0.0
+	_depredador_countdown_last = -1
+	_met_oscuro_countdown_last = -1
 	_met_oscuro_income_accum = 0.0
 	_met_oscuro_status_timer = 0.0
 	_met_oscuro_active_time = 0.0
@@ -236,9 +240,14 @@ func _update_met_oscuro(ctx: Dictionary) -> void:
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
 		var threshold := Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		_set_genome_state("met_oscuro", "activo" if met_oscuro_timer >= threshold else "latente")
+		var secs_left := int(threshold - met_oscuro_timer)
+		if secs_left >= 1 and secs_left <= 10 and secs_left != _met_oscuro_countdown_last:
+			_met_oscuro_countdown_last = secs_left
+			UIManager.show_countdown(secs_left, "MET.OSCURO")
 	else:
 		met_oscuro_timer = max(0.0, met_oscuro_timer - RunManager.LOGIC_TICK * 1.5)
 		_set_genome_state("met_oscuro", "dormido" if met_oscuro_timer == 0.0 else "latente")
+		_met_oscuro_countdown_last = -1
 
 
 ## DEPREDADOR DE REALIDADES (Glitch Survival): post-Parasitismo o post-2ª Trascendencia.
@@ -266,9 +275,14 @@ func _update_depredador(ctx: Dictionary) -> void:
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
 		var threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		_set_genome_state("depredador", "activo" if depredador_timer >= threshold else "latente")
+		var secs_left := int(threshold - depredador_timer)
+		if secs_left >= 1 and secs_left <= 10 and secs_left != _depredador_countdown_last:
+			_depredador_countdown_last = secs_left
+			UIManager.show_countdown(secs_left, "DEPREDADOR")
 	else:
 		depredador_timer = max(0.0, depredador_timer - RunManager.LOGIC_TICK * 2.0)
 		_set_genome_state("depredador", "dormido" if depredador_timer == 0.0 else "latente")
+		_depredador_countdown_last = -1
 
 
 ## SIMBIOSIS (v0.8.5 — Camino del Hardware): Ω ≥ 0.40 con clic dominante.

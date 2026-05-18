@@ -197,6 +197,9 @@ func show_toast(msg: String) -> void:
 	if system_message_label:
 		system_message_label.text = msg
 
+func show_countdown(secs: int, event: String) -> void:
+	show_toast("⚠️ %s — %ds" % [event, secs])
+
 # --- Métodos de actualización ---
 
 ## Muestra la ruta post-trascendencia activa en el header. Llamar una vez al inicio de run.

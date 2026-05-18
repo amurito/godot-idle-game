@@ -147,6 +147,10 @@ func cost(id: String) -> float:
 	if s.level == 0 and LegacyManager.get_buff_value("memoria_recurso"):
 		return 0.0
 
+	# CÓSMICO: primeras 2 compras de cada upgrade gratuitas (nivel 0 y 1)
+	if s.level <= 1 and LegacyManager.has_cosmic_buff("memoria_recurso_cosmica"):
+		return 0.0
+
 	var base_cost :float = s.get("current_cost", 0.0)
 
 	# MEMORIA ESTRUCTURAL: -5% por nivel para upgrades estructurales

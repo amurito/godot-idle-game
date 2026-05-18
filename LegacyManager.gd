@@ -499,6 +499,11 @@ const COSMIC_DATA := {
 		"desc": "Al inicio de run, el primer nivel de Contabilidad y Trueque son gratuitos automáticamente.",
 		"tier": 2,
 	},
+	"memoria_recurso_cosmica": {
+		"cost": 20, "name": "Memoria de Recurso Cósmica",
+		"desc": "Las primeras 2 compras de cada upgrade por run son gratuitas. Se acumula con Memoria de Recurso.",
+		"tier": 2,
+	},
 	"convergencia_ciclica": {
 		"cost": 28, "name": "Convergencia Cíclica",
 		"desc": "Cada trascendencia acumulada suma +5% a todos tus ingresos globales de forma permanente.",
@@ -1210,3 +1215,7 @@ func apply_cosmic_buffs() -> void:
 			var other_def = UpgradeManager.get_def(other_id)
 			if other_def and other_def.unlock_requires == "accounting":
 				UpgradeManager.states[other_id].unlocked = true
+
+	# MEMORIA DE RECURSO CÓSMICA (T2): primeras 2 compras de cada upgrade gratis (pasivo via cost())
+	if has_cosmic_buff("memoria_recurso_cosmica"):
+		LogManager.add("✦ [Cósmico] Memoria de Recurso Cósmica — primeras 2 compras de cada upgrade gratuitas esta run")
