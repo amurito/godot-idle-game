@@ -4,7 +4,7 @@ Línea evolutiva del proyecto, actualizada contra el estado real del repo.
 
 Este roadmap prioriza dependencias y decisiones de arquitectura. No intenta listar todas las ideas posibles: intenta ordenar qué conviene tocar primero para que el juego siga creciendo sin volver a concentrar todo en `main.gd`.
 
-Última actualización: 2026-04-24
+Última actualización: 2026-05-18
 
 ---
 
@@ -255,6 +255,8 @@ Prioridad: BAJA — portfolio / visualización.
 | v0.9.8 | Tests y Build | ✅ Completado |
 | v0.9.5 | Missing Endings | 🔄 Parcial |
 | v1.0 | Prestige Expandido | 🔄 Parcial |
+| v1.0.0.5 | Hotfixes A+B+C | ✅ Publicado |
+| v1.0.0.6 | Biosfera Header + UX | ✅ Publicado |
 | v1.1 | AI Observer | 🔮 Conceptual |
 | v1.2 | Gymnasium Bridge | 🔮 Conceptual |
 | v1.3 | Visualizer 3D | 🔮 Conceptual |
