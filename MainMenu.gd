@@ -1435,7 +1435,7 @@ func _show_credits_panel(on_close: Callable = Callable()) -> void:
 
 	# ── Botón saltar (siempre visible, esquina inferior derecha) ──
 	var skip_btn := Button.new()
-	skip_btn.text = EmojiToRichText.strip("Saltar →")
+	skip_btn.text = EmojiToRichText.strip(tr("MM_CREDITS_SKIP"))
 	skip_btn.anchor_left   = 1.0
 	skip_btn.anchor_right  = 1.0
 	skip_btn.anchor_top    = 1.0

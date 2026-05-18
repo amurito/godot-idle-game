@@ -311,14 +311,14 @@ func check_symbiosis_final(_delta: float):
 
 	# Auto-cierre: 5 minutos en banda estable (antes 15 min)
 	if stable_band and run_time > 300.0:
-		close_run("SIMBIOSIS", "Cooperación sostenida entre estructura y biología")
+		close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_SOSTENIDA"))
 		return
 
 	# Cierre de emergencia: si omega > 0.50 (rama Simbiosis Mecánica activa) por 60s
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS \
 		and StructuralModel.omega >= 0.50 \
 		and run_time > 60.0:
-		close_run("SIMBIOSIS", "Simbiosis Mecánica consolidada — hardware y biología unificados")
+		close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_MECANICA"))
 
 func is_fractura_epistemica_available() -> bool:
 	return not carnaval_active and not run_closed \
@@ -330,7 +330,7 @@ func check_fractura_epistemica(_delta: float):
 	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
 	if not is_fractura_epistemica_available():
 		return
-	close_run("COLAPSO CONTROLADO", "El sistema absorbió su propio colapso. La fractura epistémica fue superada.")
+	close_run("COLAPSO CONTROLADO", tr("CLOSE_COLAPSO_CONTROLADO"))
 
 func check_parasitism_final(_delta: float):
 	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:
@@ -338,17 +338,17 @@ func check_parasitism_final(_delta: float):
 
 	# Opción A: Colapso estructural clásico
 	if BiosphereEngine.biomasa > 18.0 and StructuralModel.omega < 0.22 and StructuralModel.epsilon_effective > 0.45:
-		close_run("PARASITISMO", "La biosfera drenó la estructura hasta el colapso")
+		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_DRENA"))
 		return
 
 	# Opción B: Bancarrota — el hongo drenó toda la liquidez
 	if BiosphereEngine.biomasa >= 15.0 and EconomyManager.money < 1000.0:
-		close_run("PARASITISMO", "Bancarrota Biológica: el hongo drenó toda la liquidez del sistema")
+		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_BANCARROTA"))
 		return
 
 	# Opción C: Masa crítica — crecimiento descontrolado
 	if BiosphereEngine.biomasa >= 25.0:
-		close_run("PARASITISMO", "Colapso por Masa Crítica: la biosfera reemplazó la infraestructura")
+		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_MASA"))
 
 func check_sporulation_trigger(_delta: float):
 	if carnaval_active or run_closed or EvoManager.mutation_sporulation:
@@ -557,12 +557,12 @@ func update_carnaval(delta: float) -> void:
 			var omega := StructuralModel.omega
 			var dinero := EconomyManager.money
 			if biomasa >= 8.0 and omega >= 0.35 and dinero >= 300000.0:
-				close_run("POLIMORFÍA TOTAL", "El hongo ha absorbido 12 ciclos mutacionales — su identidad trasciende toda clasificación (Bio %.1f, Ω %.2f, $%.0fK)" % [biomasa, omega, dinero/1000.0])
+				close_run("POLIMORFÍA TOTAL", tr("CLOSE_POLIMORFIA") % [biomasa, omega, dinero/1000.0])
 				return
 
 		# CHEQUEO: DOMADOR DEL CAOS
 		if carnaval_total_rotations >= 3 and carnaval_peak_money >= 1000000.0:
-			close_run("DOMADOR DEL CAOS", "Domó el caos mutacional acumulando $%.1fM de poder económico (+11 PL)" % [carnaval_peak_money / 1000000.0])
+			close_run("DOMADOR DEL CAOS", tr("CLOSE_DOMADOR_CAOS") % [carnaval_peak_money / 1000000.0])
 			return
 
 # ==================== ASCESIS PROFUNDA (sub-ruta VACÍO HAMBRIENTO) ====================
@@ -580,7 +580,7 @@ func check_ascesis_profunda(delta: float) -> void:
 	if biomasa_ok and sin_pasivo and epsilon_ok:
 		ascesis_timer += delta
 		if ascesis_timer >= Balance.ASCESIS_DURATION:
-			close_run("ASCESIS_PROFUNDA", "La renuncia absoluta genera más estabilidad que cualquier acumulación")
+			close_run("ASCESIS_PROFUNDA", tr("CLOSE_ASCESIS"))
 	# Si fallan las condiciones el timer se pausa (no se resetea)
 
 # ==================== UI EVOLUCIÓN ====================
@@ -610,13 +610,13 @@ func _show_evolution_button(target: String):
 func _on_evolution_button_pressed():
 	match target_evolution:
 		"HOMEOSTASIS":
-			close_run("HOMEOSTASIS", "Estabilidad estructural sostenida en banda homeostática")
+			close_run("HOMEOSTASIS", tr("CLOSE_HOMEOSTASIS"))
 		"ALLOSTASIS":
 			UIManager.big_click_button.modulate = Color(0.2, 0.9, 1.0)
-			close_run("ALLOSTASIS", "El sistema aprendió a tolerar el cambio calibrando un nuevo setpoint")
+			close_run("ALLOSTASIS", tr("CLOSE_ALLOSTASIS"))
 		"HOMEORHESIS":
 			UIManager.big_click_button.modulate = Color(1.0, 0.8, 0.2)
-			close_run("HOMEORHESIS", "Evolución irreversible: el metabolismo trasciende la regulación basal")
+			close_run("HOMEORHESIS", tr("CLOSE_HOMEORHESIS"))
 	evolution_button.visible = false
 
 # =====================================================
@@ -646,7 +646,7 @@ func activate_mente_colmena() -> void:
 	if not LegacyManager.get_buff_value("mente_colmena"):
 		LegacyManager.grant_buff("mente_colmena")
 		UIManager.show_toast(tr("TOAST_MC_UNLOCKED"))
-	close_run("MENTE COLMENA DISTRIBUIDA", "Tus patrones psicomotores fueron asimilados. El administrador es obsoleto. (+8 PL)")
+	close_run("MENTE COLMENA DISTRIBUIDA", tr("CLOSE_MENTE_COLMENA"))
 
 func tick_auto_buy(dt: float) -> void:
 	_mente_colmena_buy_timer += dt

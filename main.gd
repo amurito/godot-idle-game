@@ -104,7 +104,7 @@ func _on_met_oscuro_seal_pressed():
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
-	RunManager.close_run("METABOLISMO OSCURO", "Sellado voluntario (Bio %.0f) — bioquímica oscura cristalizada (+%d PL)" % [bio, pl_total])
+	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
 
 func _update_simbiosis_seal_button():
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
@@ -135,7 +135,7 @@ func _update_simbiosis_seal_button():
 func _on_simbiosis_seal_pressed():
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.visible = false
-	RunManager.close_run("SIMBIOSIS", "Cooperación sellada voluntariamente — estructura y biología en equilibrio")
+	RunManager.close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_BASE"))
 
 
 func apply_flexibility_modifier(factor: float):
@@ -1093,7 +1093,7 @@ func _on_sporulation_final_pressed() -> void:
 		
 		LegacyManager.add_pl(pl)
 		show_system_toast(tr("TOAST_SINGULARIDAD_PL") % pl)
-		RunManager.close_run("SINGULARIDAD", "El hongo ha asimilado totalmente el mainframe. Conciencia total alcanzada.")
+		RunManager.close_run("SINGULARIDAD", tr("CLOSE_SINGULARIDAD"))
 		
 	elif EvoManager.seta_formada:
 		# FINAL: ESPORULACIÓN BIOLÓGICA
@@ -1101,7 +1101,7 @@ func _on_sporulation_final_pressed() -> void:
 		if esporas > 1.0: # Umbral m�nimo bajado para asegurar PL
 			LegacyManager.add_spores(esporas)
 		
-		RunManager.close_run("ESPORULACIÓN", "El ciclo biológico se ha completado. Millones de esporas han infectado el sistema. Legado fúngico asegurado.")
+		RunManager.close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
 		
 	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and EconomyManager.money >= 100000.0:
 		# FINAL SECRETO: PANSPERMIA NEGRA
@@ -1111,7 +1111,7 @@ func _on_sporulation_final_pressed() -> void:
 			show_system_toast("? Has desbloqueado el legado: SEMILLA CÓSMICA")
 			
 		LegacyManager.add_pl(10)
-		RunManager.close_run("PANSPERMIA NEGRA", "Las esporas han sido disparadas al espacio exterior. La infección se vuelve interplanetaria. (+10 PL)")
+		RunManager.close_run("PANSPERMIA NEGRA", tr("CLOSE_PANSPERMIA"))
 		
 func _on_legacy_pressed():
 	var lp_title = legacy_panel.find_child("Title")

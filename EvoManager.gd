@@ -591,10 +591,10 @@ func check_parasitism_final(_main: Control):
 	# Condición de victoria por parasitismo: 1 PL (mínimo histórico)
 	if BiosphereEngine.biomasa >= 15.0 and EconomyManager.money < 1000.0:
 		LegacyManager.add_pl(1)
-		RunManager.close_run("PARASITISMO", "Bancarrota Biológica: el hongo ha drenado toda la liquidez del sistema (+1 PL)")
+		RunManager.close_run("PARASITISMO", tr("CLOSE_EVO_PARASITISMO_BANCARROTA"))
 	elif BiosphereEngine.biomasa >= 25.0:
 		LegacyManager.add_pl(1)
-		RunManager.close_run("PARASITISMO", "Colapso por Masa Crítica: el tejido biótico ha reemplazado toda la infraestructura (+1 PL)")
+		RunManager.close_run("PARASITISMO", tr("CLOSE_EVO_PARASITISMO_MASA"))
 
 func activate_symbiosis():
 	if mutation_homeostasis or mutation_hyperassimilation or mutation_red_micelial: return
@@ -811,10 +811,10 @@ func process_met_oscuro(dt: float) -> bool:
 		LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 		LegacyManager.add_pl(2)
-		RunManager.close_run("METABOLISMO OSCURO", "Saturacion Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
+		RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
 		return false
 	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-		RunManager.close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")
+		RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_MILLONARIO"))
 		return false
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
@@ -824,7 +824,7 @@ func process_depredador(dt: float) -> void:
 			and BiosphereEngine.biomasa > 25.0 \
 			and EconomyManager.money < 500.0 \
 			and not RunManager.run_closed:
-		RunManager.close_run("COLAPSO DEPREDATORIO", "Fractura epistémica: estrés estructural colapsó bajo presión depredatoria (+8 PL)")
+		RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
 		return
 	_depredador_active_tick += dt
 	if _depredador_active_tick >= 1.5:
@@ -838,7 +838,7 @@ func process_depredador(dt: float) -> void:
 			if is_instance_valid(UIManager.big_click_button):
 				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 		else:
-			RunManager.close_run("DEPREDADOR DE REALIDADES", "El hongo consumió todo el código fuente. Ya no existís. (+12 PL)")
+			RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
 
 func process_depredador_progress(dt: float) -> void:
 	_depredador_status_timer += dt
