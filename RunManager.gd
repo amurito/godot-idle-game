@@ -118,7 +118,7 @@ func close_run(route: String, reason: String):
 
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
-		UIManager.show_toast("LEGADO — Ganaste " + str(pl_to_add) + " PL por " + route)
+		UIManager.show_toast(tr("MSG_PL_GAINED") % [pl_to_add, route])
 	LogManager.add("✦ [PL] Base: +%d (%s)" % [pl_to_add, route])
 
 	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
@@ -214,6 +214,7 @@ func close_run(route: String, reason: String):
 	extreme_shocks_recovered = 0
 	homeostasis_tier_reached = 0
 
+	TelemetryManager.close_run({"pl_gained": _total_pl})
 	SaveManager.save_game(get_tree().get_first_node_in_group("main"))
 
 func enter_post_homeostasis():

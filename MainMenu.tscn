@@ -108,7 +108,7 @@ theme_override_constants/separation = 15
 layout_mode = 2
 theme_override_colors/font_color = Color(1.0, 0.8, 0.25, 1)
 theme_override_font_sizes/font_size = 32
-text = "HISTORIAL DE LOGROS"
+text = "ACH_PANEL_TITLE"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="AchievementsPanel/VBoxContainer"]
@@ -155,7 +155,7 @@ theme_override_constants/separation = 15
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.9, 1.0, 1)
 theme_override_font_sizes/font_size = 32
-text = "HISTORIAL DE CICLOS BIÓTICOS"
+text = "HIST_PANEL_TITLE"
 horizontal_alignment = 1
 
 [node name="TabsRow" type="HBoxContainer" parent="HistoryPanel/VBoxContainer"]

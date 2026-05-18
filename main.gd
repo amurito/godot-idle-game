@@ -75,7 +75,7 @@ func _update_met_oscuro_seal_button():
 	# PL escalonado seg�n biomasa al momento del sellado
 	var bio := BiosphereEngine.biomasa
 	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
-	var seal_label := EmojiToRichText.strip("🌑 SELLAR MET.OSCURO (+%d PL)" % pl_seal)
+	var seal_label := EmojiToRichText.strip("🌑 " + tr("BTN_SEAL_MO") % pl_seal)
 
 	if _met_oscuro_seal_btn == null or not is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn = Button.new()
@@ -121,7 +121,7 @@ func _update_simbiosis_seal_button():
 		return
 	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn = Button.new()
-		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 SELLAR SIMBIOSIS (+4 PL)")
+		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 " + tr("BTN_SEAL_SIMB"))
 		_simbiosis_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
@@ -297,7 +297,7 @@ func update_achievements_label():
 	# Vista resumida en el HUD. Detalles completos se ven en el menú principal.
 	var total := AchievementManager.total_count()
 	var got := AchievementManager.unlocked_count()
-	var t := "--- Logros (%d / %d) ---\n" % [got, total]
+	var t := tr("UI_ACHIEVEMENTS_HDR") % [got, total] + "\n"
 	# Recorrer por tier
 	for tier in [AchievementManager.Tier.MICELIO, AchievementManager.Tier.ESPORA, AchievementManager.Tier.FRUTO, AchievementManager.Tier.ANCESTRAL, AchievementManager.Tier.MYTHIC]:
 		var ids: Array = AchievementManager.get_by_tier(tier)
@@ -363,7 +363,7 @@ func _ready():
 	update_lap_toggle_button()
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
-		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run (disponible al cerrar run)")
+		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run " + tr("UI_EXPORT_PENDING"))
 
 	# Inicializar managers con referencia a main ANTES de update_ui()
 	AchievementManager.set_main(self)
@@ -377,7 +377,7 @@ func _ready():
 
 	# === CONTROLES MINIMALISTAS (SUPERIOR IZQUIERDA) ===
 	var menu_btn := Button.new()
-	menu_btn.text = EmojiToRichText.strip("🏠 Menú")
+	menu_btn.text = EmojiToRichText.strip("🏠 " + tr("GAME_BTN_MENU"))
 	menu_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	menu_btn.pressed.connect(func():
 		print("?? Guardando y volviendo al menú...")
@@ -394,7 +394,7 @@ func _ready():
 	bottom_left_panel.add_child(_reset_btn)
 
 	var legacy_btn := Button.new()
-	legacy_btn.text = EmojiToRichText.strip("🧬 Banco Genético")
+	legacy_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_BANCO_GENETICO"))
 	legacy_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	legacy_btn.pressed.connect(_on_legacy_pressed)
 	bottom_left_panel.add_child(legacy_btn)
@@ -1117,7 +1117,7 @@ func _on_legacy_pressed():
 	var lp_title = legacy_panel.find_child("Title")
 	if lp_title is RichTextLabel:
 		lp_title.clear()
-		lp_title.append_text(EmojiToRichText.rich("[center]🧬 Banco Genético (Plásmidos)[/center]"))
+		lp_title.append_text(EmojiToRichText.rich("[center]🧬 " + tr("BANCO_GENETICO_TITLE") + "[/center]"))
 	legacy_panel.visible = true
 	$DimmerBackground.visible = true
 	var vp := get_viewport_rect()
@@ -1387,7 +1387,7 @@ func _update_legacy_indicators() -> void:
 	if bio_mult > 1.01 or absorb > 0.0:
 		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
 	if RunManager.mente_colmena_active:
-		_add_chip.call(EmojiToRichText.strip("🧠IA"), "Mente Colmena activa\nCompra automática de upgrades", Color(0.9, 0.3, 0.9))
+		_add_chip.call(EmojiToRichText.strip("🧠IA"), tr("CHIP_MENTE_COLMENA"), Color(0.9, 0.3, 0.9))
 
 
 
@@ -1612,7 +1612,7 @@ func unlock_accounting():
 		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.30)
 	add_lap("??? Institución desbloqueada — Contabilidad Básica")
 	if UIManager.system_message_label:
-		UIManager.system_message_label.text = "El sistema se institucionaliza: nace la Contabilidad Básica"
+		UIManager.system_message_label.text = tr("MSG_INSTITUTIONS_UNLOCKED")
 	on_institutions_unlocked()
 
 # Handled via UpgradeManager now
@@ -1837,7 +1837,7 @@ func update_ui():
 		elif EvoManager.mutation_parasitism:
 			btn_evolve.visible = true
 			btn_evolve.disabled = true
-			btn_evolve.text = EmojiToRichText.strip("🔒 MUTACIÓN BLOQUEADA")
+			btn_evolve.text = EmojiToRichText.strip("🔒 " + tr("BTN_MUTATION_LOCKED"))
 			btn_evolve.modulate = Color(1.0, 0.4, 0.2) # Naranja parásito
 		else:
 			var any_tier1 = EvoManager.is_any_latent_tier1()
@@ -1845,7 +1845,7 @@ func update_ui():
 
 			btn_evolve.visible = any_tier1 or any_tier2
 			btn_evolve.disabled = false
-			btn_evolve.text = EmojiToRichText.strip("🧬 INICIAR MUTACIÓN")
+			btn_evolve.text = EmojiToRichText.strip("🧬 " + tr("BTN_MUTATION_START"))
 			if any_tier2:
 				btn_evolve.modulate = Color(0, 1, 1) # Cyan para Allostasis
 			else:

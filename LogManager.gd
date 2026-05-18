@@ -60,14 +60,14 @@ func update_log_label() -> void:
 	var txt := ""
 	if show_all_laps:
 		var lines := 18
-		txt = "--- Eventos (completo) ---\n"
+		txt = "--- " + tr("LOG_HDR_ALL") + " ---\n"
 		var start = max(0, lap_events.size() - lines)
 		for i in range(start, lap_events.size()):
 			var lap = lap_events[i]
 			txt += "%s → %s\n" % [lap.time, lap.event]
 	else:
 		# vista compacta: sólo eventos "mayores"
-		txt = "--- Eventos clave ---\n"
+		txt = "--- " + tr("LOG_HDR_KEY") + " ---\n"
 		var shown := 0
 		for i in range(lap_events.size() - 1, -1, -1):
 			var lap = lap_events[i]
@@ -83,9 +83,9 @@ func update_log_label() -> void:
 func update_toggle_button() -> void:
 	if UIManager.toggle_lap_button:
 		UIManager.toggle_lap_button.text = EmojiToRichText.strip(
-			"📜 Ver todos los eventos"
+			tr("LOG_VIEW_ALL")
 			if not show_all_laps
-			else "📋 Ver eventos clave"
+			else tr("LOG_VIEW_KEY")
 		)
 
 func toggle_view() -> void:

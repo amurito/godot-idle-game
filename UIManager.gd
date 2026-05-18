@@ -301,10 +301,10 @@ func update_route_badge() -> void:
 	route_badge_label.visible = true
 
 func update_money(amount: float):
-	if money_label: money_label.text = "Dinero: $" + str(round(amount))
+	if money_label: money_label.text = tr("UI_MONEY") + str(round(amount))
 
 func update_timer(t: float):
-	if session_time_label: session_time_label.text = "Tiempo de sesión: " + format_time(t)
+	if session_time_label: session_time_label.text = tr("UI_SESSION_TIME") + format_time(t)
 
 # ===== HEADER BAR UPDATES (NEW) =====
 func update_header_money(amount: float, delta_per_sec: float):
@@ -401,7 +401,7 @@ func update_structural_metrics(epsilon: float, omega: float, persistence: float,
 	if structural_pers_value:
 		structural_pers_value.text = "%.2f" % persistence
 	if structural_acc_value:
-		structural_acc_value.text = "Nv. %d" % accounting
+		structural_acc_value.text = tr("UI_LEVEL_ABBR") % accounting
 
 ## Anima la transición de paneles colapsables con tweens suaves (Phase 6)
 func _toggle_collapsible_panel(panel: Control, btn: Button, pressed: bool, label: String) -> void:
@@ -549,53 +549,53 @@ func update_click_stats_panel(_main: Node) -> String:
 	var ap = EconomyManager.get_active_passive_breakdown()
 	var push = ap.push_abs
 		
-	var t = "[b]Aporte actual:[/b]\n"
-	t += "[color=#cccccc]• Click PUSH = +%.2f\n" % push
-	if StructuralModel.unlocked_d: t += "• Trabajo Manual = +%.2f /s\n" % EconomyManager.get_auto_income_effective()
-	if StructuralModel.unlocked_e: t += "• Trueque = +%.2f /s[/color]\n\n" % EconomyManager.get_trueque_income_effective()
-	
-	t += "[b]Δ$ total = +%.2f[/b]\n" % ap.total
+	var t = "[b]" + tr("LAB_APORTE_ACTUAL") + "[/b]\n"
+	t += "[color=#cccccc]" + tr("LAB_CLICK_PUSH_LINE") % push + "\n"
+	if StructuralModel.unlocked_d: t += tr("LAB_TRABAJO_LINE") % EconomyManager.get_auto_income_effective() + "\n"
+	if StructuralModel.unlocked_e: t += tr("LAB_TRUEQUE_LINE") % EconomyManager.get_trueque_income_effective() + "[/color]\n\n"
+
+	t += "[b]" + tr("LAB_DELTA_TOTAL") % ap.total + "[/b]\n"
 	if ap.total > 0:
 		if ap.activo > ap.pasivo:
-			t += "CLICK domina el sistema\n\n"
+			t += tr("LAB_CLICK_DOM") + "\n\n"
 		else:
-			t += "La RED SISTÉMICA domina\n\n"
-		
-	t += "[color=#d946ef]--- Producción activa ---\n"
-	t += "a = %.1f   Click base\n" % a
+			t += tr("LAB_RED_DOM") + "\n\n"
+
+	t += "[color=#d946ef]--- " + tr("LAB_PROD_ACTIVE") + " ---\n"
+	t += "a = %.1f   " % a + tr("LAB_CLICK_BASE") + "\n"
 	if UpgradeManager.level("click_mult") > 0:
-		t += "b = %.2f   Multiplicador\n" % b
+		t += "b = %.2f   " % b + tr("LAB_MULTIPLICADOR") + "\n"
 	if StructuralModel.persistence_upgrade_unlocked:
 		t += "c_n(actual) = %.2f\n" % c_n
 	if RunManager.vacio_hambriento_active:
 		t += "vh = %.0f\n" % RunManager.vacio_hambriento_mult
 	if LegacyManager.get_buff_value("impulso_manual"):
-		t += "im = 2.00   Impulso Manual (Legado)\n"
+		t += "im = 2.00   " + tr("LAB_IMPULSO_MANUAL") + "\n"
 	t += "\n"
-	
+
 	if StructuralModel.unlocked_d:
-		t += "d = %.1f/s   Trabajo Manual\n" % d_raw
-		if StructuralModel.unlocked_md: t += "md = %.2f   Ritmo de Trabajo\n" % md
-		else: t += "md = -- (estructura latente)\n"
-		if UpgradeManager.level("specialization") > 0: t += "so = %.2f   Especialización de Oficio\n" % so
+		t += "d = %.1f/s   " % d_raw + tr("LAB_TRABAJO_MANUAL") + "\n"
+		if StructuralModel.unlocked_md: t += "md = %.2f   " % md + tr("LAB_RITMO_TRABAJO") + "\n"
+		else: t += "md = -- " + tr("LAB_LATENTE") + "\n"
+		if UpgradeManager.level("specialization") > 0: t += "so = %.2f   " % so + tr("LAB_ESPECIALIZACION") + "\n"
 		t += "\n"
-	
+
 	if StructuralModel.unlocked_e:
-		t += "e = %.1f/s   Trueque corregido\n" % e_raw
-		if StructuralModel.unlocked_me: 
-			t += "me = %.2f   Red de Intercambio\n" % me
+		t += "e = %.1f/s   " % e_raw + tr("LAB_TRUEQUE_CORR") + "\n"
+		if StructuralModel.unlocked_me:
+			t += "me = %.2f   " % me + tr("LAB_RED_INTERCAMBIO") + "\n"
 			if UpgradeManager.level("trueque_allo") > 0:
-				t += "ea = %.2f   Escalado Alostático (Legado)\n" % UpgradeManager.value("trueque_allo")
-		else: t += "me = -- (estructura latente)\n"
-	
+				t += "ea = %.2f   " % UpgradeManager.value("trueque_allo") + tr("LAB_ESCALADO_ALOS") + "\n"
+		else: t += "me = -- " + tr("LAB_LATENTE") + "\n"
+
 	if LegacyManager.get_buff_value("redireccion_energia"):
-		t += "re = +%.1f/s   Redirección (10%% Click a Pasivo)\n" % (EconomyManager.get_click_power() * 0.10)
-	
-	t += "\n\n--- MODELO ESTRUCTURAL ---\n"
+		t += "re = +%.1f/s   " % (EconomyManager.get_click_power() * 0.10) + tr("LAB_REDIRECCION") + "\n"
+
+	t += "\n\n--- " + tr("LAB_MODELO_STRUCT") + " ---\n"
 	var n_struct = StructuralModel.get_effective_structural_n()
 	var k_base = EcoModel.get_k_structural(n_struct)
 	var alpha = EcoModel.get_alpha(n_struct)
-	
+
 	t += "k = %.2f\n" % k_base
 	t += "α = %.2f\n" % alpha
 	if UpgradeManager.level("cognitive") > 0:
@@ -604,68 +604,68 @@ func update_click_stats_panel(_main: Node) -> String:
 	t += "n = %d\n" % StructuralModel.get_structural_upgrades()
 
 	if UpgradeManager.level("cognitive") > 0:
-		t += "\n\n--- Capital Cognitivo ---\n"
+		t += "\n\n--- " + tr("LAB_CAPITAL_COG") + " ---\n"
 		t += "μ = %.2f\n" % EconomyManager.cached_mu
-		t += "Nivel cognitivo = %d\n" % UpgradeManager.level("cognitive")
+		t += tr("LAB_NIVEL_COG") % UpgradeManager.level("cognitive") + "\n"
 		var acc_lvl_d: int = UpgradeManager.level("accounting")
 		if acc_lvl_d > 0:
-			t += "Contabilidad ×μ = ×%.2f\n" % (1.0 + acc_lvl_d * 0.08)
+			t += tr("LAB_CONTAB_MU") % (1.0 + acc_lvl_d * 0.08) + "\n"
 		if RunManager.resilience_score > 0.0:
-			t += "Resiliencia ×μ = ×%.2f (score %.0f)\n" % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score]
+			t += tr("LAB_RESIL_MU") % [1.0 + min(RunManager.resilience_score / 300.0, 1.0) * 0.30, RunManager.resilience_score] + "\n"
 
 	# --- LEGADO: MULTIPLICADORES DE INGRESOS ---
 	var has_income_buff := false
-	var income_section := "\n--- LEGADO: Multiplicadores ---\n"
+	var income_section := "\n--- " + tr("LAB_LEGADO_MULT") + " ---\n"
 	if LegacyManager.get_buff_value("impulso_manual"):
-		income_section += "im  Impulso Manual        click base ×2.00\n"; has_income_buff = true
+		income_section += tr("LAB_IM_LINE") + "\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("resonancia_simbionte"):
 		var rs_val: float = min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
-		income_section += "rs  Resonancia Simbionte   click ×%.2f (bio=%.1f, cap ×2.5)\n" % [rs_val, BiosphereEngine.biomasa]
+		income_section += tr("LAB_RS_LINE") % [rs_val, BiosphereEngine.biomasa] + "\n"
 		has_income_buff = true
 	if LegacyManager.get_buff_value("aura_dorada"):
-		income_section += "au  Aura Dorada            click ×2.50  [solo click]\n"; has_income_buff = true
+		income_section += tr("LAB_AU_LINE") + "\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("semilla_cosmica"):
-		income_section += "sc  Semilla Cósmica        click ×2.00 · pasivo ×2.00\n"; has_income_buff = true
+		income_section += tr("LAB_SC_LINE") + "\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("mente_colmena"):
-		income_section += "mc  Mente Colmena          pasivo ×3.00\n"; has_income_buff = true
+		income_section += tr("LAB_MC_LINE") + "\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		var mg_active := StructuralModel.epsilon_runtime > 0.40
-		var mg_state := "ACTIVO" if mg_active else "inactivo (ε=%.2f)" % StructuralModel.epsilon_runtime
-		income_section += "mg  Metabolismo Oscuro     click ×1.50 · pasivo ×1.80  [%s]\n" % mg_state
+		var mg_state := tr("LAB_MG_ACTIVO") if mg_active else tr("LAB_MG_INACTIVO") % StructuralModel.epsilon_runtime
+		income_section += tr("LAB_MG_LINE") % mg_state + "\n"
 		has_income_buff = true
 	var eco_mult: float = LegacyManager.get_effect_value("all_income_mult")
 	if eco_mult > 0.0:
-		income_section += "ep  Eco Primordial         todos ×%.2f\n" % (1.0 + eco_mult); has_income_buff = true
+		income_section += tr("LAB_EP_LINE") % (1.0 + eco_mult) + "\n"; has_income_buff = true
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
 		var cc_val := 1.0 + LegacyManager.trascendencia_count * 0.05
-		income_section += "cc  Convergencia Cíclica   todos ×%.2f (T=%d)\n" % [cc_val, LegacyManager.trascendencia_count]
+		income_section += tr("LAB_CC_LINE") % [cc_val, LegacyManager.trascendencia_count] + "\n"
 		has_income_buff = true
 	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
 	if cog_mult > 0.0:
 		var cog_val := 1.0 + UpgradeManager.level("accounting") * cog_mult
-		income_section += "rc  Resonancia Cognitiva   todos ×%.2f (nv.cog=%d)\n" % [cog_val, UpgradeManager.level("accounting")]
+		income_section += tr("LAB_RC_LINE") % [cog_val, UpgradeManager.level("accounting")] + "\n"
 		has_income_buff = true
 	if has_income_buff:
 		t += income_section
 
 	# --- LEGADO: DEFENSA OMEGA ---
 	var has_omega_buff := false
-	var omega_section := "\n--- LEGADO: Defensa Ω ---\n"
+	var omega_section := "\n--- " + tr("LAB_LEGADO_OMEGA") + " ---\n"
 	if LegacyManager.get_buff_value("plasticidad_adaptativa"):
-		omega_section += "Plasticidad Adaptativa    Ω_min inicio ≥ 0.30\n"; has_omega_buff = true
+		omega_section += tr("LAB_PA_LINE") + "\n"; has_omega_buff = true
 	if LegacyManager.get_buff_value("legado_homeorresis"):
-		omega_section += "Trascendencia Cristalina  Ω ≥ 0.55 (tick)\n"; has_omega_buff = true
+		omega_section += tr("LAB_TC_LINE") + "\n"; has_omega_buff = true
 	if LegacyManager.get_buff_value("legado_alostasis"):
-		omega_section += "Resiliencia Alostática    Ω_min +0.02/shock (acumulado: %d shocks)\n" % RunManager.disturbances_survived
+		omega_section += tr("LAB_RA_LINE") % RunManager.disturbances_survived + "\n"
 		has_omega_buff = true
 	var eq_per_dist: float = LegacyManager.get_effect_value("omega_min_per_disturbance")
 	if eq_per_dist > 0.0:
-		omega_section += "Equilibrio Heredado       Ω_min +%.2f/shock\n" % eq_per_dist; has_omega_buff = true
+		omega_section += tr("LAB_EH_LINE") % eq_per_dist + "\n"; has_omega_buff = true
 	var omega_rec: float = LegacyManager.get_effect_value("omega_recovery_speed")
 	if omega_rec > 0.0:
-		omega_section += "Setpoint Adaptativo       Ω_min regen ×%.2f/s\n" % omega_rec; has_omega_buff = true
+		omega_section += tr("LAB_SA_LINE") % omega_rec + "\n"; has_omega_buff = true
 	if LegacyManager.get_buff_value("cristalizacion_permanente"):
-		omega_section += "Cristalización Permanente shock Ω_min −50%%\n"; has_omega_buff = true
+		omega_section += tr("LAB_CP_LINE") + "\n"; has_omega_buff = true
 	if has_omega_buff:
 		t += omega_section
 
@@ -801,13 +801,13 @@ func build_evo_checklist(_main: Node) -> String:
 				var bar := ""
 				for i in range(20):
 					bar += "█" if i < filled else "░"
-				t += "[color=cyan]>>> Sincronía 50/50: [%s] %d%% (%.0f/180s)[/color]\n" % [bar, mc_pct, mc_timer]
+				t += "[color=cyan]" + tr("EVO_MC_SYNC_BAR") % [bar, mc_pct, mc_timer] + "[/color]\n"
 				# Mostrar ratio actual
 				var ap :Dictionary = EconomyManager.get_active_passive_breakdown()
 				var r_act := int(ap.activo)
 				var r_pas := int(ap.pasivo)
 				var ratio_color := "[color=cyan]" if abs(r_act - 50) <= 2 else "[color=yellow]"
-				t += ratio_color + "    Ratio: %d%% Activo / %d%% Pasivo[/color]\n" % [r_act, r_pas]
+				t += ratio_color + "    " + tr("EVO_MC_RATIO_DISPLAY") % [r_act, r_pas] + "[/color]\n"
 			else:
 				t += "[color=#aaaaaa]" + tr("EVO_MC_RATIO_REQ") + "[/color]\n"
 				t += "[color=#aaaaaa]" + tr("EVO_MC_EPS_REQ") + "[/color]\n"
@@ -914,109 +914,109 @@ func _build_run_end_lore(route: String) -> String:
 		# ── RAMA AZUL: HOMEOSTASIS ────────────────────────────────────────────────
 		"HOMEOSTASIS": {
 			"emoji": "⚖️", "color": "#00ccff",
-			"lore": "Equilibrio activo sostenido. El sistema reguló sus variables internas — ε en banda, Ω balanceado, flujos duales. La entropía fue domesticada, no eliminada.",
-			"buffs": ["Toda la producción +50% — click y pasivo (Orden Administrativo)", "Ω_min 0.35 — seguridad estructural base", "Evita pérdidas grandes ante perturbaciones", "+3 PL ganados"],
-			"nerfs": ["Cap de crecimiento biológico (biomasa < 12)", "Requiere ε en banda + Ω ≥ 0.40 + flujos duales (activo y pasivo)", "Velocidad de scaling reducida"]
+			"lore": tr("LORE_HOME_LORE"),
+			"buffs": [tr("LORE_HOME_B1"), tr("LORE_HOME_B2"), tr("LORE_HOME_B3"), tr("LORE_HOME_B4")],
+			"nerfs": [tr("LORE_HOME_N1"), tr("LORE_HOME_N2"), tr("LORE_HOME_N3")]
 		},
 		"ALLOSTASIS": {
 			"emoji": "💜", "color": "#aa55ff",
-			"lore": "Adaptación dinámica a nuevos estados de equilibrio. El hongo sobrevivió perturbaciones y aprendió a recalibrar su setpoint. El equilibrio ya no es un punto: es una trayectoria.",
-			"buffs": ["Setpoint adaptativo — resiliencia +80% dinámica", "Ω_min >= 0.45 permanente en próxima run", "Impulso Metabólico Adaptativo: pasivo ×5", "+6 PL ganados"],
-			"nerfs": ["Requiere haber sobrevivido ≥1 perturbación activa", "Requiere Resiliencia ≥ 150 + Δ$ > 200/s + Cont. nivel 2"]
+			"lore": tr("LORE_ALOS_LORE"),
+			"buffs": [tr("LORE_ALOS_B1"), tr("LORE_ALOS_B2"), tr("LORE_ALOS_B3"), tr("LORE_ALOS_B4")],
+			"nerfs": [tr("LORE_ALOS_N1"), tr("LORE_ALOS_N2")]
 		},
 		"HOMEORHESIS": {
 			"emoji": "💎", "color": "#00ffee",
-			"lore": "Equilibrio dinámico avanzado. El sistema atravesó 5+ ciclos de perturbación sin colapso y alcanzó auto-regulación en trayectorias de cambio continuo. Más allá de la homeostasis.",
-			"buffs": ["Trascendencia cristalina — metabolismo irreversible", "Desbloquea legado permanente de Allostasis", "Mayor resiliencia base en NG+ (Ω_min bonus)", "+8 PL ganados"],
-			"nerfs": ["Requiere ≥5 perturbaciones + recuperarse de shock extremo", "Resiliencia ≥ 400 + Δ$ > 300/s + Ω_min ≥ 0.50", "Extremadamente difícil de sostener"]
+			"lore": tr("LORE_HOMR_LORE"),
+			"buffs": [tr("LORE_HOMR_B1"), tr("LORE_HOMR_B2"), tr("LORE_HOMR_B3"), tr("LORE_HOMR_B4")],
+			"nerfs": [tr("LORE_HOMR_N1"), tr("LORE_HOMR_N2"), tr("LORE_HOMR_N3")]
 		},
 		# ── RAMA VERDE: SIMBIOSIS / SINGULARIDAD ─────────────────────────────────
 		"SIMBIOSIS": {
 			"emoji": "💚", "color": "#00dd66",
-			"lore": "Cooperación mutualista. Con estabilidad del ecosistema > 40% (Ω ≥ 0.40), cada sistema activo potenció al siguiente. Linkeo exponencial emergente.",
-			"buffs": ["Click ×2.5 (dominio activo)", "Buffs compartidos — linkeo entre sistemas", "Ruta hacia SINGULARIDAD desbloqueada", "+4 PL ganados"],
-			"nerfs": ["Pasivo -50% (atrofia autómata)", "Requiere estabilidad ecosistema > 40% (Ω ≥ 0.40)", "Desaparece si la estabilidad colapsa"]
+			"lore": tr("LORE_SIMB_LORE"),
+			"buffs": [tr("LORE_SIMB_B1"), tr("LORE_SIMB_B2"), tr("LORE_SIMB_B3"), tr("LORE_SIMB_B4")],
+			"nerfs": [tr("LORE_SIMB_N1"), tr("LORE_SIMB_N2"), tr("LORE_SIMB_N3")]
 		},
 		"SINGULARIDAD": {
 			"emoji": "📡", "color": "#00ffff",
-			"lore": "Punto de no retorno tecnológico. La Mecánica Simbiótica integró el tejido fúngico al mainframe. Ya no hay distinción entre código y micelio.",
-			"buffs": ["Núcleo de Conciencia sincronizado (+20% eficiencia tecnológica)", "Desbloquea MENTE COLMENA en NG+ (ratio 50/50 por 180s)", "PL variable (6 + bonus ε)"],
-			"nerfs": ["Requiere Simbiosis previa (NG+) + Rama Mecánica elegida", "Requiere 90s de sincronización sin interrupciones (ε ≤ 0.25)"]
+			"lore": tr("LORE_SING_LORE"),
+			"buffs": [tr("LORE_SING_B1"), tr("LORE_SING_B2"), tr("LORE_SING_B3")],
+			"nerfs": [tr("LORE_SING_N1"), tr("LORE_SING_N2")]
 		},
 		"MENTE COLMENA DISTRIBUIDA": {
 			"emoji": "🧠", "color": "#40aaff",
-			"lore": "Fusión total entre biología y tecnología. El hongo opera como entidad autónoma e inteligente. El administrador fue reemplazado. La IA fúngica opera sola.",
-			"buffs": ["Auto-click permanente ×10 (decisiones automáticas óptimas)", "+300% automation efectiva", "+8 PL ganados", "Legado Mente Colmena: pasivo ×3 permanente"],
-			"nerfs": ["Control del jugador anulado al activarse", "Requiere ratio activo/pasivo 50/50 sostenido 180s (NG+ Singularidad)"]
+			"lore": tr("LORE_MENTE_LORE"),
+			"buffs": [tr("LORE_MENTE_B1"), tr("LORE_MENTE_B2"), tr("LORE_MENTE_B3"), tr("LORE_MENTE_B4")],
+			"nerfs": [tr("LORE_MENTE_N1"), tr("LORE_MENTE_N2")]
 		},
 		# ── RAMA ROJA: RED MICELIAL / ESPORULACIÓN ───────────────────────────────
 		"ESPORULACIÓN": {
 			"emoji": "✨", "color": "#aaff44",
-			"lore": "El Núcleo Central maduró y la biomasa superó el umbral de reproducción. La seta dispersó su carga genética. Una nueva generación hereda la memoria estructural.",
-			"buffs": ["Desbloquea PANSPERMIA NEGRA en NG+ (Colonización)", "+5 PL ganados", "Esporas acumuladas = biomasa del ciclo"],
-			"nerfs": ["Requiere Red Micelial Fase C (seta formada)", "Requiere ε_peak ≥ 0.75 y ε_effective ≤ 0.35 sostenido", "Requiere biomasa ≥ umbral de reproducción"]
+			"lore": tr("LORE_ESPOR_LORE"),
+			"buffs": [tr("LORE_ESPOR_B1"), tr("LORE_ESPOR_B2"), tr("LORE_ESPOR_B3")],
+			"nerfs": [tr("LORE_ESPOR_N1"), tr("LORE_ESPOR_N2"), tr("LORE_ESPOR_N3")]
 		},
 		"ESPORULACION": {
 			"emoji": "✨", "color": "#aaff44",
-			"lore": "El Núcleo Central maduró y la biomasa superó el umbral de reproducción. La seta dispersó su carga genética. Una nueva generación hereda la memoria estructural.",
-			"buffs": ["Desbloquea PANSPERMIA NEGRA en NG+ (Colonización)", "+5 PL ganados"],
-			"nerfs": ["Requiere Red Micelial Fase C (seta formada)", "Requiere ε_peak ≥ 0.75 y ε_effective ≤ 0.35 sostenido"]
+			"lore": tr("LORE_ESPOR_LORE"),
+			"buffs": [tr("LORE_ESPOR_B1"), tr("LORE_ESPOR_B2")],
+			"nerfs": [tr("LORE_ESPOR_N1"), tr("LORE_ESPOR_N2")]
 		},
 		"PANSPERMIA NEGRA": {
 			"emoji": "🚀", "color": "#dd22ff",
-			"lore": "Las esporas fueron disparadas al vacío interestelar. El hongo ya no es de este mundo. La próxima civilización ya está infectada.",
-			"buffs": ["Legado Semilla Cósmica: ×2 producción pasiva permanente", "+10 PL ganados", "Scaling exponencial inter-run desbloqueado"],
-			"nerfs": ["Requiere Esporulación previa + $100k durante primordio activo", "Única ruta sin PL en close_run (ya otorgados en main)"]
+			"lore": tr("LORE_PANSP_LORE"),
+			"buffs": [tr("LORE_PANSP_B1"), tr("LORE_PANSP_B2"), tr("LORE_PANSP_B3")],
+			"nerfs": [tr("LORE_PANSP_N1"), tr("LORE_PANSP_N2")]
 		},
 		# ── RAMA NARANJA: PARASITISMO / HIPERASIMILACIÓN ─────────────────────────
 		"PARASITISMO": {
 			"emoji": "☣️", "color": "#ff4400",
-			"lore": "Explotación parasitaria del ecosistema. Extrae recursos sin retribuir. El organismo vacía el sistema antes de colapsar sobre sí mismo. Victoria pírrica.",
-			"buffs": ["Biomasa ×2 (crecimiento descontrolado)", "Pasivo +20% inicial (Decay mechanic)", "+2 PL ganados", "Habilita ruta NG+ → DEPREDADOR DE REALIDADES"],
-			"nerfs": ["Degradación constante (corrosión estructural irreversible)", "Pérdida progresiva de ingresos (parasitism_corrosion → 0)", "Drenaje de dinero = biomasa × 0.25/s", "Ω máx 0.25 (fragilidad permanente)", "Colapso inevitable por masa crítica o bancarrota"]
+			"lore": tr("LORE_PARAS_LORE"),
+			"buffs": [tr("LORE_PARAS_B1"), tr("LORE_PARAS_B2"), tr("LORE_PARAS_B3"), tr("LORE_PARAS_B4")],
+			"nerfs": [tr("LORE_PARAS_N1"), tr("LORE_PARAS_N2"), tr("LORE_PARAS_N3"), tr("LORE_PARAS_N4"), tr("LORE_PARAS_N5")]
 		},
 		"HIPERASIMILACIÓN": {
 			"emoji": "🔥", "color": "#ff8800",
-			"lore": "Absorción agresiva total. El sistema quema todo en un instante de velocidad extrema. Overheat — acumulás demasiado y la penalización es exponencial.",
-			"buffs": ["Click PUSH ×10 (≈+250% velocidad efectiva)", "+50% absorción de biomasa global", "Escala early-game explosivamente", "+1 PL ganado"],
-			"nerfs": ["-60% estabilidad estructural (Ω colapsa a 0)", "-75% producción pasiva (Atrofia Autómata)", "Colapso garantizado — la run termina al activarse (salvo NG+ Parasitismo)"]
+			"lore": tr("LORE_HIPERAS_LORE"),
+			"buffs": [tr("LORE_HIPERAS_B1"), tr("LORE_HIPERAS_B2"), tr("LORE_HIPERAS_B3"), tr("LORE_HIPERAS_B4")],
+			"nerfs": [tr("LORE_HIPERAS_N1"), tr("LORE_HIPERAS_N2"), tr("LORE_HIPERAS_N3")]
 		},
 		# ── FRACTURA EPISTÉMICA ──────────────────────────────────────────────────
 		"COLAPSO CONTROLADO": {
 			"emoji": "⚡", "color": "#ff6622",
-			"lore": "El sistema llegó al límite epistémico — ε extremo, pero Ω mantenida. En vez de colapsar pasivamente, el jugador dirigió la fractura. El conocimiento se rompe, pero deja semillas.",
-			"buffs": ["+6 PL base (Fractura Epistémica)", "+PL extra × ε_peak (si tenés Colapso Controlado en Banco Genético)", "Cierre voluntario — sin sorpresas"],
-			"nerfs": ["Requiere Fractura Epistémica (Banco Cósmico T3)", "Condición: ε_effective > 0.90 con Ω > 0.30", "Requiere haber desbloqueado la ruta Hiperasimilación + Horizonte Estructural previamente"]
+			"lore": tr("LORE_COL_LORE"),
+			"buffs": [tr("LORE_COL_B1"), tr("LORE_COL_B2"), tr("LORE_COL_B3")],
+			"nerfs": [tr("LORE_COL_N1"), tr("LORE_COL_N2"), tr("LORE_COL_N3")]
 		},
 		# ── RAMA GLITCH: DEPREDADOR / MET.OSCURO ─────────────────────────────────
 		"DEPREDADOR DE REALIDADES": {
 			"emoji": "👾", "color": "#ff0055",
-			"lore": "El hongo no solo sobrevivió al glitch: lo consumió. Convierte biomasa de competidores en energía propia. La realidad del sistema fue su último recurso.",
-			"buffs": ["+12 PL ganados (máximo del juego)", "Devora upgrades → +15 biomasa cada uno", "Legado METABOLISMO GLITCH desbloqueado", "Habilita ruta NG++ → METABOLISMO OSCURO"],
-			"nerfs": ["Agotar todos los upgrades termina la run automáticamente", "Requiere NG+ Parasitismo + Hiperasimilación + ε > 0.95 sostenido 30s", "Comportamiento de UI impredecible (glitch visual)"]
+			"lore": tr("LORE_DEP_LORE"),
+			"buffs": [tr("LORE_DEP_B1"), tr("LORE_DEP_B2"), tr("LORE_DEP_B3"), tr("LORE_DEP_B4")],
+			"nerfs": [tr("LORE_DEP_N1"), tr("LORE_DEP_N2"), tr("LORE_DEP_N3")]
 		},
 		"METABOLISMO OSCURO": {
 			"emoji": "🌑", "color": "#8844aa",
-			"lore": "Metabolismo en condiciones extremas. Con recursos críticos (< 20%) y depredación activa, el hongo activó rutas bioquímicas alternativas en entornos hostiles. La ciencia no predijo esta ruta.",
-			"buffs": ["Pasivo alternativo: biomasa × 0.8/s (bioquímica oscura)", "Click ×3 (energía alternativa)", "Biomasa autoalimentada +0.1/s", "ε_runtime decae (autorregulación emergente)", "+4 PL base (hasta +6 por saturación Bio ≥ 100)"],
-			"nerfs": ["Upgrades bloqueados permanentemente (sin compras)", "Ω forzado a 0.10 (fragilidad extrema)", "Pasivo estructural anulado (solo biomasa produce)", "Requiere Depredador activo + 3 devours + Bio ≥ 25 + dinero crítico (< $1000) sostenidos 15s"]
+			"lore": tr("LORE_MO_LORE"),
+			"buffs": [tr("LORE_MO_B1"), tr("LORE_MO_B2"), tr("LORE_MO_B3"), tr("LORE_MO_B4"), tr("LORE_MO_B5")],
+			"nerfs": [tr("LORE_MO_N1"), tr("LORE_MO_N2"), tr("LORE_MO_N3"), tr("LORE_MO_N4")]
 		},
 	}
 
 	var data = lore_data.get(route, null)
 	if data == null:
-		return "[color=gray]--- Run completada: %s ---[/color]\n" % route
+		return "[color=gray]" + tr("LORE_RUN_DONE") % route + "[/color]\n"
 
 	var t := ""
 	t += "[color=%s][b]%s %s[/b][/color]\n\n" % [data.color, data.emoji, route]
 	t += "[color=#cccccc][i]%s[/i][/color]\n\n" % data.lore
-	t += "[color=#00ff88][b]Efectos:[/b][/color]\n"
+	t += "[color=#00ff88][b]" + tr("LORE_EFFECTS") + "[/b][/color]\n"
 	for buff in data.buffs:
 		t += "[color=#00ff88]+ %s[/color]\n" % buff
 	t += "\n"
 	for nerf in data.nerfs:
 		t += "[color=#ff4444]- %s[/color]\n" % nerf
-	t += "\n[color=gray]Iniciá nueva run para continuar.[/color]"
+	t += "\n[color=gray]" + tr("LORE_NEW_RUN") + "[/color]"
 	return t
 
 # =====================================================
@@ -1028,15 +1028,15 @@ func build_genome_text() -> String:
 	var t := ""
 	# Ruta post-trascendencia activa
 	if RunManager.vacio_hambriento_active:
-		t += "[b][color=#bb44ff]🕳️ VACÍO HAMBRIENTO — producción ×100[/color][/b]\n"
-		t += "[color=#888888]Buffs cósmicos consumidos permanentemente.[/color]\n"
+		t += "[b][color=#bb44ff]🕳️ " + tr("GENOME_VACIO_TITLE") + "[/color][/b]\n"
+		t += "[color=#888888]" + tr("GENOME_VACIO_DESC") + "[/color]\n"
 		var _gen: float = EconomyManager.money
 		var _run_t: float = RunManager.run_time
-		t += "[color=#9955dd]--- ASCESIS PROFUNDA ---[/color]\n"
+		t += "[color=#9955dd]" + tr("GENOME_ASCESIS_TITLE") + "[/color]\n"
 		if _gen < 1000000.0:
-			t += "[color=#666666]Acumulá $1M (%.0f/1000000)[/color]\n\n" % _gen
+			t += "[color=#666666]" + tr("GENOME_ASCESIS_GEN") % _gen + "[/color]\n\n"
 		elif _run_t < 900.0:
-			t += "[color=#666666]Aguantá 15min de run (%.0fs/900s)[/color]\n\n" % _run_t
+			t += "[color=#666666]" + tr("GENOME_ASCESIS_TIME") % _run_t + "[/color]\n\n"
 		else:
 			var bio_ok: bool = BiosphereEngine.biomasa < 0.5
 			var sin_p: bool = UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
@@ -1044,7 +1044,7 @@ func build_genome_text() -> String:
 			var bio_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if bio_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var pas_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if sin_p else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var eps_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if eps_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
-			t += "Bio: " + bio_s + "  Pasivo: " + pas_s + "  e: " + eps_s + "\n"
+			t += tr("GENOME_ASCESIS_BIO_LBL") + ": " + bio_s + "  " + tr("GENOME_ASCESIS_PAS_LBL") + ": " + pas_s + "  e: " + eps_s + "\n"
 			var prog: float = clamp(RunManager.ascesis_timer / float(Balance.ASCESIS_DURATION), 0.0, 1.0)
 			var filled: int = int(prog * 20)
 			var bar: String = "[" + "X".repeat(filled) + ".".repeat(20 - filled) + "]"
@@ -1052,17 +1052,17 @@ func build_genome_text() -> String:
 	elif RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
 		var idx := RunManager.carnaval_index
 		var muts := RunManager.carnaval_mutations
-		t += "[b][color=#ff8833]🎭 CARNAVAL DE MUTACIONES[/color][/b]\n"
-		t += "Rotación: [color=#ffaa55]%s[/color] → %s → %s\n" % [muts[idx], muts[(idx+1)%3], muts[(idx+2)%3]]
+		t += "[b][color=#ff8833]🎭 " + tr("ROUTE_CARNAVAL") + "[/color][/b]\n"
+		t += tr("GENOME_CARNAVAL_ROT") % ["[color=#ffaa55]" + muts[idx] + "[/color]", muts[(idx+1)%3], muts[(idx+2)%3]] + "\n"
 		var secs_left := int(Balance.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
-		t += "[color=#888888]Próxima rotación en %ds[/color]\n" % secs_left
+		t += "[color=#888888]" + tr("GENOME_CARNAVAL_NEXT") % secs_left + "[/color]\n"
 		var rot := RunManager.carnaval_total_rotations
 		var peak := RunManager.carnaval_peak_money
-		t += "[color=#ffdd44]Rotaciones: %d/12 (Polimorfía) | Dinero pico: $%.0fK (Domador)[/color]\n\n" % [rot, peak/1000.0]
+		t += "[color=#ffdd44]" + tr("GENOME_CARNAVAL_STATS") % [rot, peak/1000.0] + "[/color]\n\n"
 	elif RunManager.reencarnacion_active:
-		t += "[b][color=#44ee99]⚱️ REENCARNACIÓN HEREDADA[/color][/b]\n"
-		t += "[color=#888888]Upgrades heredados del ciclo anterior. Costos escalan ×1.5 extra.[/color]\n\n"
-	t += "🧬 GENOMA FÚNGICO\n"
+		t += "[b][color=#44ee99]⚱️ " + tr("ROUTE_REENCARNACION") + "[/color][/b]\n"
+		t += "[color=#888888]" + tr("GENOME_REENC_DESC") + "[/color]\n\n"
+	t += tr("GENOME_FUNGICO") + "\n"
 	t += tr("MUT_LABEL_HIPERAS") + ": " + tr("MUT_STATE_" + EvoManager.genome.hiperasimilacion.to_upper()) + "\n"
 	t += tr("MUT_LABEL_PARASIT") + ": " + tr("MUT_STATE_" + EvoManager.genome.parasitismo.to_upper()) + "\n"
 	t += tr("MUT_LABEL_RED") + ": " + tr("MUT_STATE_" + EvoManager.genome.red_micelial.to_upper()) + "\n"
@@ -1076,20 +1076,20 @@ func build_genome_text() -> String:
 		t += tr("MUT_LABEL_MO") + ": " + tr("MUT_STATE_" + mo_state.to_upper()) + "\n"
 
 	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO (Post-Depredador):[/color][/b]\n"
-		t += "[color=#00ff00]+ Pasivo = Bio × 0.8/s · Click ×3 · Biomasa autoalimentada[/color]\n"
-		t += "[color=#ff4444]- Upgrades bloqueados · Ω 0.10 · Devorar detenido[/color]\n"
+		t += "[b][color=#8844aa]🌑 " + tr("GENOME_MO_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_MO_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_MO_NERF") + "[/color]\n"
 	elif EvoManager.mutation_depredador:
-		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
-		t += "[color=#00ff00]+ Devora upgrade cada 1.5s (+15 biomasa)[/color]\n"
-		t += "[color=#ff4444]- Agotar upgrades cierra la run[/color]\n"
+		t += "[b][color=#ff0055]☠️ " + tr("GENOME_DEP_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_DEP_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_DEP_NERF") + "[/color]\n"
 	elif EvoManager.mutation_hyperassimilation:
-		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (Active Rush):[/color][/b]\n"
-		t += "[color=#00ff00]+ Sobrecarga Click PUSH x10.0[/color]\n"
-		t += "[color=#ff4444]- Producción pasiva atrofiada (-75%)[/color]\n"
-		t += "[color=#ff4444]- Colapso persistencia inminente[/color]\n"
+		t += "[b][color=magenta]⚠️ " + tr("GENOME_HIPERAS_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_HIPERAS_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_HIPERAS_NERF1") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_HIPERAS_NERF2") + "[/color]\n"
 	elif EvoManager.genome.hiperasimilacion == "latente":
-		t += "\n[color=gray]• Hiperasimilación (LATENTE)[/color]"
+		t += "\n[color=gray]• " + tr("GENOME_HIPERAS_LATENTE") + "[/color]"
 
 	var _route_prefix: String = tr("MUT_ROUTE_PREFIX") + ": "
 	if EvoManager.mutation_met_oscuro:
@@ -1106,107 +1106,106 @@ func build_genome_text() -> String:
 		t += "\n🦠 " + _route_prefix + tr("MUT_PARASITISMO")
 
 	if RunManager.run_closed:
-		t += "\n\n🏁 FINAL ALCANZADO: " + RunManager.final_route
+		t += "\n\n" + tr("GENOME_FINAL") + RunManager.final_route
 	return t
 
 func build_mutation_status_text() -> String:
-	var t := "\n[color=#aaaaaa]--- Efectos mutacionales activos ---[/color]\n"
+	var t := "\n[color=#aaaaaa]" + tr("MSTAT_HEADER") + "[/color]\n"
 	var buff := "[color=#00ff00]+"
 	var nerf := "[color=#ff4444]-"
 
 	if EvoManager.mutation_hyperassimilation:
-		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (RUSH):[/color][/b]\n"
-		t += buff + " Sobrecarga Click PUSH x10.0[/color]\n"
-		t += nerf + " Pasivo -75% / Fragilidad Ω[/color]\n"
+		t += "[b][color=magenta]⚠️ " + tr("MSTAT_HIPERAS_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_HIPERAS_B1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_HIPERAS_N1") + "[/color]\n"
 
 	if EvoManager.mutation_homeostasis:
-		t += "[b][color=cyan]⚖️ HOMEOSTASIS:[/color][/b]\n"
-		t += buff + " Toda la producción +50% — click y pasivo (Orden Administrativo)[/color]\n"
-		t += buff + " Estabilidad ε (runtime reducido)[/color]\n"
-		t += buff + " Ω_min 0.35 (Seguridad estructural)[/color]\n"
-		t += nerf + " Limitación Biomasa (crecimiento controlado)[/color]\n"
+		t += "[b][color=cyan]⚖️ " + tr("MSTAT_HOME_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_HOME_B1") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_HOME_B2") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_HOME_B3") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_HOME_N1") + "[/color]\n"
 
 	if EvoManager.mutation_symbiosis:
-		t += "[b][color=green]🌱 SIMBIOSIS ESTRUCTURAL:[/color][/b]\n"
-		t += buff + " Potencia Click PUSH ×2.5 (Domino Activo)[/color]\n"
-		t += nerf + " Producción Pasiva -50% (Atrofia Autómata)[/color]\n"
+		t += "[b][color=green]🌱 " + tr("MSTAT_SIMB_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_SIMB_B1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_SIMB_N1") + "[/color]\n"
 
 	if EvoManager.mutation_red_micelial:
-		t += "[b][color=#9955ff]🕸️ RED MICELIAL:[/color][/b]\n"
-		t += buff + " Producción Pasiva TOTAL ×2.5 (Heptasíntesis)[/color]\n"
-		t += nerf + " Potencia Click PUSH -50% (Desconexión Motora)[/color]\n"
+		t += "[b][color=#9955ff]🕸️ " + tr("MSTAT_RED_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_RED_B1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_RED_N1") + "[/color]\n"
 
 	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO:[/color][/b]\n"
-		t += buff + " Pasivo = Biomasa × 0.8 /s (bioquímica oscura)[/color]\n"
-		t += buff + " Click PUSH ×3 (energía alternativa)[/color]\n"
-		t += buff + " Biomasa autoalimentada +0.1/s[/color]\n"
-		t += buff + " ε_runtime decae -0.05/s (autorregulación)[/color]\n"
-		t += nerf + " Devorar DETENIDO (estabilización)[/color]\n"
-		t += nerf + " Upgrades bloqueados (no se pueden comprar)[/color]\n"
-		t += nerf + " Ω forzado a 0.10 (fragilidad permanente)[/color]\n"
-		t += nerf + " Pasivo estructural anulado[/color]\n"
-		# Progress bar de saturación hacia el cierre automático (+6 PL)
+		t += "[b][color=#8844aa]🌑 " + tr("MSTAT_MO_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_MO_B1") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_MO_B2") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_MO_B3") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_MO_B4") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_MO_N1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_MO_N2") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_MO_N3") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_MO_N4") + "[/color]\n"
 		var bio_now: float = BiosphereEngine.biomasa
 		var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
 		var bar_filled: int = int(bio_pct / 5.0)  # 20 segmentos
 		var bio_bar: String = "█".repeat(bar_filled) + "░".repeat(20 - bar_filled)
 		var pl_label: String = "+6 PL" if bio_now >= 100.0 else ("+4 PL" if bio_now >= 50.0 else "+2 PL")
-		t += "\n[color=#aa66cc]◈ SATURACIÓN (sellado manual: %s):[/color]\n" % pl_label
+		t += "\n[color=#aa66cc]" + tr("MSTAT_MO_SAT") % pl_label + "[/color]\n"
 		t += "[color=#8844aa][%s][/color] [color=white]%.0f / 100[/color]\n" % [bio_bar, bio_now]
-		t += "[color=#666688]  Sellado manual disponible tras 2min · Saturación auto (+6PL) · $1M auto (+4PL)[/color]\n"
+		t += "[color=#666688]  " + tr("MSTAT_MO_SEAL_HINT") + "[/color]\n"
 	elif EvoManager.mutation_depredador:
-		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
-		t += buff + " Devora upgrade cada 1.5s (+15 biomasa cada uno)[/color]\n"
-		t += nerf + " Agotar upgrades cierra la run[/color]\n"
+		t += "[b][color=#ff0055]☠️ " + tr("MSTAT_DEP_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_DEP_B1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_DEP_N1") + "[/color]\n"
 		var dev: int = EvoManager.met_oscuro_devoured_count
 		var bio: float = BiosphereEngine.biomasa
 		var money_now: float = EconomyManager.money
 		var d_ok: bool = dev >= 3
 		var b_ok: bool = bio >= 25.0
 		var r_ok: bool = money_now < 1000.0
-		t += "\n[color=#aa66cc]◈ RUTA ALTERNATIVA — MET.OSCURO (Depredación + Recursos críticos):[/color]\n"
-		t += "  [color=%s]Devorados ≥ 3 → %d[/color]\n" % ["#00ff88" if d_ok else "#ff5555", dev]
-		t += "  [color=%s]Biomasa ≥ 25 → %.1f[/color]\n" % ["#00ff88" if b_ok else "#ff5555", bio]
-		t += "  [color=%s]$ crítico < 1000 → $%.0f[/color]\n" % ["#00ff88" if r_ok else "#ff5555", money_now]
-		t += "  [color=#aaaaaa]Sostener 15s para activar bioquímica oscura[/color]\n"
+		t += "\n[color=#aa66cc]" + tr("MSTAT_DEP_ALT") + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if d_ok else "#ff5555"] + tr("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if b_ok else "#ff5555"] + tr("MSTAT_DEP_BIO25") % bio + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if r_ok else "#ff5555"] + tr("MSTAT_DEP_MONEY") % money_now + "[/color]\n"
+		t += "  [color=#aaaaaa]" + tr("MSTAT_DEP_SUSTAIN") + "[/color]\n"
 
 	if EvoManager.mutation_parasitism:
-		t += "[b][color=#ff4400]🦠 PARASITISMO:[/color][/b]\n"
-		t += buff + " Biomasa ×2 (crecimiento descontrolado)[/color]\n"
-		t += buff + " Pasivo +20%[/color]\n"
-		t += nerf + " Drenaje de dinero = Biomasa × 0.25 / s[/color]\n"
-		t += nerf + " Corrosión de infraestructura (irreversible)[/color]\n"
-		t += nerf + " Contabilidad -10% / Ω máx 0.25[/color]\n"
+		t += "[b][color=#ff4400]🦠 " + tr("MSTAT_PARAS_TITLE") + "[/color][/b]\n"
+		t += buff + " " + tr("MSTAT_PARAS_B1") + "[/color]\n"
+		t += buff + " " + tr("MSTAT_PARAS_B2") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_PARAS_N1") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_PARAS_N2") + "[/color]\n"
+		t += nerf + " " + tr("MSTAT_PARAS_N3") + "[/color]\n"
 		var bio: float = BiosphereEngine.biomasa
 		var omg: float = StructuralModel.omega
 		var eps: float = StructuralModel.epsilon_effective
 		var money: float = EconomyManager.money
-		t += "\n[color=#ffaa00]◈ CIERRE (opción A):[/color]\n"
+		t += "\n[color=#ffaa00]" + tr("MSTAT_PARAS_CLOSE_A") + "[/color]\n"
 		var a1: bool = bio >= 18.0
 		var a2: bool = omg < 0.22
 		var a3: bool = eps > 0.45
-		t += "  [color=%s]Bio ≥ 18 → %.1f[/color]\n" % ["#00ff88" if a1 else "#ff5555", bio]
-		t += "  [color=%s]Ω < 0.22 → %.2f[/color]\n" % ["#00ff88" if a2 else "#ff5555", omg]
-		t += "  [color=%s]ε > 0.45 → %.2f[/color]\n" % ["#00ff88" if a3 else "#ff5555", eps]
-		t += "[color=#ffaa00]◈ CIERRE (opción B):[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if a1 else "#ff5555"] + tr("MSTAT_PARAS_BIO18") % bio + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if a2 else "#ff5555"] + tr("MSTAT_PARAS_OMEGA22") % omg + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if a3 else "#ff5555"] + tr("MSTAT_PARAS_EPS45") % eps + "[/color]\n"
+		t += "[color=#ffaa00]" + tr("MSTAT_PARAS_CLOSE_B") + "[/color]\n"
 		var b1: bool = bio >= 15.0
 		var b2: bool = money < 1000.0
 		var b3: bool = bio >= 25.0
-		t += "  [color=%s]Bio ≥ 15 + $ < 1000 → %.0f / $%.0f[/color]\n" % ["#00ff88" if (b1 and b2) else "#ff5555", bio, money]
-		t += "  [color=%s]  ó Bio ≥ 25 → %.1f[/color]\n" % ["#00ff88" if b3 else "#ff5555", bio]
+		t += "  [color=%s]" % ["#00ff88" if (b1 and b2) else "#ff5555"] + tr("MSTAT_PARAS_B15") % [bio, money] + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if b3 else "#ff5555"] + tr("MSTAT_PARAS_B25") % bio + "[/color]\n"
 	return t
 
 func build_institution_panel_text(_main: Node) -> String:
-	var t := "--- Contabilidad Básica ---\n"
-	t += "\n--- ε desglosado (Homeostasis) ---\n"
-	t += "%s ε activo = %s\n" % [epsilon_flag(StructuralModel.epsilon_active, 0.15), snapped(StructuralModel.epsilon_active, 0.01)]
-	t += "%s ε pasivo = %s\n" % [epsilon_flag(StructuralModel.epsilon_passive, 0.12), snapped(StructuralModel.epsilon_passive, 0.01)]
-	t += "%s ε complejidad = %s\n" % [epsilon_flag(StructuralModel.epsilon_complex, 0.08), snapped(StructuralModel.epsilon_complex, 0.01)]
-	t += "Ω_min = %s\n" % snapped(StructuralModel.omega_min, 0.01)
-	t += "Contabilidad = nivel %d\n" % UpgradeManager.level("accounting")
-	t += "Amortiguación = %d%%\n" % int(StructuralModel.get_accounting_effect() * 100.0)
-	t += "\nε_peak = %s\n" % snapped(StructuralModel.epsilon_peak, 0.01)
+	var t := "--- " + tr("INST_ACCOUNTING_HDR") + " ---\n"
+	t += "\n--- " + tr("INST_EPS_HDR") + " ---\n"
+	t += "%s %s = %s\n" % [epsilon_flag(StructuralModel.epsilon_active, 0.15), tr("INST_EPS_ACTIVE"), snapped(StructuralModel.epsilon_active, 0.01)]
+	t += "%s %s = %s\n" % [epsilon_flag(StructuralModel.epsilon_passive, 0.12), tr("INST_EPS_PASSIVE"), snapped(StructuralModel.epsilon_passive, 0.01)]
+	t += "%s %s = %s\n" % [epsilon_flag(StructuralModel.epsilon_complex, 0.08), tr("INST_EPS_COMPLEX"), snapped(StructuralModel.epsilon_complex, 0.01)]
+	t += tr("INST_OMEGA_MIN") + " = %s\n" % snapped(StructuralModel.omega_min, 0.01)
+	t += tr("INST_ACCOUNTING_LVL") % UpgradeManager.level("accounting") + "\n"
+	t += tr("INST_AMORT") % int(StructuralModel.get_accounting_effect() * 100.0) + "\n"
+	t += "\n" + tr("INST_EPS_PEAK") + " = %s\n" % snapped(StructuralModel.epsilon_peak, 0.01)
 	return t
 
 ## Actualiza el panel de mutación en la columna central (genoma + ruta + efectos + checklist)
@@ -1219,11 +1218,11 @@ func update_mutation_center_panel(main: Node = null) -> void:
 	if not RunManager.run_closed:
 		t += build_mutation_status_text()
 	if RunManager.homeostasis_mode:
-		t += "\n\n⚖️ HOMEOSTASIS MODE"
-		t += "\nResiliencia = %s" % snapped(RunManager.resilience_score, 1)
-		t += "\nPerturbaciones cada %ds" % RunManager.DISTURBANCE_INTERVAL
+		t += "\n\n⚖️ " + tr("INST_HOME_MODE")
+		t += "\n" + tr("INST_RESILIENCE") % snapped(RunManager.resilience_score, 1)
+		t += "\n" + tr("INST_DISTURBANCE") % RunManager.DISTURBANCE_INTERVAL
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
-		t += "\n⚠️ La red no puede estabilizarse localmente"
+		t += "\n" + tr("INST_NET_WARN")
 	if main != null:
 		t += build_evo_checklist(main)
 	genome_summary_label.visible = true
@@ -1476,13 +1475,13 @@ func update_fungal_cycle_bar() -> void:
 			if bar.visible:
 				bar.value = BiosphereEngine.micelio
 				if EvoManager.seta_formada:
-					bar.tooltip_text = "CICLO COMPLETADO: SETA MADURA"
+					bar.tooltip_text = tr("TOOLTIP_CYCLE_COMPLETE")
 					bar.value = 100.0
 				elif EvoManager.primordio_active:
 					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					bar.tooltip_text = "PRIMORDIO ACTIVO — %.0fs restantes" % t_left
+					bar.tooltip_text = tr("TOOLTIP_PRIMORDIO") % t_left
 				else:
-					bar.tooltip_text = "Micelio: %d%%  — Ciclo Biológico Activo" % int(BiosphereEngine.micelio)
+					bar.tooltip_text = tr("TOOLTIP_MICELIO_CYCLE") % int(BiosphereEngine.micelio)
 
 		if is_instance_valid(primordio_button):
 			if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:

@@ -217,30 +217,30 @@ func _show_post_tras_picker() -> void:
 
 	vbox.add_child(HSeparator.new())
 
-	const ROUTES := [
+	var ROUTES := [
 		{
 			"id": "", "icon": "▶",
-			"name": "CICLO ESTÁNDAR",
+			"name": tr("ROUTE_CICLO_ESTANDAR"),
 			"color": Color(0.7, 0.7, 0.7),
-			"desc": "Sin modificadores. Mecánicas normales, Banco Genético y Cósmico activos.",
+			"desc": tr("ROUTE_CICLO_DESC"),
 		},
 		{
 			"id": "vacio", "icon": "🕳️",
-			"name": "VACÍO HAMBRIENTO",
+			"name": tr("ROUTE_VACIO_HAMBRIENTO"),
 			"color": Color(0.55, 0.0, 0.8),
-			"desc": "Consume TODOS tus buffs cósmicos activos permanentemente.\nA cambio: producción ×100 durante toda la run.",
+			"desc": tr("ROUTE_VACIO_DESC"),
 		},
 		{
 			"id": "carnaval", "icon": "🎭",
-			"name": "CARNAVAL DE MUTACIONES",
+			"name": tr("ROUTE_CARNAVAL"),
 			"color": Color(1.0, 0.4, 0.1),
-			"desc": "Al iniciar, 3 mutaciones aleatorias son elegidas.\nRotan automáticamente cada 60 segundos. Sin control manual.",
+			"desc": tr("ROUTE_CARNAVAL_DESC"),
 		},
 		{
 			"id": "reencarnacion", "icon": "⚱️",
-			"name": "REENCARNACIÓN HEREDADA",
+			"name": tr("ROUTE_REENCARNACION"),
 			"color": Color(0.3, 0.9, 0.6),
-			"desc": "Empezás con todos los upgrades al nivel del ciclo anterior.\nPero cada compra futura escala ×1.5 más caro (deuda kármica).",
+			"desc": tr("ROUTE_REENCARNACION_DESC"),
 		},
 	]
 
@@ -630,16 +630,16 @@ func _update_history_view() -> void:
 	var header_label: String
 	if _history_tab == "current":
 		entries = LegacyManager.current_cycle_history
-		header_label = "Ciclo de trascendencia actual (T%d)" % LegacyManager.trascendencia_count
+		header_label = tr("HIST_CURRENT_CYCLE") % LegacyManager.trascendencia_count
 	else:
 		entries = LegacyManager.all_time_history
-		header_label = "Histórico completo de ciclos"
+		header_label = tr("HIST_HEADER_ALL")
 
 	var t: String = "[center][color=#9adfff][b]═══ %s ═══[/b][/color]\n" % header_label
-	t += "[color=#888888]%d ciclo(s) registrado(s)[/color][/center]\n\n" % entries.size()
+	t += "[color=#888888]" + tr("HIST_CYCLE_COUNT") % entries.size() + "[/color][/center]\n\n"
 
 	if entries.is_empty():
-		t += "[center][color=#666666][i]Todavía no hay ciclos registrados en esta vista.[/i][/color][/center]"
+		t += "[center][color=#666666][i]" + tr("HIST_EMPTY") + "[/i][/color][/center]"
 		history_label.clear()
 		history_label.append_text(EmojiToRichText.rich(t))
 		return
@@ -664,8 +664,9 @@ func _update_history_view() -> void:
 			tier_badge = "  [color=#888888][T%d][/color]" % t_tier
 
 		t += "[table=1]"
-		t += "[cell bgcolor=%s][b][color=%s]CICLO BIÓTICO %d: %s[/color][/b]%s\n" % \
-			[colors.card, colors.title, cycle_index, route, tier_badge]
+		var cycle_title: String = tr("HIST_CYCLE_ENTRY") % [cycle_index, route]
+		t += "[cell bgcolor=%s][b][color=%s]%s[/color][/b]%s\n" % \
+			[colors.card, colors.title, cycle_title, tier_badge]
 		if reason != "":
 			t += "[color=#aaaaaa][i]%s[/i][/color]\n" % reason
 		t += "[color=#888888]⏱ %s · μ_peak %.2f · ε_peak %.2f · +%d PL[/color][/cell]" % \
@@ -798,6 +799,13 @@ func _populate_legacy_items():
 		else:
 			col.queue_free()
 
+	var wip_lbl := Label.new()
+	wip_lbl.text = tr("BANK_WIP_NOTICE")
+	wip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wip_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
+	wip_lbl.modulate = Color(0.5, 0.5, 0.6)
+	legacy_list.add_child(wip_lbl)
+
 func _on_buy_legacy(id: String):
 	if LegacyManager.purchase_legacy(id):
 		_update_legacy_view()
@@ -806,8 +814,8 @@ func _update_achievements_view():
 	var total: int = AchievementManager.total_count()
 	var got: int = AchievementManager.unlocked_count()
 
-	var t: String = "[center][color=#ffcc00][b]═══ HISTORIAL DE LOGROS ═══[/b][/color]\n"
-	t += "[color=#888888]%d / %d desbloqueados[/color][/center]\n\n" % [got, total]
+	var t: String = "[center][color=#ffcc00][b]═══ " + tr("ACH_PANEL_TITLE") + " ═══[/b][/color]\n"
+	t += "[color=#888888]" + tr("ACH_PANEL_UNLOCKED") % [got, total] + "[/color][/center]\n\n"
 
 	var tier_order := [
 		AchievementManager.Tier.MICELIO,
@@ -840,8 +848,8 @@ func _update_achievements_view():
 			var def: Dictionary = AchievementManager.DEFS[id]
 			var unlocked_one: bool = AchievementManager.is_unlocked(id)
 			var is_secret: bool = def.get("secret", false)
-			var name_str: String = def.get("name", id)
-			var desc_str: String = def.get("desc", "")
+			var name_str: String = AchievementManager.get_display_name(id)
+			var desc_str: String = AchievementManager.get_display_desc(id)
 
 			var icon_char: String
 			var title_color: String
@@ -874,14 +882,14 @@ func _update_achievements_view():
 			if unlocked_one:
 				var entry: Dictionary = AchievementManager.unlocked.get(id, {})
 				var is_new: bool = not entry.get("seen", true)
-				var new_badge: String = "  [color=#ffdd00][b]★ NUEVO[/b][/color]" if is_new else ""
+				var new_badge: String = "  [color=#ffdd00][b]" + tr("ACH_BADGE_NEW") + "[/b][/color]" if is_new else ""
 				t += "[cell bgcolor=%s][b][color=%s]%s[/color]%s[/b]\n[color=%s][i]%s[/i][/color][/cell]" % \
 					[card_bg, title_color, name_str, new_badge, desc_color, desc_str]
 				if is_new:
 					AchievementManager.mark_seen(id)
 			elif is_secret:
-				t += "[cell bgcolor=%s][b][color=%s]??? [i](logro oculto)[/i][/color][/b][/cell]" % \
-					[card_bg, title_color]
+				t += "[cell bgcolor=%s][b][color=%s]??? [i](%s)[/i][/color][/b][/cell]" % \
+					[card_bg, title_color, tr("ACH_PANEL_HIDDEN")]
 			else:
 				var progress_str: String = _build_progress_str(id, def)
 				t += "[cell bgcolor=%s][b][color=%s]%s[/color][/b]%s\n[color=%s][i]%s[/i][/color][/cell]" % \
@@ -909,7 +917,7 @@ func _build_progress_str(id: String, def: Dictionary) -> String:
 	var filled: int = int(ratio * 8.0)
 	var bar: String = "▓".repeat(filled) + "░".repeat(8 - filled)
 	# Label con formato si existe
-	var fmt: String = def.get("progress_format", "{current} / {target}")
+	var fmt: String = tr(def["progress_key"]) if def.has("progress_key") else "{current} / {target}"
 	var label: String = fmt.replace("{current}", str(int(current))).replace("{target}", str(int(target)))
 	return "  [color=#888888][%s] %s[/color]" % [bar, label]
 
@@ -966,7 +974,7 @@ func _setup_trascendencia_ui() -> void:
 	if LegacyManager.trascendencia_count > 0:
 		btn_cosmic_bank = Button.new()
 		btn_cosmic_bank.custom_minimum_size = Vector2(0, 45)
-		btn_cosmic_bank.text = EmojiToRichText.strip("✦ Banco Cósmico")
+		btn_cosmic_bank.text = EmojiToRichText.strip("✦ " + tr("MM_COSMIC_BANK"))
 		btn_cosmic_bank.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
 		btn_cosmic_bank.pressed.connect(_on_cosmic_bank_pressed)
 		vbox2.add_child(btn_cosmic_bank)
@@ -1217,14 +1225,14 @@ func _show_cosmic_bank_panel() -> void:
 	margin.add_child(vbox)
 
 	var title := Label.new()
-	title.text = EmojiToRichText.strip("✦ BANCO CÓSMICO ✦")
+	title.text = EmojiToRichText.strip("✦ " + tr("COSMIC_BANK_TITLE") + " ✦")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(30))
 	title.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0))
 	vbox.add_child(title)
 
 	var counter := Label.new()
-	counter.text = "Ξ Disponible: %d   ·   Trascendencias: %d" % [LegacyManager.esencia, LegacyManager.trascendencia_count]
+	counter.text = tr("COSMIC_BANK_COUNTER") % [LegacyManager.esencia, LegacyManager.trascendencia_count]
 	counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	counter.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	counter.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
@@ -1254,7 +1262,8 @@ func _show_cosmic_bank_panel() -> void:
 
 		var name_lbl := Label.new()
 		var tier_str := " [T%d]" % info.get("tier", 1)
-		name_lbl.text = info.name + tier_str + (" (ADQUIRIDO)" if is_unlocked else " [%d Ξ]" % info.cost)
+		var acquired_str := " (" + tr("COSMIC_ACQUIRED") + ")" if is_unlocked else " [%d Ξ]" % info.cost
+		name_lbl.text = tr("COSMIC_" + id.to_upper() + "_NAME") + tier_str + acquired_str
 		name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		if is_unlocked:
 			name_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
@@ -1264,7 +1273,7 @@ func _show_cosmic_bank_panel() -> void:
 			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
 
 		var desc_lbl := Label.new()
-		desc_lbl.text = info.desc
+		desc_lbl.text = tr("COSMIC_" + id.to_upper() + "_DESC")
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		desc_lbl.modulate = Color(0.75, 0.75, 0.8)
@@ -1285,7 +1294,7 @@ func _show_cosmic_bank_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var placeholder := Label.new()
-	placeholder.text = "◈ Próximamente: más upgrades, nuevas ramas del árbol, lore fragments."
+	placeholder.text = tr("COSMIC_COMING_SOON")
 	placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	placeholder.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	placeholder.modulate = Color(0.5, 0.5, 0.6)
@@ -1307,37 +1316,23 @@ func _on_tools_analyze_pressed() -> void:
 		return
 
 	var script_path := ProjectSettings.globalize_path("res://tools/analyze_telemetry.py")
-	var runs_dir   := OS.get_user_data_dir() + "/telemetry/runs"
-	var output_html := ProjectSettings.globalize_path("res://tools/analysis_output/telemetry_dashboard.html")
+	var runs_dir    := OS.get_user_data_dir() + "/telemetry/runs"
+	const URL       := "http://localhost:8421/"
 
-	print("[Tools] script: ", script_path)
-	print("[Tools] runs_dir: ", runs_dir)
-
-	btn_tools.text = "Analizando..."
+	btn_tools.text = "Iniciando..."
 	btn_tools.disabled = true
 
-	# OS.execute bloquea — lo corremos en un thread para no freear el juego.
-	var thread := Thread.new()
-	thread.start(func():
-		var out: Array = []
-		var code := OS.execute("python", [script_path, runs_dir], out, true)
-		call_deferred("_tools_analysis_done", thread, code, out, output_html)
+	# Lanza el servidor en proceso separado (no bloquea — queda corriendo en background).
+	# Si el puerto ya está ocupado, el script lo detecta y no rompe.
+	OS.create_process("python", [script_path, runs_dir, "--serve"])
+
+	# Abrir browser después de 2.5 s (startup del servidor)
+	get_tree().create_timer(2.5).timeout.connect(func():
+		if is_instance_valid(btn_tools):
+			btn_tools.text = "Telemetria"
+			btn_tools.disabled = false
+		OS.shell_open(URL)
 	)
-
-
-func _tools_analysis_done(thread: Thread, exit_code: int, output: Array, html_path: String) -> void:
-	thread.wait_to_finish()
-	print("[Tools] exit code: ", exit_code)
-	for line in output:
-		print("[Tools] ", line)
-	var btn_tools := get_node_or_null("CenterContainer/VBoxContainer/BtnTools")
-	if is_instance_valid(btn_tools):
-		btn_tools.text = "Telemetria" if exit_code == 0 else "Error (ver Output)"
-		btn_tools.disabled = false
-	if exit_code == 0:
-		OS.shell_open(html_path)
-	else:
-		push_warning("[Tools] analyze_telemetry.py fallo con codigo " + str(exit_code))
 
 
 func _on_buy_cosmic(id: String) -> void:

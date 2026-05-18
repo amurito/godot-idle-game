@@ -83,7 +83,7 @@ const DEFS := {
 		"desc": "Comprar 5 upgrades en una run.",
 		"tier": Tier.MICELIO, "secret": false, "toast": "small",
 		"trigger": "event_count", "event_name": "upgrade_bought", "target": 5,
-		"progress_format": "{current} / {target} upgrades",
+		"progress_key": "ACH_PROGFMT_UPGRADES",
 	},
 	"raices_profundas": {
 		"name": "Raíces Profundas",
@@ -190,14 +190,14 @@ const DEFS := {
 		"tier": Tier.ESPORA, "secret": false, "toast": "full",
 		"trigger": "event", "event_name": "disturbance_streak",
 		"conditions": [{"key": "streak", "op": ">=", "value": 3}],
-		"target": 3, "progress_format": "{current} / {target} perturbaciones",
+		"target": 3, "progress_key": "ACH_PROGFMT_DISTURBANCES",
 	},
 	"punto_inflexion": {
 		"name": "Punto de Inflexión",
 		"desc": "Cambiar el término dominante 3 veces en una sola run.",
 		"tier": Tier.ESPORA, "secret": false, "toast": "full",
 		"trigger": "event_count", "event_name": "dominant_switch", "target": 3,
-		"progress_format": "{current} / {target} cambios",
+		"progress_key": "ACH_PROGFMT_SWITCHES",
 	},
 	"sin_tocar": {
 		"name": "Sin Tocar",
@@ -220,7 +220,7 @@ const DEFS := {
 		"desc": "Activar 2 mutaciones distintas en una misma run.",
 		"tier": Tier.ESPORA, "secret": false, "toast": "full",
 		"trigger": "event_count", "event_name": "mutation_activated", "target": 2,
-		"progress_format": "{current} / {target} mutaciones",
+		"progress_key": "ACH_PROGFMT_MUTATIONS",
 	},
 	"presion_adaptativa": {
 		"name": "Presión Adaptativa",
@@ -478,7 +478,7 @@ const DEFS := {
 		"desc": "Devorar 50 upgrades en una sola run de DEPREDADOR.",
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "event_count", "event_name": "depredador_devour", "target": 50,
-		"progress_format": "{current} / {target} upgrades devorados",
+		"progress_key": "ACH_PROGFMT_DEVOURED",
 	},
 	"ascension_total": {
 		"name": "Ascensión Total",
@@ -693,15 +693,15 @@ func get_display_name(id: String) -> String:
 	if not DEFS.has(id): return "???"
 	var def: Dictionary = DEFS[id]
 	if def.get("secret", false) and not is_unlocked(id):
-		return "??? (secreto)"
-	return def["name"]
+		return tr("ACH_SECRET_NAME")
+	return tr("ACH_" + id.to_upper() + "_NAME")
 
 func get_display_desc(id: String) -> String:
 	if not DEFS.has(id): return ""
 	var def: Dictionary = DEFS[id]
 	if def.get("secret", false) and not is_unlocked(id):
-		return "Logro oculto — descubrilo jugando."
-	return def["desc"]
+		return tr("ACH_SECRET_DESC")
+	return tr("ACH_" + id.to_upper() + "_DESC")
 
 func has_unseen() -> bool:
 	for id in unlocked:
@@ -1059,8 +1059,8 @@ func _show_toast(_id: String, def: Dictionary) -> void:
 	var tier: int = def.get("tier", Tier.MICELIO)
 	var icon: String = TIER_ICONS.get(tier, "🏁")
 	var tier_name: String = TIER_NAMES.get(tier, "?")
-	var name_str: String = def["name"]
-	var desc_str: String = def.get("desc", "")
+	var name_str: String = tr("ACH_" + _id.to_upper() + "_NAME")
+	var desc_str: String = tr("ACH_" + _id.to_upper() + "_DESC")
 	var color: Color = TIER_COLORS.get(tier, Color(0.7, 0.7, 0.75))
 	var is_legendary: bool = level == "legendary"
 
