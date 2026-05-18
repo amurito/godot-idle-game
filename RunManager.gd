@@ -93,7 +93,7 @@ func reset():
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
-	return StructuralModel.epsilon_effective >= 0.03 and StructuralModel.epsilon_effective <= 0.30
+	return StructuralModel.epsilon_runtime >= 0.03 and StructuralModel.epsilon_runtime <= 0.30
 
 # ==================== CIERRE DE RUN ====================
 func close_run(route: String, reason: String):

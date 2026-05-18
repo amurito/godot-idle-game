@@ -390,13 +390,14 @@ func _ready():
 	bios_btn.text = EmojiToRichText.strip("🌱 Biosfera")
 	bios_btn.toggle_mode = true
 	bios_btn.button_pressed = true
-	bios_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+	bios_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	bios_btn.toggled.connect(func(pressed):
-		# Mostrar/ocultar el Fungi DLC (violeta)
 		if is_instance_valid(fungi_ui):
 			fungi_ui.visible = pressed
 	)
-	bottom_left_panel.add_child(bios_btn)
+	var _header_content := $HeaderBar/HeaderContent
+	_header_content.add_child(bios_btn)
+	_header_content.move_child(bios_btn, _header_content.get_child_count() - 2)
 
 	_reset_btn = Button.new()
 	_reset_btn.text = tr("GAME_BTN_RESET")
