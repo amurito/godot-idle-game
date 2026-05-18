@@ -56,6 +56,7 @@ var _depredador_status_timer: float = 0.0
 const DEPREDADOR_STATUS_INTERVAL := 10.0
 var _depredador_countdown_last: int = -1
 var _met_oscuro_countdown_last: int = -1
+var _parasitismo_countdown_last: int = -1
 
 # === NG+ METABOLISMO OSCURO (Post-Depredador) ===
 var mutation_met_oscuro := false
@@ -110,6 +111,7 @@ func reset() -> void:
 	_depredador_status_timer = 0.0
 	_depredador_countdown_last = -1
 	_met_oscuro_countdown_last = -1
+	_parasitismo_countdown_last = -1
 	_met_oscuro_income_accum = 0.0
 	_met_oscuro_status_timer = 0.0
 	_met_oscuro_active_time = 0.0
@@ -203,6 +205,16 @@ func _update_parasitismo(ctx: Dictionary) -> void:
 	var inactivity_trigger: bool = EconomyManager.time_since_last_click > 120.0 and ctx.biomasa > 3.0
 	var stagnation_trigger: bool = ctx.run_time > 1800.0 and ctx.biomasa > 5.0 \
 		and LegacyManager.last_run_ending != "HOMEOSTASIS"
+
+	# Countdown inactividad: últimos 10s antes de que se active Parasitismo por idle
+	if not mutation_parasitism and ctx.biomasa > 3.0:
+		var idle := EconomyManager.time_since_last_click
+		var secs_left := int(120.0 - idle)
+		if secs_left >= 1 and secs_left <= 10 and secs_left != _parasitismo_countdown_last:
+			_parasitismo_countdown_last = secs_left
+			UIManager.show_countdown(secs_left, "PARASITISMO")
+		elif idle < 110.0:
+			_parasitismo_countdown_last = -1
 
 	if mutation_parasitism:
 		_set_genome_state("parasitismo", "activo")
