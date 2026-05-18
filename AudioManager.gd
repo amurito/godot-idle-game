@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # AudioManager.gd — Autoload
 # SFX pool + música de fondo + persistencia de settings.
@@ -480,8 +480,8 @@ func _build_locale_row(parent: VBoxContainer) -> void:
 		var parent_ref := _settings_panel.get_parent()
 		_close_settings_panel()
 		var wip := AcceptDialog.new()
-		wip.title = "English — Work in Progress"
-		wip.dialog_text = "The English translation is not complete yet.\nSome texts may still appear in Spanish.\n\nThank you for your patience!"
+		wip.title = "English"
+		wip.dialog_text = "Most game text is now in English.\nSome advanced content (lab formulas, run log) may still appear in Spanish.\n\nThank you for playing!"
 		wip.get_ok_button().text = "Got it"
 		parent_ref.add_child(wip)
 		wip.popup_centered(Vector2(400, 160))

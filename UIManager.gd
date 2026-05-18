@@ -145,7 +145,7 @@ func setup(ui_root: Control):
 	var mutation_toggle_btn = _find("MutationToggleBtn")
 	if mutation_toggle_btn and genome_scroll:
 		mutation_toggle_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(genome_scroll, mutation_toggle_btn, pressed, "Genoma Fúngico + Próxima Mutación")
+			_toggle_collapsible_panel(genome_scroll, mutation_toggle_btn, pressed, tr("UI_PANEL_GENOME"))
 		)
 
 	# Right panel collapsibles (Phase 4)
@@ -160,13 +160,13 @@ func setup(ui_root: Control):
 	var economy_btn = _find("EconomyToggleBtn")
 	if economy_btn:
 		economy_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(economy_content, economy_btn, pressed, "Economía")
+			_toggle_collapsible_panel(economy_content, economy_btn, pressed, tr("UI_PANEL_ECONOMY"))
 		)
 
 	var structural_btn = _find("StructuralToggleBtn")
 	if structural_btn:
 		structural_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(structural_content, structural_btn, pressed, "Estructura")
+			_toggle_collapsible_panel(structural_content, structural_btn, pressed, tr("UI_PANEL_STRUCTURE"))
 		)
 
 	# Route badge — RichTextLabel para soporte de emojis en web (Label rompería en HTML5)
@@ -232,22 +232,22 @@ func _apply_bio_header_style() -> void:
 	# Tooltips: tooltip_text + señal mouse_entered como backup.
 	# HeaderBar pasó a MOUSE_FILTER_PASS en el TSCN para que hijos reciban hover.
 	var metric_tooltips := {
-		"EpsilonMetric": ["EpsilonBar",       "ε — Estrés estructural | banda sana 0.03–0.30 | Verde=en banda / Amarillo=alto / Rojo=crítico"],
-		"OmegaMetric":   ["OmegaBar",         "Ω — Estabilidad (1=perfecto) | Verde >0.75 / Amarillo 0.40 / Rojo <0.20"],
-		"BiomasaMetric": ["BiomasaBar",       "Biomasa — tejido fúngico | >12 bloquea homeostasis | >15 parasitismo colapsa"],
-		"HifasMetric":   ["HifasBar",         "Hifas — motor de crecimiento (cap ~40) | escalan con ingreso pasivo"],
-		"NutrientesMetric": ["NutrientesBar", "Nutrientes — combustible para biomasa | cada 50 = 15% descuento en upgrades"],
+		"EpsilonMetric": ["EpsilonBar",       "UI_TIP_EPSILON"],
+		"OmegaMetric":   ["OmegaBar",         "UI_TIP_OMEGA"],
+		"BiomasaMetric": ["BiomasaBar",       "UI_TIP_BIOMASA"],
+		"HifasMetric":   ["HifasBar",         "UI_TIP_HIFAS"],
+		"NutrientesMetric": ["NutrientesBar", "UI_TIP_NUTRIENTES"],
 	}
 	for container_name in metric_tooltips:
 		var bar_name: String = metric_tooltips[container_name][0]
-		var tip: String      = metric_tooltips[container_name][1]
+		var tip_key: String  = metric_tooltips[container_name][1]
 		var container = _find_scene(container_name)
 		var bar       = _find_scene(bar_name)
 		for node in [container, bar]:
 			if node:
-				node.tooltip_text = tip
+				node.tooltip_text = tr(tip_key)
 				node.mouse_filter = Control.MOUSE_FILTER_STOP
-				node.mouse_entered.connect(func(): _show_header_tip(tip))
+				node.mouse_entered.connect(func(): _show_header_tip(tr(tip_key)))
 				node.mouse_exited.connect(func(): _clear_header_tip())
 
 var _header_tip_prev := ""
@@ -284,14 +284,14 @@ func update_route_badge() -> void:
 	var text := ""
 	var color := Color.WHITE
 	if RunManager.vacio_hambriento_active:
-		text = "🕳️  VACÍO HAMBRIENTO  ×100"
+		text = "🕳️  " + tr("ROUTE_VACIO_HAMBRIENTO") + "  ×100"
 		color = Color(0.75, 0.2, 1.0)
 	elif RunManager.carnaval_active:
 		var mut :String= RunManager.carnaval_mutations[RunManager.carnaval_index] if not RunManager.carnaval_mutations.is_empty() else "?"
-		text = "🎭  CARNAVAL  [%s]" % mut
+		text = "🎭  " + tr("ROUTE_CARNAVAL") + "  [%s]" % mut
 		color = Color(1.0, 0.5, 0.1)
 	elif RunManager.reencarnacion_active:
-		text = "⚱️  REENCARNACIÓN HEREDADA"
+		text = "⚱️  " + tr("ROUTE_REENCARNACION")
 		color = Color(0.3, 0.95, 0.6)
 	if text == "":
 		route_badge_label.visible = false

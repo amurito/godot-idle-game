@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # TutorialManager.gd — Autoload
 # Fase 1: Tutorial progresivo — welcome overlay, highlights dorados, hints contextuales.
@@ -52,16 +52,27 @@ const ANTISTUCK_COOLDOWN  := 150.0  # segundos entre hints consecutivos
 
 const TOAST_DURATION := 4.5  # segundos antes del fade-out
 
-const MUTATION_HINTS: Dictionary = {
-	"hiperasimilacion": "[b]Hiperasimilación[/b] activada.\nAbsorción de recursos aumentada — ingreso pasivo potenciado.",
-	"parasitismo":      "[b]Parasitismo[/b] activado.\nEl sistema extrae recursos del entorno con bonos periódicos de dinero.",
-	"red_micelial":     "[b]Red Micelial[/b] activada.\nHifas y Micelio se regeneran más rápido.",
-	"esporulacion":     "[b]Esporulación[/b] activada.\nBoosts ocasionales de Biomasa por dispersión de esporas.",
-	"simbiosis":        "[b]Simbiosis[/b] activada.\nCooperación estructural — las mejoras son más baratas.",
-	"homeostasis":      "[b]Homeostasis[/b] activada.\nToda la producción +50% (click y pasivo). Ω_min = 0.35. Banda óptima de ε activa para cerrar la run.",
-	"allostasis":       "[b]Allostasis[/b] activada.\nAdaptación proactiva al estrés estructural.",
-	"depredador":       "[b]Modo Depredador[/b] activado.\nAlto riesgo, alto retorno — consumís para crecer rápido.",
-	"met_oscuro":       "[color=#ff6666][b]Metabolismo Oscuro[/b][/color] activado.\nUpgrades convencionales bloqueados. Potencia rutas no lineales.",
+const _MUTATION_KEYS: Dictionary = {
+	"hiperasimilacion": "TUTO_MUT_HIPERASIMILACION",
+	"parasitismo":      "TUTO_MUT_PARASITISMO",
+	"red_micelial":     "TUTO_MUT_RED_MICELIAL",
+	"esporulacion":     "TUTO_MUT_ESPORULACION",
+	"simbiosis":        "TUTO_MUT_SIMBIOSIS",
+	"homeostasis":      "TUTO_MUT_HOMEOSTASIS",
+	"allostasis":       "TUTO_MUT_ALLOSTASIS",
+	"depredador":       "TUTO_MUT_DEPREDADOR",
+	"met_oscuro":       "TUTO_MUT_MET_OSCURO",
+}
+const _UPGRADE_KEYS: Dictionary = {
+	"click":          "TUTO_UPG_CLICK",
+	"auto":           "TUTO_UPG_AUTO",
+	"trueque":        "TUTO_UPG_TRUEQUE",
+	"click_mult":     "TUTO_UPG_CLICK_MULT",
+	"auto_mult":      "TUTO_UPG_AUTO_MULT",
+	"trueque_net":    "TUTO_UPG_TRUEQUE_NET",
+	"specialization": "TUTO_UPG_SPECIALIZATION",
+	"cognitive":      "TUTO_UPG_COGNITIVE",
+	"accounting":     "TUTO_UPG_ACCOUNTING",
 }
 
 var _toast_vbox: VBoxContainer = null
@@ -151,10 +162,7 @@ func notify_mutation_activated(mutation_id: String) -> void:
 
 ## Llamar la primera vez que el jugador abre el Modo Laboratorio.
 func notify_lab_opened() -> void:
-	notify_milestone("lab_opened",
-		"Modo Laboratorio",
-		"Mostrás ε, Ω, μ y la fórmula de persistencia en tiempo real.\nPresioná [b][L][/b] para volver al modo normal.",
-		Color(0.4, 0.75, 1.0))
+	notify_milestone("lab_opened", tr("TUTO_MT_LAB_TITLE"), tr("TUTO_MT_LAB_BODY"), Color(0.4, 0.75, 1.0))
 
 
 func reset_tutorial() -> void:
@@ -303,7 +311,7 @@ func toggle_shortcuts_panel(parent: Node) -> void:
 	vbox.add_child(HSeparator.new())
 
 	var btn_close := Button.new()
-	btn_close.text = "Cerrar"
+	btn_close.text = tr("TUTO_BTN_CLOSE")
 	btn_close.custom_minimum_size = Vector2(0.0, 40.0)
 	btn_close.pressed.connect(func():
 		if is_instance_valid(_shortcuts_panel):
@@ -315,28 +323,28 @@ func toggle_shortcuts_panel(parent: Node) -> void:
 
 func _build_shortcuts_bbcode() -> String:
 	var t := ""
-	t += "[color=cyan][b]General[/b][/color]\n"
-	t += _shortcut_row("[L]", "Activar / desactivar Modo Laboratorio")
-	t += _shortcut_row("[K]", "Ver progreso de la run")
+	t += "[color=cyan][b]" + tr("TUTO_SC_GENERAL") + "[/b][/color]\n"
+	t += _shortcut_row("[L]", tr("TUTO_SC_L"))
+	t += _shortcut_row("[K]", tr("TUTO_SC_K"))
 	t += "\n"
-	t += "[color=cyan][b]Upgrades rápidos (teclas 1–9)[/b][/color]\n"
+	t += "[color=cyan][b]" + tr("TUTO_SC_UPGRADES") + "[/b][/color]\n"
 	var pairs := [
-		["[1]", "Mejorar clic"],
-		["[2]", "Trabajo Manual"],
-		["[3]", "Trueque"],
-		["[4]", "Mult. clic"],
-		["[5]", "Mult. auto"],
-		["[6]", "Red de trueque"],
-		["[7]", "Especialización"],
-		["[8]", "Capital cognitivo (μ)"],
-		["[9]", "Contabilidad"],
+		["[1]", tr("TUTO_SC_1")],
+		["[2]", tr("TUTO_SC_2")],
+		["[3]", tr("TUTO_SC_3")],
+		["[4]", tr("TUTO_SC_4")],
+		["[5]", tr("TUTO_SC_5")],
+		["[6]", tr("TUTO_SC_6")],
+		["[7]", tr("TUTO_SC_7")],
+		["[8]", tr("TUTO_SC_8")],
+		["[9]", tr("TUTO_SC_9")],
 	]
 	for pair in pairs:
 		t += _shortcut_row(pair[0], pair[1])
 	t += "\n"
-	t += "[color=cyan][b]Indicadores del header (hover para tooltip)[/b][/color]\n"
-	t += "  [color=yellow][b]ε[/b][/color]   Estrés Estructural — sube con clics, baja con mejoras\n"
-	t += "  [color=cyan][b]Ω[/b][/color]   Flexibilidad — colapsa si ε es muy alto\n"
+	t += "[color=cyan][b]" + tr("TUTO_SC_HEADER_IND") + "[/b][/color]\n"
+	t += "  [color=yellow][b]ε[/b][/color]   " + tr("TUTO_SC_EPS") + "\n"
+	t += "  [color=cyan][b]Ω[/b][/color]   " + tr("TUTO_SC_OMG") + "\n"
 	t += "  [color=#88ff88][b]Bio[/b][/color] Biomasa — recurso del sistema fúngico\n"
 	return t
 
@@ -387,50 +395,33 @@ func _build_contextual_hint() -> String:
 	# 1. Upgrade costeable → acción más obvia disponible
 	const ORDER := ["click", "auto", "trueque", "click_mult", "auto_mult",
 		"trueque_net", "specialization", "cognitive", "accounting"]
-	const NAMES := {
-		"click":          "Mejorar Clic",
-		"auto":           "Trabajo Manual",
-		"trueque":        "Trueque",
-		"click_mult":     "Mult. Clic",
-		"auto_mult":      "Mult. Auto",
-		"trueque_net":    "Red de Trueque",
-		"specialization": "Especialización",
-		"cognitive":      "Capital Cognitivo (μ)",
-		"accounting":     "Contabilidad",
-	}
 	for id in ORDER:
 		if UpgradeManager.can_buy(id, money):
-			return ("Podés comprar [b]" + NAMES[id] + "[/b] ahora mismo.\n"
-				+ "Usá las teclas [b][1–9][/b] para compras rápidas.")
+			return tr("TUTO_AS_BUY") % [tr(_UPGRADE_KEYS[id])]
 
 	# 2. Epsilon peligroso — a 0.65 ya bloquea expansión micelial
 	var eps := StructuralModel.epsilon_effective
 	if eps > 0.65:
-		return ("[color=yellow]ε = %.2f[/color] — nivel alto.\n" % eps
-			+ "Comprá mejoras estructurales para bajar ε.\n"
-			+ "[color=#ff8888]Por encima de 0.65 la Red Micelial se bloquea.[/color]")
+		return tr("TUTO_AS_EPS") % eps
 
 	# 3. Sin automatización todavía
 	if UpgradeManager.level("auto") == 0:
-		return ("Sin [b]Trabajo Manual[/b] el ingreso solo viene de clics.\n"
-			+ "Seguí acumulando para desbloquearlo.")
+		return tr("TUTO_AS_NO_AUTO")
 
 	# 4. Biomasa alta con mutaciones disponibles
 	if BiosphereEngine.biomasa >= 10.0 and not EvoManager.mutation_sporulation:
-		return ("[color=#88ff88]Biomasa suficiente[/color] para una mutación.\n"
-			+ "Revisá el panel de [b]Genoma Fúngico[/b].")
+		return tr("TUTO_AS_BIO")
 
 	# 5. Cerca de Homeostasis
 	if EvoManager.mutation_homeostasis and not RunManager.post_homeostasis:
-		return ("Estás en ruta hacia [color=cyan]Homeostasis[/color].\n"
-			+ "Mantenés ε en banda (0.03–0.30) para avanzar de tier.")
+		return tr("TUTO_AS_HOMEO")
 
 	return ""
 
 
 func _show_antistuck_hint(hint_text: String) -> void:
 	_antistuck_panel = _make_hint_bubble(
-		"[color=#aaaaff]Sugerencia[/color]\n" + hint_text,
+		tr("TUTO_AS_HEADER") + "\n" + hint_text,
 		func():
 			_dismiss_antistuck()
 	)
@@ -449,29 +440,20 @@ func _check_milestones() -> void:
 	if not _had_passive_income and _main.has_method("get_passive_total"):
 		if (_main as Node).call("get_passive_total") > 0.1:
 			_had_passive_income = true
-			notify_milestone("first_passive_income",
-				"¡Ingreso Pasivo activo!",
-				"Trabajo Manual genera [b]$/s[/b] sin hacer clic.\nSeguí comprando mejoras para aumentarlo.",
-				Color(0.3, 0.85, 0.4))
+			notify_milestone("first_passive_income", tr("TUTO_MT_PASSIVE_TITLE"), tr("TUTO_MT_PASSIVE_BODY"), Color(0.3, 0.85, 0.4))
 
 	# Homeostasis alcanzada
 	if not _milestones_seen.has("homeostasis_reached") and RunManager.homeostasis_mode:
-		notify_milestone("homeostasis_reached",
-			"¡Homeostasis alcanzada!",
-			"Mantenés ε en la banda óptima (0.03–0.30)\npara avanzar al siguiente tier del sistema.",
-			Color(0.3, 0.8, 1.0))
+		notify_milestone("homeostasis_reached", tr("TUTO_MT_HOMEO_TITLE"), tr("TUTO_MT_HOMEO_BODY"), Color(0.3, 0.8, 1.0))
 
 	# Primera Trascendencia
 	if not _milestones_seen.has("first_trascendencia") and LegacyManager.trascendencia_count > 0:
-		notify_milestone("first_trascendencia",
-			"¡Primera Trascendencia!",
-			"Ganaste [b]Puntos de Legado[/b].\nEl sistema reinicia pero los buffs permanentes se conservan.",
-			Color(0.8, 0.4, 1.0))
+		notify_milestone("first_trascendencia", tr("TUTO_MT_TRAS_TITLE"), tr("TUTO_MT_TRAS_BODY"), Color(0.8, 0.4, 1.0))
 
 	# Detección de nuevas mutaciones
 	if not _all_mutations_seen:
 		var all_seen := true
-		for m_id: String in MUTATION_HINTS:
+		for m_id: String in _MUTATION_KEYS:
 			if not _mutations_toasted.has(m_id):
 				all_seen = false
 				var val: Variant = EvoManager.get("mutation_" + m_id)
@@ -556,10 +538,10 @@ func notify_milestone(id: String, title: String, body: String, border_color: Col
 
 
 func _show_mutation_toast(m_id: String) -> void:
-	var hint: String = MUTATION_HINTS.get(m_id, "")
-	if hint == "":
+	var key: String = _MUTATION_KEYS.get(m_id, "")
+	if key == "":
 		return
-	_show_toast("Nueva Mutación", hint, Color(0.35, 0.92, 0.45))
+	_show_toast(tr("TUTO_TOAST_MUT_TITLE"), tr(key), Color(0.35, 0.92, 0.45))
 
 
 # ==================== FASE 3 — PANEL DE OBJETIVOS ====================
@@ -592,7 +574,7 @@ func toggle_objectives_panel(parent: Node) -> void:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "Progreso de la Run"
+	title.text = tr("TUTO_OBJ_TITLE")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 	title.add_theme_color_override("font_color", Color(0.4, 0.92, 0.55))
@@ -610,7 +592,7 @@ func toggle_objectives_panel(parent: Node) -> void:
 	vbox.add_child(HSeparator.new())
 
 	var btn_close := Button.new()
-	btn_close.text = "Cerrar"
+	btn_close.text = tr("TUTO_BTN_CLOSE")
 	btn_close.custom_minimum_size = Vector2(0.0, 40.0)
 	btn_close.pressed.connect(func():
 		if is_instance_valid(_objectives_panel):
@@ -675,7 +657,7 @@ func _build_milestones_bbcode() -> String:
 		t += "\n"
 
 	var pct := int(100.0 * done_count / total)
-	t += "[color=#888888]Progreso: %d / %d  (%d%%)[/color]\n" % [done_count, total, pct]
+	t += tr("TUTO_OBJ_PROGRESS") % [done_count, total, pct]
 
 	if next_text != "" and not RunManager.run_closed:
 		t += "\n[color=cyan]Proximo objetivo:[/color]\n  " + next_text
@@ -692,7 +674,7 @@ func _any_upgrade_purchased() -> bool:
 
 
 func _any_mutation_active() -> bool:
-	for m_id: String in MUTATION_HINTS:
+	for m_id: String in _MUTATION_KEYS:
 		var v: Variant = EvoManager.get("mutation_" + m_id)
 		if v is bool and (v as bool):
 			return true
@@ -701,7 +683,7 @@ func _any_mutation_active() -> bool:
 
 func _mutation_count() -> int:
 	var n := 0
-	for m_id: String in MUTATION_HINTS:
+	for m_id: String in _MUTATION_KEYS:
 		var v: Variant = EvoManager.get("mutation_" + m_id)
 		if v is bool and (v as bool):
 			n += 1
@@ -833,7 +815,7 @@ func _show_welcome_overlay() -> void:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "Bienvenido a AntiIDLE"
+	title.text = tr("TUTO_WELCOME_TITLE")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", AccessibilityManager.fs(30))
 	title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.1))
@@ -861,14 +843,14 @@ func _show_welcome_overlay() -> void:
 	vbox.add_child(btn_row)
 
 	var btn_skip := Button.new()
-	btn_skip.text = "Omitir tutorial"
+	btn_skip.text = tr("TUTO_BTN_SKIP")
 	btn_skip.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	btn_skip.modulate = Color(0.65, 0.65, 0.65)
 	btn_skip.pressed.connect(func(): skip_tutorial())
 	btn_row.add_child(btn_skip)
 
 	var btn_start := Button.new()
-	btn_start.text = "  Empezar  "
+	btn_start.text = tr("TUTO_BTN_START")
 	btn_start.custom_minimum_size = Vector2(0.0, 48.0)
 	btn_start.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
 	btn_start.pressed.connect(func(): _advance())
