@@ -64,6 +64,7 @@ const TRANSLATIONS := {
 		"SET_FONT_HINT": "Requiere reinicio de escena al cambiar.",
 		"SET_REDUCE_MOTION": "Reducir movimiento (sin animaciones)",
 		"SET_HIGH_CONTRAST": "Alto contraste",
+		"SET_REACTOR_3D": "Reactor 3D",
 		"SET_COLORBLIND": "Daltonismo:",
 		"SET_COLORBLIND_OFF": "Desactivado",
 
@@ -1160,6 +1161,7 @@ const TRANSLATIONS := {
 		"SET_FONT_HINT": "Requires scene restart to apply.",
 		"SET_REDUCE_MOTION": "Reduce motion (no animations)",
 		"SET_HIGH_CONTRAST": "High contrast",
+		"SET_REACTOR_3D": "3D Reactor",
 		"SET_COLORBLIND": "Color blindness:",
 		"SET_COLORBLIND_OFF": "Disabled",
 

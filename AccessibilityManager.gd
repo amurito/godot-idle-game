@@ -21,6 +21,9 @@ var high_contrast: bool = false
 ## Modo daltonismo. 0=OFF 1=Deuteranopía 2=Protanopía 3=Tritanopía
 var colorblind_mode: int = ColorblindMode.OFF
 
+## Si true, muestra reactor 3D; si false, muestra reactor 2D con efectos por ruta
+var reactor_3d_enabled: bool = true
+
 signal settings_changed
 
 
@@ -96,6 +99,12 @@ func set_colorblind_mode(v: int) -> void:
 	settings_changed.emit()
 
 
+func set_reactor_3d(v: bool) -> void:
+	reactor_3d_enabled = v
+	_save_settings()
+	settings_changed.emit()
+
+
 func _load_settings() -> void:
 	if not FileAccess.file_exists(SETTINGS_PATH):
 		return
@@ -108,18 +117,20 @@ func _load_settings() -> void:
 	if json.parse(text) != OK:
 		return
 	var data: Dictionary = json.data
-	font_scale      = float(data.get("font_scale",      1.0))
-	reduce_motion   = bool(data.get("reduce_motion",   false))
-	high_contrast   = bool(data.get("high_contrast",   false))
-	colorblind_mode = int(data.get("colorblind_mode",  0))
+	font_scale         = float(data.get("font_scale",         1.0))
+	reduce_motion      = bool(data.get("reduce_motion",      false))
+	high_contrast      = bool(data.get("high_contrast",      false))
+	colorblind_mode    = int(data.get("colorblind_mode",     0))
+	reactor_3d_enabled = bool(data.get("reactor_3d_enabled", true))
 
 
 func _save_settings() -> void:
 	var data := {
-		"font_scale":      font_scale,
-		"reduce_motion":   reduce_motion,
-		"high_contrast":   high_contrast,
-		"colorblind_mode": colorblind_mode,
+		"font_scale":         font_scale,
+		"reduce_motion":      reduce_motion,
+		"high_contrast":      high_contrast,
+		"colorblind_mode":    colorblind_mode,
+		"reactor_3d_enabled": reactor_3d_enabled,
 	}
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file:

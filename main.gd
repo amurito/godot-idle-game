@@ -8,7 +8,7 @@ const FUNGI_UI_SCENE = preload("res://fungi.tscn")
 var fungi_ui: Control
 
 var reactor_visual: Node = null
-var _use_3d_reactor: bool = true
+var _use_3d_reactor: bool = true  # overridden by AccessibilityManager in _ready()
 var reactor_3d: Node = null
 var _3d_power_label: Label = null
 
@@ -493,6 +493,7 @@ func _ready():
 	if OS.get_name() == "HTML5":
 		print("🔄 HTML5 detectado - Reemplazando emojis...")
 		call_deferred("_replace_emojis_for_html5")
+	_use_3d_reactor = AccessibilityManager.reactor_3d_enabled
 	if _use_3d_reactor:
 		_init_reactor_3d()
 
@@ -636,6 +637,25 @@ func _sync_reactor_viewport() -> void:
 	) as SubViewport
 	if is_instance_valid(cont) and is_instance_valid(vp):
 		pass  # stretch=true en SubViewportContainer maneja el resize automáticamente
+
+func toggle_reactor_mode(use_3d: bool) -> void:
+	if use_3d == _use_3d_reactor:
+		return
+	_use_3d_reactor = use_3d
+	var container := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer")
+	var rv := get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual")
+	if use_3d:
+		if not is_instance_valid(reactor_3d):
+			_init_reactor_3d()
+		else:
+			if is_instance_valid(container): container.visible = true
+			if is_instance_valid(rv): rv.visible = false
+			if is_instance_valid(_3d_power_label): _3d_power_label.visible = true
+	else:
+		if is_instance_valid(container): container.visible = false
+		if is_instance_valid(rv): rv.visible = true
+		if is_instance_valid(_3d_power_label): _3d_power_label.visible = false
+
 
 func _mount_fungi_dlc():
 	await get_tree().process_frame

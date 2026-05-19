@@ -732,7 +732,7 @@ func get_reactor_color() -> Color:
 
 	# Prioridad 3: Mutaciones base activas
 	if mutation_hyperassimilation:
-		return Color(1.0, 0.1, 0.6)       # Magenta
+		return Color(0.95, 0.05, 0.05)    # Rojo
 	if mutation_homeorhesis:
 		return Color(0.55, 1.0, 0.92)     # Aqua Nacarado (NG+++)
 	if mutation_allostasis:
@@ -741,6 +741,8 @@ func get_reactor_color() -> Color:
 		return Color(0.05, 0.88, 0.68)    # Verde Equilibrio
 	if mutation_parasitism:
 		return Color(1.0, 0.45, 0.0)      # Naranja
+	if nucleo_conciencia:
+		return Color(0.2, 0.5, 1.0)       # Azul Eléctrico (SINGULARIDAD)
 	if mutation_red_micelial:
 		return Color(0.3, 1.0, 0.3)       # Verde Hoja
 	if mutation_symbiosis:

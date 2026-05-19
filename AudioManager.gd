@@ -584,6 +584,18 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 		AccessibilityManager.set_high_contrast(pressed))
 	box.add_child(contrast_cb)
 
+	# ── Reactor 3D ───────────────────────────────────
+	var reactor_cb := CheckBox.new()
+	reactor_cb.text = tr("SET_REACTOR_3D")
+	reactor_cb.button_pressed = AccessibilityManager.reactor_3d_enabled
+	reactor_cb.toggled.connect(func(pressed: bool):
+		AccessibilityManager.set_reactor_3d(pressed)
+		var main = Engine.get_main_loop().current_scene
+		if main and main.has_method("toggle_reactor_mode"):
+			main.toggle_reactor_mode(pressed)
+	)
+	box.add_child(reactor_cb)
+
 	# ── Modo daltonismo ──────────────────────────────
 	var cb_row := HBoxContainer.new()
 	cb_row.add_theme_constant_override("separation", 10)
