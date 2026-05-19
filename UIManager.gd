@@ -63,11 +63,14 @@ var header_nutrientes_value
 
 # ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
 var genome_scroll            # GenomeScroll ScrollContainer (togglable)
+var genome_toggle_btn        # MutationToggleBtn Button (locale-aware header)
 var route_badge_label        # Label en el header mostrando la ruta activa
 
 # ========== RIGHT PANEL COLLAPSIBLES (Phase 4) ==========
 var economy_content          # EconomyContent VBoxContainer (togglable)
+var economy_toggle_btn       # EconomyToggleBtn Button (locale-aware header)
 var structural_content       # StructuralContent GridContainer (togglable)
+var structural_toggle_btn    # StructuralToggleBtn Button (locale-aware header)
 var structural_eps_value     # EpsValue label
 var structural_omg_value     # OmgValue label
 var structural_pers_value    # PersValue label
@@ -142,10 +145,11 @@ func setup(ui_root: Control):
 
 	# Center panel collapsible — Genoma Fúngico
 	genome_scroll = _find("GenomeScroll")
-	var mutation_toggle_btn = _find("MutationToggleBtn")
-	if mutation_toggle_btn and genome_scroll:
-		mutation_toggle_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(genome_scroll, mutation_toggle_btn, pressed, tr("UI_PANEL_GENOME"))
+	genome_toggle_btn = _find("MutationToggleBtn")
+	if genome_toggle_btn and genome_scroll:
+		genome_toggle_btn.text = EmojiToRichText.strip("▼ " + tr("UI_PANEL_GENOME"))
+		genome_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(genome_scroll, genome_toggle_btn, pressed, tr("UI_PANEL_GENOME"))
 		)
 
 	# Right panel collapsibles (Phase 4)
@@ -157,17 +161,22 @@ func setup(ui_root: Control):
 	structural_acc_value = _find("AccValue")
 
 	# Wire toggle buttons for collapsible sections (Phase 6 — Smooth Transitions)
-	var economy_btn = _find("EconomyToggleBtn")
-	if economy_btn:
-		economy_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(economy_content, economy_btn, pressed, tr("UI_PANEL_ECONOMY"))
+	economy_toggle_btn = _find("EconomyToggleBtn")
+	if economy_toggle_btn:
+		economy_toggle_btn.text = EmojiToRichText.strip("▼ " + tr("UI_PANEL_ECONOMY"))
+		economy_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(economy_content, economy_toggle_btn, pressed, tr("UI_PANEL_ECONOMY"))
 		)
 
-	var structural_btn = _find("StructuralToggleBtn")
-	if structural_btn:
-		structural_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(structural_content, structural_btn, pressed, tr("UI_PANEL_STRUCTURE"))
+	structural_toggle_btn = _find("StructuralToggleBtn")
+	if structural_toggle_btn:
+		structural_toggle_btn.text = EmojiToRichText.strip("▶ " + tr("UI_PANEL_STRUCTURE"))
+		structural_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(structural_content, structural_toggle_btn, pressed, tr("UI_PANEL_STRUCTURE"))
 		)
+
+	if not LocaleManager.locale_changed.is_connected(refresh_panel_labels):
+		LocaleManager.locale_changed.connect(refresh_panel_labels)
 
 	# Route badge — RichTextLabel para soporte de emojis en web (Label rompería en HTML5)
 	var header_content = _find_scene("HeaderContent")
@@ -196,6 +205,17 @@ func setup(ui_root: Control):
 	sporulation_final_button = _find_scene("SporulationFinalButton")
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
+
+func refresh_panel_labels(_locale: String = "") -> void:
+	if is_instance_valid(economy_toggle_btn):
+		var pressed := economy_toggle_btn.button_pressed
+		economy_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_ECONOMY"))
+	if is_instance_valid(structural_toggle_btn):
+		var pressed := structural_toggle_btn.button_pressed
+		structural_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_STRUCTURE"))
+	if is_instance_valid(genome_toggle_btn):
+		var pressed := genome_toggle_btn.button_pressed
+		genome_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_GENOME"))
 
 func _make_fill_style(color: Color) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
@@ -938,7 +958,7 @@ func _build_run_end_lore(route: String) -> String:
 			"nerfs": [tr("LORE_SIMB_N1"), tr("LORE_SIMB_N2"), tr("LORE_SIMB_N3")]
 		},
 		"SINGULARIDAD": {
-			"emoji": "📡", "color": "#00ffff",
+			"emoji": "📡", "color": "#ffd060",
 			"lore": tr("LORE_SING_LORE"),
 			"buffs": [tr("LORE_SING_B1"), tr("LORE_SING_B2"), tr("LORE_SING_B3")],
 			"nerfs": [tr("LORE_SING_N1"), tr("LORE_SING_N2")]
