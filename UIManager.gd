@@ -208,13 +208,13 @@ func setup(ui_root: Control):
 
 func refresh_panel_labels(_locale: String = "") -> void:
 	if is_instance_valid(economy_toggle_btn):
-		var pressed := economy_toggle_btn.button_pressed
+		var pressed: bool = economy_toggle_btn.button_pressed
 		economy_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_ECONOMY"))
 	if is_instance_valid(structural_toggle_btn):
-		var pressed := structural_toggle_btn.button_pressed
+		var pressed: bool = structural_toggle_btn.button_pressed
 		structural_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_STRUCTURE"))
 	if is_instance_valid(genome_toggle_btn):
-		var pressed := genome_toggle_btn.button_pressed
+		var pressed: bool = genome_toggle_btn.button_pressed
 		genome_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_GENOME"))
 
 func _make_fill_style(color: Color) -> StyleBoxFlat:
