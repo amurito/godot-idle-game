@@ -10,9 +10,9 @@ extends Node2D
 # =========================
 # CONFIG
 # =========================
-const BASE_CORE_SCALE := 0.35
-const SCALE_LOG_FACTOR := 0.22
-const MAX_SCALE := 3.5
+const BASE_CORE_SCALE := 0.22
+const SCALE_LOG_FACTOR := 0.14
+const MAX_SCALE := 1.8
 
 const PULSE_DECAY := 5.0
 const PULSE_STRENGTH := 0.35

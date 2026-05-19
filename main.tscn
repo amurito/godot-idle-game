@@ -261,7 +261,7 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="BigClickButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
-custom_minimum_size = Vector2(320, 260)
+custom_minimum_size = Vector2(320, 210)
 layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 4
@@ -271,10 +271,11 @@ theme = ExtResource("2_0xm2m")
 theme_override_font_sizes/font_size = 30
 flat = true
 icon_alignment = 1
+clip_contents = true
 script = ExtResource("3_h2yge")
 
 [node name="ReactorVisual" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton"]
-position = Vector2(155, 70)
+position = Vector2(160, 105)
 script = ExtResource("4_1bvp3")
 
 [node name="Core" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
