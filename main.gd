@@ -802,10 +802,11 @@ func _on_logic_tick():
 				_3d_power_label.text = "AUTO\n+%.1f" % power
 			else:
 				_3d_power_label.text = "+%.1f" % power
-		elif not _use_3d_reactor:
-			UIManager.big_click_button.set_display_delta(power)
+		elif not _use_3d_reactor and is_instance_valid(reactor_visual):
 			if RunManager.mente_colmena_active:
-				UIManager.big_click_button.text = EmojiToRichText.strip("🧠 AUTO-OVERRIDE")
+				reactor_visual.set_display_text(EmojiToRichText.strip("🧠 AUTO-OVERRIDE"))
+			else:
+				reactor_visual.set_display_delta(power)
 
 	# 5) Parasitismo: drenaje masivo de ingresos (Corrosi�n Estructural)
 	if EvoManager.mutation_parasitism:

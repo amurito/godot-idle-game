@@ -43,6 +43,11 @@ func set_display_delta(value: float) -> void:
 		var sz := int(clamp(log(1.0 + active_delta) * 3.0 + 8.0, 8.0, 26.0))
 		value_label.add_theme_font_size_override("font_size", sz)
 
+func set_display_text(text: String) -> void:
+	if is_instance_valid(value_label):
+		value_label.text = text
+		value_label.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+
 func set_tint(c: Color) -> void:
 	target_tint = c
 

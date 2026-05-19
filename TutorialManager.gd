@@ -184,35 +184,10 @@ func reset_tutorial() -> void:
 
 # ==================== FASE 2 — TOOLTIPS DE HEADER ====================
 
-const _TOOLTIP_MU := (
-	"[b][color=#ff88ff]μ — Capital Cognitivo[/color][/b]\n\n"
-	+ "Amplifica la persistencia estructural del sistema.\n"
-	+ "Crece con mejoras de [b]Capital Cognitivo[/b]\ny se potencia con [b]Contabilidad[/b].\n\n"
-	+ "μ = 1 + ln(1 + n) × 0.08\n\n"
-	+ "[color=cyan]Contabilidad: ×1.08 por nivel.[/color]\n"
-	+ "[color=#aaaaff]Resiliencia: hasta ×1.30 extra.[/color]"
-)
-const _TOOLTIP_EPSILON := (
-	"[b][color=yellow]ε — Estrés Estructural[/color][/b]\n\n"
-	+ "Tensión interna del sistema.\n"
-	+ "Sube con cada clic, baja con mejoras.\n\n"
-	+ "[color=#88ff88]< 0.35[/color]  Biología y orden disponibles\n"
-	+ "[color=#ffaa44]> 0.40[/color]  Hiperasimilación se despierta\n"
-	+ "[color=#ff8888]> 0.65[/color]  Expansión micelial bloqueada\n"
-	+ "[color=#ff4444]> 0.80[/color]  Ω colapsa hacia 0\n"
-)
-const _TOOLTIP_OMEGA := (
-	"[b][color=cyan]Ω — Flexibilidad Estructural[/color][/b]\n\n"
-	+ "Opuesto al estrés. Alta Ω = adaptable.\n"
-	+ "Ω = 1 / (1 + ε · k · n)\n\n"
-	+ "[color=#88ff88]Mejoras estructurales mantienen Ω alto.[/color]"
-)
-const _TOOLTIP_BIOMASA := (
-	"[b][color=#88ff88]Biomasa[/color][/b]\n\n"
-	+ "Recurso del sistema fúngico.\n"
-	+ "Crece con el ciclo microbiano, se consume\nen mutaciones y evoluciones.\n\n"
-	+ "[color=cyan]Necesaria para evolucionar.[/color]"
-)
+const _TOOLTIP_KEY_EPSILON  := "TUTO_TIP_EPSILON"
+const _TOOLTIP_KEY_OMEGA    := "TUTO_TIP_OMEGA"
+const _TOOLTIP_KEY_BIOMASA  := "TUTO_TIP_BIOMASA"
+const _TOOLTIP_KEY_MU       := "TUTO_TIP_MU"
 
 
 func setup_header_tooltips() -> void:
@@ -220,12 +195,12 @@ func setup_header_tooltips() -> void:
 
 
 func _wire_header_tooltips() -> void:
-	_wire_tooltip(UIManager.header_epsilon_value, _TOOLTIP_EPSILON)
-	_wire_tooltip(UIManager.header_epsilon_bar,   _TOOLTIP_EPSILON)
-	_wire_tooltip(UIManager.header_omega_value,   _TOOLTIP_OMEGA)
-	_wire_tooltip(UIManager.header_omega_bar,     _TOOLTIP_OMEGA)
-	_wire_tooltip(UIManager.header_biomasa_value, _TOOLTIP_BIOMASA)
-	_wire_tooltip(UIManager.header_biomasa_bar,   _TOOLTIP_BIOMASA)
+	_wire_tooltip(UIManager.header_epsilon_value, _TOOLTIP_KEY_EPSILON)
+	_wire_tooltip(UIManager.header_epsilon_bar,   _TOOLTIP_KEY_EPSILON)
+	_wire_tooltip(UIManager.header_omega_value,   _TOOLTIP_KEY_OMEGA)
+	_wire_tooltip(UIManager.header_omega_bar,     _TOOLTIP_KEY_OMEGA)
+	_wire_tooltip(UIManager.header_biomasa_value, _TOOLTIP_KEY_BIOMASA)
+	_wire_tooltip(UIManager.header_biomasa_bar,   _TOOLTIP_KEY_BIOMASA)
 	# μ: tooltip solo disponible cuando Capital Cognitivo está activo
 	var fl: Variant = UIManager.formula_label
 	if fl != null and is_instance_valid(fl) and fl is Control:
@@ -233,19 +208,19 @@ func _wire_header_tooltips() -> void:
 		fctrl.mouse_filter = Control.MOUSE_FILTER_PASS
 		fctrl.mouse_entered.connect(func():
 			if UpgradeManager.level("cognitive") > 0:
-				_show_tooltip(fctrl, _TOOLTIP_MU)
+				_show_tooltip(fctrl, tr(_TOOLTIP_KEY_MU))
 		)
 		fctrl.mouse_exited.connect(func(): _hide_tooltip())
 
 
-func _wire_tooltip(node: Variant, text: String) -> void:
+func _wire_tooltip(node: Variant, key: String) -> void:
 	if node == null or not is_instance_valid(node):
 		return
 	if not node is Control:
 		return
 	var ctrl := node as Control
 	ctrl.mouse_filter = Control.MOUSE_FILTER_PASS
-	ctrl.mouse_entered.connect(func(): _show_tooltip(ctrl, text))
+	ctrl.mouse_entered.connect(func(): _show_tooltip(ctrl, tr(key)))
 	ctrl.mouse_exited.connect(func(): _hide_tooltip())
 
 
