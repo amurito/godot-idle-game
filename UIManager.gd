@@ -57,11 +57,14 @@ var header_biomasa_value
 
 # ========== CENTER PANEL COLLAPSIBLE — GENOMA ==========
 var genome_scroll            # GenomeScroll ScrollContainer (togglable)
+var genome_toggle_btn        # MutationToggleBtn Button (locale-aware header)
 var route_badge_label        # Label en el header mostrando la ruta activa
 
 # ========== RIGHT PANEL COLLAPSIBLES (Phase 4) ==========
 var economy_content          # EconomyContent VBoxContainer (togglable)
+var economy_toggle_btn       # EconomyToggleBtn Button (locale-aware header)
 var structural_content       # StructuralContent GridContainer (togglable)
+var structural_toggle_btn    # StructuralToggleBtn Button (locale-aware header)
 var structural_eps_value     # EpsValue label
 var structural_omg_value     # OmgValue label
 var structural_pers_value    # PersValue label
@@ -130,10 +133,11 @@ func setup(ui_root: Control):
 
 	# Center panel collapsible — Genoma Fúngico
 	genome_scroll = _find("GenomeScroll")
-	var mutation_toggle_btn = _find("MutationToggleBtn")
-	if mutation_toggle_btn and genome_scroll:
-		mutation_toggle_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(genome_scroll, mutation_toggle_btn, pressed, "Genoma Fúngico + Próxima Mutación")
+	genome_toggle_btn = _find("MutationToggleBtn")
+	if genome_toggle_btn and genome_scroll:
+		genome_toggle_btn.text = EmojiToRichText.strip("▼ " + tr("UI_PANEL_GENOME"))
+		genome_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(genome_scroll, genome_toggle_btn, pressed, tr("UI_PANEL_GENOME"))
 		)
 
 	# Right panel collapsibles (Phase 4)
@@ -145,17 +149,23 @@ func setup(ui_root: Control):
 	structural_acc_value = _find("AccValue")
 
 	# Wire toggle buttons for collapsible sections (Phase 6 — Smooth Transitions)
-	var economy_btn = _find("EconomyToggleBtn")
-	if economy_btn:
-		economy_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(economy_content, economy_btn, pressed, "Economía")
+	economy_toggle_btn = _find("EconomyToggleBtn")
+	if economy_toggle_btn:
+		economy_toggle_btn.text = EmojiToRichText.strip("▼ " + tr("UI_PANEL_ECONOMY"))
+		economy_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(economy_content, economy_toggle_btn, pressed, tr("UI_PANEL_ECONOMY"))
 		)
 
-	var structural_btn = _find("StructuralToggleBtn")
-	if structural_btn:
-		structural_btn.toggled.connect(func(pressed: bool):
-			_toggle_collapsible_panel(structural_content, structural_btn, pressed, "Estructura")
+	structural_toggle_btn = _find("StructuralToggleBtn")
+	if structural_toggle_btn:
+		structural_toggle_btn.text = EmojiToRichText.strip("▶ " + tr("UI_PANEL_STRUCTURE"))
+		structural_toggle_btn.toggled.connect(func(pressed: bool):
+			_toggle_collapsible_panel(structural_content, structural_toggle_btn, pressed, tr("UI_PANEL_STRUCTURE"))
 		)
+
+	# Conectar locale_changed para refrescar etiquetas de secciones
+	if not LocaleManager.locale_changed.is_connected(refresh_panel_labels):
+		LocaleManager.locale_changed.connect(refresh_panel_labels)
 
 	# Route badge — RichTextLabel para soporte de emojis en web (Label rompería en HTML5)
 	var header_content = _find_scene("HeaderContent")
@@ -184,6 +194,17 @@ func setup(ui_root: Control):
 	sporulation_final_button = _find_scene("SporulationFinalButton")
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
+
+func refresh_panel_labels(_locale: String = "") -> void:
+	if is_instance_valid(economy_toggle_btn):
+		var pressed := economy_toggle_btn.button_pressed
+		economy_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_ECONOMY"))
+	if is_instance_valid(structural_toggle_btn):
+		var pressed := structural_toggle_btn.button_pressed
+		structural_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_STRUCTURE"))
+	if is_instance_valid(genome_toggle_btn):
+		var pressed := genome_toggle_btn.button_pressed
+		genome_toggle_btn.text = EmojiToRichText.strip(("▼ " if pressed else "▶ ") + tr("UI_PANEL_GENOME"))
 
 func _find(node_name: String):
 	return root.find_child(node_name, true, false)
@@ -836,7 +857,7 @@ func _build_run_end_lore(route: String) -> String:
 			"nerfs": ["Pasivo -50% (atrofia autómata)", "Requiere estabilidad ecosistema > 40% (Ω ≥ 0.40)", "Desaparece si la estabilidad colapsa"]
 		},
 		"SINGULARIDAD": {
-			"emoji": "📡", "color": "#00ffff",
+			"emoji": "📡", "color": "#ffd060",
 			"lore": "Punto de no retorno tecnológico. La Mecánica Simbiótica integró el tejido fúngico al mainframe. Ya no hay distinción entre código y micelio.",
 			"buffs": ["Núcleo de Conciencia sincronizado (+20% eficiencia tecnológica)", "Desbloquea MENTE COLMENA en NG+ (ratio 50/50 por 180s)", "PL variable (6 + bonus ε)"],
 			"nerfs": ["Requiere Simbiosis previa (NG+) + Rama Mecánica elegida", "Requiere 90s de sincronización sin interrupciones (ε ≤ 0.25)"]
@@ -960,50 +981,50 @@ func build_genome_text() -> String:
 	elif RunManager.reencarnacion_active:
 		t += "[b][color=#44ee99]⚱️ REENCARNACIÓN HEREDADA[/color][/b]\n"
 		t += "[color=#888888]Upgrades heredados del ciclo anterior. Costos escalan ×1.5 extra.[/color]\n\n"
-	t += "🧬 GENOMA FÚNGICO\n"
-	t += "Hiperasimilación: " + EvoManager.genome.hiperasimilacion + "\n"
-	t += "Parasitismo: " + EvoManager.genome.parasitismo + "\n"
-	t += "Red micelial: " + EvoManager.genome.red_micelial + "\n"
-	t += "Esporulación: " + EvoManager.genome.esporulacion + "\n"
-	t += "Simbiosis: " + EvoManager.genome.simbiosis + "\n"
+	t += tr("GENOME_FUNGICO") + "\n"
+	t += tr("MUT_LABEL_HIPERAS") + ": " + tr("MUT_STATE_" + EvoManager.genome.hiperasimilacion.to_upper()) + "\n"
+	t += tr("MUT_LABEL_PARASIT") + ": " + tr("MUT_STATE_" + EvoManager.genome.parasitismo.to_upper()) + "\n"
+	t += tr("MUT_LABEL_RED") + ": " + tr("MUT_STATE_" + EvoManager.genome.red_micelial.to_upper()) + "\n"
+	t += tr("MUT_LABEL_ESPOR") + ": " + tr("MUT_STATE_" + EvoManager.genome.esporulacion.to_upper()) + "\n"
+	t += tr("MUT_LABEL_SIMBIO") + ": " + tr("MUT_STATE_" + EvoManager.genome.simbiosis.to_upper()) + "\n"
 	var dep_state: String = EvoManager.genome.get("depredador", "dormido")
 	if dep_state != "dormido" or EvoManager.mutation_depredador:
-		t += "Depredador: " + dep_state + "\n"
+		t += tr("MUT_LABEL_DEP") + ": " + tr("MUT_STATE_" + dep_state.to_upper()) + "\n"
 	var mo_state: String = EvoManager.genome.get("met_oscuro", "dormido")
 	if mo_state != "dormido" or EvoManager.mutation_met_oscuro:
-		t += "Met.Oscuro: " + mo_state + "\n"
+		t += tr("MUT_LABEL_MO") + ": " + tr("MUT_STATE_" + mo_state.to_upper()) + "\n"
 
 	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 METABOLISMO OSCURO (Post-Depredador):[/color][/b]\n"
-		t += "[color=#00ff00]+ Pasivo = Bio × 0.8/s · Click ×3 · Biomasa autoalimentada[/color]\n"
-		t += "[color=#ff4444]- Upgrades bloqueados · Ω 0.10 · Devorar detenido[/color]\n"
+		t += "[b][color=#8844aa]🌑 " + tr("GENOME_MO_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_MO_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_MO_NERF") + "[/color]\n"
 	elif EvoManager.mutation_depredador:
-		t += "[b][color=#ff0055]☠️ DEPREDADOR DE REALIDADES:[/color][/b]\n"
-		t += "[color=#00ff00]+ Devora upgrade cada 1.5s (+15 biomasa)[/color]\n"
-		t += "[color=#ff4444]- Agotar upgrades cierra la run[/color]\n"
+		t += "[b][color=#ff0055]☠️ " + tr("GENOME_DEP_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_DEP_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_DEP_NERF") + "[/color]\n"
 	elif EvoManager.mutation_hyperassimilation:
-		t += "[b][color=magenta]⚠️ HIPERASIMILACIÓN (Active Rush):[/color][/b]\n"
-		t += "[color=#00ff00]+ Sobrecarga Click PUSH x10.0[/color]\n"
-		t += "[color=#ff4444]- Producción pasiva atrofiada (-75%)[/color]\n"
-		t += "[color=#ff4444]- Colapso persistencia inminente[/color]\n"
+		t += "[b][color=magenta]⚠️ " + tr("GENOME_HIPERAS_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + tr("GENOME_HIPERAS_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_HIPERAS_NERF1") + "[/color]\n"
+		t += "[color=#ff4444]" + tr("GENOME_HIPERAS_NERF2") + "[/color]\n"
 	elif EvoManager.genome.hiperasimilacion == "latente":
-		t += "\n[color=gray]• Hiperasimilación (LATENTE)[/color]"
+		t += "\n[color=gray]• " + tr("GENOME_HIPERAS_LATENTE") + "[/color]"
 
 	if EvoManager.mutation_met_oscuro:
-		t += "\n🌑 Ruta evolutiva: METABOLISMO OSCURO"
+		t += "\n🌑 " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_MET_OSCURO")
 	elif EvoManager.mutation_depredador:
-		t += "\n☠️ Ruta evolutiva: DEPREDADOR DE REALIDADES"
+		t += "\n☠️ " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_DEPREDADOR")
 	elif EvoManager.mutation_homeostasis:
-		t += "\n⚖️ Ruta evolutiva: HOMEOSTASIS"
+		t += "\n⚖️ " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_HOMEOSTASIS")
 	elif EvoManager.mutation_hyperassimilation:
-		t += "\n⚠️ Ruta evolutiva: HIPERASIMILACIÓN"
+		t += "\n⚠️ " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_HIPERASIMILACION")
 	elif EvoManager.mutation_symbiosis:
-		t += "\n🌱 Ruta evolutiva: SIMBIOSIS"
+		t += "\n🌱 " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_SIMBIOSIS")
 	elif EvoManager.mutation_parasitism:
-		t += "\n🦠 Ruta evolutiva: PARASITISMO"
+		t += "\n🦠 " + tr("MUT_ROUTE_PREFIX") + ": " + tr("MUT_PARASITISMO")
 
 	if RunManager.run_closed:
-		t += "\n\n🏁 FINAL ALCANZADO: " + RunManager.final_route
+		t += "\n\n" + tr("GENOME_FINAL") + RunManager.final_route
 	return t
 
 func build_mutation_status_text() -> String:
