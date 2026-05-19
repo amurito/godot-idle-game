@@ -803,10 +803,7 @@ func _on_logic_tick():
 			else:
 				_3d_power_label.text = "+%.1f" % power
 		elif not _use_3d_reactor and is_instance_valid(reactor_visual):
-			if RunManager.mente_colmena_active:
-				reactor_visual.set_display_text(EmojiToRichText.strip("🧠 AUTO-OVERRIDE"))
-			else:
-				reactor_visual.set_display_delta(power)
+			reactor_visual.set_display_delta(power)
 
 	# 5) Parasitismo: drenaje masivo de ingresos (Corrosi�n Estructural)
 	if EvoManager.mutation_parasitism:
@@ -1547,6 +1544,22 @@ func _input(event):
 	if event.is_action_pressed("ui_debug"):
 		StructuralModel.epsilon_debug = !StructuralModel.epsilon_debug
 		print("e DEBUG =", StructuralModel.epsilon_debug)
+
+	# ESC — cerrar panel activo (Settings > Banco Genético > EvoChoice)
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			if is_instance_valid(AudioManager._settings_panel):
+				AudioManager._close_settings_panel()
+				get_viewport().set_input_as_handled()
+				return
+			if is_instance_valid(legacy_panel) and legacy_panel.visible:
+				_on_close_legacy_pressed()
+				get_viewport().set_input_as_handled()
+				return
+			if is_instance_valid(evo_choice_panel) and evo_choice_panel.visible:
+				evo_choice_panel.visible = false
+				get_viewport().set_input_as_handled()
+				return
 
 	# Lab Mode toggle con tecla L � muestra/oculta f�rmulas, genoma y todos los eventos
 	if event is InputEventKey and event.pressed and not event.echo:
