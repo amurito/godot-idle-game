@@ -583,32 +583,32 @@ func toggle_objectives_panel(parent: Node) -> void:
 func _build_milestones_bbcode() -> String:
 	# Secciones: [nombre, [[done_bool, label], ...]]
 	var sections: Array = [
-		["Inicio", [
-			[true,                                                        "Run iniciada"],
-			[_any_upgrade_purchased(),                                    "Primera mejora comprada"],
-			[_had_passive_income or UpgradeManager.level("auto") > 0,    "Ingreso pasivo activo ($/s)"],
+		["TUTO_SEC_START", [
+			[true,                                                        "TUTO_MS_RUN_STARTED"],
+			[_any_upgrade_purchased(),                                    "TUTO_MS_FIRST_UPGRADE"],
+			[_had_passive_income or UpgradeManager.level("auto") > 0,    "TUTO_MS_PASSIVE"],
 		]],
-		["Crecimiento", [
-			[UpgradeManager.level("trueque") > 0,                        "Red de produccion establecida"],
-			[UpgradeManager.level("cognitive") > 0,                      "Capital Cognitivo activado (u)"],
-			[UpgradeManager.level("trueque_net") > 0,                    "Red de trueque expandida"],
-			[UpgradeManager.level("specialization") > 0,                 "Especializacion funcional"],
-			[UpgradeManager.level("accounting") > 0,                     "Institucion de Contabilidad"],
-			[UpgradeManager.level("persistence") > 0,                    "Persistencia del sistema activa"],
+		["TUTO_SEC_GROWTH", [
+			[UpgradeManager.level("trueque") > 0,                        "TUTO_MS_PROD_NET"],
+			[UpgradeManager.level("cognitive") > 0,                      "TUTO_MS_COGNITIVE"],
+			[UpgradeManager.level("trueque_net") > 0,                    "TUTO_MS_BARTER_NET"],
+			[UpgradeManager.level("specialization") > 0,                 "TUTO_MS_SPECIALIZATION"],
+			[UpgradeManager.level("accounting") > 0,                     "TUTO_MS_ACCOUNTING"],
+			[UpgradeManager.level("persistence") > 0,                    "TUTO_MS_PERSISTENCE"],
 		]],
-		["Evolucion", [
-			[_any_mutation_active(),                                      "Primera mutacion activada"],
-			[_mutation_count() >= 2,                                      "Mutaciones multiples (x2+)"],
-			[EvoManager.mutation_homeostasis,                             "Homeostasis iniciada"],
-			[RunManager.homeostasis_mode or RunManager.post_homeostasis,  "Homeostasis alcanzada"],
-			[RunManager.post_homeostasis,                                 "Limite de Homeostasis superado"],
+		["TUTO_SEC_EVOLUTION", [
+			[_any_mutation_active(),                                      "TUTO_MS_FIRST_MUT"],
+			[_mutation_count() >= 2,                                      "TUTO_MS_MULTI_MUT"],
+			[EvoManager.mutation_homeostasis,                             "TUTO_MS_HOMEO_START"],
+			[RunManager.homeostasis_mode or RunManager.post_homeostasis,  "TUTO_MS_HOMEO_REACHED"],
+			[RunManager.post_homeostasis,                                 "TUTO_MS_HOMEO_SURPASSED"],
 		]],
-		["Trascendencia", [
-			[_milestones_seen.has("lab_opened"),                          "Modo Laboratorio descubierto"],
-			[LegacyManager.trascendencia_count > 0,                      "Primera Trascendencia completada"],
-			[LegacyManager.legacy_points > 0,                            "Legado acumulado"],
-			[LegacyManager.post_tras_route != "",                         "Ruta post-trascendencia activa"],
-			[LegacyManager.trascendencia_count >= 2,                     "Segunda Trascendencia"],
+		["TUTO_SEC_TRANSCEND", [
+			[_milestones_seen.has("lab_opened"),                          "TUTO_MS_LAB"],
+			[LegacyManager.trascendencia_count > 0,                      "TUTO_MS_TRAS1"],
+			[LegacyManager.legacy_points > 0,                            "TUTO_MS_LEGACY"],
+			[LegacyManager.post_tras_route != "",                         "TUTO_MS_ROUTE"],
+			[LegacyManager.trascendencia_count >= 2,                     "TUTO_MS_TRAS2"],
 		]],
 	]
 
@@ -618,12 +618,12 @@ func _build_milestones_bbcode() -> String:
 	var t := ""
 
 	for sec in sections:
-		var sec_name: String = sec[0]
+		var sec_name: String = tr(sec[0])
 		var ms_list: Array = sec[1]
 		t += "[color=#556677]-- " + sec_name + " --[/color]\n"
 		for ms in ms_list:
 			var done: bool = ms[0]
-			var label: String = ms[1]
+			var label: String = tr(ms[1])
 			total += 1
 			if done:
 				done_count += 1
@@ -638,7 +638,7 @@ func _build_milestones_bbcode() -> String:
 	t += tr("TUTO_OBJ_PROGRESS") % [done_count, total, pct]
 
 	if next_text != "" and not RunManager.run_closed:
-		t += "\n[color=cyan]Proximo objetivo:[/color]\n  " + next_text
+		t += "\n[color=cyan]" + tr("TUTO_OBJ_NEXT") + "[/color]\n  " + next_text
 
 	return t
 
@@ -691,50 +691,29 @@ func _run_step(step: int) -> void:
 		1:
 			var target := UIManager.big_click_button as Control
 			if is_instance_valid(target):
-				_show_highlight(
-					target,
-					"[b]¡Hacé clic en el reactor![/b]\nCada clic genera energía y aumenta\nel estrés estructural [color=yellow](ε)[/color]."
-				)
+				_show_highlight(target, tr("TUTO_STEP1"))
 			else:
 				_run_step(2)
 
 		2:
 			var target := _find_first_affordable_upgrade()
 			if is_instance_valid(target):
-				_show_highlight(
-					target,
-					"[b]¡Primera mejora disponible![/b]\nLas mejoras incrementan tu ingreso\npasivo y la complejidad estructural."
-				)
+				_show_highlight(target, tr("TUTO_STEP2"))
 			else:
 				_run_step(3)
 
 		3:
-			_show_floating_hint(
-				"[b][L][/b] activa el [color=cyan]Modo Laboratorio[/color]:\nestadísticas avanzadas de ε, Ω y μ en tiempo real."
-			)
+			_show_floating_hint(tr("TUTO_STEP3"))
 
 		4:
-			_show_floating_hint(
-				"[color=yellow][b]ε — Estrés Estructural[/b][/color]\n"
-				+ "Sube con clics, baja con mejoras.\n\n"
-				+ "[color=#88ff88]< 0.35[/color]  biología y orden disponibles\n"
-				+ "[color=#ffaa44]> 0.40[/color]  Hiperasimilación se despierta\n"
-				+ "[color=#ff8888]> 0.65[/color]  expansión micelial bloqueada\n"
-				+ "[color=#ff4444]> 0.80[/color]  Ω colapsa — sistema rígido\n\n"
-				+ "[color=#888888]Hover en ε del header para más.[/color]"
-			)
+			_show_floating_hint(tr("TUTO_STEP4"))
 			if is_instance_valid(_hint_container):
 				_hint_container.position.y = 420.0
 
 		5:
-			# Highlight en [2] Trabajo Manual y [3] Trueque simultáneamente
 			var auto_btn := _find_upgrade_button("auto")
 			var trueque_btn := _find_upgrade_button("trueque")
-			var hint_text := (
-				"[color=#88ff88][b]Ingreso Pasivo[/b][/color]\n\n"
-				+ "[b][2] Trabajo Manual[/b] y [b][3] Trueque[/b]\ngeneran $/s sin hacer clic.\n\n"
-				+ "Observá el indicador [b]$/s[/b] en el header."
-			)
+			var hint_text := tr("TUTO_STEP5")
 			if is_instance_valid(auto_btn):
 				_show_highlight(auto_btn, hint_text)
 				if is_instance_valid(trueque_btn):
@@ -745,22 +724,10 @@ func _run_step(step: int) -> void:
 				_show_floating_hint(hint_text)
 
 		6:
-			_show_floating_hint(
-				"[color=#88ff88][b]Genoma Fúngico[/b][/color]\n\n"
-				+ "[b]Biomasa[/b] se acumula sola con el tiempo —\nel sistema fúngico la genera en segundo plano.\n"
-				+ "Mirá el indicador [color=#88ff88][b]Bio[/b][/color] arriba a la derecha.\n\n"
-				+ "[color=#aaaaff]Cuando tengas suficiente, el panel [b]Genoma[/b]\nse ilumina — ahí activás [b]Mutaciones[/b]\nque abren rutas únicas de crecimiento.[/color]"
-			)
+			_show_floating_hint(tr("TUTO_STEP6"))
 
 		7:
-			_show_floating_hint(
-				"[color=#88ff88][b]Mutación[/b][/color] — el sistema te ofrece caminos.\n\n"
-				+ "[color=cyan]El equilibrio[/color]   mantené ε en calma\n"
-				+ "[color=#88ff88]La biología[/color]   expandite, crecé, dispersate\n"
-				+ "[color=yellow]La cooperación[/color] construí en orden\n\n"
-				+ "[color=#ff6666]...o dejás que el caos te domine.[/color]\n\n"
-				+ "[color=#888888]La mutación no se elige. Se gana.[/color]"
-			)
+			_show_floating_hint(tr("TUTO_STEP7"))
 
 		_:
 			_completed = true
@@ -805,14 +772,7 @@ func _show_welcome_overlay() -> void:
 	body.bbcode_enabled = true
 	body.fit_content = true
 	body.custom_minimum_size = Vector2(460.0, 0.0)
-	body.text = (
-		"[center]Sos una estructura en proceso de evolución.\n\n"
-		+ "Hacé clic en el [b]reactor[/b] para generar energía, "
-		+ "comprá [b]mejoras[/b] para crecer y vigilá el "
-		+ "[color=yellow][b]estrés estructural (ε)[/b][/color] "
-		+ "antes de que tu sistema colapse.\n\n"
-		+ "[color=cyan]La presión da lugar a la adaptación.[/color][/center]"
-	)
+	body.text = tr("TUTO_WELCOME_BODY")
 	vbox.add_child(body)
 
 	var btn_row := HBoxContainer.new()

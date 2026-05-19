@@ -641,7 +641,6 @@ func activate_mente_colmena() -> void:
 	mente_colmena_active = true
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.disabled = true
-		UIManager.big_click_button.text = "AUTO-OVERRIDE"
 		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
 	if not LegacyManager.get_buff_value("mente_colmena"):
 		LegacyManager.grant_buff("mente_colmena")
