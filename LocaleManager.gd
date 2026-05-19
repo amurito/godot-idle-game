@@ -36,6 +36,15 @@ const TRANSLATIONS := {
 		"MM_QUIT": "Salir",
 		"MM_TOOLS": "Telemetria",
 		"MM_BACK": "Volver",
+		"MM_CANCEL": "Cancelar",
+
+		# === DIALOGS SAVE/RESET ===
+		"DLG_NEW_RUN_TITLE": "Iniciar nueva run",
+		"DLG_NEW_RUN_TEXT": "Se iniciará una nueva run en este slot.\nEl legado y la trascendencia se preservan.",
+		"DLG_NEW_RUN_OK": "Iniciar",
+		"DLG_RESET_TITLE": "Borrar run actual",
+		"DLG_RESET_TEXT": "Esto borra la run actual del slot activo.\nLegacy y Trascendencia se preservan.\n\n¿Continuar?",
+		"DLG_RESET_OK": "Borrar y reiniciar",
 
 		# === SETTINGS PANEL ===
 		"SET_TITLE": "⚙ AJUSTES",
@@ -1133,6 +1142,15 @@ const TRANSLATIONS := {
 		"MM_QUIT": "Quit",
 		"MM_TOOLS": "Telemetry",
 		"MM_BACK": "Back",
+		"MM_CANCEL": "Cancel",
+
+		# === DIALOGS SAVE/RESET ===
+		"DLG_NEW_RUN_TITLE": "Start New Run",
+		"DLG_NEW_RUN_TEXT": "A new run will start in this slot.\nLegacy and transcendence are preserved.",
+		"DLG_NEW_RUN_OK": "Start",
+		"DLG_RESET_TITLE": "Delete Current Run",
+		"DLG_RESET_TEXT": "This deletes the current run in the active slot.\nLegacy and Transcendence are preserved.\n\nContinue?",
+		"DLG_RESET_OK": "Delete and restart",
 
 		# === SETTINGS PANEL ===
 		"SET_TITLE": "⚙ SETTINGS",

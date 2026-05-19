@@ -351,14 +351,14 @@ func delete_save_and_restart():
 func confirm_and_reset(parent: Node) -> void:
 	var dlg := ConfirmationDialog.new()
 	if RunManager.run_closed:
-		dlg.title = "Iniciar nueva run"
-		dlg.dialog_text = "Se iniciará una nueva run en este slot.\nEl legado y la trascendencia se preservan."
-		dlg.ok_button_text = "Iniciar"
+		dlg.title = tr("DLG_NEW_RUN_TITLE")
+		dlg.dialog_text = tr("DLG_NEW_RUN_TEXT")
+		dlg.ok_button_text = tr("DLG_NEW_RUN_OK")
 	else:
-		dlg.title = "Borrar run actual"
-		dlg.dialog_text = "Esto borra la run actual del slot activo.\nLegacy y Trascendencia se preservan.\n\n¿Continuar?"
-		dlg.ok_button_text = "Borrar y reiniciar"
-	dlg.get_cancel_button().text = "Cancelar"
+		dlg.title = tr("DLG_RESET_TITLE")
+		dlg.dialog_text = tr("DLG_RESET_TEXT")
+		dlg.ok_button_text = tr("DLG_RESET_OK")
+	dlg.get_cancel_button().text = tr("MM_CANCEL")
 	parent.add_child(dlg)
 	dlg.confirmed.connect(func():
 		dlg.queue_free()
