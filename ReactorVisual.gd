@@ -27,6 +27,7 @@ var active_delta := 0.0
 var pulse := 0.0
 var target_tint := Color(0.15, 0.65, 1.0) # Azul base (EvoManager lo sobreescribe)
 var value_label: Label
+var zoom_scale: float = 1.0
 
 # =========================
 # API PÚBLICA
@@ -81,7 +82,21 @@ func _ready():
 	value_label.custom_minimum_size = Vector2(300, 100)
 	label_container.add_child(value_label)
 
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed): return
+	if get_local_mouse_position().length() > 160.0: return
+	if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		zoom_scale = minf(zoom_scale * 1.15, 4.0)
+		get_viewport().set_input_as_handled()
+	elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		zoom_scale = maxf(zoom_scale / 1.15, 0.4)
+		get_viewport().set_input_as_handled()
+	elif event.button_index == MOUSE_BUTTON_MIDDLE:
+		zoom_scale = 1.0  # reset con click de rueda
+
 func _process(delta: float) -> void:
+	# Zoom suave con rueda del mouse (doble-click del centro para resetear)
+	scale = scale.lerp(Vector2.ONE * zoom_scale, 0.14)
 	# Crecimiento logarítmico
 	var growth := log(1.0 + active_delta) * SCALE_LOG_FACTOR
 	var target_scale := BASE_CORE_SCALE + growth
