@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://rqldeufooy01"]
+[gd_scene load_steps=17 format=3 uid="uid://rqldeufooy01"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://c3i7d0q3n8d5e" path="res://fungi_theme.tres" id="2_0xm2m"]
@@ -9,17 +9,38 @@
 [ext_resource type="Script" uid="uid://bonwdb6474v6l" path="res://UpgradeButton.gd" id="7_upgrade"]
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_7mycd"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_ring_add"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_particles_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_inner_core"]
+offsets = PackedFloat32Array(0, 0.12, 0.38, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.9, 1, 1, 1, 0.15, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_inner"]
+gradient = SubResource("Gradient_inner_core")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7mycd"]
 particle_flag_disable_z = true
 emission_shape = 1
-emission_sphere_radius = 1.0
+emission_sphere_radius = 8.0
 direction = Vector3(0, 0, 0)
 spread = 180.0
-initial_velocity_min = 3.0
-initial_velocity_max = 10.0
+initial_velocity_min = 8.0
+initial_velocity_max = 28.0
 gravity = Vector3(0, 0, 0)
-scale_min = 0.29999998
+scale_min = 0.4
+scale_max = 1.2
+color = Color(0.5, 0.85, 1.0, 0.8)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_evo"]
 content_margin_left = 25.0
@@ -287,12 +308,18 @@ texture = ExtResource("5_lquwl")
 
 [node name="Ring" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
 scale = Vector2(0.9, 0.9)
+material = SubResource("CanvasItemMaterial_ring_add")
 texture = ExtResource("6_7mycd")
 
+[node name="CoreInner" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
+material = SubResource("CanvasItemMaterial_7mycd")
+texture = SubResource("GradientTexture2D_inner")
+
 [node name="Particles" type="GPUParticles2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
-amount = 50
-lifetime = 1.2
-explosiveness = 0.1
+material = SubResource("CanvasItemMaterial_particles_add")
+amount = 80
+lifetime = 1.8
+explosiveness = 0.05
 process_material = SubResource("ParticleProcessMaterial_7mycd")
 
 [node name="Tendrils" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]

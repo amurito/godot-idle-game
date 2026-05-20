@@ -4,6 +4,7 @@ extends Node2D
 # NODOS
 # =========================
 @onready var core: Node2D = $Core
+@onready var core_inner: Node2D = $CoreInner
 @onready var ring: Node2D = $Ring
 @onready var particles: GPUParticles2D = $Particles
 
@@ -93,8 +94,12 @@ func _process(delta: float) -> void:
 
 	# Suavizado de la escala
 	var pulse_offset := pulse * PULSE_STRENGTH
-	var final_scale = lerp(core.scale.x, target_scale + pulse_offset, 0.2)
+	var final_scale: float = lerp(core.scale.x, target_scale + pulse_offset, 0.2)
 	core.scale = Vector2.ONE * final_scale
+
+	# Inner core: más pequeño, pulsa más fuerte
+	var inner_scale: float = lerp(core_inner.scale.x, final_scale * 0.38 + pulse * 0.18, 0.35)
+	core_inner.scale = Vector2.ONE * inner_scale
 
 	# Rotación y escala del ring (crece con el poder, más pequeño en early)
 	ring.rotation += delta * (0.4 + growth * 0.2)
@@ -105,9 +110,15 @@ func _process(delta: float) -> void:
 	# Color: target_tint viene siempre de EvoManager vía main.gd → set_tint()
 	core.modulate = core.modulate.lerp(target_tint, 0.2)
 
-	var ring_color = target_tint
-	ring_color.a = 0.35
+	# Inner core más blanco/brillante — centro caliente
+	var inner_tint := target_tint.lerp(Color.WHITE, 0.55)
+	core_inner.modulate = core_inner.modulate.lerp(inner_tint, 0.2)
+
+	# Ring semi-transparente + partículas coloreadas
+	var ring_color := target_tint
+	ring_color.a = 0.5
 	ring.modulate = ring.modulate.lerp(ring_color, 0.2)
+	particles.modulate = particles.modulate.lerp(target_tint, 0.15)
 
 	# --- Animación de Tentáculos (Hifas / Cables) ---
 	_update_tendrils(delta)
