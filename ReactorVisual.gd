@@ -96,8 +96,10 @@ func _process(delta: float) -> void:
 	var final_scale = lerp(core.scale.x, target_scale + pulse_offset, 0.2)
 	core.scale = Vector2.ONE * final_scale
 
-	# Rotación y Pulso del ring
+	# Rotación y escala del ring (crece con el poder, más pequeño en early)
 	ring.rotation += delta * (0.4 + growth * 0.2)
+	var ring_target_scale := clamp(0.6 + growth * 0.5, 0.6, 1.6)
+	ring.scale = ring.scale.lerp(Vector2.ONE * ring_target_scale, 0.05)
 	pulse = max(pulse - delta * PULSE_DECAY, 0.0)
 
 	# Color: target_tint viene siempre de EvoManager vía main.gd → set_tint()

@@ -286,7 +286,7 @@ scale = Vector2(1.2, 1.2)
 texture = ExtResource("5_lquwl")
 
 [node name="Ring" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
-scale = Vector2(1.8, 1.8)
+scale = Vector2(0.9, 0.9)
 texture = ExtResource("6_7mycd")
 
 [node name="Particles" type="GPUParticles2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
