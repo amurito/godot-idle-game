@@ -317,9 +317,9 @@ texture = SubResource("GradientTexture2D_inner")
 
 [node name="Particles" type="GPUParticles2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
 material = SubResource("CanvasItemMaterial_particles_add")
-amount = 80
-lifetime = 1.8
-explosiveness = 0.05
+amount = 200
+lifetime = 2.2
+explosiveness = 0.03
 process_material = SubResource("ParticleProcessMaterial_7mycd")
 
 [node name="Tendrils" type="Node2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
