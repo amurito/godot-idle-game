@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # UIManager.gd — Autoload
 # Encargado de la actualización visual y gestión de referencias de UI.
