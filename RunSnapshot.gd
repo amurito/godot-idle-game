@@ -99,7 +99,13 @@ static func from_run(main: Node) -> RunSnapshot:
 	# Evolución / ruta
 	s.final_route   = RunManager.final_route
 	s.final_reason  = RunManager.final_reason
-	s.red_branch    = EvoManager.red_branch_selected
+	s.run_id = "run_%s-%s-%s_%s-%s" % [
+	str(t.day).pad_zeros(2),
+	str(t.month).pad_zeros(2), 
+	str(t.year % 100).pad_zeros(2),
+	str(t.hour).pad_zeros(2),
+	str(t.minute).pad_zeros(2)
+	]
 	s.seta_formada  = EvoManager.seta_formada
 
 	# Mutaciones activas

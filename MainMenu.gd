@@ -37,6 +37,16 @@ var credits_panel: Panel = null
 var _credits_close_cb: Callable = Callable()
 
 func _ready():
+	# Web: el canvas de Godot tiene su tamaño de render en atributos HTML (canvas.width/height),
+	# que Godot gestiona. Nosotros sólo tocamos el CSS display para que se MUESTRE a pantalla
+	# completa. No usamos DisplayServer.window_set_size() porque puede leer un innerWidth
+	# erróneo y encoger el canvas. CSS !important gana sobre estilos inline del engine.
+	if OS.get_name() == "Web":
+		# Con canvasResizePolicy=2 (parcheado por fix_web_export.bat post-export),
+		# Godot ya redimensiona el canvas al browser nativamente.
+		# Este CSS es backup/refuerzo para fondo y overflow.
+		JavaScriptBridge.eval("document.body.style.background='#000';document.body.style.overflow='hidden';")
+
 	AudioManager.play_music("ambient")
 	if AccessibilityManager.font_scale != 1.0:
 		var t := Theme.new()

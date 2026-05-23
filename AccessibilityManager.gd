@@ -22,7 +22,7 @@ var high_contrast: bool = false
 var colorblind_mode: int = ColorblindMode.OFF
 
 ## Si true, muestra reactor 3D; si false, muestra reactor 2D con efectos por ruta
-var reactor_3d_enabled: bool = true
+var reactor_3d_enabled: bool = false
 
 signal settings_changed
 
@@ -121,7 +121,7 @@ func _load_settings() -> void:
 	reduce_motion      = bool(data.get("reduce_motion",      false))
 	high_contrast      = bool(data.get("high_contrast",      false))
 	colorblind_mode    = int(data.get("colorblind_mode",     0))
-	reactor_3d_enabled = bool(data.get("reactor_3d_enabled", true))
+	reactor_3d_enabled = bool(data.get("reactor_3d_enabled", false))
 
 
 func _save_settings() -> void:

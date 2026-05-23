@@ -66,19 +66,18 @@ func _ready() -> void:
 #  BUSES
 # ---------------------------------------------------------------
 func _setup_buses() -> void:
-	# Crea buses Music y SFX si no existen, ruteados a Master.
+	# Los buses Music/SFX vienen definidos en default_bus_layout.tres
+	# (referenciado desde [audio] buses/default_bus_layout en project.godot).
+	# Crear buses por código rompía el ruteo de audio en export web.
+	# Fallback defensivo por si el layout no cargó: cae a Master.
 	_bus_music = AudioServer.get_bus_index("Music")
-	if _bus_music == -1:
-		AudioServer.add_bus()
-		_bus_music = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(_bus_music, "Music")
-		AudioServer.set_bus_send(_bus_music, "Master")
 	_bus_sfx = AudioServer.get_bus_index("SFX")
+	if _bus_music == -1:
+		push_warning("[AudioManager] Bus 'Music' no encontrado — fallback Master")
+		_bus_music = 0
 	if _bus_sfx == -1:
-		AudioServer.add_bus()
-		_bus_sfx = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(_bus_sfx, "SFX")
-		AudioServer.set_bus_send(_bus_sfx, "Master")
+		push_warning("[AudioManager] Bus 'SFX' no encontrado — fallback Master")
+		_bus_sfx = 0
 
 
 # ---------------------------------------------------------------
@@ -133,9 +132,13 @@ func _unlock_audio() -> void:
 	if _audio_unlocked:
 		return
 	_audio_unlocked = true
+	if OS.get_name() == "Web":
+		# Godot 4 expone su AudioContext como GodotAudio.ctx (no Godot.audio.Context que era v3).
+		JavaScriptBridge.eval("if(typeof GodotAudio!=='undefined'&&GodotAudio.ctx)GodotAudio.ctx.resume().catch(function(){});")
 	if _pending_music_id != "":
-		_start_music(_pending_music_id)
+		var id := _pending_music_id
 		_pending_music_id = ""
+		_start_music(id)
 
 
 # ---------------------------------------------------------------

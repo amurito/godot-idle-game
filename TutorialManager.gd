@@ -25,6 +25,7 @@ var _tooltip_canvas: CanvasLayer = null  # layer 127 — tooltips y anti-stuck
 
 var _highlight_panel: Panel = null
 var _extra_highlights: Array = []   # highlights adicionales para multi-target
+var _extra_tweens: Array[Tween] = []  # tweens de extra highlights — matar en _clear_all
 var _hint_container: PanelContainer = null
 var _target_node: Control = null
 var _tween: Tween = null
@@ -124,6 +125,12 @@ func _process(dt: float) -> void:
 
 func set_main(m: Node) -> void:
 	_main = m
+	m.tree_exiting.connect(_on_main_exiting)
+
+
+func _on_main_exiting() -> void:
+	_main = null
+	_dismiss_antistuck()
 
 
 func start() -> void:
@@ -707,8 +714,6 @@ func _run_step(step: int) -> void:
 
 		4:
 			_show_floating_hint(tr("TUTO_STEP4"))
-			if is_instance_valid(_hint_container):
-				_hint_container.position.y = 420.0
 
 		5:
 			var auto_btn := _find_upgrade_button("auto")
@@ -828,7 +833,7 @@ func _show_highlight(target: Control, hint_text: String) -> void:
 func _show_floating_hint(hint_text: String) -> void:
 	_hint_container = _make_hint_bubble(hint_text)
 	_canvas.add_child(_hint_container)
-	_hint_container.position = Vector2(16.0, 520.0)
+	_hint_container.position = Vector2(16.0, 350.0)
 
 
 # ==================== HELPERS UI ====================
@@ -905,6 +910,10 @@ func _clear_all() -> void:
 	if is_instance_valid(_tween):
 		_tween.kill()
 		_tween = null
+	for tw in _extra_tweens:
+		if is_instance_valid(tw):
+			tw.kill()
+	_extra_tweens.clear()
 	for child in _canvas.get_children():
 		child.queue_free()
 	_highlight_panel = null
@@ -928,10 +937,11 @@ func _add_extra_highlight(target: Control) -> void:
 	_canvas.add_child(p)
 	_extra_highlights.append(p)
 	# Pulso sincronizado con el highlight principal
-	var tw := create_tween()
+	var tw: Tween = create_tween()
 	tw.set_loops()
 	tw.tween_property(p, "modulate:a", 0.25, 0.65)
 	tw.tween_property(p, "modulate:a", 1.0, 0.65)
+	_extra_tweens.append(tw)
 
 
 ## Busca un UpgradeButton por su upgrade_id

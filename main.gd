@@ -348,6 +348,7 @@ func reset_local_state():
 func _ready():
 	show()
 	add_to_group("main")
+
 	# Aplicar escala de fuente base vía Theme (afecta labels/buttons sin override explícito)
 	if AccessibilityManager.font_scale != 1.0:
 		var t := Theme.new()
@@ -475,11 +476,13 @@ func _ready():
 	call_deferred("_update_legacy_indicators")
 
 	if OS.is_debug_build():
-		var dp := preload("res://DebugPanel.gd").new()
-		dp.visible = false
-		add_child(dp)
-		dp.init(self)
-		_debug_panel = dp
+		var dp_script := load("res://DebugPanel.gd")
+		if dp_script:
+			var dp: Node = dp_script.new()
+			dp.visible = false
+			add_child(dp)
+			dp.init(self)
+			_debug_panel = dp
 
 	# --- RECUPERACI�N DE ESTADO PENDIENTE (v0.8.8) ---
 	# Si cargamos una partida donde la mutaci�n est� activa pero no se eligi� rama
@@ -799,9 +802,9 @@ func _on_logic_tick():
 			var sz := int(clamp(log(1.0 + power) * 3.0 + 8.0, 8.0, 26.0))
 			_3d_power_label.add_theme_font_size_override("font_size", sz)
 			if RunManager.mente_colmena_active:
-				_3d_power_label.text = "AUTO\n+%.1f" % power
+				_3d_power_label.text = "AUTO\n+%d" % int(power)
 			else:
-				_3d_power_label.text = "+%.1f" % power
+				_3d_power_label.text = "+%d" % int(power)
 		elif not _use_3d_reactor and is_instance_valid(reactor_visual):
 			reactor_visual.set_display_delta(power)
 

@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 ## LocaleManager — Autoload
 ## Centraliza la traducción de strings de UI (ES por defecto, EN opcional).
@@ -212,7 +212,7 @@ const TRANSLATIONS := {
 		"TUTO_MS_PASSIVE": "Ingreso pasivo activo ($/s)",
 		"TUTO_MS_PROD_NET": "Red de producción establecida",
 		"TUTO_MS_COGNITIVE": "Capital Cognitivo activado (μ)",
-		"TUTO_MS_BARTER_NET": "Red de trueque expandida",
+		"TUTO_MS_EXCHANGE_NET": "Red de trueque expandida",
 		"TUTO_MS_SPECIALIZATION": "Especialización funcional",
 		"TUTO_MS_ACCOUNTING": "Institución de Contabilidad",
 		"TUTO_MS_PERSISTENCE": "Persistencia del sistema activa",
@@ -1270,7 +1270,7 @@ const TRANSLATIONS := {
 		"TUTO_STEP2": "[b]First upgrade available![/b]\nUpgrades increase your passive income\nand structural complexity.",
 		"TUTO_STEP3": "[b][L][/b] activates [color=cyan]Lab Mode[/color]:\nadvanced live stats for ε, Ω and μ.",
 		"TUTO_STEP4": "[color=yellow][b]ε — Structural Stress[/b][/color]\nRises with clicks, drops with upgrades.\n\n[color=#88ff88]< 0.35[/color]  biology and order available\n[color=#ffaa44]> 0.40[/color]  Hyperassimilation awakens\n[color=#ff8888]> 0.65[/color]  mycelial expansion blocked\n[color=#ff4444]> 0.80[/color]  Ω collapses — rigid system\n\n[color=#888888]Hover over ε in the header for more.[/color]",
-		"TUTO_STEP5": "[color=#88ff88][b]Passive Income[/b][/color]\n\n[b][2] Manual Labor[/b] and [b][3] Barter[/b]\ngenerate $/s without clicking.\n\nWatch the [b]$/s[/b] indicator in the header.",
+		"TUTO_STEP5": "[color=#88ff88][b]Passive Income[/b][/color]\n\n[b][2] Manual Labor[/b] and [b][3] Exchange[/b]\ngenerate $/s without clicking.\n\nWatch the [b]$/s[/b] indicator in the header.",
 		"TUTO_STEP6": "[color=#88ff88][b]Fungal Genome[/b][/color]\n\n[b]Biomass[/b] accumulates on its own over time —\nthe fungal system generates it in the background.\nCheck the [color=#88ff88][b]Bio[/b][/color] indicator at the top right.\n\n[color=#aaaaff]When you have enough, the [b]Genome[/b] panel\nlights up — that's where you activate [b]Mutations[/b]\nthat open unique growth paths.[/color]",
 		"TUTO_STEP7": "[color=#88ff88][b]Mutation[/b][/color] — the system offers you paths.\n\n[color=cyan]Equilibrium[/color]   keep ε calm\n[color=#88ff88]Biology[/color]      expand, grow, spread\n[color=yellow]Cooperation[/color]  build in order\n\n[color=#ff6666]...or let chaos dominate.[/color]\n\n[color=#888888]The mutation is not chosen. It is earned.[/color]",
 		"TUTO_MUT_HIPERASIMILACION": "[b]Hyperassimilation[/b] activated.\nIncreased resource absorption — passive income boosted.",
@@ -1318,7 +1318,7 @@ const TRANSLATIONS := {
 		"TUTO_MS_PASSIVE": "Passive income active ($/s)",
 		"TUTO_MS_PROD_NET": "Production network established",
 		"TUTO_MS_COGNITIVE": "Cognitive Capital activated (μ)",
-		"TUTO_MS_BARTER_NET": "Barter network expanded",
+		"TUTO_MS_EXCHANGE_NET": "Exchange network expanded",
 		"TUTO_MS_SPECIALIZATION": "Functional specialization",
 		"TUTO_MS_ACCOUNTING": "Accounting institution",
 		"TUTO_MS_PERSISTENCE": "System persistence active",
@@ -1349,10 +1349,10 @@ const TRANSLATIONS := {
 		"TUTO_AS_HOMEO": "You're on the [color=cyan]Homeostasis[/color] path.\nKeep ε in band (0.03–0.30) to advance tier.",
 		"TUTO_UPG_CLICK": "Improve Click",
 		"TUTO_UPG_AUTO": "Manual Labor",
-		"TUTO_UPG_TRUEQUE": "Barter",
+		"TUTO_UPG_TRUEQUE": "Exchange",
 		"TUTO_UPG_CLICK_MULT": "Click Mult.",
 		"TUTO_UPG_AUTO_MULT": "Auto Mult.",
-		"TUTO_UPG_TRUEQUE_NET": "Barter Network",
+		"TUTO_UPG_TRUEQUE_NET": "Exchange Network",
 		"TUTO_UPG_SPECIALIZATION": "Specialization",
 		"TUTO_UPG_COGNITIVE": "Cognitive Capital (μ)",
 		"TUTO_UPG_ACCOUNTING": "Accounting",

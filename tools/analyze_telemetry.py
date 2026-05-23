@@ -5,6 +5,9 @@ Genera gráficos Plotly con tooltips, heatmap de correlaciones y dashboard HTML 
 """
 
 import argparse
+from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import webbrowser as _webbrowser
 import csv
 import html
 import json
@@ -1286,6 +1289,256 @@ document.getElementById("detective-select").value = run_files[0];
 
 
 # ============================================================================
+# RUN DETECTIVE
+# ============================================================================
+
+def build_run_detective_html(runs: list[dict], df: pd.DataFrame) -> str:
+    """HTML+JS para Run Detective: timeline, gráficos ε/μ/dinero, borrar run."""
+    df_dict = {row["file"]: row for row in df.to_dict("records")} if not df.empty else {}
+
+    runs_data = []
+    for run in runs:
+        filename = run.get("_file", "")
+        summary = run.get("run_summary", {})
+        row = df_dict.get(filename, {})
+        runs_data.append({
+            "file": filename,
+            "route": str(summary.get("final_route", "")),
+            "pl": to_int(summary.get("pl_gained")),
+            "pl_per_min": round(float(row.get("pl_per_min", 0.0)), 3),
+            "epsilon_peak": round(to_float(summary.get("epsilon_peak")), 4),
+            "max_mu": round(to_float(summary.get("max_mu")), 4),
+            "run_time": round(to_float(summary.get("run_time")), 1),
+            "duration": seconds_to_label(to_float(summary.get("run_time"))),
+            "version": str(run.get("meta", {}).get("game_version", "")),
+            "metrics": [
+                {
+                    "time": round(to_float(m.get("time")), 1),
+                    "epsilon": round(to_float(m.get("epsilon")), 4),
+                    "mu": round(to_float(m.get("mu", 1)), 4),
+                    "money": round(to_float(m.get("money")), 0),
+                    "biomasa": round(to_float(m.get("biomasa")), 3),
+                }
+                for m in run.get("metrics_series", [])
+            ],
+            "events": [
+                {k: v for k, v in ev.items() if k not in ("session_id",)}
+                for ev in run.get("events", [])
+                if ev.get("type") not in ("session_start", "session_end")
+            ],
+        })
+
+    runs_json = json.dumps(runs_data, ensure_ascii=False)
+    route_colors_json = json.dumps(ROUTE_COLORS, ensure_ascii=False)
+
+    return (
+        """
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px;">
+    <select id="det-select" style="background:#1a1a2e;color:#ffcc44;border:1px solid #ffcc44;padding:8px 14px;border-radius:6px;font-size:13px;flex:1;max-width:560px;">
+        <option value="">— Seleccionar run —</option>
+    </select>
+    <button id="det-delete-btn" disabled
+        style="background:#2e0e14;color:#ff7a8a;border:1px solid #c01c28;padding:8px 18px;border-radius:6px;font-size:13px;cursor:pointer;opacity:0.5;">
+        Borrar run
+    </button>
+    <span id="det-delete-note" style="color:#666;font-size:11px;font-style:italic;"></span>
+</div>
+
+<div id="det-panel" style="display:none;">
+    <div id="det-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:18px;"></div>
+    <div id="det-charts" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px;"></div>
+    <div style="color:#88aaff;margin-bottom:8px;font-weight:600;font-size:13px;">Timeline de eventos</div>
+    <div id="det-events" style="max-height:340px;overflow-y:auto;background:#0d0d14;border-radius:6px;padding:8px;"></div>
+</div>
+
+<script>
+(function(){
+    var RUNS="""
+        + runs_json
+        + """;
+    var ROUTE_COLORS="""
+        + route_colors_json
+        + """;
+    var IS_SERVER=window.location.protocol==='http:';
+    var EVT_COLORS={
+        'upgrade_bought':'#1c71d8','mutation_activated':'#9141ac',
+        'first_epsilon_high':'#e5a50a','achievement_unlocked':'#26a269',
+        'run_close':'#c01c28','run_start':'#44cc88','trascendencia':'#ffcc44'
+    };
+
+    var sel=document.getElementById('det-select');
+    var delBtn=document.getElementById('det-delete-btn');
+    var delNote=document.getElementById('det-delete-note');
+
+    RUNS.forEach(function(r){
+        var o=document.createElement('option');
+        o.value=r.file;
+        o.textContent=r.file+'  |  '+r.route+'  |  '+r.pl+' PL  |  '+r.duration;
+        sel.appendChild(o);
+    });
+
+    sel.addEventListener('change',function(){ showRun(RUNS.find(function(r){return r.file===sel.value;})); });
+    delBtn.addEventListener('click',function(){
+        var run=RUNS.find(function(r){return r.file===sel.value;});
+        if(run) deleteRun(run.file);
+    });
+
+    function showRun(run){
+        var panel=document.getElementById('det-panel');
+        if(!run){panel.style.display='none';delBtn.disabled=true;delBtn.style.opacity='0.5';return;}
+        panel.style.display='block';
+        delBtn.disabled=false; delBtn.style.opacity='1';
+        delNote.textContent=IS_SERVER?'':'Modo archivo — usá --serve para borrar desde el browser';
+
+        var rc=ROUTE_COLORS[run.route]||'#64748b';
+        document.getElementById('det-stats').innerHTML=[
+            {n:'<span style="color:'+rc+'">'+run.route+'</span>',l:'Ruta'},
+            {n:run.pl,l:'PL'},
+            {n:run.duration,l:'Duración'},
+            {n:run.pl_per_min.toFixed(2),l:'PL/min'},
+            {n:run.epsilon_peak.toFixed(3),l:'ε_peak'},
+            {n:run.max_mu.toFixed(3),l:'μ máx'},
+            {n:run.version,l:'Versión'},
+        ].map(function(s){
+            return '<div class="stat-card" style="padding:12px;"><div class="stat-num" style="font-size:1.2em;">'+s.n+'</div><div class="stat-label">'+s.l+'</div></div>';
+        }).join('');
+
+        renderCharts(run);
+        renderEvents(run);
+    }
+
+    function renderCharts(run){
+        document.getElementById('det-charts').innerHTML=
+            '<div id="det-ch-eps" style="flex:1;min-width:340px;height:260px;"></div>'+
+            '<div id="det-ch-eco" style="flex:1;min-width:340px;height:260px;"></div>';
+        var t=run.metrics.map(function(m){return m.time;});
+        var base={paper_bgcolor:'#111118',plot_bgcolor:'#111118',font:{color:'#e0e0e0'},
+                  margin:{t:36,b:36,l:48,r:48},legend:{x:0,y:1,font:{size:10}}};
+        Plotly.newPlot('det-ch-eps',
+            [{x:t,y:run.metrics.map(function(m){return m.epsilon;}),name:'ε',line:{color:'#e5a50a',width:2},type:'scatter'},
+             {x:t,y:run.metrics.map(function(m){return m.mu;}),name:'μ',line:{color:'#5599ff',width:2},yaxis:'y2',type:'scatter'}],
+            Object.assign({},base,{title:{text:'ε y μ',font:{size:13}},xaxis:{title:'seg'},
+                yaxis:{title:'ε',color:'#e5a50a'},yaxis2:{title:'μ',overlaying:'y',side:'right',color:'#5599ff'}}));
+        Plotly.newPlot('det-ch-eco',
+            [{x:t,y:run.metrics.map(function(m){return m.money;}),name:'Dinero',line:{color:'#26a269',width:2},type:'scatter'},
+             {x:t,y:run.metrics.map(function(m){return m.biomasa;}),name:'Biomasa',line:{color:'#9141ac',width:2},yaxis:'y2',type:'scatter'}],
+            Object.assign({},base,{title:{text:'Dinero y Biomasa',font:{size:13}},xaxis:{title:'seg'},
+                yaxis:{title:'$',color:'#26a269'},yaxis2:{title:'Biomasa',overlaying:'y',side:'right',color:'#9141ac'}}));
+    }
+
+    function renderEvents(run){
+        var rows=run.events.map(function(e){
+            var color=EVT_COLORS[e.type]||'#888';
+            var t=e.time!=null?(+e.time).toFixed(1)+'s':'—';
+            var d='';
+            if(e.upgrade_id) d=e.upgrade_id+' → Nv'+(e.new_level||'?');
+            if(e.mutation_id) d=e.mutation_id;
+            if(e.achievement_id) d=e.achievement_id;
+            if(e.final_route) d=e.final_route+' (+'+(e.pl_gained||0)+' PL)';
+            if(e.epsilon_value!=null) d='ε = '+parseFloat(e.epsilon_value).toFixed(3);
+            return '<tr style="border-bottom:1px solid #1a1a2e;">'+
+                '<td style="padding:3px 10px;color:#888;white-space:nowrap;">'+t+'</td>'+
+                '<td style="padding:3px 10px;color:'+color+';">'+e.type+'</td>'+
+                '<td style="padding:3px 10px;color:#ccc;">'+d+'</td></tr>';
+        }).join('');
+        document.getElementById('det-events').innerHTML=
+            '<table style="width:100%;border-collapse:collapse;font-size:12px;">'+
+            '<tr style="color:#ffcc44;position:sticky;top:0;background:#0d0d14;">'+
+            '<th style="padding:4px 10px;text-align:left;">Tiempo</th>'+
+            '<th style="padding:4px 10px;text-align:left;">Evento</th>'+
+            '<th style="padding:4px 10px;text-align:left;">Detalle</th></tr>'+rows+'</table>';
+    }
+
+    function deleteRun(filename){
+        if(!IS_SERVER){
+            alert('Para borrar desde el browser, ejecutá:\\n\\npython analyze_telemetry.py --serve\\n\\nArchivo a borrar manualmente:\\n'+filename);
+            return;
+        }
+        if(!confirm('¿Borrar "'+filename+'"?\\n\\nEsta run se eliminará permanentemente y el dashboard se regenerará.')) return;
+        delBtn.textContent='Borrando...'; delBtn.disabled=true;
+        fetch('/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:filename})})
+            .then(function(r){return r.json();})
+            .then(function(data){
+                if(data.ok){location.reload();}
+                else{alert('Error: '+(data.error||'desconocido'));delBtn.textContent='Borrar run';delBtn.disabled=false;}
+            })
+            .catch(function(err){alert('Error de red: '+err);delBtn.textContent='Borrar run';delBtn.disabled=false;});
+    }
+})();
+</script>"""
+    )
+
+
+# ============================================================================
+# SERVIDOR HTTP LOCAL (modo --serve)
+# ============================================================================
+
+class _TelemetryHandler(BaseHTTPRequestHandler):
+    runs_dir: Path = None
+    output_dir: Path = None
+
+    def do_GET(self):
+        if self.path in ("/", "/index.html"):
+            data = (self.output_dir / "telemetry_dashboard.html").read_bytes()
+            self._send(200, "text/html; charset=utf-8", data)
+        else:
+            self._send(404, "text/plain", b"Not found")
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length).decode())
+        if self.path == "/delete":
+            filename = Path(body.get("file", "")).name  # evita path traversal
+            target = self.runs_dir / filename
+            if target.exists() and target.suffix == ".json" and target.parent.resolve() == self.runs_dir.resolve():
+                target.unlink()
+                self._regenerate()
+                self._send(200, "application/json", b'{"ok":true}')
+            else:
+                self._send(400, "application/json", b'{"ok":false,"error":"archivo invalido"}')
+        else:
+            self._send(404, "text/plain", b"Not found")
+
+    def _regenerate(self):
+        runs = load_all_runs(self.runs_dir)
+        rows = [summarize_run(r) for r in runs]
+        df = build_dataframe(rows)
+        df.to_csv(self.output_dir / "telemetry_runs.csv", index=False)
+        create_correlation_heatmap(df, self.output_dir)
+        html = build_dashboard_html(df, runs)
+        (self.output_dir / "telemetry_dashboard.html").write_text(html, encoding="utf-8")
+
+    def _send(self, code: int, ctype: str, body: bytes):
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, fmt, *args):
+        pass  # silenciar logs del servidor
+
+
+def run_server(runs_dir: Path, output_dir: Path, port: int = 8421) -> None:
+    _TelemetryHandler.runs_dir = runs_dir.resolve()
+    _TelemetryHandler.output_dir = output_dir.resolve()
+    try:
+        server = HTTPServer(("localhost", port), _TelemetryHandler)
+    except OSError:
+        print(f"[>]  Puerto {port} ocupado — el servidor ya esta corriendo.")
+        _webbrowser.open(f"http://localhost:{port}/")
+        return
+    print(f"[>]  Servidor activo: http://localhost:{port}/")
+    print("[>]  Ctrl+C para detener.")
+    _webbrowser.open(f"http://localhost:{port}/")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n[>]  Servidor detenido.")
+
+
+# ============================================================================
 # DASHBOARD HTML
 # ============================================================================
 
@@ -1320,7 +1573,6 @@ def build_dashboard_html(df: pd.DataFrame, runs: list[dict]) -> str:
     evolution = create_evolution_overlay(df, runs).to_html(full_html=False, include_plotlyjs=False)
 
     accum_curves = create_accumulation_curves(runs).to_html(full_html=False, include_plotlyjs=False)
-    run_detective = build_run_detective_html(runs)
 
     upgrade_stats = extract_upgrade_stats(runs, df)
     mut_stats = extract_mutation_stats(runs, df)
@@ -1330,6 +1582,7 @@ def build_dashboard_html(df: pd.DataFrame, runs: list[dict]) -> str:
     upg_route_heatmap = create_upgrade_route_heatmap(upgrade_stats).to_html(full_html=False, include_plotlyjs=False)
     mut_overview = create_mutation_overview(mut_stats).to_html(full_html=False, include_plotlyjs=False)
     mut_timing = create_mutation_timing(mut_stats).to_html(full_html=False, include_plotlyjs=False)
+    run_detective = build_run_detective_html(runs, df)  # noqa: needs both args
 
     # Tabla HTML simple
     table_rows = ""
@@ -1432,7 +1685,9 @@ def build_dashboard_html(df: pd.DataFrame, runs: list[dict]) -> str:
 <body>
 <div class="container">
     <h1>🍄 AntiIDLE - Telemetry Dashboard</h1>
-    <p>Dashboard interactivo para análisis de balance y rendimiento</p>
+    <p>Dashboard interactivo para análisis de balance y rendimiento &nbsp;·&nbsp;
+    <span style="color:#ffcc44; font-weight:600;">Generado: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</span>
+    &nbsp;·&nbsp; <span style="color:#88aaff;">{total_runs} runs</span></p>
     
     {cards_html}
     
@@ -1476,6 +1731,9 @@ def build_dashboard_html(df: pd.DataFrame, runs: list[dict]) -> str:
     <div class="plot-card">{mut_overview}</div>
     <div class="plot-card">{mut_timing}</div>
 
+    <h2>🔍 Run Detective</h2>
+    <div class="plot-card">{run_detective}</div>
+
     <h2>📋 Tabla de runs</h2>
     <div style="overflow-x: auto;">
         <table>
@@ -1505,6 +1763,10 @@ def parse_args() -> argparse.Namespace:
                         help="Folder containing telemetry run JSON files.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_DIR,
                         help="Output folder for analysis files.")
+    parser.add_argument("--serve", action="store_true",
+                        help="Inicia servidor HTTP en localhost para borrar runs desde el browser.")
+    parser.add_argument("--port", type=int, default=8421,
+                        help="Puerto del servidor HTTP (default: 8421).")
     return parser.parse_args()
 
 
@@ -1535,8 +1797,12 @@ def main() -> int:
     
     print(f"[OK] Analisis completado. {len(runs)} runs procesadas.")
     print(f"[>]  Output: {output_dir.absolute()}")
-    print(f"[>]  Abre:   {output_dir / 'telemetry_dashboard.html'}")
-    
+
+    if args.serve:
+        run_server(runs_dir, output_dir, args.port)
+    else:
+        print(f"[>]  Abre:   {output_dir / 'telemetry_dashboard.html'}")
+
     return 0
 
 

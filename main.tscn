@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://rqldeufooy01"]
+[gd_scene load_steps=15 format=3 uid="uid://rqldeufooy01"]
 
 [ext_resource type="Script" uid="uid://cwauyyqcu0klj" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Theme" uid="uid://c3i7d0q3n8d5e" path="res://fungi_theme.tres" id="2_0xm2m"]
@@ -14,9 +14,6 @@ blend_mode = 1
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_ring_add"]
 blend_mode = 1
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_particles_add"]
-blend_mode = 1
-
 [sub_resource type="Gradient" id="Gradient_inner_core"]
 offsets = PackedFloat32Array(0, 0.12, 0.38, 1)
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.9, 1, 1, 1, 0.15, 0, 0, 0, 0)
@@ -29,6 +26,9 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_particles_add"]
+blend_mode = 1
+
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7mycd"]
 particle_flag_disable_z = true
 emission_shape = 1
@@ -40,7 +40,7 @@ initial_velocity_max = 28.0
 gravity = Vector3(0, 0, 0)
 scale_min = 0.4
 scale_max = 1.2
-color = Color(0.5, 0.85, 1.0, 0.8)
+color = Color(0.5, 0.85, 1, 0.8)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_evo"]
 content_margin_left = 25.0
@@ -259,7 +259,6 @@ anchor_bottom = 1.0
 offset_top = 60.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(1.0055599, 1)
 mouse_filter = 2
 theme_override_constants/separation = 32
 alignment = 1
@@ -275,12 +274,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="CenterPanel" type="VBoxContainer" parent="UIRootContainer/LeftPanel"]
+clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
-clip_contents = true
 
 [node name="BigClickButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]
 custom_minimum_size = Vector2(320, 240)
@@ -307,8 +306,8 @@ scale = Vector2(1.2, 1.2)
 texture = ExtResource("5_lquwl")
 
 [node name="Ring" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
-scale = Vector2(0.9, 0.9)
 material = SubResource("CanvasItemMaterial_ring_add")
+scale = Vector2(0.9, 0.9)
 texture = ExtResource("6_7mycd")
 
 [node name="CoreInner" type="Sprite2D" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual"]
@@ -354,7 +353,7 @@ stretch = true
 
 [node name="Reactor3DViewport" type="SubViewport" parent="UIRootContainer/LeftPanel/CenterPanel/BigClickButton/Reactor3DContainer"]
 handle_input_locally = false
-size = Vector2i(320, 260)
+size = Vector2i(320, 240)
 render_target_update_mode = 0
 
 [node name="SporulationFinalButton" type="Button" parent="UIRootContainer/LeftPanel/CenterPanel"]

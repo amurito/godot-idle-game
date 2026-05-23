@@ -523,7 +523,7 @@ func build_formula_text(_main: Node) -> String:
 	elif fLen > 55: fSize = 15
 	elif fLen > 40: fSize = 16
 
-	var t: String = "[center][font_size=%d]∫$ = " % fSize + formula_main + "[/font_size]\n"
+	var t: String = "[font_size=%d]∫$ = " % fSize + formula_main + "[/font_size]\n"
 
 	# Λ breakdown (solo si hay mults de legado)
 	if lambda_parts.size() > 0:
@@ -537,11 +537,11 @@ func build_formula_text(_main: Node) -> String:
 	if UpgradeManager.level("cognitive") > 0:
 		t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
 		t += "κμ = k · (1 + α · (μ - 1))\n"
-		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color][/center]" % [
+		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  μ = %.2f  n = %d[/color]" % [
 			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, EconomyManager.cached_mu, raw_n
 		]
 	else:
-		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  n = %d[/color][/center]" % [
+		t += "[color=#cccccc]c₀ = %.2f  cₙ = %.2f  n = %d[/color]" % [
 			StructuralModel.persistence_base, StructuralModel.persistence_dynamic, raw_n
 		]
 
