@@ -1,5 +1,42 @@
 # CHANGELOG — AntiIDLE
 
+## [v1.0.0.10] — Hotfix — 2026-05-24
+
+Bundle de fixes de export web + UI compacta.
+Nota: se salta a `.10` porque las tags `.7/.8/.9` ya existen en remote apuntando a commits de i18n previos (sin bump de `version.gd` en su momento, por lo que el juego seguía mostrando `1.0.0.6`).
+
+#### Audio web (RESUELTO)
+- Audio HTML5 finalmente suena en Chrome. Causa raíz: crear buses con `AudioServer.add_bus()` en runtime no ruteaba al Master en web.
+- Nuevo `default_bus_layout.tres` con Master + Music + SFX estáticos, referenciado desde `[audio] buses/default_bus_layout` en `project.godot`.
+- `[audio] general/default_playback_type.web=1` (Stream en lugar de Sample): el Sample tenía bugs cuando los buses no estaban registrados al cargarse los streams.
+- `AudioManager._setup_buses()` simplificado: solo cachea índices con fallback defensivo a Master + `push_warning`.
+
+#### Export web — bundle previo
+- `fix_web_export.bat` + `fix_web_export.ps1`: patcheo post-export del `index.html` (canvasResizePolicy 0→2, inyección JS de audio unlock interceptando `AudioContext` en `<head>`).
+- `[display] stretch_mode=canvas_items + aspect=expand`: sin barras negras, clicks alineados con CSS scaling.
+- `variant/thread_support=false` en preset HTML5: no requiere COOP/COEP del servidor.
+- `exclude_filter` en preset HTML5: `DebugPanel.gd,tests/*` para reducir bundle.
+
+#### UI — botones compactos
+- `ProductionPanel` (upgrades): altura mínima 280→150, `v_separation` 8→4, `h_separation` 8→6.
+- `UpgradeButton`: altura mínima 56→36, `content_margin` 4→2 en los StyleBox, `font_size` override `AccessibilityManager.fs(11)`.
+- Ahorro neto: ~120-130px verticales en el centro de la pantalla. El texto de 2 líneas (label + costo) sigue entrando.
+
+#### Emojis Twemoji en web
+- **SELLAR FINAL 🧬**: ahora usa `Button.icon = load("res://emoji/1f9ec.png")` en lugar de char emoji en `text`. Renderiza universal sin depender de la fuente del browser.
+- **Iconos de mutación tier1/tier2**: nodos `Icon` (antes Label vacío) ahora son `TextureRect`. Nuevo helper `EmojiToRichText.set_icon_texture(rect, emoji)` carga el PNG por código. Asignados según tier: ⚖️ Homeostasis · 🕸️ Red Micelial · 🤝 Simbiosis · ⚖️ Allostasis · 🌱 Colonización · 🤝 Simbiosis Mecánica.
+- `Desc` text de cada opción ahora pasa por `EmojiToRichText.rich()` para convertir emojis inline en `[img]` BBCode.
+- `EMOJI_TO_FILE`: agregadas variantes "bare" (sin FE0F invisible) de ⚠ ☠ ☣ ⚖ 🕸 🕳 ⚱ 🏛 🌪 🏗 — antes solo matcheaban las versiones con FE0F y los strings del LocaleManager venían sin él.
+
+#### Otros
+- Renames i18n: Barter → Exchange en strings de tutorial.
+- Anti-stuck dismiss on scene exit (TutorialManager).
+- `ReactorVisual.set_display_delta`: muestra entero en lugar de decimal.
+- `AccessibilityManager.reactor_3d_enabled = false` por default (2D primero).
+- `RunSnapshot`: run_id con formato `run_DD-MM-YY_HH-MM`.
+
+---
+
 ## [v1.0.0] — "Génesis" — 2026-05-15
 
 Primera versión estable para publicación pública.
