@@ -13,7 +13,12 @@ const HOTKEY_MAP := {
 
 func _ready() -> void:
 	add_to_group("upgrade_buttons")
-	
+
+	# Botones compactos: bajar el font_size permite reducir la altura del botón
+	# sin que el label de 2 líneas (texto + costo) se salga del rectángulo.
+	# NO usar clip_text: sin texto los botones colapsan a ancho 0 en GridContainer.
+	add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+
 	if upgrade_id == "":
 		var n = name.to_lower()
 		var cleaned = n.replace("button", "").replace("upgrade", "")
@@ -114,7 +119,7 @@ func _apply_affordability_style(can_afford: bool) -> void:
 		s.set_border_width_all(2)
 		s.border_color = Color(ok_c.r, ok_c.g, ok_c.b, 0.85)
 		s.set_corner_radius_all(4)
-		s.set_content_margin_all(4)
+		s.set_content_margin_all(2)
 		add_theme_stylebox_override("normal", s)
 		# Hover
 		var h := s.duplicate() as StyleBoxFlat
@@ -134,7 +139,7 @@ func _apply_affordability_style(can_afford: bool) -> void:
 		s.set_border_width_all(1)
 		s.border_color = Color(0.35, 0.30, 0.40, 0.45)  # gris
 		s.set_corner_radius_all(4)
-		s.set_content_margin_all(4)
+		s.set_content_margin_all(2)
 		add_theme_stylebox_override("normal", s)
 		add_theme_stylebox_override("hover", s)
 		add_theme_stylebox_override("pressed", s)
@@ -148,7 +153,7 @@ func _apply_affordability_style_hc(can_afford: bool) -> void:
 		s.set_border_width_all(3)
 		s.border_color = Color(1.0, 1.0, 1.0, 1.0)
 		s.set_corner_radius_all(3)
-		s.set_content_margin_all(4)
+		s.set_content_margin_all(2)
 		add_theme_stylebox_override("normal", s)
 		var h := s.duplicate()
 		h.bg_color = Color(0.15, 0.15, 0.15, 1.0)
@@ -163,7 +168,7 @@ func _apply_affordability_style_hc(can_afford: bool) -> void:
 		s.set_border_width_all(1)
 		s.border_color = Color(0.45, 0.45, 0.45, 0.7)
 		s.set_corner_radius_all(3)
-		s.set_content_margin_all(4)
+		s.set_content_margin_all(2)
 		add_theme_stylebox_override("normal", s)
 		add_theme_stylebox_override("hover", s)
 		add_theme_stylebox_override("pressed", s)
@@ -176,7 +181,7 @@ func _apply_acquired_style() -> void:
 	s.set_border_width_all(1)
 	s.border_color = Color(0.25, 0.55, 0.25, 0.45)  # verde apagado
 	s.set_corner_radius_all(4)
-	s.set_content_margin_all(4)
+	s.set_content_margin_all(2)
 	add_theme_stylebox_override("normal", s)
 	add_theme_stylebox_override("hover", s)
 	add_theme_stylebox_override("disabled", s)

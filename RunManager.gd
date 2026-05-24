@@ -594,10 +594,16 @@ func _show_evolution_button(target: String):
 		evolution_button.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 		evolution_button.custom_minimum_size = Vector2(0, 80)
 		evolution_button.pressed.connect(_on_evolution_button_pressed)
+		# Icono Twemoji (🧬) — vía Button.icon en lugar del char emoji para que
+		# se renderice también en web export (donde el font default no incluye emojis).
+		var dna_path := "res://emoji/1f9ec.png"
+		if ResourceLoader.exists(dna_path):
+			evolution_button.icon = load(dna_path)
+			evolution_button.expand_icon = false
 		UIManager.root.get_node("RightPanel").add_child(evolution_button)
 		UIManager.root.get_node("RightPanel").move_child(evolution_button, 0)
 
-	evolution_button.text = "🧬 SELLAR FINAL (" + target + ")"
+	evolution_button.text = "SELLAR FINAL (" + target + ")"
 	match target:
 		"HOMEOSTASIS":
 			evolution_button.add_theme_color_override("font_color", Color.CYAN)

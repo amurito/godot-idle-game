@@ -430,29 +430,29 @@ size_flags_vertical = 3
 theme_override_constants/separation = 8
 
 [node name="ProductionPanel" type="GridContainer" parent="UIRootContainer/CenterColumn"]
-custom_minimum_size = Vector2(0, 280)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 4
 columns = 3
 
 [node name="UpgradeClickButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Mejorar Click ( +$a )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeClickMultiplierButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Memoria Numérica ( ×b )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="PersistenceUpgradeButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Memoria Operativa (única)
 Persistencia -> 1.6
@@ -460,42 +460,42 @@ Costo: $500"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeAutoButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Trabajo Manual ( +d /s )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeAutoMultiplierButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Ritmo de Trabajo ( ×md )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeSpecializationButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Especialización ( +so )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeTruequeButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Trueque ( +e /s )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeTruequeNetworkButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Red de Intercambio ( ×me )
 Costo: $X"
 script = ExtResource("7_upgrade")
 
 [node name="UpgradeTruequeAlloButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Escalado Alostático ( ×ea )
 Costo: $X"
@@ -503,7 +503,7 @@ script = ExtResource("7_upgrade")
 upgrade_id = "trueque_allo"
 
 [node name="UpgradeCognitiveButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Capital Cognitivo
 Costo: $X"
@@ -511,7 +511,7 @@ script = ExtResource("7_upgrade")
 upgrade_id = "cognitive"
 
 [node name="UpgradeAccountingButton" type="Button" parent="UIRootContainer/CenterColumn/ProductionPanel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Contabilidad
 Costo: $X"
@@ -851,10 +851,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
+[node name="Icon" type="TextureRect" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-horizontal_alignment = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptHomeostasis"]
 layout_mode = 2
@@ -881,10 +882,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
+[node name="Icon" type="TextureRect" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-horizontal_alignment = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptColonization"]
 layout_mode = 2
@@ -911,10 +913,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="Icon" type="Label" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
+[node name="Icon" type="TextureRect" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-horizontal_alignment = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Desc" type="RichTextLabel" parent="EvoChoicePanel/Margin/VBox/HBox/OptSymbiosis"]
 layout_mode = 2

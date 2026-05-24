@@ -1446,20 +1446,29 @@ func update_bifurcation_panel() -> void:
 
 	evo_choice_panel.get_node("Margin/VBox/TopBar/Header").text = data["header"]
 
+	# Icons (TextureRect) — Twemoji PNG según ruta/tier para que se vean en web.
+	var icon_home: TextureRect = opt_homeostasis.find_child("Icon") as TextureRect
+	var icon_col: TextureRect = evo_choice_panel.find_child("OptColonization", true, false).find_child("Icon") as TextureRect
+	var icon_sym: TextureRect = evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Icon") as TextureRect
+
 	if data["tier_mode"] == "tier1":
 		opt_homeostasis.visible = true
 		opt_colonization.visible = true
 		opt_symbiosis.visible = true
 
-		opt_homeostasis.find_child("Desc").text = data["homeostasis_text"]
+		EmojiToRichText.set_icon_texture(icon_home, "⚖️")
+		EmojiToRichText.set_icon_texture(icon_col, "🕸️")
+		EmojiToRichText.set_icon_texture(icon_sym, "🤝")
+
+		opt_homeostasis.find_child("Desc").text = EmojiToRichText.rich(data["homeostasis_text"])
 		btn_homeostasis.text = tr("EVO_BTN_EQUIL")
 		btn_homeostasis.disabled = not data["homeostasis_ready"]
 
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["red_micelial_text"]
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = EmojiToRichText.rich(data["red_micelial_text"])
 		btn_colonization.text = tr("EVO_BTN_RAMIF")
 		btn_colonization.disabled = not data["red_micelial_ready"]
 
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["simbiosis_text"]
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = EmojiToRichText.rich(data["simbiosis_text"])
 		btn_symbiosis.text = tr("EVO_BTN_FUSION")
 		btn_symbiosis.disabled = not data["simbiosis_ready"]
 
@@ -1468,7 +1477,9 @@ func update_bifurcation_panel() -> void:
 		opt_colonization.visible = false
 		opt_symbiosis.visible = false
 
-		opt_homeostasis.find_child("Desc").text = data["allostasis_text"]
+		EmojiToRichText.set_icon_texture(icon_home, "⚖️")
+
+		opt_homeostasis.find_child("Desc").text = EmojiToRichText.rich(data["allostasis_text"])
 		btn_homeostasis.text = tr("EVO_BTN_EVOLVE") if data["allostasis_ready"] else tr("EVO_BTN_REQS_FAIL")
 		btn_homeostasis.disabled = not data["allostasis_ready"]
 		btn_homeostasis.modulate = Color(0, 1, 1)
@@ -1478,11 +1489,14 @@ func update_bifurcation_panel() -> void:
 		opt_colonization.visible = true
 		opt_symbiosis.visible = true
 
-		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = data["colonization_text"]
+		EmojiToRichText.set_icon_texture(icon_col, "🌱")
+		EmojiToRichText.set_icon_texture(icon_sym, "🤝")
+
+		evo_choice_panel.find_child("OptColonization", true, false).find_child("Desc").text = EmojiToRichText.rich(data["colonization_text"])
 		btn_colonization.text = tr("EVO_BTN_COLONIZE")
 		btn_colonization.disabled = not data["colonization_ready"]
 
-		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = data["symbiosis_text"]
+		evo_choice_panel.find_child("OptSymbiosis", true, false).find_child("Desc").text = EmojiToRichText.rich(data["symbiosis_text"])
 		btn_symbiosis.disabled = not data["symbiosis_ready"]
 		btn_symbiosis.text = tr("EVO_BTN_INTEG_REQ") if not data["symbiosis_ready"] else tr("EVO_BTN_INTEG")
 
