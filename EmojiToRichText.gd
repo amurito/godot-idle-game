@@ -36,11 +36,18 @@ const EMOJI_TO_FILE: Dictionary = {
 }
 
 const BMP_SYMBOLS: Dictionary = {
+	# IMPORTANTE: iterar este dict en orden de inserción al hacer replace().
+	# Las claves COMPUESTAS (c₀, cₙ, fⁿ) deben venir ANTES que las bare (₀, ₙ, ⁿ)
+	# para que el match más específico tenga precedencia. Si "₀" se reemplaza
+	# primero, "c₀" ya no matchearía después.
 	"▲": "+",
 	"▼": "-",
 	"▶": ">",
 	"●": "*",
 	"→": "->",
+	"←": "<",
+	"↑": "^",
+	"↓": "v",
 	"═": "=",
 	"─": "-",
 	"█": "|",
@@ -51,11 +58,20 @@ const BMP_SYMBOLS: Dictionary = {
 	"★": "*",
 	"✦": "*",
 	"◈": "*",
+	"⚫": "*",
 	"c₀": "c0",
 	"cₙ": "cn",
 	"fⁿ": "fn",
+	"₀": "0",
+	"ₙ": "n",
+	"ⁿ": "n",
+	"≤": "<=",
+	"≥": ">=",
+	"≈": "~",
+	"−": "-",
 	"⏱": "T",
 	"⏰": "T",
+	"⌨": "",
 	"🕳️": "",
 	"⚱️": "",
 	"⚙": "",

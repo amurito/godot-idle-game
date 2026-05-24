@@ -43,13 +43,13 @@ const PASSIVE_RATIO_START := 0.60
 var _debug_panel: Panel = null
 
 # RunManager.final_reason movido a RunManager.gd
-var show_final_details := false  # ya lo ten�as; lo usamos para controlar detalles
+var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
 
-# Timers � tick system (no more manual accumulation in _process)
+# Timers — tick system (no more manual accumulation in _process)
 var _logic_timer: Timer
 var _ui_timer: Timer
 var _autosave_timer: Timer
-const UI_TICK := 0.1      # 10 Hz � labels & buttons
+const UI_TICK := 0.1      # 10 Hz — labels & buttons
 const AUTOSAVE_INTERVAL := 30.0
 
 # ================= REFERENCIAS UI ===================
@@ -683,8 +683,8 @@ func get_dlc_height() -> float:
 	if fungi_ui and fungi_ui.visible:
 		if fungi_ui.has_method("get_min_height"):
 			return fungi_ui.get_min_height()
-		return 180.0 # fallback si es visible pero no hay m�todo
-	return 0.0 # No ocupa espacio si est� oculto
+		return 180.0 # fallback si es visible pero no hay método
+	return 0.0 # No ocupa espacio si está oculto
 
 func adjust_scroll_for_dlc():
 	var h := get_dlc_height()
@@ -944,7 +944,7 @@ func _update_evolution_progress_bar():
 	if EvoManager.mutation_homeostasis:
 		current_val = RunManager.homeostasis_timer
 		max_val = Balance.HOMEOSTASIS_TIME_REQUIRED
-		show_bar = true # Siempre visible si la ruta est� activa
+		show_bar = true # Siempre visible si la ruta está activa
 			
 	# En el futuro podemos a�adir aqu� Simbiosis, Esporulación, etc.
 	
@@ -1119,7 +1119,7 @@ func _on_sporulation_final_pressed() -> void:
 	elif EvoManager.seta_formada:
 		# FINAL: ESPORULACIÓN BIOLÓGICA
 		var esporas := BiosphereEngine.trigger_sporulation()
-		if esporas > 1.0: # Umbral m�nimo bajado para asegurar PL
+		if esporas > 1.0: # Umbral mínimo bajado para asegurar PL
 			LegacyManager.add_spores(esporas)
 		
 		RunManager.close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
@@ -1307,7 +1307,8 @@ func _update_legacy_indicators() -> void:
 
 	var _add_chip := func(text: String, tooltip: String, color: Color) -> void:
 		var chip := Label.new()
-		chip.text = text
+		# strip() asegura que ↑/↓/≥/etc. del omega_lbl no queden como boxes en web
+		chip.text = EmojiToRichText.strip(text)
 		chip.tooltip_text = tooltip
 		chip.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		chip.modulate = color
@@ -1831,7 +1832,7 @@ func toggle_lap_view():
 func update_ui():
 	update_epsilon_sticky()
 	UIManager.update_bifurcation_panel()
-	UIManager.update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biol�gico)
+	UIManager.update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biológico)
 
 	check_dominance_transition()
 	check_achievements()
@@ -1861,7 +1862,7 @@ func update_ui():
 			UIManager.institution_panel_label.append_text(EmojiToRichText.rich(UIManager.build_institution_panel_text(self)))
 
 	if StructuralModel.institution_accounting_unlocked:
-		pass # Los botones gen�ricos se encargan de visibilidad
+		pass # Los botones genéricos se encargan de visibilidad
 	else:
 		pass
 

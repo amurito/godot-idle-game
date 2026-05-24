@@ -283,7 +283,7 @@ func _show_post_tras_picker() -> void:
 		vbox.add_child(btn)
 
 	var btn_cancel := Button.new()
-	btn_cancel.text = "← " + tr("MM_BACK")
+	btn_cancel.text = EmojiToRichText.strip("← " + tr("MM_BACK"))
 	btn_cancel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_cancel.pressed.connect(overlay.queue_free)
 	vbox.add_child(btn_cancel)
