@@ -1107,20 +1107,20 @@ func _show_toast(_id: String, def: Dictionary) -> void:
 	hbox.add_child(vbox)
 
 	var header_lbl := Label.new()
-	header_lbl.text = ("★ LOGRO LEGENDARIO" if is_legendary else "LOGRO") + " — " + tier_name
+	header_lbl.text = EmojiToRichText.strip(("★ LOGRO LEGENDARIO" if is_legendary else "LOGRO") + " — " + tier_name)
 	header_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	header_lbl.add_theme_color_override("font_color", color)
 	vbox.add_child(header_lbl)
 
 	var name_lbl := Label.new()
-	name_lbl.text = name_str
+	name_lbl.text = EmojiToRichText.strip(name_str)
 	name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0))
 	vbox.add_child(name_lbl)
 
 	if level in ["full", "legendary"] and desc_str != "":
 		var desc_lbl := Label.new()
-		desc_lbl.text = desc_str
+		desc_lbl.text = EmojiToRichText.strip(desc_str)
 		desc_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

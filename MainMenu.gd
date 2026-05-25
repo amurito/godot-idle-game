@@ -756,7 +756,7 @@ func _populate_legacy_items():
 					name_str += "  " + tr("ACH_BADGE_NEW")
 
 				var name_lbl: Label = Label.new()
-				name_lbl.text = name_str
+				name_lbl.text = EmojiToRichText.strip(name_str)
 				name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 				name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				if is_maxed:
@@ -810,7 +810,7 @@ func _populate_legacy_items():
 			col.queue_free()
 
 	var wip_lbl := Label.new()
-	wip_lbl.text = tr("BANK_WIP_NOTICE")
+	wip_lbl.text = EmojiToRichText.strip(tr("BANK_WIP_NOTICE"))
 	wip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	wip_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	wip_lbl.modulate = Color(0.5, 0.5, 0.6)
@@ -1242,7 +1242,7 @@ func _show_cosmic_bank_panel() -> void:
 	vbox.add_child(title)
 
 	var counter := Label.new()
-	counter.text = tr("COSMIC_BANK_COUNTER") % [LegacyManager.esencia, LegacyManager.trascendencia_count]
+	counter.text = EmojiToRichText.strip(tr("COSMIC_BANK_COUNTER") % [LegacyManager.esencia, LegacyManager.trascendencia_count])
 	counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	counter.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 	counter.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
@@ -1304,7 +1304,7 @@ func _show_cosmic_bank_panel() -> void:
 	vbox.add_child(HSeparator.new())
 
 	var placeholder := Label.new()
-	placeholder.text = tr("COSMIC_COMING_SOON")
+	placeholder.text = EmojiToRichText.strip(tr("COSMIC_COMING_SOON"))
 	placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	placeholder.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	placeholder.modulate = Color(0.5, 0.5, 0.6)

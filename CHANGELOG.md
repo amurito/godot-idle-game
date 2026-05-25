@@ -1,5 +1,20 @@
 # CHANGELOG — AntiIDLE
 
+## [v1.0.0.12] — Hotfix — 2026-05-25
+
+#### Banco Genético — íconos rotos en web (RESUELTO)
+Tras una segunda auditoría visual quedaron 5 labels asignando texto crudo a `Label.text` sin pasar por `EmojiToRichText.strip()` en web:
+- `MainMenu.gd:759` `name_lbl` — `★ NUEVO` (badge de buff recién desbloqueado)
+- `MainMenu.gd:813` `wip_lbl` — `◈ Próximamente...` (BANK_WIP_NOTICE)
+- `MainMenu.gd:1245` `counter` — `Ξ Disponible · Trascendencias` (Banco Cósmico)
+- `MainMenu.gd:1307` `placeholder` — `◈ Próximamente...` (COSMIC_COMING_SOON)
+- `AchievementManager.gd:1110` `header_lbl` — `★ LOGRO LEGENDARIO` (toast popup)
+- `AchievementManager.gd:1116,1123` `name_lbl`/`desc_lbl` — strip defensivo (logros tipo "Δ$ ≥ 100/s")
+
+Todos envueltos con `EmojiToRichText.strip(...)`.
+
+---
+
 ## [v1.0.0.11] — Hotfix — 2026-05-25
 
 #### Header chip 🧠 roto en web (RESUELTO)
