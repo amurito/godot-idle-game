@@ -1,72 +1,73 @@
 # CHANGELOG — AntiIDLE
 
-## [v1.0.0.13] — Hotfix — 2026-05-25
+## [v1.0.0.10] — "génesis" — 2026-05-25
 
-#### Header chip Ω — máx 1 flecha
-El chip `Ω≥X.XX` podía acumular hasta 3 `↑` (Resiliencia Alostática + Equilibrio Heredado + Regeneración Ω), que `strip()` convertía a `^ ^ ^` en web. Cosmético pero feo.
-- Ahora se muestra una sola `↑` como indicador de "hay bonos extra activos"; el tooltip sigue listando cada uno por separado.
-
-#### Fórmula `∫$ = ...` — fuerza a una línea
-La fórmula del Lab Mode partía en dos líneas cuando crecía (Λ breakdown + cognitive + capital), comiéndose espacio vertical del panel.
-- `FormulaLabel`: `autowrap_mode = 0` (OFF) + `clip_contents = true`. Si excede el ancho, trunca a la derecha sin romper el layout.
-- Bandas de auto-fit más finas: `fLen > 35→16`, `>45→15`, `>55→14`, `>68→13`, `>80→12`, `>95→11`. Antes solo `>40→16`, `>55→15`, `>70→13`.
-- Cap mínimo en 11 (legible). Si una fórmula muy larga aún excede a 11px, queda clipped — el breakdown completo siempre está abajo en `Λ = ...`.
+Release oficial de cierre del sprint **génesis**. Consolida fixes de export web, auditoría completa de emojis, UI compacta y pulido del header.
+Nota: la numeración salta a `.10` porque las tags `.7/.8/.9` ya existían en remote apuntando a commits previos de i18n (sin bump de `version.gd` en su momento, el juego seguía mostrando `1.0.0.6`).
 
 ---
 
-## [v1.0.0.12] — Hotfix — 2026-05-25
+### Web export — audio funcional + bundle estable
 
-#### Banco Genético — íconos rotos en web (RESUELTO)
-Tras una segunda auditoría visual quedaron 5 labels asignando texto crudo a `Label.text` sin pasar por `EmojiToRichText.strip()` en web:
-- `MainMenu.gd:759` `name_lbl` — `★ NUEVO` (badge de buff recién desbloqueado)
-- `MainMenu.gd:813` `wip_lbl` — `◈ Próximamente...` (BANK_WIP_NOTICE)
-- `MainMenu.gd:1245` `counter` — `Ξ Disponible · Trascendencias` (Banco Cósmico)
-- `MainMenu.gd:1307` `placeholder` — `◈ Próximamente...` (COSMIC_COMING_SOON)
-- `AchievementManager.gd:1110` `header_lbl` — `★ LOGRO LEGENDARIO` (toast popup)
-- `AchievementManager.gd:1116,1123` `name_lbl`/`desc_lbl` — strip defensivo (logros tipo "Δ$ ≥ 100/s")
-
-Todos envueltos con `EmojiToRichText.strip(...)`.
-
----
-
-## [v1.0.0.11] — Hotfix — 2026-05-25
-
-#### Header chip 🧠 roto en web (RESUELTO)
-- Chip "IA" (Mente Colmena) mostraba el emoji 🧠 como cuadrado roto en la build web.
-- Causa: el lambda `_add_chip` en `main.gd` no aplicaba `EmojiToRichText.strip()` al texto antes de asignarlo al `Label` — el fix estaba en el commit de auditoría (43de923) pero no había sido re-exportado.
-- Fix ya aplicado en código; esta versión fuerza re-export con todos los fixes de auditoría incluidos.
-
----
-
-## [v1.0.0.10] — Hotfix — 2026-05-24
-
-Bundle de fixes de export web + UI compacta.
-Nota: se salta a `.10` porque las tags `.7/.8/.9` ya existen en remote apuntando a commits de i18n previos (sin bump de `version.gd` en su momento, por lo que el juego seguía mostrando `1.0.0.6`).
-
-#### Audio web (RESUELTO)
-- Audio HTML5 finalmente suena en Chrome. Causa raíz: crear buses con `AudioServer.add_bus()` en runtime no ruteaba al Master en web.
-- Nuevo `default_bus_layout.tres` con Master + Music + SFX estáticos, referenciado desde `[audio] buses/default_bus_layout` en `project.godot`.
-- `[audio] general/default_playback_type.web=1` (Stream en lugar de Sample): el Sample tenía bugs cuando los buses no estaban registrados al cargarse los streams.
-- `AudioManager._setup_buses()` simplificado: solo cachea índices con fallback defensivo a Master + `push_warning`.
-
-#### Export web — bundle previo
+- **Audio HTML5 finalmente suena** en Chrome. Root cause: crear buses con `AudioServer.add_bus()` en runtime no ruteaba al Master en web.
+  - Nuevo `default_bus_layout.tres` con Master + Music + SFX estáticos, referenciado desde `[audio] buses/default_bus_layout` en `project.godot`.
+  - `[audio] general/default_playback_type.web=1` (Stream en lugar de Sample): el Sample tenía bugs cuando los buses no estaban registrados al cargarse los streams.
+  - `AudioManager._setup_buses()` simplificado: solo cachea índices con fallback defensivo a Master + `push_warning`.
 - `fix_web_export.bat` + `fix_web_export.ps1`: patcheo post-export del `index.html` (canvasResizePolicy 0→2, inyección JS de audio unlock interceptando `AudioContext` en `<head>`).
 - `[display] stretch_mode=canvas_items + aspect=expand`: sin barras negras, clicks alineados con CSS scaling.
 - `variant/thread_support=false` en preset HTML5: no requiere COOP/COEP del servidor.
 - `exclude_filter` en preset HTML5: `DebugPanel.gd,tests/*` para reducir bundle.
 
-#### UI — botones compactos
+---
+
+### Emojis Twemoji — cobertura completa en web
+
+Godot 4 web export usa un subset de Noto Sans que NO cubre emojis color ni varios bloques BMP (Geometric Shapes, Arrows, Box Drawings, etc.). Solución sistémica: `EmojiToRichText` + Twemoji PNGs locales en `res://emoji/`.
+
+#### API
+- `rich(text)` — para RichTextLabel: reemplaza emojis con `[img=16]res://emoji/XXXX.png[/img]` y BMP symbols con ASCII.
+- `strip(text)` — para Label / Button: elimina emojis y reemplaza BMP symbols.
+- `set_icon_texture(rect, emoji)` — para TextureRect: carga el PNG Twemoji directamente como ícono visual.
+- Solo actúan en web (`OS.get_name() == "Web"`); desktop pasa-through.
+
+#### Patrones nuevos
+- **SELLAR FINAL 🧬**: ahora `Button.icon = load("res://emoji/1f9ec.png")` en lugar de char emoji en `text`. Renderiza universal sin depender de la fuente del browser.
+- **Iconos de mutación tier1/tier2**: nodos `Icon` ahora son `TextureRect`. Asignados según tier: ⚖️ Homeostasis · 🕸️ Red Micelial · 🤝 Simbiosis · ⚖️ Allostasis · 🌱 Colonización · 🤝 Simbiosis Mecánica.
+- `Desc` text de cada opción pasa por `EmojiToRichText.rich()`.
+
+#### Cobertura ampliada
+- `EMOJI_TO_FILE`: 55 PNGs + variantes "bare" (sin FE0F invisible) de ⚠ ☠ ☣ ⚖ 🕸 🕳 ⚱ 🏛 🌪 🏗. Orden: claves con FE0F primero para que `replace()` no parta el FE0F como huérfano.
+- `BMP_SYMBOLS`: ← → ↑ ↓ ▲ ▼ ▶ ● ⚫ ★ ✦ ◈ ═ ─ █ ▓ ░ ✓ ✗ c₀ cₙ fⁿ ₀ ₙ ⁿ ≤ ≥ ≈ − ⏱ ⏰ ⌨ ⚙. Claves compuestas vienen primero para que el match más específico tenga precedencia.
+
+#### Auditoría sistemática (commits `43de923`, `1eff78e`)
+Script Python ad-hoc que carga `EMOJI_TO_FILE`/`BMP_SYMBOLS` desde `EmojiToRichText.gd` y cruza contra todos los chars `>= U+2000` en `LocaleManager.gd`, archivos `.gd` y `.tscn`. Resultado: **0 issues UI restantes**.
+
+Labels reparados (segunda pasada visual post-deploy):
+- `main.gd` `_add_chip` lambda (chips del header: pas×, Ω, IA).
+- `MainMenu.gd` — `name_lbl` (`★ NUEVO`), `wip_lbl` (`◈ Próximamente`), `counter` (`Ξ Disponible · …`), `placeholder` (`◈ Próximamente`).
+- `AchievementManager.gd` — `header_lbl` (`★ LOGRO LEGENDARIO`), `name_lbl`/`desc_lbl` defensivo.
+- `MainMenu.gd:286` `btn_cancel` (`← Volver`).
+
+---
+
+### UI — pulido del header + pantalla central
+
+#### Botones compactos
 - `ProductionPanel` (upgrades): altura mínima 280→150, `v_separation` 8→4, `h_separation` 8→6.
 - `UpgradeButton`: altura mínima 56→36, `content_margin` 4→2 en los StyleBox, `font_size` override `AccessibilityManager.fs(11)`.
-- Ahorro neto: ~120-130px verticales en el centro de la pantalla. El texto de 2 líneas (label + costo) sigue entrando.
+- Ahorro neto: ~120-130px verticales. El texto de 2 líneas (label + costo) sigue entrando.
 
-#### Emojis Twemoji en web
-- **SELLAR FINAL 🧬**: ahora usa `Button.icon = load("res://emoji/1f9ec.png")` en lugar de char emoji en `text`. Renderiza universal sin depender de la fuente del browser.
-- **Iconos de mutación tier1/tier2**: nodos `Icon` (antes Label vacío) ahora son `TextureRect`. Nuevo helper `EmojiToRichText.set_icon_texture(rect, emoji)` carga el PNG por código. Asignados según tier: ⚖️ Homeostasis · 🕸️ Red Micelial · 🤝 Simbiosis · ⚖️ Allostasis · 🌱 Colonización · 🤝 Simbiosis Mecánica.
-- `Desc` text de cada opción ahora pasa por `EmojiToRichText.rich()` para convertir emojis inline en `[img]` BBCode.
-- `EMOJI_TO_FILE`: agregadas variantes "bare" (sin FE0F invisible) de ⚠ ☠ ☣ ⚖ 🕸 🕳 ⚱ 🏛 🌪 🏗 — antes solo matcheaban las versiones con FE0F y los strings del LocaleManager venían sin él.
+#### Chip Ω — una sola flecha
+El chip `Ω≥X.XX` podía acumular hasta 3 `↑` (Resiliencia Alostática + Equilibrio Heredado + Regen Ω), que `strip()` convertía a `^ ^ ^` en web. Ahora una sola `↑` como indicador agregado; tooltip lista cada bono.
 
-#### Otros
+#### Fórmula `∫$ = ...` — fuerza a una línea
+- `FormulaLabel`: `autowrap_mode = 0` (OFF) + `clip_contents = true`. Si excede el ancho, trunca a la derecha sin romper el layout vertical del Lab Mode.
+- Bandas de auto-fit más finas: `fLen >35→16`, `>45→15`, `>55→14`, `>68→13`, `>80→12`, `>95→11`. Cap mínimo en 11 (legible).
+
+---
+
+### Otros
+
 - Renames i18n: Barter → Exchange en strings de tutorial.
 - Anti-stuck dismiss on scene exit (TutorialManager).
 - `ReactorVisual.set_display_delta`: muestra entero en lugar de decimal.
