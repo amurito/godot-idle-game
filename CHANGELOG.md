@@ -1,5 +1,14 @@
 # CHANGELOG — AntiIDLE
 
+## [v1.0.0.11] — Hotfix — 2026-05-25
+
+#### Header chip 🧠 roto en web (RESUELTO)
+- Chip "IA" (Mente Colmena) mostraba el emoji 🧠 como cuadrado roto en la build web.
+- Causa: el lambda `_add_chip` en `main.gd` no aplicaba `EmojiToRichText.strip()` al texto antes de asignarlo al `Label` — el fix estaba en el commit de auditoría (43de923) pero no había sido re-exportado.
+- Fix ya aplicado en código; esta versión fuerza re-export con todos los fixes de auditoría incluidos.
+
+---
+
 ## [v1.0.0.10] — Hotfix — 2026-05-24
 
 Bundle de fixes de export web + UI compacta.
