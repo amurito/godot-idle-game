@@ -22,8 +22,7 @@ var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
 var _reset_btn: Button = null
 
-# CONSTANTES DE MODELO (moved to StructuralModel.gd)
-const CLICK_RATE := 1.0
+# CONSTANTES DE MODELO (CLICK_RATE vive en EconomyManager.gd)
 
 var mu_peak_run: float = 0.0
 var delta_peak_run: float = 0.0
@@ -33,17 +32,14 @@ var _telemetry_sample_timer: float = 0.0
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
 
-# === e PASIVO (v0.8) ===
+# === ε PASIVO (v0.8) ===
 const EPS_PASSIVE_SCALE := 0.24
 const PASSIVE_RATIO_START := 0.60
 
 
-# =============== SESI�N / LAB MODE ===================
+# =============== SESIÓN / LAB MODE ===================
 
 var _debug_panel: Panel = null
-
-# RunManager.final_reason movido a RunManager.gd
-var show_final_details := false  # ya lo tenías; lo usamos para controlar detalles
 
 # Timers — tick system (no more manual accumulation in _process)
 var _logic_timer: Timer
@@ -138,35 +134,8 @@ func _on_simbiosis_seal_pressed():
 	RunManager.close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_BASE"))
 
 
-func apply_flexibility_modifier(factor: float):
-	StructuralModel.apply_flexibility_modifier(factor)
-
-func enable_persistence_inertia(factor: float):
-	StructuralModel.enable_persistence_inertia(factor)
-
-func apply_symbiotic_stabilization():
-	# m�s flexibilidad estructural
-	StructuralModel.omega = min(1.0, StructuralModel.omega * 1.25)
-
-	# amortiguaci�n permanente del estrés
-	EconomyManager.mutation_accounting_bonus = min(0.6, EconomyManager.mutation_accounting_bonus + 0.15)
-
-	# mejora pasivo sin romper el modelo
-	EconomyManager.trueque_efficiency *= 1.1
-	EconomyManager.mutation_auto_factor *= 1.05
 # =====================================================
-#  RUTA FINAL � detalles
-# =====================================================
-func build_final_line() -> String:
-	if not RunManager.run_closed:
-		return ""
-	var t := "\n?? FINAL: %s" % RunManager.final_route
-	if show_final_details:
-		t += "\n" + get_final_reason()
-	return t
-
-# =====================================================
-#  FORMATO TEXTO F�RMULA
+#  FORMATO TEXTO FÓRMULA
 # =====================================================
 
 func build_formula_text() -> String:
@@ -381,7 +350,6 @@ func _ready():
 	menu_btn.text = EmojiToRichText.strip("🏠 " + tr("GAME_BTN_MENU"))
 	menu_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 	menu_btn.pressed.connect(func():
-		print("?? Guardando y volviendo al menú...")
 		SaveManager.save_game(self)
 		get_tree().change_scene_to_file("res://MainMenu.tscn")
 	)
@@ -492,10 +460,6 @@ func _ready():
 		if is_instance_valid(evo_choice_panel) and not RunManager.run_closed:
 			dimmer.visible = true
 			evo_choice_panel.visible = true
-			print("🚨 Recuperando elección de rama pendiente")
-	if OS.get_name() == "HTML5":
-		print("🔄 HTML5 detectado - Reemplazando emojis...")
-		call_deferred("_replace_emojis_for_html5")
 	_use_3d_reactor = AccessibilityManager.reactor_3d_enabled
 	if _use_3d_reactor:
 		_init_reactor_3d()
@@ -507,57 +471,6 @@ func _ready():
 	if not RunManager.run_closed:
 		TelemetryManager.start_run(self)
 
-func _replace_emojis_for_html5():
-	print("✅ INICIANDO reemplazo de emojis...")
-
-	# Reemplazar en todos los labels y botones
-	_replace_emojis_in_node(self)
-	print("✅ Reemplazo completado")
-
-func _replace_emojis_in_node(node: Node):
-	var replacements = {
-		"🍄": "[Hongo]",
-		"🔥": "[Fuego]",
-		"☣️": "[Peligro]",
-		"🕸️": "[Red]",
-		"🤝": "[Simb]",
-		"⚖️": "[Homeo]",
-		"🌱": "[Planta]",
-		"⚡": "[Rayo]",
-		"💜": "[Alo]",
-		"💎": "[HomeoR]",
-		"🌑": "[Oscuro]",
-		"☠️": "[Muerte]",
-		"💾": "[Disco]",
-		"🌿": "[Hoja]",
-		"🎭": "[Carnaval]",
-		"🌀": "[Tras]",
-		"⚱️": "[Reenc]",
-		"🕳️": "[Vacio]",
-		"🧠": "[Mente]",
-		"🚀": "[Cohete]",
-		"⚠️": "[!]",
-		"✅": "[OK]",
-		"✨": "[*]",
-		"🏁": "[Fin]",
-		"📤": "[Exp]",
-		"🔒": "[Bloq]",
-		"▶": "[>]",
-		"▼": "[v]",
-		"▲": "[^]",
-		"✓": "[v]",
-		"✗": "[x]",
-		"→": "[->]",
-		"↓": "[down]",
-		"↑": "[up]",
-	}
-	if node is Label or node is Button or node is RichTextLabel:
-		var text_property = node.text if node.has_method("get_text") else ""
-		for emoji in replacements:
-			if emoji in text_property:
-				node.text = text_property.replace(emoji, replacements[emoji])
-		for child in node.get_children():
-			_replace_emojis_in_node(child)
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
@@ -581,7 +494,6 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	
 func register_reactor(rv: Node):
 	reactor_visual = rv
-	print("?? Reactor registrado:", rv)
 
 func _init_reactor_3d() -> void:
 	var viewport := get_node_or_null(
@@ -626,7 +538,6 @@ func _init_reactor_3d() -> void:
 		btn.add_child(_3d_power_label)
 	# set_script() no llama a _ready() → sincronizar el viewport manualmente tras el layout
 	call_deferred("_sync_reactor_viewport")
-	print("✅ Reactor3D inicializado")
 
 func _sync_reactor_viewport() -> void:
 	# Espera 2 frames para que el layout esté completamente calculado
@@ -676,7 +587,6 @@ func _mount_fungi_dlc():
 	fungi_ui.size_flags_horizontal = Control.SIZE_FILL
 	fungi_ui.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	print("?? Fungi DLC mounted (layout-aware)")
 	adjust_scroll_for_dlc()
 
 func get_dlc_height() -> float:
@@ -1040,7 +950,6 @@ func _on_btn_colonization_pressed() -> void:
 	update_ui()
 
 func _trigger_allostasis() -> void:
-	print("?? EVOLUCIÓN: ALLOSTASIS (TIER 2)")
 	EvoManager.activate_mutation("allostasis")
 	RunManager.homeostasis_mode = false # Salimos de homeostasis pura
 	
@@ -1065,7 +974,6 @@ func _on_btn_symbiosis_pressed() -> void:
 	update_ui()
 
 func _on_branch_selected(branch: int):
-	print("?? SELECCIÓN DE RAMA DETECTADA: ", branch)
 	EvoManager.red_branch_selected = branch
 	if is_instance_valid(dimmer):
 		dimmer.visible = false
@@ -1199,7 +1107,7 @@ func _refresh_legacy_store():
 			if col_has_items:
 				col.add_child(HSeparator.new())
 			var hdr: Label = Label.new()
-			hdr.text = "-- %s --" % LegacyManager.CAT_NAMES.get(cat, cat.to_upper())
+			hdr.text = "-- %s --" % tr("LEGACY_CAT_" + cat.to_upper())
 			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 			hdr.modulate = cat_colors.get(cat, Color.WHITE)
 			hdr.custom_minimum_size.y = 22
@@ -1224,7 +1132,7 @@ func _build_legacy_item(id: String) -> Control:
 	var v: VBoxContainer = VBoxContainer.new()
 	v.add_theme_constant_override("separation", 1)
 
-	var name_str: String = def.get("name", id)
+	var name_str: String = tr("LEGACY_" + id.to_upper() + "_NAME")
 	if max_lvl > 1:
 		name_str += "  [%d/%d]" % [lvl, max_lvl]
 	var l_title: Label = Label.new()
@@ -1240,7 +1148,7 @@ func _build_legacy_item(id: String) -> Control:
 		l_title.modulate = Color(0.5, 0.9, 0.6)
 
 	var l_desc: Label = Label.new()
-	l_desc.text = def.get("flavor", "")
+	l_desc.text = tr("LEGACY_" + id.to_upper() + "_FLAVOR")
 	l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l_desc.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
 	l_desc.modulate = Color(0.6, 0.6, 0.6)
@@ -1674,7 +1582,6 @@ func get_system_phase() -> String:
 # =====================================================
 # DLC � INTERFAZ FÚNGICA v0.8
 func _on_Biosfera_pressed() -> void:
-	print("?? Biosfera toggle")
 	if fungi_ui:
 		fungi_ui.visible = !fungi_ui.visible
 		adjust_scroll_for_dlc()
@@ -1694,7 +1601,6 @@ func _on_BigClickButton_pressed():
 
 
 func on_institutions_unlocked():
-	print("Nueva capa estructural detectada: Instituciones")
 	show_institutions_panel = true
 	StructuralModel.epsilon_runtime *= 0.85 # baja 15% el estrés
 	StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
