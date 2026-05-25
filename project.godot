@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="AntiIDLE"
+config/name="HYPHAE: genesis"
 config/description="Simulación de sistemas adaptativos: gestioná un organismo en evolución, alcanzá la homeostasis y trascendé el ciclo biótico. Idle/incremental con mutaciones, trueque y herencia cósmica."
 config/version="1.0.0"
 run/main_scene="res://MainMenu.tscn"

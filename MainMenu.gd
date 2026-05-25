@@ -1389,7 +1389,7 @@ func _show_credits_panel(on_close: Callable = Callable()) -> void:
 	_credits_spacer(content, 100)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "AntiIDLE"
+	title_lbl.text = "HYPHAE: genesis"
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(52))
 	title_lbl.add_theme_color_override("font_color", Color(0.25, 0.82, 1.0))

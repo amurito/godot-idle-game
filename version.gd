@@ -1,7 +1,7 @@
 extends Node
 
 var TITLE: String:
-	get: return "AntiIDLE — v" + get_version_string()
+	get: return "HYPHAE: genesis — v" + get_version_string()
 var VERSION: String:
 	get: return get_version_string()
 const NAME := "génesis"

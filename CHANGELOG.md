@@ -1,4 +1,4 @@
-# CHANGELOG — AntiIDLE
+# CHANGELOG — HYPHAE: genesis
 
 ## [v1.0.0.10] — "génesis" — 2026-05-25
 

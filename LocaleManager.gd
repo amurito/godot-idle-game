@@ -154,7 +154,7 @@ const TRANSLATIONS := {
 		"GAME_BTN_LOCKED": "BLOQUEADO",
 		"GAME_BTN_FREE": "GRATIS",
 		# === TUTORIAL ===
-		"TUTO_WELCOME_TITLE": "Bienvenido a AntiIDLE",
+		"TUTO_WELCOME_TITLE": "Bienvenido a HYPHAE: genesis",
 		"TUTO_WELCOME_BODY": "[center]Sos una estructura en proceso de evolución.\n\nHacé clic en el [b]reactor[/b] para generar energía, comprá [b]mejoras[/b] para crecer y vigilá el [color=yellow][b]estrés estructural (ε)[/b][/color] antes de que tu sistema colapse.\n\n[color=cyan]La presión da lugar a la adaptación.[/color][/center]",
 		"TUTO_BTN_SKIP": "Omitir tutorial",
 		"TUTO_BTN_START": "  Empezar  ",
@@ -1260,7 +1260,7 @@ const TRANSLATIONS := {
 		"GAME_BTN_LOCKED": "LOCKED",
 		"GAME_BTN_FREE": "FREE",
 		# === TUTORIAL ===
-		"TUTO_WELCOME_TITLE": "Welcome to AntiIDLE",
+		"TUTO_WELCOME_TITLE": "Welcome to HYPHAE: genesis",
 		"TUTO_WELCOME_BODY": "[center]You are a structure in the process of evolution.\n\nClick the [b]reactor[/b] to generate energy, buy [b]upgrades[/b] to grow, and watch [color=yellow][b]structural stress (ε)[/b][/color] before your system collapses.\n\n[color=cyan]Pressure gives rise to adaptation.[/color][/center]",
 		"TUTO_BTN_SKIP": "Skip tutorial",
 		"TUTO_BTN_START": "  Start  ",
