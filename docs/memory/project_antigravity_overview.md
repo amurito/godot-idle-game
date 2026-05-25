@@ -1,10 +1,10 @@
 ---
-name: AntiIDLE project overview
-description: Overview of the AntiIDLE idle game project — engine, version, file structure, current phase
+name: HYPHAE: genesis project overview
+description: Overview of the HYPHAE: genesis idle game project — engine, version, file structure, current phase
 type: project
 originSessionId: 554b9b8e-33ea-46f2-85ae-400b8aa51329
 ---
-Juego idle en Godot/GDScript llamado "AntiIDLE" (working dir: C:\Users\nicol\Desktop\idleantigravity).
+Juego idle en Godot/GDScript llamado "HYPHAE: genesis" (working dir: C:\Users\nicol\Desktop\idleantigravity).
 
 Versión actual: v0.9.9 (Post-Biológico)
 

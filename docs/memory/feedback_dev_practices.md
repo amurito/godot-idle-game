@@ -1,6 +1,6 @@
 ---
 name: Dev practices and lessons learned
-description: Prácticas aprendidas durante el desarrollo de AntiIDLE — worktrees, cost vs display, GDScript quirks
+description: Prácticas aprendidas durante el desarrollo de HYPHAE: genesis — worktrees, cost vs display, GDScript quirks
 type: feedback
 originSessionId: 554b9b8e-33ea-46f2-85ae-400b8aa51329
 ---
