@@ -518,10 +518,15 @@ func build_formula_text(_main: Node) -> String:
 				"[color=#ffaa44]","[color=#9933cc]","[color=#ffdd88]","[color=cyan]","[/color]"]:
 		plain_str = plain_str.replace(tag, "")
 	var fLen := plain_str.length()
+	# Bandas auto-fit — la línea queda sin wrap (autowrap_mode=0 + clip_contents en .tscn).
+	# Bajar a 11 mínimo: aún legible y absorbe fórmulas largas con cognitive + Λ + breakdown.
 	var fSize := 18
-	if fLen > 70: fSize = 13
-	elif fLen > 55: fSize = 15
-	elif fLen > 40: fSize = 16
+	if   fLen > 95: fSize = 11
+	elif fLen > 80: fSize = 12
+	elif fLen > 68: fSize = 13
+	elif fLen > 55: fSize = 14
+	elif fLen > 45: fSize = 15
+	elif fLen > 35: fSize = 16
 
 	var t: String = "[font_size=%d]∫$ = " % fSize + formula_main + "[/font_size]\n"
 

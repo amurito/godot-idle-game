@@ -1,5 +1,19 @@
 # CHANGELOG — AntiIDLE
 
+## [v1.0.0.13] — Hotfix — 2026-05-25
+
+#### Header chip Ω — máx 1 flecha
+El chip `Ω≥X.XX` podía acumular hasta 3 `↑` (Resiliencia Alostática + Equilibrio Heredado + Regeneración Ω), que `strip()` convertía a `^ ^ ^` en web. Cosmético pero feo.
+- Ahora se muestra una sola `↑` como indicador de "hay bonos extra activos"; el tooltip sigue listando cada uno por separado.
+
+#### Fórmula `∫$ = ...` — fuerza a una línea
+La fórmula del Lab Mode partía en dos líneas cuando crecía (Λ breakdown + cognitive + capital), comiéndose espacio vertical del panel.
+- `FormulaLabel`: `autowrap_mode = 0` (OFF) + `clip_contents = true`. Si excede el ancho, trunca a la derecha sin romper el layout.
+- Bandas de auto-fit más finas: `fLen > 35→16`, `>45→15`, `>55→14`, `>68→13`, `>80→12`, `>95→11`. Antes solo `>40→16`, `>55→15`, `>70→13`.
+- Cap mínimo en 11 (legible). Si una fórmula muy larga aún excede a 11px, queda clipped — el breakdown completo siempre está abajo en `Λ = ...`.
+
+---
+
 ## [v1.0.0.12] — Hotfix — 2026-05-25
 
 #### Banco Genético — íconos rotos en web (RESUELTO)

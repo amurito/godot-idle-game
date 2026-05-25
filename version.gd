@@ -9,7 +9,7 @@ const NAME := "Génesis"
 const MAJOR := 1
 const MINOR := 0
 const PATCH := 0
-const HOTFIX := 12  # Incrementar para hotfixes: 1.0.0.1, 1.0.0.2, etc.
+const HOTFIX := 13  # Incrementar para hotfixes: 1.0.0.1, 1.0.0.2, etc.
 
 
 func get_env(var_name: String) -> String:

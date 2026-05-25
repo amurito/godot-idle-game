@@ -1389,12 +1389,10 @@ func _update_legacy_indicators() -> void:
 		var omega_lbl := "Ω≥%.2f" % omega_min if omega_min > 0.0 else "Ω↑"
 		if alostasis_active:
 			omega_tip += "\n• Resiliencia Alostática: +0.02/shock*"
-			omega_lbl += " ↑"
 		if eq_bonus_active:
 			omega_tip += "\n• Equilibrio Heredado: +0.04/shock*"
-			if "↑" not in omega_lbl:
-				omega_lbl += " ↑"
-		if omega_rec > 0.0:
+		# Una sola flecha como indicador de "tiene bonus extra" (tooltip lista cada uno)
+		if (alostasis_active or eq_bonus_active or omega_rec > 0.0) and "↑" not in omega_lbl:
 			omega_lbl += " ↑"
 		_add_chip.call(omega_lbl, omega_tip, Color(0.4, 0.9, 1.0))
 	if LegacyManager.get_buff_value("deriva_esporada"):
