@@ -991,7 +991,7 @@ func on_run_closed(route: String) -> void:
 		"click_count":            _click_count,
 		"clicks_after_minute_one":_clicks_after_minute_one,
 		"run_time":               _run_time,
-		"epsilon":                _snapshot.get("epsilon", 0.0),
+		"epsilon":                StructuralModel.epsilon_runtime,  # runtime = lo que ve el jugador
 		"omega":                  StructuralModel.omega,
 		"disturbances_survived":  RunManager.disturbances_survived,
 		"resilience_score":       RunManager.resilience_score,

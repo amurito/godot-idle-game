@@ -26,6 +26,7 @@ var disturbances_survived: int = 0
 var disturbances_without_reset: int = 0  # Racha de perturbaciones sin reset de timer (para logro)
 var is_recovering_from_shock: bool = false
 var is_recovering_from_extreme: bool = false  # shock de 0.8-1.0 en curso
+var _shock_peak_epsilon: float = 0.0          # epsilon_runtime al pico del shock (para logro presion_adaptativa)
 var extreme_shocks_recovered: int = 0         # veces que se volvió a banda tras shock extremo
 var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 
@@ -421,6 +422,7 @@ func trigger_disturbance():
 		LogManager.add(tr("LOG_SHOCK_NORMAL") % str(snapped(shock, 0.01)))
 
 	StructuralModel.epsilon_runtime += shock
+	_shock_peak_epsilon = StructuralModel.epsilon_runtime  # pico real para logro presion_adaptativa
 	is_recovering_from_shock = true
 	if is_extreme:
 		is_recovering_from_extreme = true
@@ -453,7 +455,7 @@ func check_shock_tracking():
 			LogManager.add(tr("LOG_SHOCK_ABSORBED") % extreme_shocks_recovered)
 		else:
 			LogManager.add(tr("LOG_SHOCK_STABILIZED") % disturbances_survived)
-		AchievementManager.on_disturbance_survived(StructuralModel.epsilon_effective)
+		AchievementManager.on_disturbance_survived(_shock_peak_epsilon)
 
 		# LEGADO ALOSTASIS: Ω_min crece +0.02 por shock estabilizado (cap 0.70)
 		if LegacyManager.get_buff_value("legado_alostasis"):
