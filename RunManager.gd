@@ -323,7 +323,7 @@ func check_symbiosis_final(_delta: float):
 func is_fractura_epistemica_available() -> bool:
 	return not carnaval_active and not run_closed \
 		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
-		and StructuralModel.epsilon_effective > 0.90 \
+		and StructuralModel.epsilon_runtime > 0.90 \
 		and StructuralModel.omega > 0.30
 
 func check_fractura_epistemica(_delta: float):

@@ -333,31 +333,30 @@ func show_settings_panel(parent: Node) -> void:
 	)
 	vbox.add_child(btn_export)
 
-	if OS.get_name() == "Web":
-		# En web también ofrecemos importar (para cargar un save exportado desde desktop)
-		var btn_import := Button.new()
-		btn_import.text = tr("SET_IMPORT_SAVE")
-		btn_import.custom_minimum_size = Vector2(0, 36)
-		btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
-		btn_import.pressed.connect(func():
-			_close_settings_panel()
-			SaveManager.import_save_json()
-		)
-		vbox.add_child(btn_import)
+	# Importar save — disponible en todas las plataformas (FileDialog en desktop, JS en Web)
+	var btn_import := Button.new()
+	btn_import.text = tr("SET_IMPORT_SAVE")
+	btn_import.custom_minimum_size = Vector2(0, 36)
+	btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
+	btn_import.pressed.connect(func():
+		_close_settings_panel()
+		SaveManager.import_save_json()
+	)
+	vbox.add_child(btn_import)
 
-		var import_hint := Label.new()
-		import_hint.text = tr("SET_IMPORT_HINT")
-		import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-		import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
-		vbox.add_child(import_hint)
-	else:
-		var export_hint := Label.new()
-		export_hint.text = tr("SET_EXPORT_HINT")
-		export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-		export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
-		vbox.add_child(export_hint)
+	var import_hint := Label.new()
+	import_hint.text = tr("SET_IMPORT_HINT")
+	import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
+	vbox.add_child(import_hint)
+
+	var export_hint := Label.new()
+	export_hint.text = tr("SET_EXPORT_HINT")
+	export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
+	vbox.add_child(export_hint)
 
 	vbox.add_child(HSeparator.new())
 
