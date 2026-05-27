@@ -30,6 +30,10 @@ var _shock_peak_epsilon: float = 0.0          # epsilon_runtime al pico del shoc
 var extreme_shocks_recovered: int = 0         # veces que se volvió a banda tras shock extremo
 var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 
+# FRACTURA EPISTÉMICA — carga sostenida antes de COLAPSO CONTROLADO
+var _fractura_carga_timer: float = 0.0
+const FRACTURA_CARGA_DURATION := 20.0  # segundos de ε > 0.90 sostenido con HIPER activa
+
 var evolution_button: Button = null
 var target_evolution: String = ""
 
@@ -91,6 +95,7 @@ func reset():
 	mente_colmena_active = false
 	mente_colmena_timer = 0.0
 	_mente_colmena_buy_timer = 0.0
+	_fractura_carga_timer = 0.0
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
@@ -322,18 +327,34 @@ func check_symbiosis_final(_delta: float):
 		close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_MECANICA"))
 
 func is_fractura_epistemica_available() -> bool:
-	# Rework v1.0.0.10: quitado omega > 0.30 (era antagónico con HIPER que baja Ω).
-	# HIPERASIMILACIÓN pasa a ser la ENTRADA a COLAPSO CONTROLADO si el buff está activo.
+	# Rework v1.0.0.10 (profundidad): requiere HIPER ya mutada (solo posible en gate Depredador),
+	# ε > 0.90, run > 4min y biomasa mínima. Debe sostenerse 20s para disparar.
 	return not carnaval_active and not run_closed \
 		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
-		and StructuralModel.epsilon_runtime > 0.90
+		and EvoManager.mutation_hyperassimilation \
+		and StructuralModel.epsilon_runtime > 0.90 \
+		and run_time > 240.0 \
+		and BiosphereEngine.biomasa > 5.0
 
-func check_fractura_epistemica(_delta: float):
+func check_fractura_epistemica(dt: float):
 	# FRACTURA EPISTÉMICA (Banco Cósmico T3): cierra como COLAPSO CONTROLADO.
-	# Se llama ANTES de update_genome() para interceptar el timeout de HIPERASIMILACIÓN.
+	# Requiere HIPER activa + ε > 0.90 sostenido durante FRACTURA_CARGA_DURATION segundos.
+	# El reactor lerp Rojo→Dorado mientras carga (ver EvoManager.get_reactor_color).
 	if not is_fractura_epistemica_available():
+		# Decaimiento 2× si las condiciones se rompen (sin trampa de carga parcial)
+		_fractura_carga_timer = max(0.0, _fractura_carga_timer - dt * 2.0)
 		return
-	close_run("COLAPSO CONTROLADO", tr("CLOSE_COLAPSO_CONTROLADO"))
+
+	var prev := _fractura_carga_timer
+	_fractura_carga_timer += dt
+
+	# Toast de alerta al alcanzar el 50% de carga
+	var half := FRACTURA_CARGA_DURATION * 0.5
+	if prev < half and _fractura_carga_timer >= half:
+		UIManager.show_toast(tr("FRACTURA_CHARGING_50"))
+
+	if _fractura_carga_timer >= FRACTURA_CARGA_DURATION:
+		close_run("COLAPSO CONTROLADO", tr("CLOSE_COLAPSO_CONTROLADO"))
 
 func check_parasitism_final(_delta: float):
 	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:

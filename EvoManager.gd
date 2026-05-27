@@ -732,6 +732,10 @@ func get_reactor_color() -> Color:
 
 	# Prioridad 3: Mutaciones base activas
 	if mutation_hyperassimilation:
+		# Fractura Epistémica cargando: lerp Rojo (HIPER) → Dorado (COLAPSO CONTROLADO)
+		if RunManager._fractura_carga_timer > 0.0:
+			var t := clampf(RunManager._fractura_carga_timer / RunManager.FRACTURA_CARGA_DURATION, 0.0, 1.0)
+			return Color(0.95, 0.05, 0.05).lerp(Color(1.1, 0.85, 0.05), t)
 		return Color(0.95, 0.05, 0.05)    # Rojo
 	if mutation_homeorhesis:
 		return Color(0.55, 1.0, 0.92)     # Aqua Nacarado (NG+++)
