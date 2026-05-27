@@ -1,7 +1,7 @@
 ﻿extends Node
 
-# AchievementManager.gd — Autoload (v0.9.4)
-# 50 logros en 4 tiers. Arquitectura híbrida:
+# AchievementManager.gd — Autoload (v1.0.0.10)
+# Catálogo de logros en 5 tiers (MICELIO/ESPORA/FRUTO/ANCESTRAL/MYTHIC). Arquitectura híbrida:
 #   push_snapshot(dict)  → estado del mundo cada tick
 #   push_event(name, {}) → eventos puntuales
 #   CUSTOM_EVALUATORS    → lógica compleja con nombre
@@ -52,7 +52,7 @@ const TIER_ICONS := {
 #   "custom"           — evaluador nombrado en CUSTOM_EVALUATORS
 const DEFS := {
 
-	# ═══════════════ MICELIO (14) ═══════════════
+	# ═══════════════ MICELIO ═══════════════
 
 	"primera_espora": {
 		"name": "Primera Espora",
@@ -66,18 +66,8 @@ const DEFS := {
 		"tier": Tier.MICELIO, "secret": false, "toast": "silent",
 		"trigger": "threshold", "metric": "total_money", "target": 1000.0,
 	},
-	"primer_eslabon": {
-		"name": "Primer Eslabón",
-		"desc": "Comprar el primer upgrade del juego.",
-		"tier": Tier.MICELIO, "secret": false, "toast": "silent",
-		"trigger": "event", "event_name": "upgrade_bought",
-	},
-	"primer_latido": {
-		"name": "Primer Latido",
-		"desc": "Mantener producción positiva durante 30 segundos seguidos.",
-		"tier": Tier.MICELIO, "secret": false, "toast": "silent",
-		"trigger": "sustained", "metric": "delta_total", "op": ">", "target": 0.0, "duration": 30.0,
-	},
+	# Eliminados en v1.0.0.10: primer_eslabon (overlap con pequena_red),
+	# primer_latido (trivial — se disparaba con el primer click).
 	"pequena_red": {
 		"name": "Pequeña Red",
 		"desc": "Comprar 5 upgrades en una run.",
@@ -99,9 +89,9 @@ const DEFS := {
 	},
 	"sistema_respira": {
 		"name": "El Sistema Respira",
-		"desc": "Sostener ε < 0.20 durante 60 segundos.",
+		"desc": "Sostener ε < 0.20 durante 3 minutos.",
 		"tier": Tier.MICELIO, "secret": false, "toast": "small",
-		"trigger": "sustained", "metric": "epsilon", "op": "<", "target": 0.20, "duration": 60.0,
+		"trigger": "sustained", "metric": "epsilon", "op": "<", "target": 0.20, "duration": 180.0,
 	},
 	"metabolismo_estable": {
 		"name": "Metabolismo Estable",
@@ -117,22 +107,25 @@ const DEFS := {
 	},
 	"arbol_productivo": {
 		"name": "Árbol Productivo",
-		"desc": "Desbloquear todos los eslabones productivos (d, md, so, e, me).",
+		"desc": "Desbloquear todos los eslabones productivos y cognitivos (d, md, so, e, me, μ, mem, contabilidad).",
 		"tier": Tier.MICELIO, "secret": false, "toast": "small",
 		"trigger": "custom", "evaluator": "arbol_productivo",
 	},
-	"click_dominance": {
-		"name": "Dominancia del Click",
-		"desc": "Hacer que el término CLICK domine el sistema.",
+	"passive_dominance": {
+		"name": "Dominancia Pasiva",
+		"desc": "Hacer que el término PASIVO (Trabajo Manual o Trueque) domine el sistema.",
 		"tier": Tier.MICELIO, "secret": false, "toast": "small",
-		"trigger": "custom", "evaluator": "click_dominance",
+		"trigger": "custom", "evaluator": "passive_dominance",
 	},
 	"jardin_controlado": {
 		"name": "Jardín Controlado",
-		"desc": "Completar una run sin ninguna perturbación.",
+		"desc": "Cerrar una run sin ninguna perturbación y con Ω ≥ 0.50.",
 		"tier": Tier.MICELIO, "secret": false, "toast": "small",
 		"trigger": "event", "event_name": "run_closed",
-		"conditions": [{"key": "disturbances_survived", "op": "==", "value": 0}],
+		"conditions": [
+			{"key": "disturbances_survived", "op": "==", "value": 0},
+			{"key": "omega", "op": ">=", "value": 0.50},
+		],
 	},
 	"mano_ligera": {
 		"name": "Mano Ligera",
@@ -149,7 +142,7 @@ const DEFS := {
 		"conditions": [{"key": "power", "op": ">=", "value": 10000.0}],
 	},
 
-	# ═══════════════ ESPORA (14) ═══════════════
+	# ═══════════════ ESPORA ═══════════════
 
 	"red_micelial_activada": {
 		"name": "Red Micelial",
@@ -251,9 +244,16 @@ const DEFS := {
 	},
 	"bioma_despierto": {
 		"name": "Bioma Despierto",
-		"desc": "Las hifas emergen — alcanzar Hifas ≥ 0.5 por primera vez.",
+		"desc": "Red micelial madura — alcanzar Hifas ≥ 10.",
 		"tier": Tier.ESPORA, "secret": false, "toast": "full",
-		"trigger": "threshold", "metric": "hifas", "target": 0.5,
+		"trigger": "threshold", "metric": "hifas", "target": 10.0,
+	},
+	"escalado_alostatico": {
+		"name": "Escalado Alostático",
+		"desc": "Comprar el upgrade Escalado Alostático (ea) por primera vez — ×2 al Trueque.",
+		"tier": Tier.ESPORA, "secret": false, "toast": "full",
+		"trigger": "event", "event_name": "upgrade_bought",
+		"conditions": [{"key": "id", "op": "==", "value": "trueque_allo"}],
 	},
 	"carnaval_iniciado": {
 		"name": "¡Que Comience el Carnaval!",
@@ -277,7 +277,7 @@ const DEFS := {
 		"conditions": [{"key": "route", "op": "==", "value": "vacio"}],
 	},
 
-	# ═══════════════ FRUTO (14) ═══════════════
+	# ═══════════════ FRUTO ═══════════════
 
 	"ruta_parasitismo": {
 		"name": "Parasitismo Consumado",
@@ -332,7 +332,7 @@ const DEFS := {
 	},
 	"micelio_salvaje": {
 		"name": "Micelio Salvaje",
-		"desc": "Cerrar PARASITISMO sin comprar nunca Contabilidad.",
+		"desc": "Cerrar PARASITISMO sin comprar nunca Contabilidad y con ≥ 100 clicks (anti-AFK).",
 		"tier": Tier.FRUTO, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "micelio_salvaje",
 	},
@@ -352,13 +352,7 @@ const DEFS := {
 		"tier": Tier.FRUTO, "secret": false, "toast": "full",
 		"trigger": "threshold", "metric": "money", "target": 100_000.0,
 	},
-	"hambre_elegante": {
-		"name": "Hambre Elegante",
-		"desc": "Parasitismo activo con biomasa ≥ 15 durante 60 segundos.",
-		"tier": Tier.FRUTO, "secret": false, "toast": "full",
-		"trigger": "custom", "evaluator": "hambre_elegante",
-		"duration": 60.0,
-	},
+	# Eliminado en v1.0.0.10: hambre_elegante (overlap fuerte con parasito_insaciable).
 	"eficiencia_brutal": {
 		"name": "Eficiencia Brutal",
 		"desc": "Cerrar una run con resilience_score ≥ 200 y ≤ 30 clicks.",
@@ -390,7 +384,7 @@ const DEFS := {
 		"trigger": "custom", "evaluator": "cinco_legados",
 	},
 
-	# ═══════════════ ANCESTRAL (8, todos secretos) ═══════════════
+	# ═══════════════ ANCESTRAL + MYTHIC (todos secretos) ═══════════════
 
 	"hongo_realidad": {
 		"name": "El Hongo se Come la Realidad",
@@ -410,11 +404,11 @@ const DEFS := {
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "saturacion_total",
 	},
-	"fractura_epistemica": {
-		"name": "Fractura Epistémica",
+	"colapso_depredatorio": {
+		"name": "Colapso Depredatorio",
 		"desc": "Cerrar por COLAPSO DEPREDATORIO: el estrés estructural colapsó bajo presión del Depredador.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
-		"trigger": "custom", "evaluator": "fractura_epistemica",
+		"trigger": "custom", "evaluator": "colapso_depredatorio",
 	},
 	"polimorfia_total": {
 		"name": "Polimorfía Total",
@@ -565,7 +559,7 @@ var _seta_formed_this_run: bool = false
 
 # IDs de logros con timers custom (duration en DEFS)
 const CUSTOM_TIMER_IDS := [
-	"hambre_elegante", "latido_cosmico", "entropia_cero",
+	"latido_cosmico", "entropia_cero",
 	"omega_inviolable", "metabolismo_oscuro_pico",
 ]
 
@@ -576,13 +570,12 @@ func _ready() -> void:
 	CUSTOM_EVALUATORS = {
 		"umbral_verde":       _eval_umbral_verde,
 		"arbol_productivo":   _eval_arbol_productivo,
-		"click_dominance":    _eval_click_dominance,
+		"passive_dominance":  _eval_passive_dominance,
 		"tension_productiva": _eval_tension_productiva,
 		"economia_guerra":    _eval_economia_guerra,
 		"parasito_insaciable":_eval_parasito_insaciable,
-		"ciclo_completo":     _eval_ciclo_completo,
-		"micelio_salvaje":    _eval_micelio_salvaje,
-		"hambre_elegante":    _eval_hambre_elegante_cond,
+		# ciclo_completo y micelio_salvaje se desbloquean SOLO desde on_run_closed
+		# (sus evaluadores siempre devuelven false — no se registran aquí).
 		"latido_cosmico":     _eval_latido_cosmico_cond,
 		"tres_vidas_camino":  _eval_tres_vidas_camino,
 		"entropia_cero":      _eval_entropia_cero_cond,
@@ -590,7 +583,7 @@ func _ready() -> void:
 		"reino_subterraneo":  _eval_reino_subterraneo,
 		"ultima_espora":      _eval_ultima_espora,
 		"saturacion_total":   _eval_saturacion_total,
-		"fractura_epistemica": _eval_fractura_epistemica,
+		"colapso_depredatorio": _eval_colapso_depredatorio,
 		"polimorfia_total":       _eval_polimorfia_total,
 		"domador_del_caos":       _eval_domador_del_caos,
 		"cinco_legados":          _eval_cinco_legados,
@@ -828,13 +821,22 @@ func _eval_umbral_verde(s: Dictionary) -> bool:
 	return s.get("biomasa", 0.0) >= 3.0 and s.get("epsilon", 1.0) < 0.30
 
 func _eval_arbol_productivo(_s: Dictionary) -> bool:
-	return StructuralModel.unlocked_d and StructuralModel.unlocked_md \
+	# Eslabones estructurales: d, md, so, e, me
+	if not (StructuralModel.unlocked_d and StructuralModel.unlocked_md \
 		and UpgradeManager.level("specialization") > 0 \
-		and StructuralModel.unlocked_e and StructuralModel.unlocked_me
+		and StructuralModel.unlocked_e and StructuralModel.unlocked_me):
+		return false
+	# Capital cognitivo (μ) + memoria operativa (persistence c₀) + contabilidad
+	return UpgradeManager.level("cognitive") > 0 \
+		and UpgradeManager.level("persistence") > 0 \
+		and UpgradeManager.level("accounting") > 0
 
-func _eval_click_dominance(_s: Dictionary) -> bool:
+func _eval_passive_dominance(_s: Dictionary) -> bool:
+	# Requiere haber abierto al menos una pata pasiva (Trabajo Manual o Trueque)
 	if not (StructuralModel.unlocked_d or StructuralModel.unlocked_e): return false
-	return main != null and EconomyManager.get_dominant_term() == "CLICK domina el sistema"
+	if main == null: return false
+	var dom: String = EconomyManager.get_dominant_term()
+	return dom == "Trabajo Manual domina el sistema" or dom == "Trueque domina el sistema"
 
 func _eval_tension_productiva(_s: Dictionary) -> bool:
 	return EvoManager.genome.get("homeostasis", "dormido") == "latente" \
@@ -847,15 +849,14 @@ func _eval_parasito_insaciable(s: Dictionary) -> bool:
 	return EvoManager.mutation_parasitism and s.get("biomasa", 0.0) >= 20.0
 
 func _eval_ciclo_completo(_s: Dictionary) -> bool:
-	# Se dispara en on_run_closed vía push_event con seta_formed en payload.
-	# Este evaluador no se usa en el tick — devuelve false siempre.
+	# Desbloqueo exclusivo vía on_run_closed (ruta ESPORULACIÓN + _seta_formed_this_run).
+	# No se registra en CUSTOM_EVALUATORS — este stub existe solo para referencia.
 	return false
 
 func _eval_micelio_salvaje(_s: Dictionary) -> bool:
-	return false  # Evaluado en on_run_closed payload
-
-func _eval_hambre_elegante_cond(s: Dictionary) -> bool:
-	return EvoManager.mutation_parasitism and s.get("biomasa", 0.0) >= 15.0
+	# Desbloqueo exclusivo vía on_run_closed (ruta PARASITISMO + sin Contabilidad).
+	# No se registra en CUSTOM_EVALUATORS — este stub existe solo para referencia.
+	return false
 
 func _eval_latido_cosmico_cond(s: Dictionary) -> bool:
 	return s.get("delta_total", 0.0) >= 500.0 \
@@ -863,6 +864,10 @@ func _eval_latido_cosmico_cond(s: Dictionary) -> bool:
 		and s.get("biomasa", 0.0) >= 5.0
 
 func _eval_tres_vidas_camino(_s: Dictionary) -> bool:
+	# Camino tick: concede el logro retroactivamente si el jugador ya tiene los 3 endings
+	# (útil en saves migrados o actualizaciones que añadieron este logro después).
+	# Camino explícito en on_run_closed: disparo inmediato al cerrar HOMEORHESIS.
+	# Ambos caminos son intencionales — unlock() es idempotente.
 	return LegacyManager.endings_achieved.get("HOMEOSTASIS", false) \
 		and LegacyManager.endings_achieved.get("ALLOSTASIS", false) \
 		and LegacyManager.endings_achieved.get("HOMEORHESIS", false)
@@ -883,14 +888,19 @@ func _eval_reino_subterraneo(_s: Dictionary) -> bool:
 	return true
 
 func _eval_ultima_espora(_s: Dictionary) -> bool:
-	return unlocked.size() >= DEFS.size()
+	# Fix: excluirse a sí mismo del conteo (antes era inalcanzable por self-reference).
+	# Considera todos los demás logros desbloqueados — al unlock del último, este se libera.
+	for id in DEFS:
+		if id == "ultima_espora": continue
+		if not is_unlocked(id): return false
+	return true
 
 func _eval_saturacion_total(_s: Dictionary) -> bool:
 	# Evaluado solo cuando se cierra METABOLISMO OSCURO por saturación
 	return RunManager.final_route == "METABOLISMO OSCURO" \
 		and RunManager.final_reason.contains("Saturación Oscura")
 
-func _eval_fractura_epistemica(_s: Dictionary) -> bool:
+func _eval_colapso_depredatorio(_s: Dictionary) -> bool:
 	return RunManager.final_route == "COLAPSO DEPREDATORIO"
 
 func _eval_polimorfia_total(_s: Dictionary) -> bool:
@@ -923,6 +933,7 @@ const ALL_ENDINGS := [
 	"HOMEOSTASIS", "ALLOSTASIS", "HOMEORHESIS",
 	"HIPERASIMILACION", "ESPORULACION", "PARASITISMO", "SIMBIOSIS",
 	"METABOLISMO OSCURO", "COLAPSO DEPREDATORIO", "DEPREDADOR DE REALIDADES",
+	"COLAPSO CONTROLADO",
 	"POLIMORFÍA TOTAL", "DOMADOR DEL CAOS", "ASCESIS_PROFUNDA",
 	"SINGULARIDAD", "PANSPERMIA NEGRA", "MENTE COLMENA DISTRIBUIDA",
 ]
@@ -960,6 +971,7 @@ func on_run_closed(route: String) -> void:
 		"clicks_after_minute_one":_clicks_after_minute_one,
 		"run_time":               _run_time,
 		"epsilon":                _snapshot.get("epsilon", 0.0),
+		"omega":                  StructuralModel.omega,
 		"disturbances_survived":  RunManager.disturbances_survived,
 		"resilience_score":       RunManager.resilience_score,
 		"mutations_active_count": active_count,
@@ -969,16 +981,20 @@ func on_run_closed(route: String) -> void:
 	}
 	push_event("run_closed", payload)
 	# Logros especiales que dependen de estado interno cruzado
-	if route == "PARASITISMO" and not _bought_accounting_this_run:
+	# micelio_salvaje: gate anti-AFK añadido (click_count >= 100) en v1.0.0.10
+	if route == "PARASITISMO" and not _bought_accounting_this_run and _click_count >= 100:
 		unlock("micelio_salvaje")
 	if route in ["ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL"] and _seta_formed_this_run:
 		unlock("ciclo_completo")
+	# tres_vidas_camino: también vive en CUSTOM_EVALUATORS para concesión retroactiva
+	# (saves migrados que ya tengan los 3 endings pero no el logro).
+	# Aquí LegacyManager ya registró HOMEORHESIS, así que _eval devuelve true si aplica.
 	if route == "HOMEORHESIS" and _eval_tres_vidas_camino({}):
 		unlock("tres_vidas_camino")
 	if route == "METABOLISMO OSCURO" and _eval_saturacion_total({}):
 		unlock("saturacion_total")
 	if route == "COLAPSO DEPREDATORIO":
-		unlock("fractura_epistemica")
+		unlock("colapso_depredatorio")
 	if route in ["POLIMORFÍA TOTAL", "POLIMORFIA TOTAL"] and _eval_polimorfia_total({}):
 		unlock("polimorfia_total")
 	if route == "DOMADOR DEL CAOS" and _eval_domador_del_caos({}):
@@ -1144,14 +1160,26 @@ func _show_toast(id: String, def: Dictionary) -> void:
 
 func load_data(data: Dictionary) -> void:
 	unlocked.clear()
+	# Migración de ids renombrados (v1.0.0.10): la key vieja se vuelca al id nuevo.
+	# Si solo existe la vieja → migra. Si existen las dos → preserva la nueva.
+	const ID_RENAMES := {
+		"fractura_epistemica": "colapso_depredatorio",  # colisión con cosmic buff (v1.0.0.10)
+		# NOTA v1.0.0.10: `click_dominance` se eliminó y reemplazó por `passive_dominance`
+		# (lógica OPUESTA). No se migra: el unlock viejo queda como dead entry en `unlocked`
+		# (no aparece en UI porque ya no existe en DEFS). passive_dominance debe ganarse limpio.
+	}
 	for id in data:
 		var entry = data[id]
+		var target_id: String = ID_RENAMES.get(id, id)
+		if target_id != id and data.has(target_id):
+			# Ya existe la versión nueva — ignorar la vieja
+			continue
 		# Soporta formato viejo (id → true) y nuevo (id → {unlocked_at, seen})
 		if entry is bool:
 			if entry:
-				unlocked[id] = {"unlocked_at": 0, "seen": true}
+				unlocked[target_id] = {"unlocked_at": 0, "seen": true}
 		elif entry is Dictionary:
-			unlocked[id] = entry
+			unlocked[target_id] = entry
 
 func get_data() -> Dictionary:
 	return unlocked.duplicate(true)
@@ -1160,7 +1188,7 @@ func migrate_from_legacy_save(flags: Dictionary, achievements: Dictionary) -> vo
 	# Flags estructurales viejos → nuevos ids
 	var flag_map := {
 		"unlocked_tree":              "arbol_productivo",
-		"unlocked_click_dominance":   "click_dominance",
+		# "unlocked_click_dominance" eliminado en v1.0.0.10 junto con el logro click_dominance.
 		"unlocked_delta_100":         "delta_100",
 		"achievement_millionaire":    "millonario",
 		"achievement_fragile_balance":"equilibrio_fragil",

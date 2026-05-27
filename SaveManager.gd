@@ -401,12 +401,17 @@ var _import_timer: Timer = null
 
 ## Importa un save desde archivo JSON (run + legacy).
 ## Web: abre file picker via JS y lee el archivo con FileReader.
-## Desktop: no aplica (el jugador tiene acceso directo a user://).
+## Desktop: abre FileDialog nativo para seleccionar el archivo.
 func import_save_json() -> void:
-	if OS.get_name() != "Web":
-		push_warning("[SaveManager] import_save_json: solo disponible en web.")
-		return
+	if OS.get_name() == "Web":
+		_import_save_json_web()
+	else:
+		_import_save_json_desktop()
 
+
+# ── Web ─────────────────────────────────────────────────────────────────────
+
+func _import_save_json_web() -> void:
 	# Limpiar resultado anterior
 	JavaScriptBridge.eval("window._antigravity_import_json = null;")
 
@@ -462,11 +467,57 @@ func _poll_import_result() -> void:
 		push_warning("[SaveManager] JSON de importación inválido.")
 		return
 
-	var data: Dictionary = json.data
+	_apply_import_data(json.data)
 
-	# Soporta formato nuevo { run, legacy } y formato viejo (solo run)
+
+# ── Desktop ──────────────────────────────────────────────────────────────────
+
+func _import_save_json_desktop() -> void:
+	var dialog := FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.filters = PackedStringArray(["*.json ; Archivo de save JSON"])
+	dialog.title = "Importar save — seleccionar archivo .json"
+	dialog.min_size = Vector2i(600, 400)
+	dialog.file_selected.connect(func(path: String):
+		dialog.queue_free()
+		_on_import_file_selected(path))
+	dialog.canceled.connect(func(): dialog.queue_free())
+	get_tree().root.add_child(dialog)
+	dialog.popup_centered()
+
+
+func _on_import_file_selected(path: String) -> void:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		push_warning("[SaveManager] No se pudo abrir el archivo: " + path)
+		return
+	var text := file.get_as_text()
+	file.close()
+
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		push_warning("[SaveManager] JSON de importación inválido: " + path)
+		return
+
+	if not json.data is Dictionary:
+		push_warning("[SaveManager] El archivo no contiene un objeto JSON válido.")
+		return
+
+	_apply_import_data(json.data)
+
+
+# ── Lógica común de aplicación ───────────────────────────────────────────────
+
+## Escribe run + legacy al slot activo y recarga la escena.
+## Soporta formato nuevo { "run": {...}, "legacy": {...} } y formato viejo (solo run).
+func _apply_import_data(data: Dictionary) -> void:
 	var run_data: Dictionary = data.get("run", data)
 	var legacy_data: Dictionary = data.get("legacy", {})
+
+	if run_data.is_empty() and legacy_data.is_empty():
+		push_warning("[SaveManager] _apply_import_data: datos vacíos, abortando.")
+		return
 
 	# Asegurar que el directorio del slot existe
 	var slot_dir: String = SlotManager.get_slot_dir(SlotManager.active_slot)

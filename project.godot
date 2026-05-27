@@ -39,6 +39,11 @@ AudioManager="*res://AudioManager.gd"
 TutorialManager="*res://TutorialManager.gd"
 TelemetryManager="*res://TelemetryManager.gd"
 
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
+general/default_playback_type.web=1
+
 [editor]
 
 version_control/autoload_on_startup=true

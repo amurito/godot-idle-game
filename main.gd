@@ -431,7 +431,10 @@ func _ready():
 
 	# === EVO MANAGER SIGNALS ===
 	EvoManager.mutation_activated.connect(_on_mutation_activated)
-	EvoManager.run_ended_by_mutation.connect(close_run)
+	# FIX: close_run no existe en main.gd. Conectar al autoload directamente.
+	# Antes: connect(close_run) → Callable(self, "close_run") silenciosamente roto.
+	# Esto rompía cierre por HIPERASIMILACIÓN y ESPORULACIÓN (signal emit no-op).
+	EvoManager.run_ended_by_mutation.connect(RunManager.close_run)
 	EvoManager.primordio_iniciado.connect(_on_primordio_iniciado)
 	EvoManager.primordio_abortado.connect(_on_primordio_abortado)
 	EvoManager.seta_formada_signal.connect(_on_seta_formada)

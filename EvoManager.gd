@@ -778,7 +778,7 @@ func process_met_oscuro(dt: float) -> bool:
 		LogManager.add("MET.OSCURO — Bio %.1f/100 — Pasivo %.1f/s — $%.0f" % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 		LegacyManager.add_pl(2)
-		RunManager.close_run("METABOLISMO OSCURO", "Saturacion Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
+		RunManager.close_run("METABOLISMO OSCURO", "Saturación Oscura: la biomasa rebasó el umbral crítico (+6 PL total)")
 		return false
 	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
 		RunManager.close_run("METABOLISMO OSCURO", "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)")

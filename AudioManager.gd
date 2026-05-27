@@ -66,19 +66,18 @@ func _ready() -> void:
 #  BUSES
 # ---------------------------------------------------------------
 func _setup_buses() -> void:
-	# Crea buses Music y SFX si no existen, ruteados a Master.
+	# Los buses Music/SFX vienen definidos en default_bus_layout.tres
+	# (referenciado desde [audio] buses/default_bus_layout en project.godot).
+	# Crear buses por código rompía el ruteo de audio en export web.
+	# Fallback defensivo por si el layout no cargó: cae a Master.
 	_bus_music = AudioServer.get_bus_index("Music")
-	if _bus_music == -1:
-		AudioServer.add_bus()
-		_bus_music = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(_bus_music, "Music")
-		AudioServer.set_bus_send(_bus_music, "Master")
 	_bus_sfx = AudioServer.get_bus_index("SFX")
+	if _bus_music == -1:
+		push_warning("[AudioManager] Bus 'Music' no encontrado — fallback Master")
+		_bus_music = 0
 	if _bus_sfx == -1:
-		AudioServer.add_bus()
-		_bus_sfx = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(_bus_sfx, "SFX")
-		AudioServer.set_bus_send(_bus_sfx, "Master")
+		push_warning("[AudioManager] Bus 'SFX' no encontrado — fallback Master")
+		_bus_sfx = 0
 
 
 # ---------------------------------------------------------------
@@ -328,31 +327,37 @@ func show_settings_panel(parent: Node) -> void:
 	)
 	vbox.add_child(btn_export)
 
-	if OS.get_name() == "Web":
-		# En web también ofrecemos importar (para cargar un save exportado desde desktop)
-		var btn_import := Button.new()
-		btn_import.text = "Importar save (.json)"
-		btn_import.custom_minimum_size = Vector2(0, 36)
-		btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
-		btn_import.pressed.connect(func():
-			_close_settings_panel()
-			SaveManager.import_save_json()
-		)
-		vbox.add_child(btn_import)
+	# ── Importar save (disponible en todas las plataformas) ──
+	var btn_import := Button.new()
+	btn_import.text = "Importar save (.json)"
+	btn_import.custom_minimum_size = Vector2(0, 36)
+	btn_import.add_theme_color_override("font_color", Color(0.6, 1.0, 0.75))
+	btn_import.pressed.connect(func():
+		_close_settings_panel()
+		SaveManager.import_save_json()
+	)
+	vbox.add_child(btn_import)
 
-		var import_hint := Label.new()
+	var import_hint := Label.new()
+	if OS.get_name() == "Web":
 		import_hint.text = "Carga un save exportado desde desktop. Recarga la partida al terminar."
-		import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
-		vbox.add_child(import_hint)
 	else:
-		var export_hint := Label.new()
+		import_hint.text = "Abre un selector de archivo. La partida se recargará al terminar."
+		import_hint.add_theme_color_override("font_color", Color(0.5, 0.62, 0.58))
+	import_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	import_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	vbox.add_child(import_hint)
+
+	var export_hint := Label.new()
+	if OS.get_name() == "Web":
+		export_hint.text = "Descarga el save actual como archivo .json."
+	else:
 		export_hint.text = "Se guarda en la carpeta de datos del juego y se abre el explorador."
-		export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-		export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
-		vbox.add_child(export_hint)
+	export_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	export_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	export_hint.add_theme_color_override("font_color", Color(0.62, 0.68, 0.78))
+	vbox.add_child(export_hint)
 
 	vbox.add_child(HSeparator.new())
 
