@@ -744,6 +744,7 @@ const TRANSLATIONS := {
 		"ACH_PROGFMT_MUTATIONS": "{current} / {target} mutaciones",
 		"ACH_PROGFMT_DEVOURED": "{current} / {target} upgrades devorados",
 		"ACH_PROGFMT_ENDINGS": "{current} / {target} finales",
+		"ACH_PROGFMT_ACHIEVEMENTS": "{current} / {target} logros",
 		# MICELIO
 		"ACH_PRIMERA_ESPORA_NAME": "Primera Espora",
 		"ACH_PRIMERA_ESPORA_DESC": "Completar la primera run con cualquier final.",
@@ -1863,6 +1864,7 @@ const TRANSLATIONS := {
 		"ACH_PROGFMT_MUTATIONS": "{current} / {target} mutations",
 		"ACH_PROGFMT_DEVOURED": "{current} / {target} upgrades devoured",
 		"ACH_PROGFMT_ENDINGS": "{current} / {target} endings",
+		"ACH_PROGFMT_ACHIEVEMENTS": "{current} / {target} achievements",
 		# MICELIO
 		"ACH_PRIMERA_ESPORA_NAME": "First Spore",
 		"ACH_PRIMERA_ESPORA_DESC": "Complete the first run with any ending.",

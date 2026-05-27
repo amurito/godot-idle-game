@@ -898,8 +898,9 @@ func _update_achievements_view():
 				if is_new:
 					AchievementManager.mark_seen(id)
 			elif is_secret:
-				t += "[cell bgcolor=%s][b][color=%s]??? [i](%s)[/i][/color][/b][/cell]" % \
-					[card_bg, title_color, tr("ACH_PANEL_HIDDEN")]
+				var progress_str: String = _build_progress_str(id, def)
+				t += "[cell bgcolor=%s][b][color=%s]??? [i](%s)[/i][/color][/b]%s[/cell]" % \
+					[card_bg, title_color, tr("ACH_PANEL_HIDDEN"), progress_str]
 			else:
 				var progress_str: String = _build_progress_str(id, def)
 				t += "[cell bgcolor=%s][b][color=%s]%s[/color][/b]%s\n[color=%s][i]%s[/i][/color][/cell]" % \
@@ -915,7 +916,7 @@ func _update_achievements_view():
 func _build_progress_str(id: String, def: Dictionary) -> String:
 	var trigger: String = def.get("trigger", "")
 	# Solo mostrar progreso en logros que tienen target trackeable
-	if trigger not in ["event_count"] and not def.has("progress_format"):
+	if trigger not in ["event_count"] and not def.has("progress_format") and not def.has("progress_key"):
 		return ""
 	var prog: Dictionary = AchievementManager.get_progress(id)
 	var current: float = prog.get("current", 0.0)
