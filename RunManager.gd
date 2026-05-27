@@ -322,13 +322,15 @@ func check_symbiosis_final(_delta: float):
 		close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_MECANICA"))
 
 func is_fractura_epistemica_available() -> bool:
+	# Rework v1.0.0.10: quitado omega > 0.30 (era antagónico con HIPER que baja Ω).
+	# HIPERASIMILACIÓN pasa a ser la ENTRADA a COLAPSO CONTROLADO si el buff está activo.
 	return not carnaval_active and not run_closed \
 		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
-		and StructuralModel.epsilon_runtime > 0.90 \
-		and StructuralModel.omega > 0.30
+		and StructuralModel.epsilon_runtime > 0.90
 
 func check_fractura_epistemica(_delta: float):
-	# FRACTURA EPISTÉMICA (Banco Cósmico T3): nueva ruta de cierre
+	# FRACTURA EPISTÉMICA (Banco Cósmico T3): cierra como COLAPSO CONTROLADO.
+	# Se llama ANTES de update_genome() para interceptar el timeout de HIPERASIMILACIÓN.
 	if not is_fractura_epistemica_available():
 		return
 	close_run("COLAPSO CONTROLADO", tr("CLOSE_COLAPSO_CONTROLADO"))

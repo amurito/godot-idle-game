@@ -728,6 +728,11 @@ func _on_logic_tick():
 		var money_drain = BiosphereEngine.biomasa * 0.25 * dt
 		EconomyManager.money = max(EconomyManager.money - money_drain, 0.0)
 
+	# FRACTURA EPISTÉMICA: interceptar antes de update_genome para ganarle al timeout de HIPER
+	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
+		RunManager.check_fractura_epistemica(dt)
+		if RunManager.run_closed: return
+
 	# 6) Genoma
 	EvoManager.update_genome()
 
