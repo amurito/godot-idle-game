@@ -485,6 +485,7 @@ const DEFS := {
 		"desc": "Cerrar todos los finales posibles del juego.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "dios_de_las_moscas",
+		"target": 17, "progress_key": "ACH_PROGFMT_ENDINGS",
 	},
 	"ruta_homeorhesis": {
 		"name": "Homeorhesis",
@@ -526,7 +527,7 @@ const DEFS := {
 	"ultima_espora": {
 		"name": "Última Espora",
 		"desc": "Desbloquear todos los logros del juego.",
-		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "ultima_espora",
 	},
 }
@@ -678,6 +679,13 @@ func get_progress(id: String) -> Dictionary:
 	# For disturbance_streak: read from RunManager
 	if id == "arquitecto_caos":
 		current = float(RunManager.disturbances_without_reset)
+	# For dios_de_las_moscas: count endings achieved out of ALL_ENDINGS
+	elif id == "dios_de_las_moscas":
+		var count := 0
+		for route in ALL_ENDINGS:
+			if LegacyManager.endings_achieved.get(route, false):
+				count += 1
+		current = float(count)
 	var target: float = float(def.get("target", 1))
 	var ratio := clampf(current / target, 0.0, 1.0) if target > 0.0 else 0.0
 	return {"current": current, "target": target, "ratio": ratio}
