@@ -509,6 +509,11 @@ const COSMIC_DATA := {
 		"desc": "Cada trascendencia acumulada suma +5% a todos tus ingresos globales de forma permanente.",
 		"tier": 2,
 	},
+	"cicatriz_metabolica": {
+		"cost": 25, "name": "Cicatriz Metabólica",
+		"desc": "El tiempo mínimo de run para desbloquear HOMEORRESIS se reduce a la mitad (10min → 5min).",
+		"tier": 2,
+	},
 	"fractura_epistemica": {
 		"cost": 35, "name": "Fractura Epistémica",
 		"desc": "Desbloquea la ruta COLAPSO CONTROLADO: cuando ε > 0.90 y Ω > 0.30, podés cerrar la run con +6 PL.",
@@ -1219,3 +1224,7 @@ func apply_cosmic_buffs() -> void:
 	# MEMORIA DE RECURSO CÓSMICA (T2): primeras 2 compras de cada upgrade gratis (pasivo via cost())
 	if has_cosmic_buff("memoria_recurso_cosmica"):
 		LogManager.add("✦ [Cósmico] Memoria de Recurso Cósmica — primeras 2 compras de cada upgrade gratuitas esta run")
+
+	# CICATRIZ METABÓLICA (T2): HOMEORRESIS disponible desde los 5min en vez de 10min
+	if has_cosmic_buff("cicatriz_metabolica"):
+		LogManager.add("✦ [Cósmico] Cicatriz Metabólica — tiempo mínimo de HOMEORRESIS: 5min (antes 10min)")

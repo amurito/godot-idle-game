@@ -280,9 +280,13 @@ func check_homeostasis_final(delta: float):
 	if homeostasis_tier_reached >= 2 and homeostasis_tier_reached < 3:
 		omega_min_peak = max(omega_min_peak, StructuralModel.omega_min)
 		var delta_real :float = EconomyManager.get_contribution_breakdown().total
+		# CICATRIZ METABÓLICA (Banco Cósmico T2): reduce el tiempo mínimo a la mitad
+		var homeorhesis_min_time: float = Balance.HOMEORHESIS_MIN_RUN_TIME
+		if LegacyManager.has_cosmic_buff("cicatriz_metabolica"):
+			homeorhesis_min_time *= 0.5
 		var ok = extreme_shocks_recovered >= 1 and resilience_score >= 400.0 \
 			and omega_min_peak >= 0.50 and disturbances_survived >= 5 \
-			and delta_real > 300.0 and run_time >= Balance.HOMEORHESIS_MIN_RUN_TIME
+			and delta_real > 300.0 and run_time >= homeorhesis_min_time
 		if ok:
 			homeostasis_tier_reached = 3
 			if not LegacyManager.get_buff_value("legado_homeorresis"):
@@ -341,8 +345,10 @@ func check_fractura_epistemica(dt: float):
 	# Requiere HIPER activa + ε > 0.90 sostenido durante FRACTURA_CARGA_DURATION segundos.
 	# El reactor lerp Rojo→Dorado mientras carga (ver EvoManager.get_reactor_color).
 	if not is_fractura_epistemica_available():
-		# Decaimiento 2× si las condiciones se rompen (sin trampa de carga parcial)
-		_fractura_carga_timer = max(0.0, _fractura_carga_timer - dt * 2.0)
+		# Solo decaer mientras la run está activa; si ya cerró (COLAPSO CONTROLADO),
+		# el timer queda congelado para que el reactor permanezca dorado en el endscreen.
+		if not run_closed:
+			_fractura_carga_timer = max(0.0, _fractura_carga_timer - dt * 2.0)
 		return
 
 	var prev := _fractura_carga_timer
