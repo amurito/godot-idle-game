@@ -785,8 +785,12 @@ func build_evo_checklist(_main: Node) -> String:
 			var delta_real3 :float = EconomyManager.get_contribution_breakdown().total
 			ch = ok_color + "[x] " if delta_real3 > 300.0 else fail_color + "[ ] "
 			t += ch + tr("EVO_METABOLISM_GT") % [300, snapped(delta_real3, 0.1)] + "[/color]\n"
-			ch = ok_color + "[x] " if RunManager.run_time >= 1200.0 else fail_color + "[ ] "
-			t += ch + tr("EVO_RUN_GE_TIME") % format_time(RunManager.run_time) + "[/color]\n"
+			var homeo_min_t: float = Balance.HOMEORHESIS_MIN_RUN_TIME
+			if LegacyManager.has_cosmic_buff("cicatriz_metabolica"):
+				homeo_min_t *= 0.5
+			ch = ok_color + "[x] " if RunManager.run_time >= homeo_min_t else fail_color + "[ ] "
+			var target_label := "%dmin" % int(homeo_min_t / 60.0)
+			t += ch + tr("EVO_RUN_GE_TIME") % [target_label, format_time(RunManager.run_time)] + "[/color]\n"
 		elif tier == 3:
 			t += ok_color + "[x] " + tr("EVO_TIER3_DONE") + "[/color]\n"
 		t += "\n"

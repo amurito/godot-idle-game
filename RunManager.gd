@@ -622,7 +622,7 @@ func _show_evolution_button(target: String):
 
 	if not is_instance_valid(evolution_button):
 		evolution_button = Button.new()
-		evolution_button.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
+		evolution_button.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		evolution_button.custom_minimum_size = Vector2(0, 80)
 		evolution_button.pressed.connect(_on_evolution_button_pressed)
 		# Icono Twemoji (🧬) — vía Button.icon en lugar del char emoji para que
