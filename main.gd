@@ -795,8 +795,7 @@ func _on_logic_tick():
 		RunManager.check_perfect_homeostasis()
 	if EvoManager.mutation_parasitism and not RunManager.carnaval_active:
 		RunManager.check_parasitism_final(dt)
-	# FRACTURA EPISTÉMICA: mostrar botón manual de colapso controlado
-	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
+		# Status periódico de PARASITISMO (Bio/Ω/ε/$)
 		_parasitism_status_timer += dt
 		if _parasitism_status_timer >= PARASITISM_STATUS_INTERVAL:
 			_parasitism_status_timer = 0.0

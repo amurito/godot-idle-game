@@ -1145,11 +1145,15 @@ func build_mutation_status_text() -> String:
 		t += nerf + " " + tr("MSTAT_HIPERAS_N1") + "[/color]\n"
 
 	if EvoManager.mutation_homeostasis:
+		var en_banda_home := RunManager.get_en_banda_homeostatica()
+		var bonus_color := buff if en_banda_home else "[color=#777777]"
 		t += "[b][color=cyan]⚖️ " + tr("MSTAT_HOME_TITLE") + "[/color][/b]\n"
-		t += buff + " " + tr("MSTAT_HOME_B1") + "[/color]\n"
-		t += buff + " " + tr("MSTAT_HOME_B2") + "[/color]\n"
-		t += buff + " " + tr("MSTAT_HOME_B3") + "[/color]\n"
+		t += bonus_color + " " + tr("MSTAT_HOME_B1") + "[/color]\n"
+		t += bonus_color + " " + tr("MSTAT_HOME_B2") + "[/color]\n"
+		t += bonus_color + " " + tr("MSTAT_HOME_B3") + "[/color]\n"
 		t += nerf + " " + tr("MSTAT_HOME_N1") + "[/color]\n"
+		if not en_banda_home:
+			t += "[color=#ff8844]" + tr("MSTAT_HOME_OUT_OF_BAND") + "[/color]\n"
 
 	if EvoManager.mutation_symbiosis:
 		t += "[b][color=green]🌱 " + tr("MSTAT_SIMB_TITLE") + "[/color][/b]\n"
