@@ -1190,10 +1190,14 @@ func build_mutation_status_text() -> String:
 	elif EvoManager.mutation_depredador:
 		t += "[b][color=#ff0055]☠️ " + tr("MSTAT_DEP_TITLE") + "[/color][/b]\n"
 		t += buff + " " + tr("MSTAT_DEP_B1") + "[/color]\n"
-		t += nerf + " " + tr("MSTAT_DEP_N1") + "[/color]\n"
 		var dev: int = EvoManager.met_oscuro_devoured_count
 		var bio: float = BiosphereEngine.biomasa
 		var money_now: float = EconomyManager.money
+		# Fork al agotar upgrades: resultado según masa crítica acumulada
+		var fork_ok: bool = dev >= 3 and bio >= 25.0
+		t += "[color=#ff8844]⚠ " + tr("MSTAT_DEP_FORK_INTRO") + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if fork_ok else "#ff5555"] + tr("MSTAT_DEP_FORK_WIN") % dev + "[/color]\n"
+		t += "  [color=%s]" % ["#ff8844" if not fork_ok else "#888888"] + tr("MSTAT_DEP_FORK_LOSE") + "[/color]\n"
 		var d_ok: bool = dev >= 3
 		var b_ok: bool = bio >= 25.0
 		var r_ok: bool = money_now < 1000.0

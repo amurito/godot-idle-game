@@ -825,13 +825,6 @@ func process_met_oscuro(dt: float) -> bool:
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func process_depredador(dt: float) -> void:
-	if met_oscuro_devoured_count >= 1 \
-			and StructuralModel.epsilon_runtime > 1.0 \
-			and BiosphereEngine.biomasa > 25.0 \
-			and EconomyManager.money < 500.0 \
-			and not RunManager.run_closed:
-		RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
-		return
 	_depredador_active_tick += dt
 	if _depredador_active_tick >= 1.5:
 		_depredador_active_tick = 0.0
@@ -844,7 +837,13 @@ func process_depredador(dt: float) -> void:
 			if is_instance_valid(UIManager.big_click_button):
 				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 		else:
-			RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
+			# Sin upgrades restantes: el resultado depende de cuánto se consumió.
+			# Con suficiente depredación (≥3 devorados y biomasa ≥25) el hongo trasciende;
+			# sin esa masa crítica, el sistema colapsa sin alcanzar la singularidad.
+			if met_oscuro_devoured_count >= 3 and BiosphereEngine.biomasa >= 25.0:
+				RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
+			else:
+				RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
 
 func process_depredador_progress(dt: float) -> void:
 	_depredador_status_timer += dt

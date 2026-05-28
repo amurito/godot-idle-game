@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 ## LocaleManager — Autoload
 ## Centraliza la traducción de strings de UI (ES por defecto, EN opcional).
@@ -704,6 +704,9 @@ const TRANSLATIONS := {
 		"MSTAT_DEP_TITLE": "DEPREDADOR DE REALIDADES:",
 		"MSTAT_DEP_B1": "Devora upgrade cada 1.5s (+15 biomasa cada uno)",
 		"MSTAT_DEP_N1": "Agotar upgrades cierra la run",
+		"MSTAT_DEP_FORK_INTRO": "Al agotar upgrades, el final depende de la masa crítica:",
+		"MSTAT_DEP_FORK_WIN": "≥ 3 devorados + biomasa ≥ 25 → DEPREDADOR DE REALIDADES (%d devorados)",
+		"MSTAT_DEP_FORK_LOSE": "< 3 devorados o biomasa < 25 → COLAPSO DEPREDATORIO",
 		"MSTAT_DEP_ALT": "◈ RUTA ALTERNATIVA — MET.OSCURO (Depredación + Recursos críticos):",
 		"MSTAT_DEP_DEVOURED": "Devorados ≥ 3 → %d",
 		"MSTAT_DEP_BIO25": "Biomasa ≥ 25 → %.1f",
@@ -1062,7 +1065,7 @@ const TRANSLATIONS := {
 		"CLOSE_EVO_PARASITISMO_MASA": "Colapso por Masa Crítica: el tejido biótico ha reemplazado toda la infraestructura (+1 PL)",
 		"CLOSE_MO_SATURACION": "Saturacion Oscura: la biomasa rebasó el umbral crítico (+6 PL total)",
 		"CLOSE_MO_MILLONARIO": "Millonario Oscuro: bioquímica sostenida generó $1M sin infraestructura (+4 PL)",
-		"CLOSE_COLAPSO_DEP": "Fractura epistémica: estrés estructural colapsó bajo presión depredatoria (+8 PL)",
+		"CLOSE_COLAPSO_DEP": "El Depredador consumió todo pero carecía de masa crítica para trascender. El sistema implosiona. (+8 PL)",
 		"CLOSE_DEP_REALIDADES": "El hongo consumió todo el código fuente. Ya no existís. (+12 PL)",
 		# ─── FÓRMULA ───
 		"FORMULA_MG_ACTIVE": "  (mg activo si ε>0.40)",
@@ -1828,6 +1831,9 @@ const TRANSLATIONS := {
 		"MSTAT_DEP_TITLE": "REALITY PREDATOR:",
 		"MSTAT_DEP_B1": "Devours upgrade every 1.5s (+15 biomass each)",
 		"MSTAT_DEP_N1": "Depleting upgrades ends the run",
+		"MSTAT_DEP_FORK_INTRO": "When upgrades run out, the ending depends on accumulated mass:",
+		"MSTAT_DEP_FORK_WIN": "≥ 3 devoured + biomass ≥ 25 → REALITY PREDATOR (%d devoured)",
+		"MSTAT_DEP_FORK_LOSE": "< 3 devoured or biomass < 25 → PREDATORY COLLAPSE",
 		"MSTAT_DEP_ALT": "◈ ALT ROUTE — DARK MET. (Predation + Critical resources):",
 		"MSTAT_DEP_DEVOURED": "Devoured ≥ 3 → %d",
 		"MSTAT_DEP_BIO25": "Biomass ≥ 25 → %.1f",
@@ -2186,7 +2192,7 @@ const TRANSLATIONS := {
 		"CLOSE_EVO_PARASITISMO_MASA": "Critical Mass Collapse: the biotic tissue has replaced all infrastructure (+1 PL)",
 		"CLOSE_MO_SATURACION": "Dark Saturation: biomass surpassed the critical threshold (+6 PL total)",
 		"CLOSE_MO_MILLONARIO": "Dark Millionaire: sustained biochemistry generated $1M without infrastructure (+4 PL)",
-		"CLOSE_COLAPSO_DEP": "Epistemic fracture: structural stress collapsed under predatory pressure (+8 PL)",
+		"CLOSE_COLAPSO_DEP": "The Predator consumed everything but lacked the critical mass to transcend. The system implodes. (+8 PL)",
 		"CLOSE_DEP_REALIDADES": "The fungus consumed all the source code. You no longer exist. (+12 PL)",
 		# ─── FORMULA ───
 		"FORMULA_MG_ACTIVE": "  (mg active if ε>0.40)",
