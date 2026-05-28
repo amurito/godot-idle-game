@@ -419,6 +419,12 @@ func _dismiss_antistuck() -> void:
 		_antistuck_panel.queue_free()
 		_antistuck_panel = null
 
+## API pública — llamar al abrir cualquier panel de pantalla completa (logros, banco, historial).
+## Limpia hints contextuales que de otro modo quedan sobrevolando el UI del main menu.
+func hide_gameplay_hints() -> void:
+	_dismiss_antistuck()
+	_hide_tooltip()
+
 
 func _check_milestones() -> void:
 	# Primer ingreso pasivo ($/s > 0)

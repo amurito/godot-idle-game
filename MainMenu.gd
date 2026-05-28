@@ -351,12 +351,14 @@ func _refresh_nav_badges() -> void:
 	btn_legacy.text = EmojiToRichText.strip("★ " + legacy_name.to_upper() if has_new_buff else legacy_name)
 
 func _on_achievements_pressed():
+	TutorialManager.hide_gameplay_hints()
 	achievements_panel.visible = true
 	_update_achievements_view()
 	# Los logros se marcan como vistos dentro de _update_achievements_view;
 	# refrescamos el badge al volver.
 
 func _on_legacy_pressed():
+	TutorialManager.hide_gameplay_hints()
 	legacy_panel.visible = true
 	_update_legacy_view()
 
@@ -600,6 +602,7 @@ func _refresh_history_gate() -> void:
 	btn_history.visible = unlocked
 
 func _on_history_pressed() -> void:
+	TutorialManager.hide_gameplay_hints()
 	history_panel.visible = true
 	_history_tab = "current"
 	btn_tab_current.button_pressed = true
@@ -1361,6 +1364,7 @@ func _close_cosmic_panel() -> void:
 # =====================================================
 
 func _show_credits_panel(on_close: Callable = Callable()) -> void:
+	TutorialManager.hide_gameplay_hints()
 	if is_instance_valid(credits_panel):
 		credits_panel.queue_free()
 	_credits_close_cb = on_close
