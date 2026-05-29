@@ -299,6 +299,16 @@ const LEGACY_DEFS: Dictionary = {
 		# Efecto: +5% a todos los ingresos por nivel cognitivo activo
 		# Implementado en EconomyManager.get_click_power() y get_passive_total()
 	},
+	"entropia_domesticada": {
+		"name": "Entropía Domesticada",
+		"flavor": "Sostuviste el colapso y no te rompió. La zona roja deja de castigar: alimenta.",
+		"cat": "ruta", "cost": 10, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "COLAPSO CONTROLADO"},
+		"unlock": {"type": "route_closed", "route": "COLAPSO CONTROLADO"},
+		"effect": {"type": "entropia_domesticada_mult", "value": 2.0},
+		# Efecto: con ε>0.65, producción × clamp(1 + (ε-0.65)*2.0, 1.0, 2.0)
+		# Implementado en EconomyManager.get_click_power() y get_passive_total()
+	},
 
 	# ────────────────────────────────────────────────
 	# NG+ (6) — costo 0, se otorgan vía grant_buff() al completar rutas avanzadas

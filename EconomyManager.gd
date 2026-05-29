@@ -86,6 +86,12 @@ func get_click_power() -> float:
 	if LegacyManager.get_buff_value("metabolismo_glitch") and StructuralModel.epsilon_runtime > 0.40:
 		power *= 1.50
 
+	# ENTROPÍA DOMESTICADA (COLAPSO CONTROLADO): la zona roja (ε>0.65) deja de penalizar y escala
+	var entropia_k: float = LegacyManager.get_effect_value("entropia_domesticada_mult")
+	if entropia_k > 0.0 and StructuralModel.epsilon_runtime > 0.65:
+		var ent_mult: float = clampf(1.0 + (StructuralModel.epsilon_runtime - 0.65) * entropia_k, 1.0, 2.0)
+		power *= ent_mult
+
 	# Corrosión Parasitaria (Converge a 0)
 	if EvoManager.mutation_parasitism:
 		power *= parasitism_corrosion
@@ -197,6 +203,12 @@ func get_passive_total() -> float:
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		if StructuralModel.epsilon_runtime > 0.40:
 			total *= 1.80
+
+	# ENTROPÍA DOMESTICADA (COLAPSO CONTROLADO): la zona roja (ε>0.65) deja de penalizar y escala
+	var entropia_k: float = LegacyManager.get_effect_value("entropia_domesticada_mult")
+	if entropia_k > 0.0 and StructuralModel.epsilon_runtime > 0.65:
+		var ent_mult: float = clampf(1.0 + (StructuralModel.epsilon_runtime - 0.65) * entropia_k, 1.0, 2.0)
+		total *= ent_mult
 
 	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% pasivo por trascendencia acumulada
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
