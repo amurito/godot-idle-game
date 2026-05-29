@@ -1193,18 +1193,26 @@ func build_mutation_status_text() -> String:
 		var dev: int = EvoManager.met_oscuro_devoured_count
 		var bio: float = BiosphereEngine.biomasa
 		var money_now: float = EconomyManager.money
-		# Fork al agotar upgrades: resultado según estado crítico completo (= condiciones ALT ROUTE)
-		var fork_ok: bool = dev >= 3 and bio >= 25.0 and money_now < 1000.0
-		t += "[color=#ff8844]⚠ " + tr("MSTAT_DEP_FORK_INTRO") + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if fork_ok else "#ff5555"] + tr("MSTAT_DEP_FORK_WIN") % dev + "[/color]\n"
-		t += "  [color=%s]" % ["#ff8844" if not fork_ok else "#888888"] + tr("MSTAT_DEP_FORK_LOSE") + "[/color]\n"
-		var d_ok: bool = dev >= 3
-		var b_ok: bool = bio >= 25.0
-		var r_ok: bool = money_now < 1000.0
+		# Timer de inestabilidad: barra regresiva hacia la implosión
+		var inest: float = EvoManager.depredador_inestabilidad
+		var inest_max: float = EvoManager.DEPREDADOR_INESTABILIDAD_MAX
+		var remaining: float = max(0.0, inest_max - inest)
+		var ratio: float = clampf(remaining / inest_max, 0.0, 1.0)
+		var filled: int = int(ratio * 12.0)
+		var bar: String = "█".repeat(filled) + "░".repeat(12 - filled)
+		var bar_color: String = "#00ff88" if ratio > 0.5 else ("#ffaa33" if ratio > 0.25 else "#ff3333")
+		t += "[color=%s]⏳ " % bar_color + tr("MSTAT_DEP_INESTAB") % [bar, remaining] + "[/color]\n"
+		# Tres salidas posibles antes de la implosión
+		var seal_ok: bool = dev >= 3 and bio >= 25.0 and money_now < 1000.0
+		t += "\n[color=#aaaaaa]" + tr("MSTAT_DEP_OUT_INTRO") + "[/color]\n"
+		t += "  [color=%s]" % ["#9955dd" if seal_ok else "#888888"] + tr("MSTAT_DEP_OUT_SEAL") + "[/color]\n"
+		t += "  [color=#ff5577]" + tr("MSTAT_DEP_OUT_CONSUME") + "[/color]\n"
+		t += "  [color=%s]" % bar_color + tr("MSTAT_DEP_OUT_COLAPSO") + "[/color]\n"
+		# Detalle del estado crítico para sellar MET.OSCURO
 		t += "\n[color=#aa66cc]" + tr("MSTAT_DEP_ALT") + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if d_ok else "#ff5555"] + tr("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if b_ok else "#ff5555"] + tr("MSTAT_DEP_BIO25") % bio + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if r_ok else "#ff5555"] + tr("MSTAT_DEP_MONEY") % money_now + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if dev >= 3 else "#ff5555"] + tr("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if bio >= 25.0 else "#ff5555"] + tr("MSTAT_DEP_BIO25") % bio + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if money_now < 1000.0 else "#ff5555"] + tr("MSTAT_DEP_MONEY") % money_now + "[/color]\n"
 		t += "  [color=#aaaaaa]" + tr("MSTAT_DEP_SUSTAIN") + "[/color]\n"
 
 	if EvoManager.mutation_parasitism:

@@ -54,6 +54,11 @@ var depredador_timer: float = 0.0
 var _depredador_active_tick: float = 0.0
 var _depredador_status_timer: float = 0.0
 const DEPREDADOR_STATUS_INTERVAL := 10.0
+# Timer de inestabilidad (post-activación): ventana antes de la implosión.
+# Cuenta hacia arriba mientras el Depredador está activo. Si llega al máximo
+# sin resolverse (sellar MET.OSCURO o consumir todos los upgrades) → COLAPSO.
+var depredador_inestabilidad: float = 0.0
+const DEPREDADOR_INESTABILIDAD_MAX := 60.0
 var _depredador_countdown_last: int = -1
 var _met_oscuro_countdown_last: int = -1
 var _parasitismo_countdown_last: int = -1
@@ -108,6 +113,7 @@ func reset() -> void:
 	allostasis_timer = 0.0
 	homeorhesis_timer = 0.0
 	depredador_timer = 0.0
+	depredador_inestabilidad = 0.0
 	_depredador_active_tick = 0.0
 	_depredador_status_timer = 0.0
 	_depredador_countdown_last = -1
@@ -521,6 +527,7 @@ func activate_depredador():
 	if mutation_homeostasis or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
 	LogManager.add(tr("LOG_GLITCH_ALERT"))
 	mutation_depredador = true
+	depredador_inestabilidad = 0.0  # arranca la cuenta hacia la implosión
 	mutation_activated.emit("depredador", tr("MUT_DEPREDADOR"))
 	AchievementManager.on_depredador_activated()
 
@@ -825,6 +832,13 @@ func process_met_oscuro(dt: float) -> bool:
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func process_depredador(dt: float) -> void:
+	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.
+	# Si el jugador no la resuelve antes del límite (sellando MET.OSCURO o
+	# consumiendo todos los upgrades), el sistema implosiona → COLAPSO DEPREDATORIO.
+	depredador_inestabilidad += dt
+	if depredador_inestabilidad >= DEPREDADOR_INESTABILIDAD_MAX and not RunManager.run_closed:
+		RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
+		return
 	_depredador_active_tick += dt
 	if _depredador_active_tick >= 1.5:
 		_depredador_active_tick = 0.0
@@ -837,16 +851,8 @@ func process_depredador(dt: float) -> void:
 			if is_instance_valid(UIManager.big_click_button):
 				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 		else:
-			# Sin upgrades restantes: el resultado depende del estado crítico al momento del agotamiento.
-			# El hongo necesita haber alcanzado la condición de escasez económica + depredación masiva.
-			# Si tiene demasiado dinero, nunca colapsó lo suficiente para trascender.
-			var critical_state: bool = met_oscuro_devoured_count >= 3 \
-				and BiosphereEngine.biomasa >= 25.0 \
-				and EconomyManager.money < 1000.0
-			if critical_state:
-				RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
-			else:
-				RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
+			# Consumió toda la realidad antes de la implosión → trascendencia depredatoria.
+			RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
 
 func process_depredador_progress(dt: float) -> void:
 	_depredador_status_timer += dt
