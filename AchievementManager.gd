@@ -338,12 +338,12 @@ const DEFS := {
 	},
 	"fruta_prohibida": {
 		"name": "Fruta Prohibida",
-		"desc": "Cerrar PARASITISMO o HIPERASIMILACIÓN habiendo alcanzado un pico de ε > 0.40.",
+		"desc": "Cerrar PARASITISMO o HIPERASIMILACIÓN habiendo alcanzado un pico de ε > 0.80.",
 		"tier": Tier.FRUTO, "secret": false, "toast": "full",
 		"trigger": "event", "event_name": "run_closed",
 		"conditions": [
 			{"key": "route", "op": "in", "value": ["PARASITISMO", "HIPERASIMILACION", "HIPERASIMILACIÓN"]},
-			{"key": "epsilon_peak", "op": ">", "value": 0.40},
+			{"key": "epsilon_peak", "op": ">", "value": 0.80},
 		],
 	},
 	"maquina_organica": {

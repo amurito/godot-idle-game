@@ -18,6 +18,7 @@ const PARASITISM_STATUS_INTERVAL := 45.0
 
 # NG++ Metabolismo Oscuro
 var _met_oscuro_seal_btn: Button = null
+var _depredador_buytime_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
 var _reset_btn: Button = null
@@ -101,6 +102,34 @@ func _on_met_oscuro_seal_pressed():
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
+
+func _update_depredador_buytime_button():
+	# Botón EXCLUSIVO del Depredador: compra DEP_TIME_EXTENSION s de timer pagando biomasa.
+	if RunManager.run_closed or not EvoManager.mutation_depredador:
+		if is_instance_valid(_depredador_buytime_btn):
+			_depredador_buytime_btn.visible = false
+		return
+	var cost := EvoManager.depredador_time_cost()
+	var ext := Balance.DEP_TIME_EXTENSION
+	var btn_label := EmojiToRichText.strip("⏳ " + tr("BTN_DEP_BUYTIME") % [ext, cost])
+
+	if _depredador_buytime_btn == null or not is_instance_valid(_depredador_buytime_btn):
+		_depredador_buytime_btn = Button.new()
+		_depredador_buytime_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
+		_depredador_buytime_btn.add_theme_color_override("font_color", Color(1.0, 0.55, 0.2))
+		_depredador_buytime_btn.custom_minimum_size = Vector2(0, 60)
+		_depredador_buytime_btn.pressed.connect(_on_depredador_buytime_pressed)
+		var panel := get_node_or_null("UIRootContainer/RightPanel")
+		if panel:
+			panel.add_child(_depredador_buytime_btn)
+			panel.move_child(_depredador_buytime_btn, 0)
+	_depredador_buytime_btn.text = btn_label
+	_depredador_buytime_btn.disabled = BiosphereEngine.biomasa < cost
+	_depredador_buytime_btn.visible = true
+
+func _on_depredador_buytime_pressed():
+	EvoManager.buy_depredador_time()
+	_update_depredador_buytime_button()
 
 func _update_simbiosis_seal_button():
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
@@ -301,6 +330,9 @@ func reset_local_state():
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.queue_free()
 		_met_oscuro_seal_btn = null
+	if is_instance_valid(_depredador_buytime_btn):
+		_depredador_buytime_btn.queue_free()
+		_depredador_buytime_btn = null
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.queue_free()
 		_simbiosis_seal_btn = null
@@ -667,6 +699,7 @@ func _on_logic_tick():
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)
+		_update_depredador_buytime_button()
 	elif EvoManager.depredador_timer > 0.0 and EvoManager.depredador_timer < 30.0:
 		EvoManager.process_depredador_progress(dt)
 

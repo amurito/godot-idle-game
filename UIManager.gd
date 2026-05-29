@@ -1203,15 +1203,15 @@ func build_mutation_status_text() -> String:
 		var bar_color: String = "#00ff88" if ratio > 0.5 else ("#ffaa33" if ratio > 0.25 else "#ff3333")
 		t += "[color=%s]⏳ " % bar_color + tr("MSTAT_DEP_INESTAB") % [bar, remaining] + "[/color]\n"
 		# Tres salidas posibles antes de la implosión
-		var seal_ok: bool = dev >= 3 and bio >= 25.0 and money_now < 1000.0
+		var seal_ok: bool = dev >= Balance.MET_OSCURO_DEVOURED_REQ and bio >= Balance.MET_OSCURO_BIO_REQ and money_now < 1000.0
 		t += "\n[color=#aaaaaa]" + tr("MSTAT_DEP_OUT_INTRO") + "[/color]\n"
 		t += "  [color=%s]" % ["#9955dd" if seal_ok else "#888888"] + tr("MSTAT_DEP_OUT_SEAL") + "[/color]\n"
 		t += "  [color=#ff5577]" + tr("MSTAT_DEP_OUT_CONSUME") + "[/color]\n"
 		t += "  [color=%s]" % bar_color + tr("MSTAT_DEP_OUT_COLAPSO") + "[/color]\n"
 		# Detalle del estado crítico para sellar MET.OSCURO
 		t += "\n[color=#aa66cc]" + tr("MSTAT_DEP_ALT") + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if dev >= 3 else "#ff5555"] + tr("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if bio >= 25.0 else "#ff5555"] + tr("MSTAT_DEP_BIO25") % bio + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if dev >= Balance.MET_OSCURO_DEVOURED_REQ else "#ff5555"] + tr("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if bio >= Balance.MET_OSCURO_BIO_REQ else "#ff5555"] + tr("MSTAT_DEP_BIO25") % bio + "[/color]\n"
 		t += "  [color=%s]" % ["#00ff88" if money_now < 1000.0 else "#ff5555"] + tr("MSTAT_DEP_MONEY") % money_now + "[/color]\n"
 		t += "  [color=#aaaaaa]" + tr("MSTAT_DEP_SUSTAIN") + "[/color]\n"
 

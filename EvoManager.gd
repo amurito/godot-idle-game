@@ -59,6 +59,8 @@ const DEPREDADOR_STATUS_INTERVAL := 10.0
 # sin resolverse (sellar MET.OSCURO o consumir todos los upgrades) → COLAPSO.
 var depredador_inestabilidad: float = 0.0
 const DEPREDADOR_INESTABILIDAD_MAX := 60.0
+# Compras de tiempo: cada una resta DEP_TIME_EXTENSION al timer y encarece la siguiente.
+var depredador_timer_buys: int = 0
 var _depredador_countdown_last: int = -1
 var _met_oscuro_countdown_last: int = -1
 var _parasitismo_countdown_last: int = -1
@@ -114,6 +116,7 @@ func reset() -> void:
 	homeorhesis_timer = 0.0
 	depredador_timer = 0.0
 	depredador_inestabilidad = 0.0
+	depredador_timer_buys = 0
 	_depredador_active_tick = 0.0
 	_depredador_status_timer = 0.0
 	_depredador_countdown_last = -1
@@ -247,9 +250,9 @@ func _update_met_oscuro(ctx: Dictionary) -> void:
 		_set_genome_state("met_oscuro", "dormido")
 		return
 
-	var devoured_ok: bool = met_oscuro_devoured_count >= 3
+	var devoured_ok: bool = met_oscuro_devoured_count >= Balance.MET_OSCURO_DEVOURED_REQ
 	var recursos_criticos: bool = EconomyManager.money < 1000.0
-	var bio_ok: bool = ctx.biomasa >= 25.0
+	var bio_ok: bool = ctx.biomasa >= Balance.MET_OSCURO_BIO_REQ
 
 	if devoured_ok and recursos_criticos and bio_ok:
 		var prev_mt := met_oscuro_timer
@@ -528,6 +531,7 @@ func activate_depredador():
 	LogManager.add(tr("LOG_GLITCH_ALERT"))
 	mutation_depredador = true
 	depredador_inestabilidad = 0.0  # arranca la cuenta hacia la implosión
+	depredador_timer_buys = 0
 	mutation_activated.emit("depredador", tr("MUT_DEPREDADOR"))
 	AchievementManager.on_depredador_activated()
 
@@ -714,6 +718,9 @@ func _complete_primordio() -> void:
 # SOLO modificar aquí si querés cambiar un color del reactor.
 # =============================================================
 func get_reactor_color() -> Color:
+	# Prioridad máxima: COLAPSO DEPREDATORIO → reactor muerto/implosionado (brasa negra)
+	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
+		return Color(0.12, 0.0, 0.02)     # Negro-brasa: el Depredador imploso
 	# Prioridad 0A: MET.OSCURO (post-Depredador, bioquímica oscura)
 	if mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)    # Púrpura Oscuro
@@ -853,6 +860,24 @@ func process_depredador(dt: float) -> void:
 		else:
 			# Consumió toda la realidad antes de la implosión → trascendencia depredatoria.
 			RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
+
+# Costo en biomasa de la próxima compra de tiempo del timer de inestabilidad.
+# Escala exponencialmente para que estirar el timer sea cada vez más caro.
+func depredador_time_cost() -> float:
+	return Balance.DEP_TIME_COST_BASE * pow(Balance.DEP_TIME_COST_GROWTH, float(depredador_timer_buys))
+
+# Compra DEP_TIME_EXTENSION segundos de timer pagando biomasa. Retorna true si tuvo éxito.
+func buy_depredador_time() -> bool:
+	if not mutation_depredador or RunManager.run_closed:
+		return false
+	var cost: float = depredador_time_cost()
+	if BiosphereEngine.biomasa < cost:
+		return false
+	BiosphereEngine.biomasa -= cost
+	depredador_timer_buys += 1
+	depredador_inestabilidad = max(0.0, depredador_inestabilidad - Balance.DEP_TIME_EXTENSION)
+	UIManager.show_toast(tr("TOAST_DEP_TIME_BOUGHT") % Balance.DEP_TIME_EXTENSION)
+	return true
 
 func process_depredador_progress(dt: float) -> void:
 	_depredador_status_timer += dt

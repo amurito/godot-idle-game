@@ -16,6 +16,14 @@ const CARNAVAL_INTERVAL          := 60.0   # s entre rotaciones de mutación
 const PRIMORDIO_DURATION         := 90.0   # s por ciclo biológico primordio
 const MET_OSCURO_REQUIRED_TIME   := 15.0   # s de activación met. oscuro
 const MET_OSCURO_SEAL_COOLDOWN   := 120.0  # s de cooldown tras sellado
+const MET_OSCURO_DEVOURED_REQ    := 10     # devours necesarios para sellar MET.OSCURO
+const MET_OSCURO_BIO_REQ         := 50.0   # biomasa necesaria para sellar MET.OSCURO
+
+# ── Depredador: compra de tiempo del timer de inestabilidad ──────
+# (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
+const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
+const DEP_TIME_COST_BASE           := 40.0  # costo en biomasa de la 1ª compra
+const DEP_TIME_COST_GROWTH         := 1.8   # multiplicador de costo por compra acumulada
 
 # ── LogManager ──────────────────────────────────────────────────
 const MAX_LAPS := 200  # máximo de eventos en lap_events (FIFO, descarta el más viejo)
