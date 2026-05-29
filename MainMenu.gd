@@ -788,8 +788,9 @@ func _populate_legacy_items():
 					buy_btn.text = tr("BANK_BTN_MAX")
 					buy_btn.disabled = true
 				elif not unlockable:
-					buy_btn.text = tr("BANK_BTN_LOCKED")
+					buy_btn.text = EmojiToRichText.strip(LegacyManager.describe_unlock(id))
 					buy_btn.disabled = true
+					buy_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				elif lvl == 0:
 					buy_btn.text = tr("BANK_BTN_ACQUIRE") if def.get("cost", 0) == 0 else "%d PL" % cost
 					buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)

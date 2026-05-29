@@ -857,6 +857,35 @@ func _check_condition(cond: Dictionary) -> bool:
 			return mu_peak_achieved
 	return true
 
+## Texto corto del requisito de desbloqueo (para mostrar en el boton locked)
+func describe_unlock(id: String) -> String:
+	if not LEGACY_DEFS.has(id):
+		return tr("BANK_BTN_LOCKED")
+	var unlock: Dictionary = LEGACY_DEFS[id].get("unlock", {})
+	var base: String = ""
+	match unlock.get("type", "always"):
+		"route_closed":
+			base = tr("UNLOCK_REQ_ROUTE") % str(unlock.get("route", "")).to_upper()
+		"route_closed_any":
+			base = tr("UNLOCK_REQ_ROUTE") % ", ".join(unlock.get("routes", []))
+		"route_closed_all":
+			base = tr("UNLOCK_REQ_ROUTE_ALL") % ", ".join(unlock.get("routes", []))
+		"achievement_unlocked":
+			base = tr("UNLOCK_REQ_ACH")
+		"transcendence_count":
+			base = tr("UNLOCK_REQ_TRAS") % int(unlock.get("count", 1))
+		"buff_owned":
+			var bid: String = str(unlock.get("id", ""))
+			base = tr("UNLOCK_REQ_BUFF") % tr("LEGACY_" + bid.to_upper() + "_NAME")
+		"mu_peak_reached":
+			base = tr("UNLOCK_REQ_MU") % float(unlock.get("threshold", 2.5))
+		_:
+			base = tr("BANK_BTN_LOCKED")
+	var req_buff: String = str(unlock.get("also_requires_buff", ""))
+	if req_buff != "" and get_buff_level(req_buff) == 0:
+		base += " + " + tr("UNLOCK_REQ_BUFF") % tr("LEGACY_" + req_buff.to_upper() + "_NAME")
+	return base
+
 # =====================================================
 #  API DE BUFFS — ESCRITURA
 # =====================================================

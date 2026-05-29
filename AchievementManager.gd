@@ -338,12 +338,12 @@ const DEFS := {
 	},
 	"fruta_prohibida": {
 		"name": "Fruta Prohibida",
-		"desc": "Cerrar PARASITISMO o HIPERASIMILACIÓN con ε > 0.40.",
+		"desc": "Cerrar PARASITISMO o HIPERASIMILACIÓN habiendo alcanzado un pico de ε > 0.40.",
 		"tier": Tier.FRUTO, "secret": false, "toast": "full",
 		"trigger": "event", "event_name": "run_closed",
 		"conditions": [
 			{"key": "route", "op": "in", "value": ["PARASITISMO", "HIPERASIMILACION", "HIPERASIMILACIÓN"]},
-			{"key": "epsilon", "op": ">", "value": 0.40},
+			{"key": "epsilon_peak", "op": ">", "value": 0.40},
 		],
 	},
 	"maquina_organica": {
@@ -992,6 +992,7 @@ func on_run_closed(route: String) -> void:
 		"clicks_after_minute_one":_clicks_after_minute_one,
 		"run_time":               _run_time,
 		"epsilon":                StructuralModel.epsilon_runtime,  # runtime = lo que ve el jugador
+		"epsilon_peak":           StructuralModel.epsilon_peak,     # pico de estrés alcanzado en la run
 		"omega":                  StructuralModel.omega,
 		"disturbances_survived":  RunManager.disturbances_survived,
 		"resilience_score":       RunManager.resilience_score,
