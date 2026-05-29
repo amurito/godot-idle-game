@@ -837,10 +837,13 @@ func process_depredador(dt: float) -> void:
 			if is_instance_valid(UIManager.big_click_button):
 				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
 		else:
-			# Sin upgrades restantes: el resultado depende de cuánto se consumió.
-			# Con suficiente depredación (≥3 devorados y biomasa ≥25) el hongo trasciende;
-			# sin esa masa crítica, el sistema colapsa sin alcanzar la singularidad.
-			if met_oscuro_devoured_count >= 3 and BiosphereEngine.biomasa >= 25.0:
+			# Sin upgrades restantes: el resultado depende del estado crítico al momento del agotamiento.
+			# El hongo necesita haber alcanzado la condición de escasez económica + depredación masiva.
+			# Si tiene demasiado dinero, nunca colapsó lo suficiente para trascender.
+			var critical_state: bool = met_oscuro_devoured_count >= 3 \
+				and BiosphereEngine.biomasa >= 25.0 \
+				and EconomyManager.money < 1000.0
+			if critical_state:
 				RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
 			else:
 				RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
