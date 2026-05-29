@@ -2,7 +2,7 @@
 
 > *An idle/incremental game about structural stress, mutation, and transcendence.*
 
-**[Play in browser (itch.io)](https://amurito.itch.io/hyphae-genesis)** &nbsp;·&nbsp; **[Latest release](https://github.com/amurito/godot-idle-game/releases/latest)**
+**[Play in browser](https://hyphae-game-hub.onrender.com)** &nbsp;·&nbsp; **[Latest release](https://github.com/amurito/godot-idle-game/releases/latest)**
 
 ---
 
@@ -32,7 +32,7 @@ Each transcendence unlocks more depth — the game changes qualitatively, not ju
 
 ### Browser (recommended)
 
-Play directly at **[amurito.itch.io/hyphae-genesis](https://amurito.itch.io/hyphae-genesis)** — no install needed.
+Play directly at **(https://hyphae-game-hub.onrender.com)** — no install needed.
 
 > Optimized for desktop/laptop PC. Mouse + keyboard. Mobile is not currently supported.
 
