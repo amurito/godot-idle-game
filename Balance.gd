@@ -24,6 +24,11 @@ const MET_OSCURO_BIO_REQ         := 50.0   # biomasa necesaria para sellar MET.O
 const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
 const DEP_TIME_COST_BASE           := 40.0  # costo en biomasa de la 1ª compra
 const DEP_TIME_COST_GROWTH         := 1.8   # multiplicador de costo por compra acumulada
+# Hitos de devorado: al alcanzar N upgrades comidos, regalar tiempo (resta al timer).
+# Premia el progreso hacia DEPREDADOR DE REALIDADES (comer toda la realidad antes de implosionar).
+const DEP_DEVOUR_MILESTONE_1       := 30    # 1er hito de devorado
+const DEP_DEVOUR_MILESTONE_2       := 50    # 2do hito de devorado
+const DEP_DEVOUR_MILESTONE_BONUS   := 10.0  # s que resta al timer al cruzar cada hito
 
 # ── LogManager ──────────────────────────────────────────────────
 const MAX_LAPS := 200  # máximo de eventos en lap_events (FIFO, descarta el más viejo)
