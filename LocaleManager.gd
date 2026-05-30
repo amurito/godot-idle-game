@@ -673,6 +673,7 @@ const TRANSLATIONS := {
 		"LAB_EP_LINE": "ep  Eco Primordial         todos ×%.2f",
 		"LAB_CC_LINE": "cc  Convergencia Cíclica   todos ×%.2f (T=%d)",
 		"LAB_RC_LINE": "rc  Resonancia Cognitiva   todos ×%.2f (nv.cog=%d)",
+		"LAB_ED_LINE": "ed  Entropía Domesticada  todos ×%.2f  [%s]",
 		"LAB_PA_LINE": "Plasticidad Adaptativa    Ω_min inicio ≥ 0.30",
 		"LAB_TC_LINE": "Trascendencia Cristalina  Ω ≥ 0.55 (tick)",
 		"LAB_RA_LINE": "Resiliencia Alostática    Ω_min +0.02/shock (acumulado: %d shocks)",
@@ -1080,6 +1081,7 @@ const TRANSLATIONS := {
 		"CLOSE_DEP_REALIDADES": "El hongo consumió todo el código fuente. Ya no existís. (+12 PL)",
 		# ─── FÓRMULA ───
 		"FORMULA_MG_ACTIVE": "  (mg activo si ε>0.40)",
+		"FORMULA_ED_ACTIVE": "  (ed activo si ε>0.65)",
 		# ─── LOG EVENTS — RunManager ───
 		"LOG_RUN_CLOSED": "🚩 RUN CERRADA: %s",
 		"LOG_PL_BASE": "✦ [PL] Base: +%d (%s)",
@@ -1812,6 +1814,7 @@ const TRANSLATIONS := {
 		"LAB_EP_LINE": "ep  Primordial Eco         all ×%.2f",
 		"LAB_CC_LINE": "cc  Cyclic Convergence     all ×%.2f (T=%d)",
 		"LAB_RC_LINE": "rc  Cognitive Resonance    all ×%.2f (cog.lv=%d)",
+		"LAB_ED_LINE": "ed  Tamed Entropy          all ×%.2f  [%s]",
 		"LAB_PA_LINE": "Adaptive Plasticity        Ω_min start ≥ 0.30",
 		"LAB_TC_LINE": "Crystalline Transcendence  Ω ≥ 0.55 (tick)",
 		"LAB_RA_LINE": "Allostatic Resilience      Ω_min +0.02/shock (accumulated: %d shocks)",
@@ -2219,6 +2222,7 @@ const TRANSLATIONS := {
 		"CLOSE_DEP_REALIDADES": "The fungus consumed all the source code. You no longer exist. (+12 PL)",
 		# ─── FORMULA ───
 		"FORMULA_MG_ACTIVE": "  (mg active if ε>0.40)",
+		"FORMULA_ED_ACTIVE": "  (ed active if ε>0.65)",
 		# ─── LOG EVENTS — RunManager ───
 		"LOG_RUN_CLOSED": "🚩 RUN CLOSED: %s",
 		"LOG_PL_BASE": "✦ [PL] Base: +%d (%s)",

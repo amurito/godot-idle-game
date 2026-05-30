@@ -508,6 +508,8 @@ func build_formula_text(_main: Node) -> String:
 		lambda_parts.append("[color=#ffaa44]cc[/color]")
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		lambda_parts.append("[color=#9933cc]mg?[/color]")  # condicional ε>0.40
+	if LegacyManager.get_effect_value("entropia_domesticada_mult") > 0.0:
+		lambda_parts.append("[color=#ff6622]ed?[/color]")
 	if lambda_parts.size() > 0:
 		formula_main += " · [color=#ffdd88]Λ[/color]"
 
@@ -535,6 +537,8 @@ func build_formula_text(_main: Node) -> String:
 		t += "[color=#ffdd88][font_size=11]Λ = " + " · ".join(lambda_parts)
 		if LegacyManager.get_buff_value("metabolismo_glitch"):
 			t += tr("FORMULA_MG_ACTIVE")
+		if LegacyManager.get_effect_value("entropia_domesticada_mult") > 0.0:
+			t += tr("FORMULA_ED_ACTIVE")
 		t += "[/font_size][/color]\n"
 
 	# Información del Modelo — μ solo cuando Capital Cognitivo está activo
@@ -669,6 +673,16 @@ func update_click_stats_panel(_main: Node) -> String:
 	if cog_mult > 0.0:
 		var cog_val := 1.0 + UpgradeManager.level("accounting") * cog_mult
 		income_section += tr("LAB_RC_LINE") % [cog_val, UpgradeManager.level("accounting")] + "\n"
+		has_income_buff = true
+	var entropia_k: float = LegacyManager.get_effect_value("entropia_domesticada_mult")
+	if entropia_k > 0.0:
+		var ed_active: bool = StructuralModel.epsilon_runtime > 0.65
+		var ed_mult: float = 1.0
+		var ed_state: String = tr("LAB_MG_INACTIVO") % StructuralModel.epsilon_runtime
+		if ed_active:
+			ed_mult = clampf(1.0 + (StructuralModel.epsilon_runtime - 0.65) * entropia_k, 1.0, 2.0)
+			ed_state = tr("LAB_MG_ACTIVO")
+		income_section += tr("LAB_ED_LINE") % [ed_mult, ed_state] + "\n"
 		has_income_buff = true
 	if has_income_buff:
 		t += income_section
