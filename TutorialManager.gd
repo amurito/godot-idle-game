@@ -350,6 +350,10 @@ func _give_idle_push() -> void:
 	var passive: float = EconomyManager.get_passive_total()
 	var gift: float = 10.0 * max(1.0, passive)
 	EconomyManager.money += gift
+	# Mismo tratamiento que _check_antistuck: resetear idle y armar cooldown para que
+	# descartar el push no dispare otro hint en el mismo frame.
+	_antistuck_cooldown = ANTISTUCK_COOLDOWN
+	_time_idle = 0.0
 	_show_antistuck_hint(tr("TUTO_AS_IDLE_PUSH") % gift)
 
 
@@ -405,6 +409,10 @@ func _build_contextual_hint() -> String:
 
 
 func _show_antistuck_hint(hint_text: String) -> void:
+	# Garantizar un único panel: liberar cualquiera previo antes de crear el nuevo.
+	# Sin esto, un push (60s) que pisa un hint contextual (50s) deja el anterior
+	# huérfano en el canvas y su botón "Entendido" no lo puede cerrar.
+	_dismiss_antistuck()
 	_antistuck_panel = _make_hint_bubble(
 		tr("TUTO_AS_HEADER") + "\n" + hint_text,
 		func():

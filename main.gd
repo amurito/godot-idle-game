@@ -105,7 +105,9 @@ func _on_met_oscuro_seal_pressed():
 
 func _update_depredador_buytime_button():
 	# Botón EXCLUSIVO del Depredador: compra DEP_TIME_EXTENSION s de timer pagando biomasa.
-	if RunManager.run_closed or not EvoManager.mutation_depredador:
+	# Al sellar MET.OSCURO se congela el devorar: el botón ya no aplica y debe ocultarse
+	# (mutation_depredador sigue true, así que hay que chequear met_oscuro explícitamente).
+	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
 		if is_instance_valid(_depredador_buytime_btn):
 			_depredador_buytime_btn.visible = false
 		return
@@ -696,6 +698,7 @@ func _on_logic_tick():
 		var _show_seal := EvoManager.process_met_oscuro(dt)
 		if _show_seal:
 			_update_met_oscuro_seal_button()
+		_update_depredador_buytime_button()  # se auto-oculta: el devorar está congelado
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)

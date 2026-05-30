@@ -70,6 +70,8 @@ func build_save_data(main: Node) -> Dictionary:
 			"mutation_depredador": EvoManager.mutation_depredador,
 			"mutation_met_oscuro": EvoManager.mutation_met_oscuro,
 			"depredador_timer": EvoManager.depredador_timer,
+			"depredador_inestabilidad": EvoManager.depredador_inestabilidad,
+			"depredador_timer_buys": EvoManager.depredador_timer_buys,
 			"met_oscuro_timer": EvoManager.met_oscuro_timer,
 			"met_oscuro_devoured_count": EvoManager.met_oscuro_devoured_count,
 			"red_micelial_phase": EvoManager.red_micelial_phase,
@@ -185,6 +187,8 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.mutation_depredador = ev.get("mutation_depredador", EvoManager.mutation_depredador)
 		EvoManager.mutation_met_oscuro = ev.get("mutation_met_oscuro", EvoManager.mutation_met_oscuro)
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
+		EvoManager.depredador_inestabilidad = ev.get("depredador_inestabilidad", EvoManager.depredador_inestabilidad)
+		EvoManager.depredador_timer_buys = int(ev.get("depredador_timer_buys", EvoManager.depredador_timer_buys))
 		EvoManager.met_oscuro_timer = ev.get("met_oscuro_timer", EvoManager.met_oscuro_timer)
 		EvoManager.met_oscuro_devoured_count = ev.get("met_oscuro_devoured_count", EvoManager.met_oscuro_devoured_count)
 		EvoManager.red_micelial_phase = ev.get("red_micelial_phase", EvoManager.red_micelial_phase)
