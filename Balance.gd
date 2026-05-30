@@ -26,9 +26,12 @@ const DEP_TIME_COST_BASE           := 40.0  # costo en biomasa de la 1ª compra
 const DEP_TIME_COST_GROWTH         := 1.8   # multiplicador de costo por compra acumulada
 # Hitos de devorado: al alcanzar N upgrades comidos, regalar tiempo (resta al timer).
 # Premia el progreso hacia DEPREDADOR DE REALIDADES (comer toda la realidad antes de implosionar).
-const DEP_DEVOUR_MILESTONE_1       := 30    # 1er hito de devorado
-const DEP_DEVOUR_MILESTONE_2       := 50    # 2do hito de devorado
+const DEP_DEVOUR_MILESTONES        := [30, 50, 70, 90]  # cada hito resta tiempo al timer
 const DEP_DEVOUR_MILESTONE_BONUS   := 10.0  # s que resta al timer al cruzar cada hito
+# Velocidad de devorado: el frenesí se acelera al pasar cierto umbral de comidos.
+const DEP_DEVOUR_TICK_BASE         := 1.5   # s entre devorados al inicio
+const DEP_DEVOUR_TICK_FAST         := 1.2   # s entre devorados tras DEP_DEVOUR_TICK_FAST_AT
+const DEP_DEVOUR_TICK_FAST_AT      := 50    # a partir de N devorados el tick acelera
 
 # ── LogManager ──────────────────────────────────────────────────
 const MAX_LAPS := 200  # máximo de eventos en lap_events (FIFO, descarta el más viejo)

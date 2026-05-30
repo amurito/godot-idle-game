@@ -847,7 +847,9 @@ func process_depredador(dt: float) -> void:
 		RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
 		return
 	_depredador_active_tick += dt
-	if _depredador_active_tick >= 1.5:
+	# El frenesí acelera tras DEP_DEVOUR_TICK_FAST_AT comidos.
+	var devour_tick: float = Balance.DEP_DEVOUR_TICK_FAST if met_oscuro_devoured_count >= Balance.DEP_DEVOUR_TICK_FAST_AT else Balance.DEP_DEVOUR_TICK_BASE
+	if _depredador_active_tick >= devour_tick:
 		_depredador_active_tick = 0.0
 		var devoured: bool = UpgradeManager.devour_random_upgrade()
 		if devoured:
@@ -855,11 +857,10 @@ func process_depredador(dt: float) -> void:
 			met_oscuro_devoured_count += 1
 			AchievementManager.push_event("depredador_devour", {})
 			UIManager.show_toast(tr("TOAST_MO_DIGEST") % met_oscuro_devoured_count)
-			# Hitos de devorado: regalar tiempo al cruzar 30 y 50 comidos para que
+			# Hitos de devorado: regalar tiempo al cruzar 30/50/70/90 comidos para que
 			# llegar a DEPREDADOR DE REALIDADES no sea una carrera imposible contra el timer.
 			# El conteo sube de a 1, así que cada hito se cruza exactamente una vez.
-			if met_oscuro_devoured_count == Balance.DEP_DEVOUR_MILESTONE_1 \
-			or met_oscuro_devoured_count == Balance.DEP_DEVOUR_MILESTONE_2:
+			if met_oscuro_devoured_count in Balance.DEP_DEVOUR_MILESTONES:
 				depredador_inestabilidad = max(0.0, depredador_inestabilidad - Balance.DEP_DEVOUR_MILESTONE_BONUS)
 				UIManager.show_toast(tr("TOAST_DEP_DEVOUR_MILESTONE") % [met_oscuro_devoured_count, Balance.DEP_DEVOUR_MILESTONE_BONUS])
 			if is_instance_valid(UIManager.big_click_button):
