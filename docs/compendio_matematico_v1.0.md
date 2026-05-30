@@ -123,8 +123,19 @@
 | `MENTE_COLMENA_BUY_INTERVAL` | 8.0 | RunManager | s entre auto-buys IA |
 | `PRIMORDIO_DURATION` | 90.0 | EvoManager | duración Primordio |
 | `DEPREDADOR_STATUS_INTERVAL` | 10.0 | EvoManager | log de status Depredador |
-| `MET_OSCURO_REQUIRED_TIME` | 15.0 | EvoManager | activación Met. Oscuro |
-| `MET_OSCURO_SEAL_COOLDOWN` | 120.0 | EvoManager | cooldown sello Met. Oscuro |
+| `MET_OSCURO_REQUIRED_TIME` | 15.0 | Balance | s sostenidos para activar Met. Oscuro (×0.6 con `arbol_acelerado`) |
+| `MET_OSCURO_SEAL_COOLDOWN` | 120.0 | Balance | s mínimos activos antes de habilitar el sello |
+| `MET_OSCURO_DEVOURED_REQ` | 10 | Balance | devorados necesarios para sellar Met. Oscuro |
+| `MET_OSCURO_BIO_REQ` | 50.0 | Balance | biomasa necesaria para sellar Met. Oscuro |
+| `DEPREDADOR_INESTABILIDAD_MAX` | 60.0 | EvoManager | s hasta implosión (COLAPSO DEPREDATORIO) |
+| `DEP_TIME_EXTENSION` | 10.0 | Balance | s que resta al timer cada compra de ESTABILIZAR |
+| `DEP_TIME_COST_BASE` | 40.0 | Balance | costo biomasa de la 1ª compra de ESTABILIZAR |
+| `DEP_TIME_COST_GROWTH` | 1.8 | Balance | ×costo por compra acumulada (`depredador_timer_buys`) |
+| `DEP_DEVOUR_MILESTONES` | [30,50,70,90] | Balance | hitos de devorado que restan tiempo al timer |
+| `DEP_DEVOUR_MILESTONE_BONUS` | 10.0 | Balance | s restados al cruzar cada hito |
+| `DEP_DEVOUR_TICK_BASE` | 1.5 | Balance | s entre devorados (inicio) |
+| `DEP_DEVOUR_TICK_FAST` | 1.2 | Balance | s entre devorados tras `DEP_DEVOUR_TICK_FAST_AT` comidos |
+| `DEP_DEVOUR_TICK_FAST_AT` | 50 | Balance | umbral de comidos para acelerar el tick |
 | `PARASITISM_STATUS_INTERVAL` | 45.0 | main.gd | log status parásito |
 | `TRASCENDENCIA_PL_GATE` | 50 | LegacyManager | PL requerido para 1ª trascendencia |
 
@@ -636,7 +647,7 @@ Adicionalmente: el `purchase_upgrade` multiplica el estado por `effective_cost_s
 | **allostasis** | (vía pasivo) | d_eff ×5.0 | Ω ≥ 0.60 (piso adaptativo) |
 | **homeorhesis** | — | — | (estado conceptual, gate via legado_homeorresis) |
 | **met_oscuro** | ×3.0 | =0 (ingreso solo biomasa) | Ω ≤ 0.10 |
-| **depredador** | — | — | (NG+; gate Met. Oscuro previo) |
+| **depredador** | — | — | NG+ post-PARASITISMO; timer de inestabilidad + 3 salidas → ver §15.4 |
 | **sporulation** | — | — | trigger de cierre vía esporulación |
 
 ### 12.2 Ramas Red Micelial (`EvoManager.RedBranch`)
@@ -713,6 +724,7 @@ Adicionalmente: el `purchase_upgrade` multiplica el estado por `effective_cost_s
 | `simbiosis_agresiva` | ×1.15 a click y pasivo si SIMBIOSIS+PARASITISMO completadas |
 | `colapso_controlado` | `epsilon_peak_pl_bonus = 2.0` (PL extra por ε_peak al cerrar) |
 | `resonancia_cognitiva` | `cognitivo_income_mult_per_level = 0.05` (a click y pasivo) |
+| `entropia_domesticada` | `entropia_domesticada_mult = 2.0`: si ε_rt > 0.65, click y pasivo ×`clampf(1+(ε−0.65)·2, 1, 2)` (~×1.7 a ε=1.0). Reveal+unlock: cerrar **COLAPSO CONTROLADO** |
 
 ### 13.6 NG+ / Trascendencia (revealed por hitos)
 
@@ -776,6 +788,24 @@ Métricas tracked:
 ### 15.3 REENCARNACIÓN HEREDADA
 
 Snapshot `reencarnacion_snapshot` (UpgradeManager serializado al trascender). Al iniciar la run próxima se aplica el snapshot.
+
+### 15.4 Árbol Depredador (NG+, post-PARASITISMO)
+
+Al activarse la mutación `depredador` arranca `depredador_inestabilidad` (cuenta de 0 → `DEPREDADOR_INESTABILIDAD_MAX = 60s`). Cada `DEP_DEVOUR_TICK` se devora un upgrade (`devour_random_upgrade()` reduce nivel en 1, no borra → se puede recomprar para "realimentar"). Cada devorado: `B += 15`, `met_oscuro_devoured_count += 1`. Tres salidas con identidad propia:
+
+| Salida | Condición | PL |
+|---|---|---|
+| **COLAPSO DEPREDATORIO** | el timer llega a `MAX` sin resolver → implosión. Reactor a rojo casi negro `Color(0.12,0,0.02)` | 8 |
+| **DEPREDADOR DE REALIDADES** | `devour_random_upgrade()` retorna `false` (todo a nivel 0 antes del timer) | 12 |
+| **METABOLISMO OSCURO** (sello) | sostener `devorados ≥ MET_OSCURO_DEVOURED_REQ(10) ∧ B ≥ MET_OSCURO_BIO_REQ(50)` durante `MET_OSCURO_REQUIRED_TIME(15s)` | sella (ver §16) |
+
+**Velocidad de devorado:** `DEP_DEVOUR_TICK_BASE = 1.5s`, baja a `DEP_DEVOUR_TICK_FAST = 1.2s` tras `DEP_DEVOUR_TICK_FAST_AT = 50` comidos.
+
+**Ayudas al timer** (restan a `depredador_inestabilidad`, clamp en 0):
+- **Botón ESTABILIZAR** (`RightPanel`): resta `DEP_TIME_EXTENSION = 10s` pagando biomasa. Costo `DEP_TIME_COST_BASE(40) · DEP_TIME_COST_GROWTH(1.8)^depredador_timer_buys`. Se auto-oculta si run cerrada, no-depredador o met_oscuro activo.
+- **Hitos de devorado** `DEP_DEVOUR_MILESTONES = [30,50,70,90]`: cada uno resta `DEP_DEVOUR_MILESTONE_BONUS = 10s`. Se cruzan exactamente una vez (`count in MILESTONES`).
+
+**Persistencia:** `depredador_inestabilidad` y `depredador_timer_buys` se guardan en SaveManager (bloque `evolution`).
 
 ---
 
@@ -987,7 +1017,7 @@ Gate para Tier 2 (ALLOSTASIS, HOMEORHESIS).
 | `resiliencia_cristalina` | Resiliencia Cristalina | threshold | `resilience_score ≥ 500` |
 | `kappa_maximo` | Kappa Máximo | threshold | `k_eff ≥ 1.80` |
 | `micelio_salvaje` 🔒 | Micelio Salvaje | unlock en `on_run_closed` | PARASITISMO + sin Contabilidad + `click_count ≥ 100` (anti-AFK) |
-| `fruta_prohibida` | Fruta Prohibida | run_closed | PARASITISMO/HIPER + `ε > 0.40` |
+| `fruta_prohibida` | Fruta Prohibida | run_closed | PARASITISMO/HIPER + `ε_peak > 0.80` (usa pico, no ε al cerrar) |
 | `maquina_organica` | Máquina Orgánica | threshold | `money ≥ 100K` (simultáneo) |
 | `eficiencia_brutal` | Eficiencia Brutal | run_closed | `resilience ≥ 200 ∧ click_count ≤ 30` |
 
