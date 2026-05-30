@@ -7,6 +7,32 @@ Nota: la numeración salta a `.10` porque las tags `.7/.8/.9` ya existían en re
 
 ---
 
+### Post-release — parches gameplay (2026-05-30)
+
+Parches sobre la misma versión `v1.0.0.10` (sin bump de `version.gd`). Foco: rama Depredador, buff exclusivo de COLAPSO CONTROLADO y una auditoría de bugs.
+
+#### Rama Depredador (post-PARASITISMO) — rediseño del timer de inestabilidad
+- **Botón ESTABILIZAR**: compra exclusiva del Depredador que resta `DEP_TIME_EXTENSION` (10s) al timer de inestabilidad pagando biomasa. Costo escala `DEP_TIME_COST_BASE × DEP_TIME_COST_GROWTH^compras` (40 ×1.8). Vive en `RightPanel`.
+- **MET.OSCURO seal req** subido de dev≥3/bio≥25 a **dev≥10/bio≥50** (`Balance.MET_OSCURO_DEVOURED_REQ` / `MET_OSCURO_BIO_REQ`).
+- **COLAPSO DEPREDATORIO**: override de color del reactor a rojo casi negro `Color(0.12, 0, 0.02)` (prioridad top en `EvoManager.get_reactor_color()`).
+- **Hitos de devorado** (`DEP_DEVOUR_MILESTONES = [30, 50, 70, 90]`): cada uno resta 10s al timer. Llegar a **DEPREDADOR DE REALIDADES** (vaciar la realidad antes de implosionar) ya no es una carrera imposible.
+- **Tick de devorado acelera** de 1.5s → 1.2s tras 50 comidos (`DEP_DEVOUR_TICK_BASE/FAST/FAST_AT`).
+
+#### Banco Genético — buff exclusivo "Entropía Domesticada"
+- Se desbloquea **cerrando COLAPSO CONTROLADO** (ruta cara: requiere Banco Cósmico T3 `fractura_epistemica` + ε sostenido > 0.90). `reveal` y `unlock` por `route_closed`.
+- Efecto `entropia_domesticada_mult` (×2.0): invierte la penalización de la zona roja — con **ε > 0.65** la producción (click y pasivo) escala `clampf(1 + (ε−0.65)×k, 1, 2)` (tope ~×1.7 a ε=1.0). La zona roja deja de castigar: alimenta.
+- Expuesto en **lab mode** (`LAB_ED_LINE`), en el desglose de la **fórmula Λ** (token `ed?`) y nota `FORMULA_ED_ACTIVE`.
+
+#### fruta_prohibida
+- Condición del logro subida de `ε_peak > 0.40` a **ε_peak > 0.80** (`AchievementManager` + `ACH_FRUTA_PROHIBIDA_DESC` ES/EN).
+
+#### Auditoría de bugs
+- **P0** Tip de inactividad/anti-stuck a veces no se podía cerrar: `_show_antistuck_hint()` sobrescribía `_antistuck_panel` sin liberar el anterior → panel huérfano sin botón funcional. Fix: `_dismiss_antistuck()` antes de crear el nuevo + reset de idle/cooldown en `_give_idle_push()`.
+- **P1** Botón ESTABILIZAR colgado tras sellar MET.OSCURO (`mutation_depredador` sigue true y el dispatch `elif` nunca corría). Fix: el guard oculta también con `mutation_met_oscuro` y se llama `_update_depredador_buytime_button()` en la rama MET.OSCURO.
+- **P2** `depredador_inestabilidad` y `depredador_timer_buys` no persistían → un refresh web reseteaba el timer de implosión y el costo escalado de ESTABILIZAR (save-scum). Agregados a `SaveManager` serialize/deserialize.
+
+---
+
 ### Web export — audio funcional + bundle estable
 
 - **Audio HTML5 finalmente suena** en Chrome. Root cause: crear buses con `AudioServer.add_bus()` en runtime no ruteaba al Master en web.
