@@ -1,6 +1,10 @@
 # Roadmap post-v1.0.0.3
 
-Última actualización: 2026-05-19
+Última actualización: 2026-05-31
+
+**Estado actual:** `v1.0.0.10 "génesis"` (`version.gd` HOTFIX=10) — el juego es **HYPHAE: genesis** (ex-AntiIDLE), publicado en web en `hyphae-game-hub.onrender.com`, bilingüe ES/EN, export web (HTML5) + `.exe` Windows.
+
+**Nota de versionado:** la numeración pública saltó a `.10` porque las tags `.7/.8/.9` ya existían en remote apuntando a commits previos de i18n (sin bump de `version.gd`, el juego mostraba `1.0.0.6`). Todo el sprint quedó consolidado en `v1.0.0.10 "génesis"`; los parches post-release (gameplay, balance, bugs) van sobre la misma versión sin re-bump. El detalle granular vive en `CHANGELOG.md`.
 
 ---
 
@@ -95,17 +99,53 @@ Cobertura: tutorial, shortcuts, upgrade buttons (11), mutations (10), paneles up
 
 ---
 
+## v1.0.0.10 "génesis" — Consolidación + post-release — ✅ PUBLICADO (2026-05-25 → 05-30)
+
+Release pública de cierre del sprint. Detalle granular en `CHANGELOG.md`.
+
+### Rebranding
+- Rename **AntiIDLE → HYPHAE: genesis** (código, window title, créditos, tutorial, export `product_name`/`og:title`, README, hosting URL `hyphae-game-hub.onrender.com`)
+
+### Web export estable
+- Audio HTML5 funcional en Chrome: `default_bus_layout.tres` estático + `default_playback_type.web=Stream`
+- `fix_web_export.ps1/.bat`: patch post-export (canvasResizePolicy, audio unlock)
+- `stretch_mode=canvas_items + aspect=expand`; `thread_support=false`; `exclude_filter` DebugPanel/tests
+
+### Emojis Twemoji — cobertura web completa
+- `EmojiToRichText`: `rich()` / `strip()` / `set_icon_texture()` + 55 PNGs locales en `res://emoji/`
+- Auditoría sistemática (script Python) → **0 issues UI restantes**
+
+### UI — pulido header + pantalla central
+- Botones compactos (~120px verticales ahorrados); chip Ω con 1 sola flecha; fórmula Λ forzada a 1 línea
+- Mensaje post-primera-trascendencia mejorado (ES+EN) — momento de retención #1
+
+### Achievements rebalance + save import (commit `9a4f957`)
+- `import_save_json`: FileDialog nativo en desktop; rebalance del catálogo; fix `close_run` HIPERASIMILACIÓN
+
+### Post-release gameplay (2026-05-30)
+- **Rama Depredador**: botón ESTABILIZAR (paga biomasa, resta timer), hitos de devorado `[30,50,70,90]` (−10s c/u), tick acelera 1.5→1.2s, COLAPSO DEPREDATORIO reactor rojo-negro, MET.OSCURO seal req dev≥10/bio≥50
+- **COLAPSO CONTROLADO + Entropía Domesticada**: buff exclusivo (×2.0) que invierte la penalización de zona roja (ε>0.65 escala producción); expuesto en lab mode + fórmula Λ
+- **ASCESIS PROFUNDA** rework anti-AFK: gate 900→300s, meta $1M→$10M (solo click), timer pausa si no clickeás hace >10s
+- **Logros — fix conteo + inalcanzables**: `unlocked_count()` filtra IDs huérfanos; "La Run Imposible" → `mutations_this_run>=3`; "Saturación Total" chequea estado real; "Pico Met.Oscuro" rebalanceado a Δ$≥50K/s instantáneo; contador de mutaciones cuenta Depredador/Met.Oscuro
+- **UI rutas post-trascendencia**: ocultar "Próxima transición" en Vacío/Carnaval/Reencarnación
+- **Auditoría bugs**: P0 tip anti-stuck no se cerraba, P1 ESTABILIZAR colgado tras sellar MET.OSCURO, P2 timer Depredador no persistía (save-scum)
+
+---
+
 ## Pendiente
+
+### 🚀 LANZAMIENTO — próximo paso real
+El *pulido de código* pre-launch está hecho. Falta la **ejecución de marketing/comunidad** (ver plan completo en memoria `launch_plan_hyphae_genesis.md`):
+- **Pre-launch:** smoke test end-to-end + test caché limpia/incógnito; assets (cover 630×500, 6 screenshots, GIF principal <5MB, logo PNG)
+- **Día 0:** publicar página itch.io (descripción ES/EN ya redactada en el plan); post r/incremental_games + cross-post r/godot; probar embed Chrome/Firefox/Edge
+- **Semana 1:** recolectar bugs/fricción → hotfix consolidado (no en caliente); DMs a 3-5 youtubers de idle
 
 ### Baja prioridad — Localización
 - `LegacyManager.LEGACY_DEFS` — nombres y descripciones del Banco Genético (~30-40 strings) ← user dijo "luego"
 - `LegacyManager.CAT_NAMES` — 4 categorías
 - `UIManager.build_formula_text()` — ~10-20 strings de power-user content
 
-### v1.1 — AI Observer (próxima versión real)
-- `AIObserver.gd` como autoload opcional
-- Panel: predicción de próxima mutación, ruta dominante, tensión entre rutas
-- Serializar estado cada 30s: `{epsilon, biomasa, delta, genome, run_time, dominant_term}`
-- Llamada a API externa opt-in (OpenRouter/Anthropic)
-- Fallback offline: análisis heurístico por umbrales
-- Ver `roadmap_actual.md § v1.1` para detalle conceptual
+### v1.1 — próxima versión real (post-launch)
+- **AI Observer** (`AIObserver.gd` autoload opcional): predicción de próxima mutación, ruta dominante, tensión entre rutas; serializar estado cada 30s; API externa opt-in (OpenRouter/Anthropic) + fallback heurístico offline. Detalle en `roadmap_actual.md § v1.1`
+- **Mobile** (responsive / touch)
+- **Auditoría de retención**: cada milestone (primera mutación, primera ruta post-trascendencia, Dark Metabolism) necesita mensaje "felicitación + explicación + qué sigue" — ver `launch_plan_hyphae_genesis.md § Retención`
