@@ -600,15 +600,17 @@ func update_carnaval(delta: float) -> void:
 func check_ascesis_profunda(delta: float) -> void:
 	if run_closed:
 		return
-	# Requisitos previos: run madura y dinero generado suficiente (clicks, no pasivo)
-	if run_time < 900.0 or EconomyManager.money < 1000000.0:
+	# Requisitos previos: run madura y dinero generado SOLO por clicks (sin pasivo)
+	if run_time < Balance.ASCESIS_MIN_RUN_TIME or EconomyManager.money < Balance.ASCESIS_MONEY_REQ:
 		ascesis_timer = 0.0
 		return
 	# Condiciones simultáneas: sin biósfera, sin pasivo comprado, sistema calmo
 	var biomasa_ok := BiosphereEngine.biomasa < 0.5
 	var sin_pasivo := UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
 	var epsilon_ok := StructuralModel.epsilon_runtime < 0.25
-	if biomasa_ok and sin_pasivo and epsilon_ok:
+	# Anti-AFK: la ascesis es renuncia ACTIVA — hay que sostener el clickeo, no esperar quieto
+	var click_activo := EconomyManager.time_since_last_click < Balance.ASCESIS_CLICK_TIMEOUT
+	if biomasa_ok and sin_pasivo and epsilon_ok and click_activo:
 		ascesis_timer += delta
 		if ascesis_timer >= Balance.ASCESIS_DURATION:
 			close_run("ASCESIS_PROFUNDA", tr("CLOSE_ASCESIS"))

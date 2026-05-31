@@ -118,7 +118,10 @@
 | `BIOMASS_CAP` | 10.0 | BiosphereEngine | cap duro en homeostasis |
 | `HOMEOSTASIS_TIME_REQUIRED` | 18.0 | RunManager | s para considerar homeostasis estable |
 | `DISTURBANCE_INTERVAL` | 20.0 | RunManager | s entre perturbaciones |
-| `ASCESIS_DURATION` | 300.0 | RunManager | duración Vacío Hambriento (s) |
+| `ASCESIS_DURATION` | 300.0 | RunManager | s sostenidos para cerrar ASCESIS PROFUNDA |
+| `ASCESIS_MIN_RUN_TIME` | 300.0 | Balance | gate de tiempo de ASCESIS (antes 900) |
+| `ASCESIS_MONEY_REQ` | 10000000.0 | Balance | gate de dinero ASCESIS, solo clicks (antes 1M) |
+| `ASCESIS_CLICK_TIMEOUT` | 10.0 | Balance | s máx sin click antes de pausar el timer (anti-AFK) |
 | `CARNAVAL_INTERVAL` | 60.0 | RunManager | rotación de mutaciones en Carnaval |
 | `MENTE_COLMENA_BUY_INTERVAL` | 8.0 | RunManager | s entre auto-buys IA |
 | `PRIMORDIO_DURATION` | 90.0 | EvoManager | duración Primordio |
@@ -772,6 +775,25 @@ ASCESIS_DURATION        = 300 s
 ```
 
 Tradeoff: consume buffs cósmicos al activar; produce ASCESIS_PROFUNDA si se completa.
+
+#### ASCESIS PROFUNDA (sub-cierre de Vacío Hambriento) — rework anti-AFK
+
+Renuncia ACTIVA: sin pasivo, sin biósfera, dinero solo por clicks.
+
+```
+Gate de entrada (ambos):
+  run_time  >= ASCESIS_MIN_RUN_TIME  = 300 s
+  money     >= ASCESIS_MONEY_REQ     = 10_000_000   [solo por clicks: pasivo prohibido]
+
+Sostener ASCESIS_DURATION = 300 s con TODAS:
+  biomasa < 0.5
+  level(auto) == 0 and level(trueque) == 0      [sin pasivo]
+  epsilon_runtime < 0.25
+  time_since_last_click < ASCESIS_CLICK_TIMEOUT = 10 s   [anti-AFK: si se va, el timer se PAUSA]
+```
+
+Si falla cualquier condición el timer se pausa (no resetea). Reward: +7 PL + logro Mythic "Vacío Absoluto".
+Diseño previo (abandonado): gate de 900s + $1M → AFK puro (el $1M llegaba en <3 min y el resto era espera muerta).
 
 ### 15.2 CARNAVAL DE MUTACIONES
 

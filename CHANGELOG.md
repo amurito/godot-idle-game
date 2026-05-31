@@ -26,6 +26,13 @@ Parches sobre la misma versión `v1.0.0.10` (sin bump de `version.gd`). Foco: ra
 #### fruta_prohibida
 - Condición del logro subida de `ε_peak > 0.40` a **ε_peak > 0.80** (`AchievementManager` + `ACH_FRUTA_PROHIBIDA_DESC` ES/EN).
 
+#### ASCESIS PROFUNDA — rework anti-AFK
+- El cierre era una run AFK: $1M se alcanzaba en <3 min y luego solo había que esperar el gate de 15 min sin tocar nada (las condiciones eran "no hacer cosas").
+- **Gate de tiempo** bajado de 900s → **300s** (`Balance.ASCESIS_MIN_RUN_TIME`).
+- **Meta de dinero** subida de $1M → **$10M** (`Balance.ASCESIS_MONEY_REQ`). Como el pasivo y la biósfera siguen prohibidos, ese dinero solo sale de **clickear activo**.
+- **Anti-AFK**: el timer de ascesis (300s) solo avanza si clickeaste hace menos de **10s** (`Balance.ASCESIS_CLICK_TIMEOUT` vía `EconomyManager.time_since_last_click`). Si te vas, se pausa. La renuncia es ACTIVA, no espera quieta.
+- UI: panel de genoma muestra meta en millones (`%.1fM/10M`) e indicador de **Click: OK/FALLA** (`GENOME_ASCESIS_CLK_LBL` ES/EN).
+
 #### Auditoría de bugs
 - **P0** Tip de inactividad/anti-stuck a veces no se podía cerrar: `_show_antistuck_hint()` sobrescribía `_antistuck_panel` sin liberar el anterior → panel huérfano sin botón funcional. Fix: `_dismiss_antistuck()` antes de crear el nuevo + reset de idle/cooldown en `_give_idle_push()`.
 - **P1** Botón ESTABILIZAR colgado tras sellar MET.OSCURO (`mutation_depredador` sigue true y el dispatch `elif` nunca corría). Fix: el guard oculta también con `mutation_met_oscuro` y se llama `_update_depredador_buytime_button()` en la rama MET.OSCURO.

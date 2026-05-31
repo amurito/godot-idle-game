@@ -1076,18 +1076,20 @@ func build_genome_text() -> String:
 		var _gen: float = EconomyManager.money
 		var _run_t: float = RunManager.run_time
 		t += "[color=#9955dd]" + tr("GENOME_ASCESIS_TITLE") + "[/color]\n"
-		if _gen < 1000000.0:
-			t += "[color=#666666]" + tr("GENOME_ASCESIS_GEN") % _gen + "[/color]\n\n"
-		elif _run_t < 900.0:
+		if _gen < Balance.ASCESIS_MONEY_REQ:
+			t += "[color=#666666]" + tr("GENOME_ASCESIS_GEN") % (_gen / 1000000.0) + "[/color]\n\n"
+		elif _run_t < Balance.ASCESIS_MIN_RUN_TIME:
 			t += "[color=#666666]" + tr("GENOME_ASCESIS_TIME") % _run_t + "[/color]\n\n"
 		else:
 			var bio_ok: bool = BiosphereEngine.biomasa < 0.5
 			var sin_p: bool = UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
 			var eps_ok: bool = StructuralModel.epsilon_runtime < 0.25
+			var clk_ok: bool = EconomyManager.time_since_last_click < Balance.ASCESIS_CLICK_TIMEOUT
 			var bio_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if bio_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var pas_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if sin_p else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var eps_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if eps_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
-			t += tr("GENOME_ASCESIS_BIO_LBL") + ": " + bio_s + "  " + tr("GENOME_ASCESIS_PAS_LBL") + ": " + pas_s + "  e: " + eps_s + "\n"
+			var clk_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if clk_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
+			t += tr("GENOME_ASCESIS_BIO_LBL") + ": " + bio_s + "  " + tr("GENOME_ASCESIS_PAS_LBL") + ": " + pas_s + "  e: " + eps_s + "  " + tr("GENOME_ASCESIS_CLK_LBL") + ": " + clk_s + "\n"
 			var prog: float = clamp(RunManager.ascesis_timer / float(Balance.ASCESIS_DURATION), 0.0, 1.0)
 			var filled: int = int(prog * 20)
 			var bar: String = "[" + "X".repeat(filled) + ".".repeat(20 - filled) + "]"
