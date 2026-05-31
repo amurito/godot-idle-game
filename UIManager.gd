@@ -1284,7 +1284,10 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		t += "\n" + tr("INST_DISTURBANCE") % RunManager.DISTURBANCE_INTERVAL
 	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
 		t += "\n" + tr("INST_NET_WARN")
-	if main != null:
+	# En rutas post-trascendencia el árbol de mutaciones normal no aplica:
+	# no mostrar "Próxima transición" ni las mutaciones candidatas.
+	var _post_tras: bool = RunManager.vacio_hambriento_active or RunManager.carnaval_active or RunManager.reencarnacion_active
+	if main != null and not _post_tras:
 		t += build_evo_checklist(main)
 	genome_summary_label.visible = true
 	genome_summary_label.clear()

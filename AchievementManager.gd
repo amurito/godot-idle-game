@@ -438,9 +438,9 @@ const DEFS := {
 	},
 	"metabolismo_oscuro_pico": {
 		"name": "Pico Metabólico Oscuro",
-		"desc": "Alcanzar Δ$ ≥ 500.000/s con Metabolismo Oscuro activo durante 30 segundos.",
+		"desc": "Alcanzar un pico de Δ$ ≥ 50.000/s con Metabolismo Oscuro activo.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
-		"trigger": "custom", "evaluator": "metabolismo_oscuro_pico", "duration": 30.0,
+		"trigger": "custom", "evaluator": "metabolismo_oscuro_pico",
 	},
 	"legado_absoluto": {
 		"name": "Legado Absoluto",
@@ -513,10 +513,10 @@ const DEFS := {
 	},
 	"run_imposible": {
 		"name": "La Run Imposible",
-		"desc": "Cerrar una ruta con 3 o más mutaciones activas simultáneamente.",
+		"desc": "Cerrar una run habiendo activado 3 o más mutaciones distintas (cadena depredador o Carnaval).",
 		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
 		"trigger": "event", "event_name": "run_closed",
-		"conditions": [{"key": "mutations_active_count", "op": ">=", "value": 3}],
+		"conditions": [{"key": "mutations_this_run", "op": ">=", "value": 3}],
 	},
 	"reino_subterraneo": {
 		"name": "Reino Subterráneo",
@@ -562,7 +562,7 @@ var _seta_formed_this_run: bool = false
 # IDs de logros con timers custom (duration en DEFS)
 const CUSTOM_TIMER_IDS := [
 	"latido_cosmico", "entropia_cero",
-	"omega_inviolable", "metabolismo_oscuro_pico",
+	"omega_inviolable",
 ]
 
 # ──────────────────────── INIT ────────────────────────
@@ -667,7 +667,13 @@ func total_count() -> int:
 	return DEFS.size()
 
 func unlocked_count() -> int:
-	return unlocked.size()
+	# Contar solo logros que existen en DEFS. El dict `unlocked` puede tener IDs
+	# huérfanos de versiones viejas (logros renombrados/removidos persistidos en
+	# legacy_bank.json) que inflarían el header "X / Y" por encima del real.
+	var c := 0
+	for id in unlocked:
+		if DEFS.has(id): c += 1
+	return c
 
 func get_progress(id: String) -> Dictionary:
 	if not DEFS.has(id):
@@ -917,9 +923,12 @@ func _eval_ultima_espora(_s: Dictionary) -> bool:
 	return true
 
 func _eval_saturacion_total(_s: Dictionary) -> bool:
-	# Evaluado solo cuando se cierra METABOLISMO OSCURO por saturación
+	# Cerrar MET.OSCURO con biomasa saturada (≥100). Chequea el ESTADO real,
+	# no el texto del reason: antes hacía .contains("Saturación Oscura") que fallaba
+	# por (a) tilde — el locale es "Saturacion Oscura" sin tilde —, (b) EN "Dark Saturation",
+	# y (c) el sello manual usa CLOSE_MO_VOLUNTARIO. Sirve para auto-saturación y sello.
 	return RunManager.final_route == "METABOLISMO OSCURO" \
-		and RunManager.final_reason.contains("Saturación Oscura")
+		and BiosphereEngine.biomasa >= 100.0
 
 func _eval_colapso_depredatorio(_s: Dictionary) -> bool:
 	return RunManager.final_route == "COLAPSO DEPREDATORIO"
@@ -942,7 +951,7 @@ func _eval_omega_inviolable_cond(_s: Dictionary) -> bool:
 		and StructuralModel.omega >= StructuralModel.omega_min
 
 func _eval_met_oscuro_pico_cond(s: Dictionary) -> bool:
-	return EvoManager.mutation_met_oscuro and s.get("delta_total", 0.0) >= 500000.0
+	return EvoManager.mutation_met_oscuro and s.get("delta_total", 0.0) >= 50000.0
 
 func _eval_legado_absoluto(_s: Dictionary) -> bool:
 	for id in LegacyManager.LEGACY_DEFS:
@@ -997,6 +1006,7 @@ func on_run_closed(route: String) -> void:
 		"disturbances_survived":  RunManager.disturbances_survived,
 		"resilience_score":       RunManager.resilience_score,
 		"mutations_active_count": active_count,
+		"mutations_this_run":     _mutations_this_run,
 		"seta_formed":            _seta_formed_this_run,
 		"bought_accounting":      _bought_accounting_this_run,
 		"reencarnacion_active":   RunManager.reencarnacion_active,
@@ -1050,9 +1060,11 @@ func on_mutation_activated(mutation_id: String) -> void:
 
 func on_depredador_activated() -> void:
 	push_event("depredador_activated", {})
+	on_mutation_activated("depredador")
 
 func on_met_oscuro_activated() -> void:
 	push_event("met_oscuro_activated", {})
+	on_mutation_activated("met_oscuro")
 
 func on_red_micelial_activated() -> void:
 	push_event("red_micelial_activated", {})

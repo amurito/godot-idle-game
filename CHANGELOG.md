@@ -33,6 +33,16 @@ Parches sobre la misma versión `v1.0.0.10` (sin bump de `version.gd`). Foco: ra
 - **Anti-AFK**: el timer de ascesis (300s) solo avanza si clickeaste hace menos de **10s** (`Balance.ASCESIS_CLICK_TIMEOUT` vía `EconomyManager.time_since_last_click`). Si te vas, se pausa. La renuncia es ACTIVA, no espera quieta.
 - UI: panel de genoma muestra meta en millones (`%.1fM/10M`) e indicador de **Click: OK/FALLA** (`GENOME_ASCESIS_CLK_LBL` ES/EN).
 
+#### Logros — bugs de conteo y de obtención
+- **Header "69/69" inflado**: `unlocked_count()` devolvía `unlocked.size()`, contando IDs huérfanos de logros renombrados/removidos persistidos en `legacy_bank.json`. Ahora filtra por `DEFS.has(id)` → el contador refleja los logros reales.
+- **"La Run Imposible" inalcanzable**: pedía `mutations_active_count >= 3` (mutaciones simultáneas en estado "activo"), imposible porque el genoma es de exclusión mutua. Recableado a `mutations_this_run >= 3` (mutaciones **acumuladas** en la run: cadena Depredador o Carnaval). `desc` + `ACH_RUN_IMPOSIBLE_DESC` ES/EN actualizados.
+- **Contador de mutaciones incompleto**: `on_depredador_activated()` y `on_met_oscuro_activated()` no incrementaban `_mutations_this_run` (solo lo hacía hiperasimilación). Ahora ambos llaman `on_mutation_activated()` → la cadena Depredador cuenta 3 y también arregla "Cultivo Cruzado" (ESPORA).
+- **"Saturación Total" rota por match de string**: `_eval_saturacion_total` comparaba `final_reason.contains("Saturación Oscura")`, que fallaba por tilde ausente en ES, texto distinto en EN y cierre manual por sello. Ahora chequea el **estado real**: `final_route == "METABOLISMO OSCURO" and biomasa >= 100.0`.
+- **"Pico Metabólico Oscuro" 10× fuera de rango**: pedía Δ$ ≥ 500.000/s sostenido 30s, contra un máximo de juego ~50K/s. Rebalanceado a **pico instantáneo Δ$ ≥ 50.000/s** (one-shot): umbral a `50000.0`, removido de `CUSTOM_TIMER_IDS`, sin `duration`. `desc` + `ACH_METABOLISMO_OSCURO_PICO_DESC` ES/EN actualizados.
+
+#### UI — rutas post-trascendencia
+- En Vacío Hambriento / Carnaval / Reencarnación ya **no se muestra** el bloque "Próxima transición" ni las mutaciones candidatas (el árbol de mutaciones normal no aplica en esas rutas). Guard `_post_tras` en `UIManager.build_evo_checklist`.
+
 #### Auditoría de bugs
 - **P0** Tip de inactividad/anti-stuck a veces no se podía cerrar: `_show_antistuck_hint()` sobrescribía `_antistuck_panel` sin liberar el anterior → panel huérfano sin botón funcional. Fix: `_dismiss_antistuck()` antes de crear el nuevo + reset de idle/cooldown en `_give_idle_push()`.
 - **P1** Botón ESTABILIZAR colgado tras sellar MET.OSCURO (`mutation_depredador` sigue true y el dispatch `elif` nunca corría). Fix: el guard oculta también con `mutation_met_oscuro` y se llama `_update_depredador_buytime_button()` en la rama MET.OSCURO.
