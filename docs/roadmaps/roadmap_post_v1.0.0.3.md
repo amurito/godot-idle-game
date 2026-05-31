@@ -149,3 +149,7 @@ El *pulido de código* pre-launch está hecho. Falta la **ejecución de marketin
 - **AI Observer** (`AIObserver.gd` autoload opcional): predicción de próxima mutación, ruta dominante, tensión entre rutas; serializar estado cada 30s; API externa opt-in (OpenRouter/Anthropic) + fallback heurístico offline. Detalle en `roadmap_actual.md § v1.1`
 - **Mobile** (responsive / touch)
 - **Auditoría de retención**: cada milestone (primera mutación, primera ruta post-trascendencia, Dark Metabolism) necesita mensaje "felicitación + explicación + qué sigue" — ver `launch_plan_hyphae_genesis.md § Retención`
+
+### Futuro — endgame post-trascendencia t>2 (diseño, no implementado)
+- **Refactor `RouteManager`** (registry único, data-driven) para escalar más allá de las 3 rutas básicas. Plan completo en [`docs/arquitectura_rutas.md`](../arquitectura_rutas.md).
+- **Transmutaciones** (reversión de mutaciones → rutas OP), **rutas avanzadas/fantasma** y **meta-endgame "Jardín Primigenio"** (subjuego paralelo). Diseño en [`docs/nuevas transmutaciones.md`](../nuevas%20transmutaciones.md).
