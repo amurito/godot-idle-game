@@ -449,6 +449,14 @@ func _check_milestones() -> void:
 	if not _milestones_seen.has("first_trascendencia") and LegacyManager.trascendencia_count > 0:
 		notify_milestone("first_trascendencia", tr("TUTO_MT_TRAS_TITLE"), tr("TUTO_MT_TRAS_BODY"), Color(0.8, 0.4, 1.0))
 
+	# Rutas post-trascendencia (ayuda al entrar por primera vez)
+	if not _milestones_seen.has("route_vacio") and RunManager.vacio_hambriento_active:
+		notify_milestone("route_vacio", tr("TUTO_MT_VACIO_TITLE"), tr("TUTO_MT_VACIO_BODY"), Color(0.55, 0.3, 0.85))
+	if not _milestones_seen.has("route_carnaval") and RunManager.carnaval_active:
+		notify_milestone("route_carnaval", tr("TUTO_MT_CARNAVAL_TITLE"), tr("TUTO_MT_CARNAVAL_BODY"), Color(0.95, 0.3, 0.7))
+	if not _milestones_seen.has("route_reencarnacion") and RunManager.reencarnacion_active:
+		notify_milestone("route_reencarnacion", tr("TUTO_MT_REENCARN_TITLE"), tr("TUTO_MT_REENCARN_BODY"), Color(0.85, 0.7, 0.35))
+
 	# Detección de nuevas mutaciones
 	if not _all_mutations_seen:
 		var all_seen := true
@@ -502,7 +510,7 @@ func _show_toast(title: String, body: String, border_color: Color = Color(1.0, 0
 		t_lbl.fit_content = true
 		t_lbl.custom_minimum_size = Vector2(276.0, 0.0)
 		t_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
-		t_lbl.text = "[b]" + title + "[/b]"
+		t_lbl.text = "[b]" + EmojiToRichText.rich(title) + "[/b]"
 		inner.add_child(t_lbl)
 
 	if body != "":
@@ -512,7 +520,7 @@ func _show_toast(title: String, body: String, border_color: Color = Color(1.0, 0
 		b_lbl.custom_minimum_size = Vector2(276.0, 0.0)
 		b_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 		b_lbl.add_theme_color_override("default_color", Color(0.82, 0.82, 0.82))
-		b_lbl.text = body
+		b_lbl.text = EmojiToRichText.rich(body)
 		inner.add_child(b_lbl)
 
 	vbox.add_child(panel)
