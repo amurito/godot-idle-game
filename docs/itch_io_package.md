@@ -17,6 +17,34 @@ Todo listo para copiar/pegar al crear la página. Versión: v1.0.0.10 "génesis"
 
 > itch.io permite formato rico. Pegá la versión ES y EN una debajo de la otra (es bilingüe el juego). Los `**` son negritas; ajustá con el editor visual de itch si hace falta.
 
+### Intro "cómo jugar" (pegar ARRIBA de todo, antes del pitch)
+
+**ES:**
+```
+▶ Cómo se juega
+Clickeá el reactor para generar energía y comprá mejoras para automatizar la producción.
+A medida que crecés, el estrés estructural (ε) sube: mantenelo bajo control con mejoras
+estructurales o el sistema colapsa. Cuando estés listo, trascendé el ciclo para reiniciar
+con buffs permanentes y desbloquear rutas de mutación que cambian las reglas del juego.
+
+Una partida hasta la primera trascendencia toma ~15-20 min. Después, la cosa se pone rara.
+
+🖱 Controles: Mouse para clickear y comprar · teclas 1-9 compra rápida · B biosfera · L modo lab.
+```
+
+**EN:**
+```
+▶ How to play
+Click the reactor to generate energy and buy upgrades to automate production.
+As you grow, structural stress (ε) rises: keep it in check with structural upgrades or the
+system collapses. When you're ready, transcend the cycle to restart with permanent buffs and
+unlock mutation routes that change the rules of the game.
+
+A run to your first transcendence takes ~15-20 min. After that, things get weird.
+
+🖱 Controls: Mouse to click and buy · keys 1-9 for quick buy · B biosphere · L lab mode.
+```
+
 ### ES
 
 ```
