@@ -404,10 +404,10 @@ func export_save_json(main_node: Node) -> void:
 
 	if OS.get_name() == "Web":
 		var js_literal: String = JSON.stringify(json_str)
-		var js_code: String = "(function(){var d=%s;var b=new Blob([d],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='antigravity_save.json';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},200);})();" % js_literal
+		var js_code: String = "(function(){var d=%s;var b=new Blob([d],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='hyphae_genesis_save.json';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},200);})();" % js_literal
 		JavaScriptBridge.eval(js_code)
 	else:
-		var export_path: String = "user://antigravity_save_export.json"
+		var export_path: String = "user://hyphae_genesis_save.json"
 		var file := FileAccess.open(export_path, FileAccess.WRITE)
 		if file:
 			file.store_string(json_str)
