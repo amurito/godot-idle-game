@@ -113,6 +113,83 @@ Muere. Pero sus esporas recuerdan.
 
 ---
 
+### ESCLEROCIO OSCURO  — SPEC DE IMPLEMENTACIÓN (decidida 2026-06-01)
+
+> **Renombrado** de "Esporas de Contingencia". El nombre original colisionaba
+> temáticamente con la rama biológica de esporas que ya existe (ESPORULACIÓN →
+> PANSPERMIA NEGRA, familia BIOLOGÍA). El *esclerocio* es la estructura real con la
+> que los hongos sobreviven condiciones hostiles: masa endurecida de micelio que
+> entra en dormancia y germina cuando el ambiente mejora — exactamente el
+> Metabolismo Oscuro (Ω 0.10, ε decayendo, biomasa oscura). Sin colisión de naming
+> y más lore-accurate. Vive en la **familia COLAPSO**, no toca la rama BIOLOGÍA.
+
+*"No es una semilla para crecer. Es una cápsula para recordar."*
+
+Salida alternativa al sello normal de Metabolismo Oscuro. Cambia un poco de PL
+inmediato por una carga latente que potencia la run siguiente — y, si esa run
+llega a PANSPERMIA NEGRA, desbloquea un legado permanente que cruza COLAPSO×BIOLOGÍA.
+
+**Gate de entrada (segundo botón en RightPanel, bajo el sello normal de MO) — lore-accurate, sin reloj fijo:**
+- `EvoManager.mutation_met_oscuro == true`
+- `EvoManager.met_oscuro_devoured_count >= 30` — autofagia: material consumido para endurecer el esclerocio (ya hay milestone en 30)
+- `BiosphereEngine.biomasa >= 50` — masa de micelio suficiente para encapsular
+- `StructuralModel.epsilon_runtime < 0.25` — domesticó la oscuridad antes de sellarla (MO ya hace decaer ε; premia esperar la autorregulación)
+- `not RunManager.run_closed`
+
+**Recompensa PL:**
+- `PL_REWARDS["ESCLEROCIO OSCURO"] = 6`, `NG_CAPS = 8`
+- Fórmula NG+ (t>=1): `min(floor(met_oscuro_devoured_count / 8), cap)` — premia cuánto devoraste
+
+**Buff "Memoria Oscura" (one-shot en la run siguiente, mientras la carga está latente):**
+- +15% Bio pasivo
+- ε decae 30% más lento
+- −10% al threshold de activación de MO (`MET_OSCURO_REQUIRED_TIME`)
+- Es una **carga consumible**, NO un buff del Banco Genético (que están siempre activos)
+
+**Aplicación y consumo (devuelve si abandonás):**
+- `LegacyManager.dark_legacy_charges: int` (meta-estado, persiste en save_legacy/
+  build_legacy_data/deserialize junto a `reencarnacion_snapshot`)
+- Al cerrar por ESCLEROCIO OSCURO: `dark_legacy_charges += 1`
+- Al iniciar run: si `> 0`, activar Memoria Oscura para esa run (flag en
+  `SaveManager.post_tras`) y `dark_legacy_charges -= 1`
+- **Reembolso:** si la run cierra sin comprar upgrades ni superar ~60s, devolver la carga
+  (anti-frustración, mismo espíritu que el rework anti-AFK de Ascesis)
+
+**Interacción NG+ → cruce con PANSPERMIA NEGRA (reemplaza la vieja idea de Reencarnación):**
+- Si la run que lleva Memoria Oscura activa (carga latente) cierra por **PANSPERMIA NEGRA**,
+  las esporas que se disparan al espacio llevan el código oscuro → desbloquea en el Banco
+  Genético el legado nuevo **"Semilla Cósmica Oscura"** (`semilla_cosmica_oscura`).
+- Une familia COLAPSO × familia BIOLOGÍA — el cruce que premia la Trascendencia.
+
+**Legado nuevo `semilla_cosmica_oscura` (LegacyManager.LEGACY_DEFS):**
+- `cat: "ruta"`, costo ~8 PL, `max_level: 1`
+- `reveal/unlock`: custom — "cerró PANSPERMIA NEGRA con esclerocio latente". El sistema
+  reveal/unlock soporta `route_closed_any` pero NO el AND con `dark_legacy_active`; resolver
+  con un flag persistente `esclerocio_panspermia_done` seteado en close_run y un unlock
+  type nuevo (o reusar `achievement_unlocked` enganchado a un logro oculto).
+- **Efecto:** Memoria Oscura se vuelve **permanente** (siempre activa desde cualquier run,
+  ya no consumible) + ×3 pasivo (supera el ×2 de Semilla Cósmica base). Recupera la idea
+  de "permanente" del lore original, ahora ligada a Panspermia en vez de Reencarnación.
+- Flavor: *"Las esporas ya viajaban al vacío. Ahora viajan con memoria de lo que no debió sobrevivir."*
+
+**Enganches en código:**
+- Botón: clonar `_update_met_oscuro_seal_button` / `_on_met_oscuro_seal_pressed` (main.gd:69-104).
+  Color lila-gris `Color(0.7, 0.6, 0.75)`
+- Cierre: key en `PL_REWARDS`+`NG_CAPS` (Balance.gd:48), case en match NG+ (RunManager.gd:144),
+  `dark_legacy_charges += 1` en close_run
+- Aplicación: hook al iniciar run (donde se aplica reencarnacion_snapshot, RunManager.gd:561).
+  EconomyManager.get_passive_total lee el flag; StructuralModel/EvoManager en el decay de ε
+- Cruce panspermia: en close_run, si `route == "PANSPERMIA NEGRA"` y Memoria Oscura activa,
+  setear `esclerocio_panspermia_done = true` + `LegacyManager.save_legacy()`
+- Persistencia: `dark_legacy_charges` + `esclerocio_panspermia_done` en LegacyManager.gd:580-616
+  (3 puntos); flag de run activa en SaveManager.post_tras (SaveManager.gd:100) + deserialize
+- i18n: `CLOSE_ESCLEROCIO`, `BTN_ESCLEROCIO`, `MEMORIA_OSCURA_*`, `LEGACY_SEMILLA_OSCURA_*`
+  en LocaleManager ES/EN. Emoji 🌑 / 🦠 vía EmojiToRichText.strip() (verificar PNG en res://emoji/)
+- Color reactor: prioridad en get_reactor_color() cuando salida disponible o buff activo
+- Logro Mythic "El que se encapsuló" al primer cierre por ESCLEROCIO OSCURO
+
+---
+
 ## Árbol de decisión completo
 
 ```

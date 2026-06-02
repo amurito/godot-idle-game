@@ -339,6 +339,16 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed_any", "routes": ["PANSPERMIA NEGRA", "ESPORULACION", "ESPORULACIÓN"]},
 		"effect": {"type": "semilla_cosmica_active", "value": 1.0},
 	},
+	"semilla_cosmica_oscura": {
+		"name": "Semilla Cósmica Oscura",
+		"flavor": "Las esporas ya viajaban al vacío. Ahora viajan con memoria de lo que no debió sobrevivir.",
+		"cat": "ng_plus", "cost": 8, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "legacy_flag", "flag": "esclerocio_panspermia_done"},
+		"unlock": {"type": "legacy_flag", "flag": "esclerocio_panspermia_done"},
+		"effect": {"type": "semilla_cosmica_oscura_active", "value": 1.0},
+		# Efecto: Memoria Oscura permanente (siempre activa) + ×pasivo SEMILLA_OSCURA_PASIVO_MULT.
+		# Desbloqueado por el cruce ESCLEROCIO OSCURO → PANSPERMIA NEGRA (familia COLAPSO × BIOLOGÍA).
+	},
 	"mente_colmena": {
 		"name": "Mente Colmena",
 		"flavor": "La singularidad no terminó. Se distribuyó.",
@@ -423,6 +433,14 @@ var legacy_points: int = 0
 var total_runs: int = 0
 var last_run_ending: String = ""
 var internal_spores_total: float = 0.0
+
+# --- ESCLEROCIO OSCURO ---
+# Cargas latentes de "Memoria Oscura": cada cierre por ESCLEROCIO suma 1; se consume al iniciar
+# la run siguiente (con reembolso si se abandona temprano). Se resetea al trascender (como esporas).
+var dark_legacy_charges: int = 0
+# Flag persistente del cruce ESCLEROCIO → PANSPERMIA NEGRA. Desbloquea el legado semilla_cosmica_oscura.
+# Se preserva al trascender (como endings_achieved).
+var esclerocio_panspermia_done: bool = false
 
 # Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
 # current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
@@ -589,6 +607,8 @@ func get_save_dict() -> Dictionary:
 		"achievement_data": achievement_data,
 		"buff_enabled": buff_enabled,
 		"post_tras_route": post_tras_route,
+		"dark_legacy_charges": dark_legacy_charges,
+		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -610,6 +630,8 @@ func save_legacy():
 		"achievement_data": achievement_data,
 		"buff_enabled": buff_enabled,
 		"post_tras_route": post_tras_route,
+		"dark_legacy_charges": dark_legacy_charges,
+		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -702,6 +724,8 @@ func load_legacy():
 	achievement_data = data.get("achievement_data", {})
 	buff_enabled = data.get("buff_enabled", {})
 	post_tras_route = data.get("post_tras_route", "")
+	dark_legacy_charges = int(data.get("dark_legacy_charges", 0))
+	esclerocio_panspermia_done = data.get("esclerocio_panspermia_done", false)
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])
@@ -865,6 +889,8 @@ func _check_condition(cond: Dictionary) -> bool:
 			return get_buff_level(cond.get("id", "")) > 0
 		"mu_peak_reached":
 			return mu_peak_achieved
+		"legacy_flag":
+			return bool(get(cond.get("flag", "")))
 	return true
 
 ## Texto corto del requisito de desbloqueo (para mostrar en el boton locked)
@@ -889,6 +915,8 @@ func describe_unlock(id: String) -> String:
 			base = tr("UNLOCK_REQ_BUFF") % tr("LEGACY_" + bid.to_upper() + "_NAME")
 		"mu_peak_reached":
 			base = tr("UNLOCK_REQ_MU") % float(unlock.get("threshold", 2.5))
+		"legacy_flag":
+			base = tr("UNLOCK_REQ_ESCLEROCIO")
 		_:
 			base = tr("BANK_BTN_LOCKED")
 	var req_buff: String = str(unlock.get("also_requires_buff", ""))
@@ -1114,6 +1142,7 @@ func transcend() -> int:
 	# Reset de estado entre runs (PL, buffs legacy, esporas)
 	legacy_points = 0
 	internal_spores_total = 0.0
+	dark_legacy_charges = 0  # Las cargas de Memoria Oscura no sobreviven la trascendencia (como esporas)
 	buffs.clear()
 	buff_enabled.clear()  # Los buffs desaparecen, los toggles también
 	total_runs = 0
@@ -1123,7 +1152,8 @@ func transcend() -> int:
 	current_cycle_history.clear()  # Datos archivados en all_time_history
 
 	# Se preservan: esencia, trascendencia_count, first_trascendencia_shown,
-	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot
+	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot,
+	# esclerocio_panspermia_done (el legado semilla_cosmica_oscura sigue desbloqueable)
 
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])

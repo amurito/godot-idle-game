@@ -88,6 +88,10 @@ func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation:
 	if absorb_mult > 0.0:
 		biomass_gain *= (1.0 + absorb_mult)
 
+	# MEMORIA OSCURA (Esclerocio): la run recuerda la bioquímica oscura → +15% crecimiento.
+	if RunManager.is_memoria_oscura_active():
+		biomass_gain *= Balance.MEMORIA_OSCURA_BIO_MULT
+
 	biomasa += biomass_gain
 
 	# Consumo de nutrientes

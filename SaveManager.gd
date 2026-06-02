@@ -107,7 +107,8 @@ func build_save_data(main: Node) -> Dictionary:
 			"carnaval_timer": RunManager.carnaval_timer,
 			"carnaval_total_rotations": RunManager.carnaval_total_rotations,
 			"carnaval_peak_money": RunManager.carnaval_peak_money,
-			"reencarnacion_active": RunManager.reencarnacion_active
+			"reencarnacion_active": RunManager.reencarnacion_active,
+			"memoria_oscura_active": RunManager.memoria_oscura_active
 		},
 		"laps": laps_to_save
 	}
@@ -228,6 +229,7 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		RunManager.carnaval_total_rotations = pt.get("carnaval_total_rotations", RunManager.carnaval_total_rotations)
 		RunManager.carnaval_peak_money = pt.get("carnaval_peak_money", RunManager.carnaval_peak_money)
 		RunManager.reencarnacion_active = pt.get("reencarnacion_active", RunManager.reencarnacion_active)
+		RunManager.memoria_oscura_active = pt.get("memoria_oscura_active", RunManager.memoria_oscura_active)
 		# Re-aplicar mutación activa del carnaval luego de cargar índice+lista
 		if RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
 			EvoManager.carnaval_set_mutation(RunManager.carnaval_mutations[RunManager.carnaval_index])
@@ -336,6 +338,7 @@ func delete_save_and_restart():
 	LogManager.reset()
 	RunManager.reset()
 	AchievementManager.reset_run_state()
+	# (La carga de Memoria Oscura se consume en main._ready, tras load_game — ver consume_dark_legacy_charge)
 
 	# Si hay una instancia de main, forzar su reset local
 	var main = get_tree().get_first_node_in_group("main")

@@ -18,6 +18,7 @@ const PARASITISM_STATUS_INTERVAL := 45.0
 
 # NG++ Metabolismo Oscuro
 var _met_oscuro_seal_btn: Button = null
+var _esclerocio_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
@@ -102,6 +103,41 @@ func _on_met_oscuro_seal_pressed():
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
+
+# ESCLEROCIO OSCURO — salida alternativa de Met. Oscuro (siembra Memoria Oscura en la run siguiente).
+# Gate lore-accurate: autofagia (devoured) + masa (biomasa) + autorregulación (ε bajo).
+func _update_esclerocio_button():
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro:
+		if is_instance_valid(_esclerocio_btn):
+			_esclerocio_btn.visible = false
+		return
+	var devoured_ok: bool = EvoManager.met_oscuro_devoured_count >= Balance.ESCLEROCIO_DEVOURED_REQ
+	var bio_ok: bool = BiosphereEngine.biomasa >= Balance.ESCLEROCIO_BIO_REQ
+	var eps_ok: bool = StructuralModel.epsilon_runtime < Balance.ESCLEROCIO_EPS_MAX
+	if not (devoured_ok and bio_ok and eps_ok):
+		if is_instance_valid(_esclerocio_btn):
+			_esclerocio_btn.visible = false
+		return
+
+	if _esclerocio_btn == null or not is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn = Button.new()
+		_esclerocio_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_esclerocio_btn.add_theme_color_override("font_color", Color(0.7, 0.6, 0.75))
+		_esclerocio_btn.custom_minimum_size = Vector2(0, 70)
+		_esclerocio_btn.pressed.connect(_on_esclerocio_pressed)
+		var panel := get_node_or_null("UIRootContainer/RightPanel")
+		if panel:
+			panel.add_child(_esclerocio_btn)
+			panel.move_child(_esclerocio_btn, 0)
+	_esclerocio_btn.text = EmojiToRichText.strip("🌑 " + tr("BTN_ESCLEROCIO"))
+	_esclerocio_btn.visible = true
+
+func _on_esclerocio_pressed():
+	if RunManager.run_closed:
+		return
+	if is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn.visible = false
+	RunManager.close_run("ESCLEROCIO OSCURO", tr("CLOSE_ESCLEROCIO"))
 
 func _update_depredador_buytime_button():
 	# Botón EXCLUSIVO del Depredador: compra DEP_TIME_EXTENSION s de timer pagando biomasa.
@@ -338,6 +374,9 @@ func reset_local_state():
 	if is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn.queue_free()
 		_simbiosis_seal_btn = null
+	if is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn.queue_free()
+		_esclerocio_btn = null
 	if is_instance_valid(_colapso_controlado_btn):
 		_colapso_controlado_btn.queue_free()
 		_colapso_controlado_btn = null
@@ -455,6 +494,9 @@ func _ready():
 	# =====================================================
 	RunManager.activate_post_tras_route()
 	UIManager.update_route_badge()
+	# ESCLEROCIO OSCURO: consumir carga latente de Memoria Oscura (solo en run nueva).
+	# Va acá, tras load_game, para que el reset de la escena recargada no pise el flag.
+	RunManager.consume_dark_legacy_charge()
 
 	# Aplicar buffs DESPUÉS de load_game para que:
 	# 1) _file_existed_on_load sea correcto para bonuses one-time
@@ -698,6 +740,7 @@ func _on_logic_tick():
 		var _show_seal := EvoManager.process_met_oscuro(dt)
 		if _show_seal:
 			_update_met_oscuro_seal_button()
+		_update_esclerocio_button()  # salida alternativa: siembra Memoria Oscura
 		_update_depredador_buytime_button()  # se auto-oculta: el devorar está congelado
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
@@ -1298,6 +1341,9 @@ func _update_legacy_indicators() -> void:
 	# aura_dorada ya NO afecta pasivo (rework)
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		pasivo_mult *= 2.0;  pas_tip += "\n• Semilla Cósmica ×2.0"
+	if LegacyManager.get_buff_value("semilla_cosmica_oscura"):
+		pasivo_mult *= Balance.SEMILLA_OSCURA_PASIVO_MULT
+		pas_tip += "\n• Semilla Cósmica Oscura ×%.1f" % Balance.SEMILLA_OSCURA_PASIVO_MULT
 	if LegacyManager.get_buff_value("mente_colmena"):
 		pasivo_mult *= 3.0;  pas_tip += "\n• Mente Colmena ×3.0"
 	if eco > 0.0:
@@ -1356,6 +1402,12 @@ func _update_legacy_indicators() -> void:
 		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
 	if RunManager.mente_colmena_active:
 		_add_chip.call(EmojiToRichText.strip("🧠IA"), tr("CHIP_MENTE_COLMENA"), Color(0.9, 0.3, 0.9))
+	# MEMORIA OSCURA (Esclerocio): chip destacado mientras la carga latente / legado permanente está activo
+	if RunManager.is_memoria_oscura_active():
+		var mo_tip := tr("CHIP_MEMORIA_OSCURA_TIP")
+		if RunManager._has_permanent_dark_legacy():
+			mo_tip += "\n" + tr("CHIP_MEMORIA_OSCURA_PERM")
+		_add_chip.call(EmojiToRichText.strip("🌑 " + tr("CHIP_MEMORIA_OSCURA")), mo_tip, Color(0.82, 0.55, 1.0))
 
 
 
@@ -1430,7 +1482,12 @@ func update_epsilon_runtime():
 		# Si el hongo es eficiente, ayuda a enfriar el sistema
 		bio_absorption = clamp(StructuralModel.epsilon_effective / StructuralModel.epsilon_runtime, 0.4, 1.0)
 
-	StructuralModel.epsilon_runtime = lerp(StructuralModel.epsilon_runtime, epsilon_raw * bio_absorption, 0.045)
+	var eps_target := epsilon_raw * bio_absorption
+	# MEMORIA OSCURA (Esclerocio): el sistema "recuerda" la estabilidad oscura y resiste la entropía
+	# → su subida se amortigua 30% (interpretación beneficiosa de "ε decae más lento").
+	if RunManager.is_memoria_oscura_active() and eps_target > StructuralModel.epsilon_runtime:
+		eps_target = StructuralModel.epsilon_runtime + (eps_target - StructuralModel.epsilon_runtime) * Balance.MEMORIA_OSCURA_EPS_RISE_DAMP
+	StructuralModel.epsilon_runtime = lerp(StructuralModel.epsilon_runtime, eps_target, 0.045)
 	StructuralModel.epsilon_runtime = clamp(StructuralModel.epsilon_runtime, 0.0, 2.0)
 	
 	# RAMA COLONIZACI�N: Piso de estrés 0.25 (v0.8.40)

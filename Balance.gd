@@ -22,6 +22,19 @@ const MET_OSCURO_SEAL_COOLDOWN   := 120.0  # s de cooldown tras sellado
 const MET_OSCURO_DEVOURED_REQ    := 10     # devours necesarios para sellar MET.OSCURO
 const MET_OSCURO_BIO_REQ         := 50.0   # biomasa necesaria para sellar MET.OSCURO
 
+# ── ESCLEROCIO OSCURO (salida alternativa de Met. Oscuro) ────────
+# Gate lore-accurate (procesar la oscuridad, no esperar reloj): autofagia + masa + autorregulación.
+const ESCLEROCIO_DEVOURED_REQ    := 30     # devours acumulados (material para endurecer el esclerocio)
+const ESCLEROCIO_BIO_REQ         := 50.0   # biomasa mínima para encapsular
+const ESCLEROCIO_EPS_MAX         := 0.25   # ε máximo (domesticó la oscuridad antes de sellarla)
+# Buff "Memoria Oscura" — carga consumible en la run SIGUIENTE
+const MEMORIA_OSCURA_BIO_MULT       := 1.15  # +15% crecimiento de biomasa
+const MEMORIA_OSCURA_EPS_RISE_DAMP  := 0.70  # la subida de ε se amortigua 30% (resiste la entropía)
+const MEMORIA_OSCURA_MO_THRESH_MULT := 0.90  # −10% al threshold de activación de Met. Oscuro
+const MEMORIA_OSCURA_REFUND_TIME    := 60.0  # s: si la run se abandona antes (y sin upgrades), se devuelve la carga
+# Legado permanente desbloqueado por el cruce ESCLEROCIO → PANSPERMIA NEGRA
+const SEMILLA_OSCURA_PASIVO_MULT    := 3.0   # ×pasivo del legado Semilla Cósmica Oscura
+
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
 const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
@@ -58,6 +71,7 @@ const PL_REWARDS: Dictionary = {
 	"HIPERASIMILACIÓN":          1,
 	"MUTACION_FINAL":            4,
 	"METABOLISMO OSCURO":        4,
+	"ESCLEROCIO OSCURO":         6,
 	"MENTE COLMENA DISTRIBUIDA": 8,
 	"DEPREDADOR DE REALIDADES":  12,
 	"COLAPSO DEPREDATORIO":      8,
@@ -84,6 +98,7 @@ const NG_CAPS: Dictionary = {
 	"HOMEORHESIS":               7,
 	"MUTACION_FINAL":            8,
 	"METABOLISMO OSCURO":        8,
+	"ESCLEROCIO OSCURO":         8,
 	"POLIMORFÍA TOTAL":          8,
 	"POLIMORFIA TOTAL":          8,
 	"DOMADOR DEL CAOS":          8,

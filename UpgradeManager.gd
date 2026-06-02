@@ -68,6 +68,13 @@ func get_def(id: String) -> UpgradeDef:
 func get_state(id: String) -> Dictionary:
 	return states.get(id, {})
 
+## Suma de niveles de todos los upgrades (0 = run sin ninguna compra).
+func total_levels() -> int:
+	var total := 0
+	for id in states:
+		total += int(states[id].get("level", 0))
+	return total
+
 func can_buy(id: String, money: float) -> bool:
 	var s = states.get(id, {})
 	if s.is_empty(): return false

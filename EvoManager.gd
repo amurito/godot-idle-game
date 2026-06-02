@@ -261,6 +261,9 @@ func _update_met_oscuro(ctx: Dictionary) -> void:
 			LogManager.add(tr("LOG_BIOQUIMICA") % [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), met_oscuro_devoured_count, ctx.biomasa])
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
 		var threshold := Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		# MEMORIA OSCURA (Esclerocio): la run recuerda cómo entrar en oscuridad → -10% al threshold.
+		if RunManager.is_memoria_oscura_active():
+			threshold *= Balance.MEMORIA_OSCURA_MO_THRESH_MULT
 		_set_genome_state("met_oscuro", "activo" if met_oscuro_timer >= threshold else "latente")
 		var secs_left := int(threshold - met_oscuro_timer)
 		if secs_left >= 1 and secs_left <= 10 and secs_left != _met_oscuro_countdown_last:

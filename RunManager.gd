@@ -55,6 +55,9 @@ var ascesis_timer: float = 0.0
 # REENCARNACIÓN HEREDADA
 var reencarnacion_active: bool = false
 
+# ESCLEROCIO OSCURO — carga "Memoria Oscura" activa en ESTA run (consumida al iniciar)
+var memoria_oscura_active: bool = false
+
 # CARNAVAL DE MUTACIONES
 var carnaval_active: bool = false
 var carnaval_mutations: Array = []        # 3 ids de mutación seleccionados al azar
@@ -86,6 +89,7 @@ func reset():
 	vacio_hambriento_mult = 1.0
 	ascesis_timer = 0.0
 	reencarnacion_active = false
+	memoria_oscura_active = false
 	carnaval_active = false
 	carnaval_mutations = []
 	carnaval_index = 0
@@ -100,6 +104,31 @@ func reset():
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
 	return StructuralModel.epsilon_runtime >= 0.03 and StructuralModel.epsilon_runtime <= 0.30
+
+## true si el jugador posee el legado permanente Semilla Cósmica Oscura
+## (Memoria Oscura siempre activa, no consumible).
+func _has_permanent_dark_legacy() -> bool:
+	return LegacyManager.get_buff_value("semilla_cosmica_oscura")
+
+## true si el buff "Memoria Oscura" debe estar activo esta run:
+## carga latente consumida (memoria_oscura_active) o legado permanente.
+func is_memoria_oscura_active() -> bool:
+	return memoria_oscura_active or _has_permanent_dark_legacy()
+
+## Consume una carga latente de Memoria Oscura (si hay) para la run que arranca.
+## Debe llamarse en main._ready DESPUÉS de load_game (igual que activate_post_tras_route),
+## para que el reset/load de la escena recargada no pise el flag.
+## Solo actúa en run NUEVA: en una continuación de save, memoria_oscura_active ya viene
+## restaurado desde el bloque post_tras del savegame.
+func consume_dark_legacy_charge() -> void:
+	if SaveManager._file_existed_on_load:
+		return
+	if LegacyManager.dark_legacy_charges > 0:
+		memoria_oscura_active = true
+		LegacyManager.dark_legacy_charges -= 1
+		LegacyManager.save_legacy()
+		LogManager.add(tr("LOG_MEMORIA_OSCURA_ACTIVA"))
+		print("🌑 [Esclerocio] Memoria Oscura activada para esta run (cargas restantes: %d)" % LegacyManager.dark_legacy_charges)
 
 # ==================== CIERRE DE RUN ====================
 func close_run(route: String, reason: String):
@@ -176,6 +205,10 @@ func close_run(route: String, reason: String):
 				var raw := EvoManager.met_oscuro_devoured_count * 2
 				ng_bonus = min(raw, cap)
 				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
+			"ESCLEROCIO OSCURO":
+				var raw := int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
+				ng_bonus = min(raw, cap)
+				ng_formula = "devoured %d / 8 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 				var raw := int(floor(carnaval_total_rotations / 2.0))
 				ng_bonus = min(raw, cap)
@@ -211,6 +244,22 @@ func close_run(route: String, reason: String):
 		LogManager.add(tr("LOG_PL_NG") % [ng_bonus, ng_formula])
 
 	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
+
+	# ── ESCLEROCIO OSCURO ──────────────────────────────────────────
+	# Al cerrar por ESCLEROCIO, dejar una carga latente de Memoria Oscura para la run siguiente.
+	if route == "ESCLEROCIO OSCURO":
+		LegacyManager.dark_legacy_charges += 1
+		LogManager.add(tr("LOG_ESCLEROCIO_SEMBRADO"))
+	# Cruce con PANSPERMIA NEGRA: si esta run llevaba Memoria Oscura activa, desbloquear el legado.
+	if route == "PANSPERMIA NEGRA" and memoria_oscura_active and not LegacyManager.esclerocio_panspermia_done:
+		LegacyManager.esclerocio_panspermia_done = true
+		LogManager.add(tr("LOG_SEMILLA_OSCURA_UNLOCK"))
+		UIManager.show_toast(tr("TOAST_SEMILLA_OSCURA"))
+	# Reembolso de la carga si la run se abandonó temprano sin progresar (anti-frustración).
+	if memoria_oscura_active and not _has_permanent_dark_legacy() \
+			and run_time < Balance.MEMORIA_OSCURA_REFUND_TIME and UpgradeManager.total_levels() == 0:
+		LegacyManager.dark_legacy_charges += 1
+		LogManager.add(tr("LOG_ESCLEROCIO_REEMBOLSO"))
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0

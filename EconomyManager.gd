@@ -196,6 +196,9 @@ func get_passive_total() -> float:
 	if LegacyManager.get_buff_value("semilla_cosmica"):
 		total *= 2.0 # Semilla Cósmica (Bonus permanente)
 
+	if LegacyManager.get_buff_value("semilla_cosmica_oscura"):
+		total *= Balance.SEMILLA_OSCURA_PASIVO_MULT # Semilla Cósmica Oscura (cruce Esclerocio→Panspermia)
+
 	if LegacyManager.get_buff_value("mente_colmena"):
 		total *= 3.0 # IA Automática (Bonus permanente)
 

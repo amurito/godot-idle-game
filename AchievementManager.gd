@@ -422,6 +422,12 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "domador_del_caos",
 	},
+	"esclerocio_contingencia": {
+		"name": "Esporas de Contingencia",
+		"desc": "Cerrar ESCLEROCIO OSCURO habiendo devorado 50 o más upgrades.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "esclerocio_contingencia",
+	},
 	"ruta_ascesis": {
 		"name": "Ascesis Profunda",
 		"desc": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",
@@ -588,6 +594,7 @@ func _ready() -> void:
 		"colapso_depredatorio": _eval_colapso_depredatorio,
 		"polimorfia_total":       _eval_polimorfia_total,
 		"domador_del_caos":       _eval_domador_del_caos,
+		"esclerocio_contingencia":_eval_esclerocio_contingencia,
 		"cinco_legados":          _eval_cinco_legados,
 		"omega_inviolable":       _eval_omega_inviolable_cond,
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
@@ -939,6 +946,10 @@ func _eval_polimorfia_total(_s: Dictionary) -> bool:
 func _eval_domador_del_caos(_s: Dictionary) -> bool:
 	return RunManager.final_route == "DOMADOR DEL CAOS"
 
+func _eval_esclerocio_contingencia(_s: Dictionary) -> bool:
+	return RunManager.final_route == "ESCLEROCIO OSCURO" \
+		and EvoManager.met_oscuro_devoured_count >= 50
+
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0
 	for id in LegacyManager.LEGACY_DEFS:
@@ -1031,6 +1042,8 @@ func on_run_closed(route: String) -> void:
 		unlock("polimorfia_total")
 	if route == "DOMADOR DEL CAOS" and _eval_domador_del_caos({}):
 		unlock("domador_del_caos")
+	if route == "ESCLEROCIO OSCURO" and EvoManager.met_oscuro_devoured_count >= 50:
+		unlock("esclerocio_contingencia")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1
