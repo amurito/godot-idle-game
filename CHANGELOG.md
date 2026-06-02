@@ -1,5 +1,16 @@
 # CHANGELOG — HYPHAE: genesis
 
+## [post-launch] — 2026-06-01/02
+
+### Telemetría anónima — receptor remoto en el hub
+
+- **`TelemetryManager.gd`**: agrega `_send_remote(data)` — al cerrar una run, además de guardar el JSON local en `user://telemetry/runs/`, postea el payload al hub vía `HTTPRequest` (fire-and-forget, sin bloquear gameplay). Gobernado por `const REMOTE_ENDPOINT` (vacío = solo local).
+- **Consent actualizado** ES/EN (`SET_TELEMETRY_HINT`): menciona explícitamente que los datos se envían a un servidor, sin IP ni datos personales.
+- **`tools/fetch_telemetry.py`**: baja el dump NDJSON del hub y escribe JSON locales para `analyze_telemetry.py`. Uso: `python tools/fetch_telemetry.py --server https://hyphae-game-hub.onrender.com --token $TOKEN --out ./telemetry_fetched`.
+- El receptor vive en el hub `amurito/hyphae-game-hub` (Node/Express + Supabase). Ver CHANGELOG del hub.
+
+---
+
 ## [v1.0.0.10] — "génesis" — 2026-05-25
 
 Release oficial de cierre del sprint **génesis**. Consolida fixes de export web, auditoría completa de emojis, UI compacta y pulido del header.
