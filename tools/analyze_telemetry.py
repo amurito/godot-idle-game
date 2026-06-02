@@ -1684,7 +1684,13 @@ def build_dashboard_html(df: pd.DataFrame, runs: list[dict]) -> str:
 </head>
 <body>
 <div class="container">
-    <h1>🍄 AntiIDLE - Telemetry Dashboard</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+        <h1 style="margin:0;">🍄 HYPHAE: genesis — Telemetry Dashboard</h1>
+        <a href="https://hyphae-game-hub.onrender.com/admin" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#1a1a2e;border:1px solid #ffcc44;border-radius:8px;color:#ffcc44;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            ← Panel Admin
+        </a>
+    </div>
     <p>Dashboard interactivo para análisis de balance y rendimiento &nbsp;·&nbsp;
     <span style="color:#ffcc44; font-weight:600;">Generado: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</span>
     &nbsp;·&nbsp; <span style="color:#88aaff;">{total_runs} runs</span></p>
