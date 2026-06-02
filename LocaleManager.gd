@@ -63,7 +63,7 @@ const TRANSLATIONS := {
 
 		# Telemetría
 		"SET_TELEMETRY_CHECKBOX": "Enviar datos anónimos de uso (ayuda a mejorar el juego)",
-		"SET_TELEMETRY_HINT": "Local y opt-in: guarda JSON anónimos en user://telemetry/runs al cerrar una run.",
+		"SET_TELEMETRY_HINT": "Opt-in y anónimo: al cerrar una run guarda un JSON local en user://telemetry/runs y, si hay un servidor configurado, lo envía ahí. Sin datos personales ni IP.",
 		"SET_TELEMETRY_OPEN": "Abrir carpeta de telemetría",
 
 		# Accesibilidad
@@ -1212,7 +1212,7 @@ const TRANSLATIONS := {
 
 		# Telemetry
 		"SET_TELEMETRY_CHECKBOX": "Send anonymous usage data (helps improve the game)",
-		"SET_TELEMETRY_HINT": "Local and opt-in: saves anonymous JSON in user://telemetry/runs on run close.",
+		"SET_TELEMETRY_HINT": "Opt-in and anonymous: on run close it saves a local JSON in user://telemetry/runs and, if a server is configured, sends it there. No personal data or IP.",
 		"SET_TELEMETRY_OPEN": "Open telemetry folder",
 
 		# Accessibility

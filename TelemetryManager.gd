@@ -1,12 +1,22 @@
 extends Node
 
-# TelemetryManager.gd - local opt-in telemetry.
-# Stores anonymous run JSON files under user://telemetry/runs/ only when enabled.
+# TelemetryManager.gd - opt-in anonymous telemetry.
+# Stores anonymous run JSON under user://telemetry/runs/ and, if REMOTE_ENDPOINT
+# is configured, also POSTs each run to the remote receiver. Only when enabled.
 
 const SETTINGS_PATH := "user://telemetry_settings.json"
 const ID_PATH := "user://telemetry_id.txt"
 const RUNS_DIR := "user://telemetry/runs"
 const MAX_RUN_FILES := 100
+
+# Receptor remoto (opt-in): al cerrar una run, además de guardar el JSON local,
+# se POSTea a este endpoint del hub (hyphae-game-hub, server.js -> /api/telemetry).
+# Mismo origen cuando se juega en el hub; cross-origin (CORS) cuando se juega en itch.io.
+# Dejar vacío = solo local (sin envío remoto). Verificá que la URL del hub sea la correcta.
+const REMOTE_ENDPOINT := "https://hyphae-game-hub.onrender.com/api/telemetry"
+# Solo si el hub tiene TELEMETRY_INGEST_KEY seteado: mismo valor acá (header X-Telemetry-Key).
+const REMOTE_INGEST_KEY := ""
+const REMOTE_TIMEOUT := 10.0
 
 var enabled: bool = false
 var session_id: String = ""
@@ -117,6 +127,7 @@ func close_run(summary := {}) -> void:
 
 	_run_active = false
 	call_deferred("_save_run_json", data)
+	_send_remote(data)
 
 
 func sample_metrics(main: Node, store_sample: bool = true) -> void:
@@ -260,6 +271,28 @@ func _build_run_summary(summary: Dictionary) -> Dictionary:
 		"mutations_activated": summary.get("mutations_activated", _mutations_activated.duplicate()),
 		"trascendencia_count": int(summary.get("trascendencia_count", LegacyManager.trascendencia_count))
 	}
+
+
+func _send_remote(data: Dictionary) -> void:
+	# Envío anónimo opt-in al receptor remoto. No bloquea el juego: fire-and-forget.
+	if REMOTE_ENDPOINT == "":
+		return
+
+	var body := JSON.stringify(data)
+	var req := HTTPRequest.new()
+	req.timeout = REMOTE_TIMEOUT
+	add_child(req)
+	# Liberar el nodo al terminar (ok o error), sin reintentos.
+	req.request_completed.connect(func(_result, _code, _headers, _bytes):
+		req.queue_free())
+
+	var headers := PackedStringArray(["Content-Type: application/json"])
+	if REMOTE_INGEST_KEY != "":
+		headers.append("X-Telemetry-Key: " + REMOTE_INGEST_KEY)
+
+	var err := req.request(REMOTE_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+	if err != OK:
+		req.queue_free()
 
 
 func _save_run_json(data: Dictionary) -> void:
