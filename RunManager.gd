@@ -55,9 +55,6 @@ var ascesis_timer: float = 0.0
 # REENCARNACIÓN HEREDADA
 var reencarnacion_active: bool = false
 
-# ESCLEROCIO OSCURO — carga "Memoria Oscura" activa en ESTA run (consumida al iniciar)
-var memoria_oscura_active: bool = false
-
 # CARNAVAL DE MUTACIONES
 var carnaval_active: bool = false
 var carnaval_mutations: Array = []        # 3 ids de mutación seleccionados al azar
@@ -89,7 +86,6 @@ func reset():
 	vacio_hambriento_mult = 1.0
 	ascesis_timer = 0.0
 	reencarnacion_active = false
-	memoria_oscura_active = false
 	carnaval_active = false
 	carnaval_mutations = []
 	carnaval_index = 0
@@ -110,25 +106,12 @@ func get_en_banda_homeostatica() -> bool:
 func _has_permanent_dark_legacy() -> bool:
 	return LegacyManager.get_buff_value("semilla_cosmica_oscura")
 
-## true si el buff "Memoria Oscura" debe estar activo esta run:
-## carga latente consumida (memoria_oscura_active) o legado permanente.
+## true si el buff "Memoria Oscura" está activo esta run.
+## SEMILLA DURMIENTE: mientras haya cargas (dark_legacy_charges > 0) la Memoria Oscura está
+## activa en TODAS las runs, hasta germinar en Panspermia o borrarse al trascender.
+## El legado permanente (semilla_cosmica_oscura) la mantiene activa sin consumir cargas.
 func is_memoria_oscura_active() -> bool:
-	return memoria_oscura_active or _has_permanent_dark_legacy()
-
-## Consume una carga latente de Memoria Oscura (si hay) para la run que arranca.
-## Debe llamarse en main._ready DESPUÉS de load_game (igual que activate_post_tras_route),
-## para que el reset/load de la escena recargada no pise el flag.
-## Solo actúa en run NUEVA: en una continuación de save, memoria_oscura_active ya viene
-## restaurado desde el bloque post_tras del savegame.
-func consume_dark_legacy_charge() -> void:
-	if SaveManager._file_existed_on_load:
-		return
-	if LegacyManager.dark_legacy_charges > 0:
-		memoria_oscura_active = true
-		LegacyManager.dark_legacy_charges -= 1
-		LegacyManager.save_legacy()
-		LogManager.add(tr("LOG_MEMORIA_OSCURA_ACTIVA"))
-		print("🌑 [Esclerocio] Memoria Oscura activada para esta run (cargas restantes: %d)" % LegacyManager.dark_legacy_charges)
+	return LegacyManager.dark_legacy_charges > 0 or _has_permanent_dark_legacy()
 
 # ==================== CIERRE DE RUN ====================
 func close_run(route: String, reason: String):
@@ -246,20 +229,20 @@ func close_run(route: String, reason: String):
 	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
 
 	# ── ESCLEROCIO OSCURO ──────────────────────────────────────────
-	# Al cerrar por ESCLEROCIO, dejar una carga latente de Memoria Oscura para la run siguiente.
+	# Al cerrar por ESCLEROCIO, sembrar una semilla durmiente de Memoria Oscura.
+	# Las cargas mantienen la Memoria Oscura activa en TODAS las runs siguientes
+	# (semilla durmiente) hasta que germinan en Panspermia o se borran al trascender.
 	if route == "ESCLEROCIO OSCURO":
 		LegacyManager.dark_legacy_charges += 1
 		LogManager.add(tr("LOG_ESCLEROCIO_SEMBRADO"))
-	# Cruce con PANSPERMIA NEGRA: si esta run llevaba Memoria Oscura activa, desbloquear el legado.
-	if route == "PANSPERMIA NEGRA" and memoria_oscura_active and not LegacyManager.esclerocio_panspermia_done:
-		LegacyManager.esclerocio_panspermia_done = true
-		LogManager.add(tr("LOG_SEMILLA_OSCURA_UNLOCK"))
-		UIManager.show_toast(tr("TOAST_SEMILLA_OSCURA"))
-	# Reembolso de la carga si la run se abandonó temprano sin progresar (anti-frustración).
-	if memoria_oscura_active and not _has_permanent_dark_legacy() \
-			and run_time < Balance.MEMORIA_OSCURA_REFUND_TIME and UpgradeManager.total_levels() == 0:
-		LegacyManager.dark_legacy_charges += 1
-		LogManager.add(tr("LOG_ESCLEROCIO_REEMBOLSO"))
+	# Cruce con PANSPERMIA NEGRA: si hay una semilla durmiente activa, germina → desbloquea
+	# el legado permanente y consume una carga.
+	if route == "PANSPERMIA NEGRA" and LegacyManager.dark_legacy_charges > 0:
+		LegacyManager.dark_legacy_charges -= 1
+		if not LegacyManager.esclerocio_panspermia_done:
+			LegacyManager.esclerocio_panspermia_done = true
+			LogManager.add(tr("LOG_SEMILLA_OSCURA_UNLOCK"))
+			UIManager.show_toast(tr("TOAST_SEMILLA_OSCURA"))
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0

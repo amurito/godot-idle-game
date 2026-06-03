@@ -576,6 +576,18 @@ const TRANSLATIONS := {
 		"LORE_PANSP_N1": "Requiere Esporulación previa + $100k durante primordio activo",
 		"LORE_PANSP_N2": "Única ruta sin PL en close_run (ya otorgados en main)",
 
+		# LORE — ESCLEROCIO OSCURO
+		"LORE_ESCLEROCIO_LORE": "El organismo no espera la muerte: la encapsula. Endurece su micelio en una cápsula que la ciencia llama esclerocio y deja que la bioquímica oscura duerma dentro. No es un final. Es una semilla de memoria esperando el próximo ciclo.",
+		"LORE_ESCLEROCIO_B1": "Memoria Oscura sembrada — semilla durmiente, activa en cada run",
+		"LORE_ESCLEROCIO_B2": "Mientras dure: +15% biomasa · ε resiste 30% más · −10% umbral Met. Oscuro",
+		"LORE_ESCLEROCIO_B3": "Germina al cerrar PANSPERMIA NEGRA → legado permanente",
+		"LORE_ESCLEROCIO_N1": "Otorga menos PL que el sello directo de Metabolismo Oscuro",
+		"LORE_ESCLEROCIO_N2": "La semilla se pierde al trascender si no llegó a germinar",
+
+		# LORE — PANSPERMIA NEGRA (variante con código oscuro del Esclerocio)
+		"LORE_PANSP_OSCURA_LORE": "Las esporas viajaban al vacío. Esta vez no van solas: llevan el código de la bioquímica que no debió sobrevivir. La próxima civilización no heredará un hongo — heredará su oscuridad.",
+		"LORE_PANSP_OSCURA_B1": "Semilla Cósmica Oscura: Memoria Oscura permanente + ×3 producción pasiva",
+
 		# LORE — PARASITISMO
 		"LORE_PARAS_LORE": "Explotación parasitaria del ecosistema. Extrae recursos sin retribuir. El organismo vacía el sistema antes de colapsar sobre sí mismo. Victoria pírrica.",
 		"LORE_PARAS_B1": "Biomasa ×2 (crecimiento descontrolado)",
@@ -1072,9 +1084,7 @@ const TRANSLATIONS := {
 		"MM_CREDITS_SKIP": "Saltar →",
 		"CLOSE_MO_VOLUNTARIO": "Sellado voluntario (Bio %.0f) — bioquímica oscura cristalizada (+%d PL)",
 		"CLOSE_ESCLEROCIO": "El hongo se encapsula en esclerocio. Muere, pero la memoria de la bioquímica oscura queda latente para el próximo ciclo.",
-		"LOG_ESCLEROCIO_SEMBRADO": "🌑 Esclerocio formado. Memoria Oscura sembrada para la run siguiente.",
-		"LOG_MEMORIA_OSCURA_ACTIVA": "🌑 El esclerocio germina. La Memoria Oscura del ciclo anterior está activa.",
-		"LOG_ESCLEROCIO_REEMBOLSO": "🌑 Run abandonada temprano — carga de Memoria Oscura devuelta.",
+		"LOG_ESCLEROCIO_SEMBRADO": "🌑 Esclerocio formado. La Memoria Oscura queda durmiente, activa hasta germinar en Panspermia o trascender.",
 		"LOG_SEMILLA_OSCURA_UNLOCK": "🦠 Las esporas de panspermia llevan el código oscuro. Semilla Cósmica Oscura desbloqueada en el Banco Genético.",
 		"TOAST_SEMILLA_OSCURA": "🦠 SEMILLA CÓSMICA OSCURA desbloqueada",
 		"CLOSE_SIMBIOSIS_BASE": "Cooperación sellada voluntariamente — estructura y biología en equilibrio",
@@ -1740,6 +1750,18 @@ const TRANSLATIONS := {
 		"LORE_PANSP_N1": "Requires prior Sporulation + $100k during active primordium",
 		"LORE_PANSP_N2": "Unique route with no PL in close_run (already granted in main)",
 
+		# LORE — DARK SCLEROTIUM
+		"LORE_ESCLEROCIO_LORE": "The organism doesn't wait for death: it encapsulates it. It hardens its mycelium into a capsule science calls a sclerotium and lets the dark biochemistry sleep inside. This isn't an ending. It's a seed of memory waiting for the next cycle.",
+		"LORE_ESCLEROCIO_B1": "Dark Memory seeded — dormant seed, active every run",
+		"LORE_ESCLEROCIO_B2": "While it lasts: +15% biomass · ε resists 30% more · −10% Dark Metabolism threshold",
+		"LORE_ESCLEROCIO_B3": "Germinates on closing BLACK PANSPERMIA → permanent legacy",
+		"LORE_ESCLEROCIO_N1": "Grants less PL than sealing Dark Metabolism directly",
+		"LORE_ESCLEROCIO_N2": "The seed is lost on transcending if it never germinated",
+
+		# LORE — BLACK PANSPERMIA (variant carrying the Sclerotium's dark code)
+		"LORE_PANSP_OSCURA_LORE": "The spores were traveling the void. This time they don't go alone: they carry the code of the biochemistry that should not have survived. The next civilization won't inherit a fungus — it'll inherit its darkness.",
+		"LORE_PANSP_OSCURA_B1": "Dark Cosmic Seed: permanent Dark Memory + ×3 passive production",
+
 		# LORE — PARASITISMO
 		"LORE_PARAS_LORE": "Parasitic exploitation of the ecosystem. Extracts resources without giving back. The organism drains the system before collapsing on itself. Pyrrhic victory.",
 		"LORE_PARAS_B1": "Biomass ×2 (uncontrolled growth)",
@@ -2236,9 +2258,7 @@ const TRANSLATIONS := {
 		"MM_CREDITS_SKIP": "Skip →",
 		"CLOSE_MO_VOLUNTARIO": "Voluntary seal (Bio %.0f) — dark biochemistry crystallized (+%d PL)",
 		"CLOSE_ESCLEROCIO": "The fungus encapsulates into a sclerotium. It dies, but the memory of dark biochemistry lies dormant for the next cycle.",
-		"LOG_ESCLEROCIO_SEMBRADO": "🌑 Sclerotium formed. Dark Memory seeded for the next run.",
-		"LOG_MEMORIA_OSCURA_ACTIVA": "🌑 The sclerotium germinates. Last cycle's Dark Memory is active.",
-		"LOG_ESCLEROCIO_REEMBOLSO": "🌑 Run abandoned early — Dark Memory charge refunded.",
+		"LOG_ESCLEROCIO_SEMBRADO": "🌑 Sclerotium formed. Dark Memory lies dormant, active until it germinates in Panspermia or you transcend.",
 		"LOG_SEMILLA_OSCURA_UNLOCK": "🦠 Panspermia spores carry the dark code. Dark Cosmic Seed unlocked in the Genetic Bank.",
 		"TOAST_SEMILLA_OSCURA": "🦠 DARK COSMIC SEED unlocked",
 		"CLOSE_SIMBIOSIS_BASE": "Voluntary cooperation sealed — structure and biology in balance",

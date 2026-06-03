@@ -1044,11 +1044,24 @@ func _build_run_end_lore(route: String) -> String:
 			"buffs": [tr("LORE_MO_B1"), tr("LORE_MO_B2"), tr("LORE_MO_B3"), tr("LORE_MO_B4"), tr("LORE_MO_B5")],
 			"nerfs": [tr("LORE_MO_N1"), tr("LORE_MO_N2"), tr("LORE_MO_N3"), tr("LORE_MO_N4")]
 		},
+		"ESCLEROCIO OSCURO": {
+			"emoji": "🌑", "color": "#b399c0",
+			"lore": tr("LORE_ESCLEROCIO_LORE"),
+			"buffs": [tr("LORE_ESCLEROCIO_B1"), tr("LORE_ESCLEROCIO_B2"), tr("LORE_ESCLEROCIO_B3")],
+			"nerfs": [tr("LORE_ESCLEROCIO_N1"), tr("LORE_ESCLEROCIO_N2")]
+		},
 	}
 
 	var data = lore_data.get(route, null)
 	if data == null:
 		return "[color=gray]" + tr("LORE_RUN_DONE") % route + "[/color]\n"
+
+	# Variante especial: el cruce ESCLEROCIO → PANSPERMIA NEGRA (familia COLAPSO × BIOLOGÍA).
+	# Si el cruce ya se logró, la Panspermia lleva el código oscuro: lore + efecto propios.
+	if route == "PANSPERMIA NEGRA" and LegacyManager.esclerocio_panspermia_done:
+		data.lore = tr("LORE_PANSP_OSCURA_LORE")
+		data.buffs = data.buffs.duplicate()
+		data.buffs.append(tr("LORE_PANSP_OSCURA_B1"))
 
 	var t := ""
 	t += "[color=%s][b]%s %s[/b][/color]\n\n" % [data.color, data.emoji, route]

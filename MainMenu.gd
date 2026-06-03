@@ -307,7 +307,6 @@ func _do_start_new_run(route: String) -> void:
 	LogManager.reset()
 	RunManager.reset()                     # run_closed, disturbances, homeostasis_tier, etc.
 	AchievementManager.reset_run_state()   # Borra timers/contadores per-run (no toca unlocked)
-	# (La carga de Memoria Oscura se consume en main._ready, tras load_game — ver consume_dark_legacy_charge)
 
 	# 4. Incrementar contador de ciclos en legacy
 	LegacyManager.increment_run()

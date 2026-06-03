@@ -494,9 +494,6 @@ func _ready():
 	# =====================================================
 	RunManager.activate_post_tras_route()
 	UIManager.update_route_badge()
-	# ESCLEROCIO OSCURO: consumir carga latente de Memoria Oscura (solo en run nueva).
-	# Va acá, tras load_game, para que el reset de la escena recargada no pise el flag.
-	RunManager.consume_dark_legacy_charge()
 
 	# Aplicar buffs DESPUÉS de load_game para que:
 	# 1) _file_existed_on_load sea correcto para bonuses one-time

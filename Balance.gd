@@ -31,7 +31,6 @@ const ESCLEROCIO_EPS_MAX         := 0.25   # ε máximo (domesticó la oscuridad
 const MEMORIA_OSCURA_BIO_MULT       := 1.15  # +15% crecimiento de biomasa
 const MEMORIA_OSCURA_EPS_RISE_DAMP  := 0.70  # la subida de ε se amortigua 30% (resiste la entropía)
 const MEMORIA_OSCURA_MO_THRESH_MULT := 0.90  # −10% al threshold de activación de Met. Oscuro
-const MEMORIA_OSCURA_REFUND_TIME    := 60.0  # s: si la run se abandona antes (y sin upgrades), se devuelve la carga
 # Legado permanente desbloqueado por el cruce ESCLEROCIO → PANSPERMIA NEGRA
 const SEMILLA_OSCURA_PASIVO_MULT    := 3.0   # ×pasivo del legado Semilla Cósmica Oscura
 

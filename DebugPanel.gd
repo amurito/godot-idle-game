@@ -132,6 +132,21 @@ func _build_eventos(parent: VBoxContainer) -> void:
 	_add_event_btn(hbox, "+5 min", func(): RunManager.run_time += 300.0)
 	_add_event_btn(hbox, "+30 min", func(): RunManager.run_time += 1800.0)
 
+	# ── DEBUG ESCLEROCIO OSCURO (temporal) ──
+	var hbox_esc := HBoxContainer.new()
+	hbox_esc.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_esc)
+	# Siembra una carga durmiente: la Memoria Oscura queda activa (chip + efectos) en esta y futuras runs.
+	_add_event_btn(hbox_esc, "Sembrar Esclerocio", func():
+		LegacyManager.dark_legacy_charges += 1
+		LegacyManager.save_legacy()
+		print("🌑 [DEBUG] dark_legacy_charges = %d" % LegacyManager.dark_legacy_charges))
+	# Fuerza el cruce: desbloquea el legado semilla_cosmica_oscura en el Banco Genético.
+	_add_event_btn(hbox_esc, "Cruce Panspermia", func():
+		LegacyManager.esclerocio_panspermia_done = true
+		LegacyManager.save_legacy()
+		print("🦠 [DEBUG] esclerocio_panspermia_done = true — Semilla Cósmica Oscura desbloqueada"))
+
 
 func _add_event_btn(parent: HBoxContainer, label: String, fn: Callable) -> void:
 	var btn := Button.new()
