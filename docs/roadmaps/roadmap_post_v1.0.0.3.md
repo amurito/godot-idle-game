@@ -1,8 +1,8 @@
 # Roadmap post-v1.0.0.3
 
-Última actualización: 2026-05-31
+Última actualización: 2026-06-05
 
-**Estado actual:** `v1.0.0.10 "génesis"` (`version.gd` HOTFIX=10) — el juego es **HYPHAE: genesis** (ex-AntiIDLE), publicado en web en `hyphae-game-hub.onrender.com`, bilingüe ES/EN, export web (HTML5) + `.exe` Windows.
+**Estado actual:** `v1.0.1.0 "génesis"` (`version.gd` PATCH=1, HOTFIX=0 → muestra `1.0.1`) — **rama verde (Red Micelial) reworkeada anti-AFK**. Antes: `v1.0.0.10` — el juego es **HYPHAE: genesis** (ex-AntiIDLE), publicado en web en `hyphae-game-hub.onrender.com`, bilingüe ES/EN, export web (HTML5) + `.exe` Windows.
 
 **Nota de versionado:** la numeración pública saltó a `.10` porque las tags `.7/.8/.9` ya existían en remote apuntando a commits previos de i18n (sin bump de `version.gd`, el juego mostraba `1.0.0.6`). Todo el sprint quedó consolidado en `v1.0.0.10 "génesis"`; los parches post-release (gameplay, balance, bugs) van sobre la misma versión sin re-bump. El detalle granular vive en `CHANGELOG.md`.
 
@@ -132,6 +132,19 @@ Release pública de cierre del sprint. Detalle granular en `CHANGELOG.md`.
 
 ---
 
+## v1.0.1.0 "génesis" — Rework RAMA VERDE (Red Micelial) — ✅ (2026-06-05)
+
+Las 5 salidas de la rama verde (Colonización · Seta/Esporulación · Panspermia · Singularidad · Mente Colmena) eran AFK ("sostener una postura pasiva durante T s"). Reworkeadas a **gates activos con identidad propia**. Diseño completo en [`rework_rama_verde.md`](../design/rework_rama_verde.md); constantes tuneables en `Balance.gd`. Commit `9ef0a6e`.
+
+- **Colonización — Empuje de Frontera**: el micelio ya no se llena solo (decae); se empuja clickeando + botón Expandir Micelio, contra retracciones escalantes. Tendrils del reactor crecen con el micelio.
+- **Seta/Primordio — Maduración activa**: regar (gasta biomasa **finita** — no regenera en primordio) contra contaminaciones escalantes; sin regar, la integridad colapsa.
+- **Panspermia — Lanzamiento carga vs calor**: dos presiones opuestas; misfire al sobrecalentar; **5 sobrecargas abortan a esporulación base**.
+- **Singularidad — Sincronización**: gate de **4 condiciones de fase simultáneas** (acc≥3, Ω≥0.55, ε∈[0.10–0.22], biomasa≥6) sostenidas; no es minijuego de botón.
+- **Mente Colmena — auto-play acotado**: **ráfaga activable** (Override IA, 18s on / 45s cooldown) en vez de permanente; pasivo ×3 queda; gate endurecido a 100s multi-condición.
+- Consistencia lore/log de efectos y PL; fixes de UI (botones de final colgados al cerrar, clicks auto-cancelados por toggle de `disabled`).
+
+---
+
 ## Pendiente
 
 ### 🚀 LANZAMIENTO — próximo paso real
@@ -151,5 +164,5 @@ El *pulido de código* pre-launch está hecho. Falta la **ejecución de marketin
 - **Auditoría de retención**: cada milestone (primera mutación, primera ruta post-trascendencia, Dark Metabolism) necesita mensaje "felicitación + explicación + qué sigue" — ver `launch_plan_hyphae_genesis.md § Retención`
 
 ### Futuro — endgame post-trascendencia t>2 (diseño, no implementado)
-- **Refactor `RouteManager`** (registry único, data-driven) para escalar más allá de las 3 rutas básicas. Plan completo en [`docs/arquitectura_rutas.md`](../arquitectura_rutas.md).
-- **Transmutaciones** (reversión de mutaciones → rutas OP), **rutas avanzadas/fantasma** y **meta-endgame "Jardín Primigenio"** (subjuego paralelo). Diseño en [`docs/nuevas transmutaciones.md`](../nuevas%20transmutaciones.md).
+- **Refactor `RouteManager`** (registry único, data-driven) para escalar más allá de las 3 rutas básicas. Plan completo en [`docs/design/arquitectura_rutas.md`](../design/arquitectura_rutas.md).
+- **Transmutaciones** (reversión de mutaciones → rutas OP), **rutas avanzadas/fantasma** y **meta-endgame "Jardín Primigenio"** (subjuego paralelo). Diseño en [`docs/design/nuevas transmutaciones.md`](../design/nuevas%20transmutaciones.md).
