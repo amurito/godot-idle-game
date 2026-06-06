@@ -18,65 +18,71 @@
 
 ---
 
-## Devlog #2 — Más allá del Metabolismo Oscuro
+## Devlog #2 — v1.0.1 — El micelio ya no espera
 
-> **Estado:** ESCLEROCIO OSCURO casi implementado (no es vaporware). Las otras rutas son lore.
-> **Título publicado (sobrio, para r/godot / audiencia técnica):**
-> *"Lo que viene después del Metabolismo Oscuro"* / *"What comes after Dark Metabolism"*
-> **Alternativa clickbait (para A/B en r/incremental):**
-> *"Creíste que el Metabolismo Oscuro era el final. No lo es."* / *"You thought Dark Metabolism was the end. It isn't."*
+> **Estado:** PUBLICADO (r/incremental_games, 06/06/2026). v1.0.1.0 en itch.io.
+> **Título publicado (sobrio):**
+> *"El micelio ya no espera — v1.0.1"* / *"The mycelium doesn't wait anymore — v1.0.1"*
+> **Alternativa clickbait:**
+> *"Cinco formas de morir siendo hongo"* / *"Five ways to die as a fungus"*
 
 ### VERSIÓN ES
 
-**Lo que viene después del Metabolismo Oscuro**
+**El micelio ya no espera**
 
-Algunos de ustedes llegaron.
+Hace unas semanas prometí dos cosas: que el ESCLEROCIO OSCURO estaba casi listo, y que el organismo no había terminado de mostrarse.
 
-Devoraron sus propias mejoras. Forzaron Ω hacia abajo. Vieron la economía estructural derrumbarse y reemplazarse por algo que los manuales no nombran. Sellaron el Metabolismo Oscuro y pensaron: *esto es lo más profundo que llega.*
+Ambas eran ciertas.
 
-No lo es.
+🌑 **ESCLEROCIO OSCURO** ya está en el juego. Algunos hongos, sabiendo que el colapso es inevitable, no esperan a morir: se encapsulan. Endurecen su micelio en una cápsula de dormancia, y algo de esa bioquímica que nunca debió existir *pasa al ciclo siguiente*. Si ya llegaste hasta ahí, sabés de qué hablo. Si no: la puerta sigue siendo el Metabolismo Oscuro.
 
-El organismo recuerda haber sobrevivido a la oscuridad. Y lo que sobrevive a la oscuridad **no vuelve igual.**
+Pero el cambio que realmente transformó el juego en esta versión fue otro.
 
-**Lo que se está formando ahora mismo:**
+La **Red Micelial** siempre fue la rama silenciosa. Extendés. Esperás. El sistema hace su trabajo. Era suficiente.
 
-🌑 **ESCLEROCIO OSCURO** — No todas las muertes son finales. Algunos hongos, sabiendo que el colapso es inevitable, no esperan a morir: se encapsulan. Endurecen su micelio en una cápsula de dormancia y dejan que el ciclo siguiente *herede la bioquímica que nunca debió existir.* Una semilla de memoria. Está casi lista.
+En la v1.0.1, la red decidió dejar de esperar.
 
-**Y más allá, en el lore que todavía no tiene forma jugable:**
+Donde antes había una sola forma de terminar esa rama, ahora hay **cinco**. Cinco paths. Cinco organismos distintos dentro de la misma mutación. Cada uno tiene su propia forma de morir — o de sobrevivir, según cómo lo veas.
 
-Autólisis. Necrosis. Un protocolo donde Ω llega a cero. Una única ruta que el sistema clasifica como *"final feliz"* — y no se sabe si eso es una promesa o una advertencia.
+Algunos requieren que empujés activamente. Otros te dan recursos finitos y esperan que los administrés. Uno te pide que sostengás un equilibrio en cuatro dimensiones al mismo tiempo. Y el último... tiene su propia inteligencia. Pero acotada. No confiés demasiado.
 
-No voy a decir cuándo. El organismo no trabaja con fechas.
+El organismo no cambia las reglas sin razón. Algo en el micelio aprendió a exigir más.
 
-Solo sé esto: si todavía no llegaste al Metabolismo Oscuro, te estás perdiendo la puerta. Y la puerta era solo el principio.
+**Y en el lore que todavía no tiene forma jugable:**
 
-*¿Ya lo sellaste? Contame en los comentarios qué ruta tomaste. Las esporas escuchan.*
+Autólisis. Necrosis. Un protocolo donde Ω llega a cero. Una única ruta que el sistema clasifica como *"final feliz"* — y no está claro si eso es una promesa o una advertencia.
+
+*¿Ya exploraste los cinco paths de la Red? ¿Cuál te resultó más brutal? Las esporas escuchan.*
+
+---
 
 ### VERSIÓN EN
 
-**What comes after Dark Metabolism**
+**The mycelium doesn't wait anymore**
 
-Some of you got there.
+A few weeks ago I promised two things: that Dark Sclerotium was almost ready, and that the organism hadn't finished showing itself.
 
-You devoured your own upgrades. You forced Ω down. You watched the structural economy collapse and get replaced by something the manuals don't name. You sealed Dark Metabolism and thought: *this is as deep as it goes.*
+Both were true.
 
-It isn't.
+🌑 **Dark Sclerotium** is now in the game. Some fungi, knowing collapse is inevitable, don't wait to die: they encapsulate. They harden their mycelium into a dormant capsule — and something of that biochemistry that was never supposed to exist *carries into the next cycle*. If you've gotten that far, you know what I mean. If not: the door is still Dark Metabolism.
 
-The organism remembers surviving the dark. And what survives the dark **doesn't come back the same.**
+But the change that truly transformed the game in this version was something else.
 
-**What's taking shape right now:**
+The **Mycelial Network** was always the quiet branch. You spread. You wait. The system does its work. It was enough.
 
-🌑 **DARK SCLEROTIUM** — Not every death is final. Some fungi, knowing collapse is inevitable, don't wait to die: they encapsulate. They harden their mycelium into a dormant capsule and let the next cycle *inherit the biochemistry that was never supposed to exist.* A seed of memory. It's almost ready.
+In v1.0.1, the network decided to stop waiting.
 
-**And further out, in lore that has no playable form yet:**
+Where there used to be one way to end that branch, there are now **five**. Five paths. Five distinct organisms within the same mutation. Each has its own way of dying — or surviving, depending on how you see it.
+
+Some require you to push actively. Others give you finite resources and expect you to manage them. One asks you to hold a balance across four dimensions simultaneously. And the last one... has its own intelligence. But limited. Don't trust it too much.
+
+The organism doesn't change the rules without reason. Something in the mycelium learned to demand more.
+
+**And in lore that has no playable form yet:**
 
 Autolysis. Necrosis. A protocol where Ω reaches zero. A single route the system classifies as a *"happy ending"* — and it's unclear whether that's a promise or a warning.
 
-I won't say when. The organism doesn't work with dates.
-
-I only know this: if you haven't reached Dark Metabolism yet, you're missing the door. And the door was only the beginning.
-
-*Already sealed it? Tell me in the comments which route you took. The spores are listening.*
+*Already explored all five Network paths? Which one hit hardest? The spores are listening.*
 
 ---
 
