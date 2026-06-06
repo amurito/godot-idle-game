@@ -126,7 +126,7 @@ func buy(id: String, money: float) -> bool:
 		effective_cost_scale = 1.0 + (effective_cost_scale - 1.0) * 0.92
 
 	# REENCARNACIÓN HEREDADA: deuda del ciclo anterior encarece el escalado ×1.5
-	if RunManager.reencarnacion_active:
+	if RouteManager.is_active("reencarnacion"):
 		effective_cost_scale *= 1.5
 
 	s.current_cost *= effective_cost_scale

@@ -227,32 +227,23 @@ func _show_post_tras_picker() -> void:
 
 	vbox.add_child(HSeparator.new())
 
-	var ROUTES := [
-		{
-			"id": "", "icon": "▶",
-			"name": tr("ROUTE_CICLO_ESTANDAR"),
-			"color": Color(0.7, 0.7, 0.7),
-			"desc": tr("ROUTE_CICLO_DESC"),
-		},
-		{
-			"id": "vacio", "icon": "🕳️",
-			"name": tr("ROUTE_VACIO_HAMBRIENTO"),
-			"color": Color(0.55, 0.0, 0.8),
-			"desc": tr("ROUTE_VACIO_DESC"),
-		},
-		{
-			"id": "carnaval", "icon": "🎭",
-			"name": tr("ROUTE_CARNAVAL"),
-			"color": Color(1.0, 0.4, 0.1),
-			"desc": tr("ROUTE_CARNAVAL_DESC"),
-		},
-		{
-			"id": "reencarnacion", "icon": "⚱️",
-			"name": tr("ROUTE_REENCARNACION"),
-			"color": Color(0.3, 0.9, 0.6),
-			"desc": tr("ROUTE_REENCARNACION_DESC"),
-		},
-	]
+	# Ciclo estándar siempre disponible
+	var ROUTES: Array = [{
+		"id": "", "icon": "▶",
+		"name": tr("ROUTE_CICLO_ESTANDAR"),
+		"color": Color(0.7, 0.7, 0.7),
+		"desc": tr("ROUTE_CICLO_DESC"),
+	}]
+	# Rutas post-trascendencia: únicamente las que el jugador desbloqueó
+	for rid in RouteManager.get_selectable_routes():
+		var d: Dictionary = RouteManager.ROUTE_DEFS[rid]
+		ROUTES.append({
+			"id": rid,
+			"icon": d.icon,
+			"name": tr(d.name_key),
+			"color": d.color,
+			"desc": tr(d.desc_key),
+		})
 
 	for route in ROUTES:
 		var btn := Button.new()

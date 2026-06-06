@@ -457,7 +457,7 @@ func _update_esporulacion(ctx: Dictionary) -> void:
 
 func _check_automatic_activations():
 	# CARNAVAL: bloquear activaciones automáticas de segundo nivel — solo rotan las mutaciones del pool
-	if RunManager.carnaval_active:
+	if RouteManager.is_active("carnaval"):
 		return
 
 	# MET.OSCURO tiene prioridad sobre Depredador (congela el devorar)
@@ -893,7 +893,7 @@ func get_reactor_color() -> Color:
 	if mutation_depredador:
 		return Color(1.0, 0.0, 0.33)      # Rojo Glitch
 	# Prioridad 0C: Vacío Hambriento (post-trascendencia)
-	if RunManager.vacio_hambriento_active:
+	if RouteManager.is_active("vacio"):
 		return Color(0.75, 0.2, 1.0)      # Violeta Vacío
 	# Prioridad 0: Seta Formada (v0.8.42 - Brillo máximo)
 	if seta_formada:

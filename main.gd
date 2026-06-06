@@ -561,7 +561,7 @@ func _ready():
 	# Si cargamos una partida donde la mutaci�n est� activa pero no se eligi� rama
 	# CARNAVAL: no mostrar panel � red_micelial es temporal, sin bifurcaci�n
 	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE \
-		and not RunManager.carnaval_active:
+		and RouteManager.allows_bifurcation():
 		if is_instance_valid(evo_choice_panel) and not RunManager.run_closed:
 			dimmer.visible = true
 			evo_choice_panel.visible = true
@@ -876,12 +876,8 @@ func _on_logic_tick():
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
 
-	# --- CARNAVAL DE MUTACIONES (Post-Trascendencia) ---
-	if RunManager.carnaval_active:
-		RunManager.update_carnaval(dt)
-	# --- ASCESIS PROFUNDA (sub-ruta VAC�O HAMBRIENTO) ---
-	if RunManager.vacio_hambriento_active:
-		RunManager.check_ascesis_profunda(dt)
+	# --- TICK DE RUTA POST-TRASCENDENCIA ---
+	RouteManager.tick(dt)
 
 	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
 	if EvoManager.mutation_homeostasis:
@@ -903,7 +899,7 @@ func _on_logic_tick():
 		RunManager.update_homeostasis_mode(dt)
 	if RunManager.post_homeostasis:
 		RunManager.check_perfect_homeostasis()
-	if EvoManager.mutation_parasitism and not RunManager.carnaval_active:
+	if EvoManager.mutation_parasitism and RouteManager.allows_bifurcation():
 		RunManager.check_parasitism_final(dt)
 		# Status periódico de PARASITISMO (Bio/Ω/ε/$)
 		_parasitism_status_timer += dt
@@ -932,8 +928,8 @@ func _on_ui_tick():
 	update_ui()
 	_update_evolution_progress_bar()
 
-	# Route badge (se actualiza para reflejar mutaci�n actual en Carnaval)
-	if RunManager.carnaval_active:
+	# Route badge (se actualiza para reflejar mutación actual en Carnaval)
+	if RouteManager.is_active("carnaval"):
 		UIManager.update_route_badge()
 
 	# Update header bar (Phase 2)
@@ -1020,7 +1016,7 @@ func _on_mutation_activated(id: String, display_name: String):
 			LogManager.add(tr("LOG_MUT_MET_OSCURO"))
 			show_system_toast(tr("MUT_TOAST_MO"))
 
-	if id == "red_micelial" and not RunManager.carnaval_active:
+	if id == "red_micelial" and RouteManager.allows_bifurcation():
 		# Activar el popup de elección (v0.8.32 - Modular)
 		# CARNAVAL: no mostrar panel � red_micelial rota temporalmente, sin bifurcaci�n
 		dimmer.visible = true
@@ -1669,7 +1665,7 @@ func _input(event):
 				KEY_F4:
 					LegacyManager.post_tras_route = "carnaval"
 					RunManager.activate_post_tras_route()
-					show_system_toast("?? DEBUG: Carnaval activado — %s" % str(RunManager.carnaval_mutations))
+					show_system_toast("?? DEBUG: Carnaval activado — %s" % str(RouteManager.get_extra_state().get("mutations", [])))
 				KEY_F5:
 					LegacyManager.post_tras_route = "reencarnacion"
 					RunManager.activate_post_tras_route()

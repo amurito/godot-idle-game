@@ -104,18 +104,7 @@ func build_save_data(main: Node) -> Dictionary:
 			"homeostasis_tier_reached": RunManager.homeostasis_tier_reached,
 			"omega_min_peak": RunManager.omega_min_peak
 		},
-		"post_tras": {
-			"vacio_hambriento_active": RunManager.vacio_hambriento_active,
-			"vacio_hambriento_mult": RunManager.vacio_hambriento_mult,
-			"ascesis_timer": RunManager.ascesis_timer,
-			"carnaval_active": RunManager.carnaval_active,
-			"carnaval_mutations": RunManager.carnaval_mutations,
-			"carnaval_index": RunManager.carnaval_index,
-			"carnaval_timer": RunManager.carnaval_timer,
-			"carnaval_total_rotations": RunManager.carnaval_total_rotations,
-			"carnaval_peak_money": RunManager.carnaval_peak_money,
-			"reencarnacion_active": RunManager.reencarnacion_active
-		},
+		"post_tras": RouteManager.serialize(),
 		"laps": laps_to_save
 	}
 
@@ -231,20 +220,7 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		RunManager.omega_min_peak = h.get("omega_min_peak", RunManager.omega_min_peak)
 
 	if data.has("post_tras"):
-		var pt = data.post_tras
-		RunManager.vacio_hambriento_active = pt.get("vacio_hambriento_active", RunManager.vacio_hambriento_active)
-		RunManager.vacio_hambriento_mult = pt.get("vacio_hambriento_mult", RunManager.vacio_hambriento_mult)
-		RunManager.ascesis_timer = pt.get("ascesis_timer", RunManager.ascesis_timer)
-		RunManager.carnaval_active = pt.get("carnaval_active", RunManager.carnaval_active)
-		RunManager.carnaval_mutations = pt.get("carnaval_mutations", RunManager.carnaval_mutations)
-		RunManager.carnaval_index = pt.get("carnaval_index", RunManager.carnaval_index)
-		RunManager.carnaval_timer = pt.get("carnaval_timer", RunManager.carnaval_timer)
-		RunManager.carnaval_total_rotations = pt.get("carnaval_total_rotations", RunManager.carnaval_total_rotations)
-		RunManager.carnaval_peak_money = pt.get("carnaval_peak_money", RunManager.carnaval_peak_money)
-		RunManager.reencarnacion_active = pt.get("reencarnacion_active", RunManager.reencarnacion_active)
-		# Re-aplicar mutación activa del carnaval luego de cargar índice+lista
-		if RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
-			EvoManager.carnaval_set_mutation(RunManager.carnaval_mutations[RunManager.carnaval_index])
+		RouteManager.deserialize(data.post_tras)
 
 	# Bitácora de eventos
 	if data.has("laps"):
