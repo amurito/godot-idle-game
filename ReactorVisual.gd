@@ -147,6 +147,7 @@ func _update_tendrils(_delta: float):
 	var is_mech = EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS
 	var p_active = EvoManager.primordio_active
 	var final_stat = EvoManager.seta_formada or EvoManager.nucleo_conciencia
+	var is_coloniz_push = EvoManager.is_colonizacion_pushable()  # frontera empujándose: largo por micelio
 	
 	var i = 0
 	for line in tendrils.get_children():
@@ -154,7 +155,7 @@ func _update_tendrils(_delta: float):
 		
 		# Solo visibles si desbloqueó nodo final (Nucleo o Seta) O mutó a Simbiosis/RedMicelial explícitamente y tiene suficientes hifas
 		var show_tendrils = final_stat or (EvoManager.mutation_symbiosis or EvoManager.mutation_red_micelial)
-		line.visible = show_tendrils and hifas_count > (3.0 if is_mech else 5.0)
+		line.visible = show_tendrils and (is_coloniz_push or hifas_count > (3.0 if is_mech else 5.0))
 		if not line.visible: continue
 		
 		# Color adaptado al reactor (Blanco eléctrico en Singularidad)
@@ -166,8 +167,10 @@ func _update_tendrils(_delta: float):
 			
 		line.default_color = line.default_color.lerp(l_color, 0.1)
 		
-		# Longitud basada en hifas
+		# Longitud basada en hifas (en colonización: escala con la frontera micelial)
 		var max_len = min(20.0 + hifas_count * 3.5, 230.0)
+		if is_coloniz_push:
+			max_len = min(20.0 + BiosphereEngine.micelio * 2.0, 230.0)
 		var angle_base = (PI * 2 / 4) * i + (time * 0.1)
 		
 		# --- RAMA MECÁNICA: Vibración Estática ---

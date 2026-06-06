@@ -45,7 +45,7 @@ func process_tick(delta: float, passive_income: float, epsilon_runtime: float, i
 	_compute_hifas(passive_income, is_homeostasis)
 	_update_nutrients(delta, epsilon_runtime)
 	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism, is_colonization)
-	_grow_micelio(delta, is_red_micelial)
+	_grow_micelio(delta, is_red_micelial, is_colonization)
 	
 	# Aseguramos que el epsilon efectivo se calcule siempre, incluso si no hubo crecimiento
 	_compute_epsilon_breakdown(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis)
@@ -56,10 +56,22 @@ func process_tick(delta: float, passive_income: float, epsilon_runtime: float, i
 # LÓGICA INTERNA MINUTO A MINUTO
 # =====================================================
 
-func _grow_micelio(delta: float, is_red_micelial: bool) -> void:
+func _grow_micelio(delta: float, is_red_micelial: bool, is_colonization: bool = false) -> void:
 	if not is_red_micelial:
 		return
-	# Crece proporcional a hifas. Sin hifas, se desintegra levemente.
+	if is_colonization:
+		# COLONIZACIÓN ACTIVA (Empuje de Frontera): el micelio NO se llena solo.
+		# Las hifas sólo sostienen un piso bajo; por encima la frontera RETROCEDE.
+		# Se empuja clickeando (EvoManager.colonizacion_pulse desde on_reactor_click).
+		if EvoManager.primordio_active or EvoManager.seta_formada:
+			return  # frontera congelada: el ciclo biológico ya arrancó
+		var floor_v: float = Balance.MICELIO_SUPPORT_FLOOR if hifas >= 5.0 else 0.0
+		if micelio > floor_v:
+			micelio = max(micelio - Balance.MICELIO_COLONIZ_DECAY * delta, floor_v)
+		else:
+			micelio = move_toward(micelio, floor_v, Balance.MICELIO_COLONIZ_DECAY * 0.5 * delta)
+		return
+	# Legacy (Simbiosis Mecánica / Carnaval red_micelial): crece proporcional a hifas.
 	if hifas >= 5.0:
 		micelio = min(micelio + hifas * 0.4 * delta, 100.0)
 	else:
@@ -76,6 +88,11 @@ func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
 
 func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false) -> void:
 	if hifas <= 0 or nutrientes <= 0:
+		return
+
+	# Durante el PRIMORDIO biológico la biomasa NO regenera: es el "agua" finita que
+	# gastás al Regar (anti-spam — no se rellena sola). Sólo en la rama colonización.
+	if is_colonization and EvoManager.primordio_active:
 		return
 
 	# Crecimiento base

@@ -80,6 +80,13 @@ func build_save_data(main: Node) -> Dictionary:
 			"primordio_active": EvoManager.primordio_active,
 			"primordio_timer": EvoManager.primordio_timer,
 			"primordio_abort_count": EvoManager.primordio_abort_count,
+			"colonizacion_pert_timer": EvoManager.colonizacion_pert_timer,
+			"colonizacion_phase_time": EvoManager.colonizacion_phase_time,
+			"panspermia_charge": EvoManager.panspermia_charge,
+			"panspermia_heat": EvoManager.panspermia_heat,
+			"panspermia_misfires": EvoManager.panspermia_misfires,
+			"nucleo_sync": EvoManager.nucleo_sync,
+			"nucleo_temp": EvoManager.nucleo_temp,
 			"biomasa": BiosphereEngine.biomasa,
 			"nutrientes": BiosphereEngine.nutrientes,
 			"hifas": BiosphereEngine.hifas,
@@ -197,6 +204,13 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.primordio_active = ev.get("primordio_active", EvoManager.primordio_active)
 		EvoManager.primordio_timer = ev.get("primordio_timer", EvoManager.primordio_timer)
 		EvoManager.primordio_abort_count = ev.get("primordio_abort_count", EvoManager.primordio_abort_count)
+		EvoManager.colonizacion_pert_timer = ev.get("colonizacion_pert_timer", EvoManager.colonizacion_pert_timer)
+		EvoManager.colonizacion_phase_time = ev.get("colonizacion_phase_time", EvoManager.colonizacion_phase_time)
+		EvoManager.panspermia_charge = ev.get("panspermia_charge", EvoManager.panspermia_charge)
+		EvoManager.panspermia_heat = ev.get("panspermia_heat", EvoManager.panspermia_heat)
+		EvoManager.panspermia_misfires = ev.get("panspermia_misfires", EvoManager.panspermia_misfires)
+		EvoManager.nucleo_sync = ev.get("nucleo_sync", EvoManager.nucleo_sync)
+		EvoManager.nucleo_temp = ev.get("nucleo_temp", EvoManager.nucleo_temp)
 
 		BiosphereEngine.biomasa = ev.get("biomasa", BiosphereEngine.biomasa)
 		BiosphereEngine.nutrientes = ev.get("nutrientes", BiosphereEngine.nutrientes)

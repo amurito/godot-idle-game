@@ -38,9 +38,11 @@ var evolution_button: Button = null
 var target_evolution: String = ""
 
 # NG+ MENTE COLMENA — runtime state + auto-buy
-var mente_colmena_active: bool = false
-var mente_colmena_timer: float = 0.0
+var mente_colmena_active: bool = false   # true sólo DURANTE una ráfaga activable (no permanente)
+var mente_colmena_timer: float = 0.0     # progreso del gate de sincronía
 var _mente_colmena_buy_timer: float = 0.0
+var mc_burst_timer: float = 0.0          # s restantes de la ráfaga de IA en curso
+var mc_cooldown_timer: float = 0.0       # s restantes de cooldown tras una ráfaga
 const MENTE_COLMENA_BUY_PRIORITY: Array = [
 	"accounting", "trueque", "auto", "trueque_net", "auto_mult",
 	"cognitive", "persistence", "specialization", "click_mult", "click",
@@ -95,6 +97,8 @@ func reset():
 	mente_colmena_active = false
 	mente_colmena_timer = 0.0
 	_mente_colmena_buy_timer = 0.0
+	mc_burst_timer = 0.0
+	mc_cooldown_timer = 0.0
 	_fractura_carga_timer = 0.0
 
 # ==================== HELPERS ====================
@@ -137,7 +141,7 @@ func close_run(route: String, reason: String):
 	if pl_to_add > 0:
 		LegacyManager.add_pl(pl_to_add)
 		UIManager.show_toast(tr("MSG_PL_GAINED") % [pl_to_add, route])
-	LogManager.add(tr("LOG_PL_BASE") % [pl_to_add, route])
+		LogManager.add(tr("LOG_PL_BASE") % [pl_to_add, route])
 
 	# COLAPSO CONTROLADO (Banco Genético): +PL extra según ε_peak alcanzado esta run
 	if LegacyManager.get_buff_value("colapso_controlado"):
@@ -224,7 +228,7 @@ func close_run(route: String, reason: String):
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
-		LogManager.add(tr("LOG_PL_NG") % [ng_bonus, ng_formula])
+			LogManager.add(tr("LOG_PL_NG") % [ng_bonus, ng_formula])
 
 	LegacyManager.record_run_end(route, reason, run_time, EconomyManager.cached_mu, StructuralModel.epsilon_peak, _total_pl)
 
@@ -709,14 +713,39 @@ func is_homeostasis_candidate() -> bool:
 # =====================================================
 
 func activate_mente_colmena() -> void:
-	mente_colmena_active = true
-	if is_instance_valid(UIManager.big_click_button):
-		UIManager.big_click_button.disabled = true
-		UIManager.big_click_button.modulate = Color(0.1, 0.8, 1.0)
+	# Sincronización lograda: otorga el legado (ráfaga activable + pasivo ×3) y cierra la run.
+	# Ya NO deja auto-play permanente: en runs futuras la IA es una ráfaga que disparás.
 	if not LegacyManager.get_buff_value("mente_colmena"):
 		LegacyManager.grant_buff("mente_colmena")
 		UIManager.show_toast(tr("TOAST_MC_UNLOCKED"))
+	# La singularidad puntual se DISTRIBUYE en la colmena: el núcleo deja de ser un final propio.
+	EvoManager.nucleo_conciencia = false
 	close_run("MENTE COLMENA DISTRIBUIDA", tr("CLOSE_MENTE_COLMENA"))
+
+## Dispara una RÁFAGA de auto-play (si el legado está desbloqueado y no hay cooldown).
+func activate_mc_burst() -> void:
+	if run_closed or not LegacyManager.get_buff_value("mente_colmena"):
+		return
+	if mc_burst_timer > 0.0 or mc_cooldown_timer > 0.0:
+		return
+	mc_burst_timer = Balance.MC_BURST_DURATION
+	mente_colmena_active = true
+	_mente_colmena_buy_timer = 0.0
+	UIManager.show_toast(tr("TOAST_MC_BURST_ON"))
+
+## Avanza la ráfaga / cooldown (llamado desde el logic tick).
+func tick_mc_burst(dt: float) -> void:
+	if mc_burst_timer > 0.0:
+		mc_burst_timer -= dt
+		if mc_burst_timer <= 0.0:
+			mc_burst_timer = 0.0
+			mente_colmena_active = false
+			mc_cooldown_timer = Balance.MC_BURST_COOLDOWN
+			if is_instance_valid(UIManager.big_click_button):
+				UIManager.big_click_button.disabled = false
+			UIManager.show_toast(tr("TOAST_MC_BURST_OFF"))
+	elif mc_cooldown_timer > 0.0:
+		mc_cooldown_timer = max(0.0, mc_cooldown_timer - dt)
 
 func tick_auto_buy(dt: float) -> void:
 	_mente_colmena_buy_timer += dt

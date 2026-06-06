@@ -1,5 +1,44 @@
 # CHANGELOG — HYPHAE: genesis
 
+## [v1.0.1.0] — "génesis" — 2026-06-05
+
+### Rework de la RAMA VERDE (Red Micelial) — anti-AFK
+
+Las 5 salidas de la rama verde (Colonización · Seta/Esporulación · Panspermia · Singularidad · Mente Colmena) compartían el mismo defecto: el gate era **"sostener una postura pasiva durante T segundos"** — se cumplían quedándose AFK. Cada una se convirtió en un **gate activo con identidad propia**. Diseño completo en `docs/rework_rama_verde.md`; todas las constantes son tuneables en `Balance.gd`.
+
+#### Colonización — "Empuje de Frontera"
+- El micelio **ya no se llena solo** desde hifas: las hifas sostienen un piso bajo (`MICELIO_SUPPORT_FLOOR`) y por encima la frontera **decae** (`MICELIO_COLONIZ_DECAY`). Se empuja clickeando el reactor + botón dedicado **Expandir Micelio** (`ColonizePulseButton`).
+- **Retracciones** periódicas del sustrato (`COLONIZ_PERT_*`) que muerden la frontera, escalando con el tiempo en fase.
+- UI: `FungalCycleBar` con relleno verde lima + número; los **tendrils del reactor crecen con el micelio** (`ReactorVisual`).
+
+#### Seta / Primordio — "Maduración activa"
+- "Sobrevivir 90s pasivo" → la maduración (`PRIMORDIO_BIO_MATURE`) avanza siempre, pero hay que **sobrevivir contaminaciones escalantes** (`PRIMORDIO_PERT_*`).
+- Acción **Regar** (PrimordioButton contextual): restaura integridad y cuesta biomasa. La biomasa **NO regenera** durante el primordio → es el "agua" finita; sin regar, la integridad colapsa antes de madurar.
+- Botón siempre habilitado con feedback de toast (fix: los clicks se auto-cancelaban porque `disabled` se toggleaba true→false cada tick).
+
+#### Panspermia Negra — "Secuencia de Lanzamiento"
+- "$100k checkbox" → **dos presiones opuestas**: carga que **decae** (`PANSPERMIA_CHARGE_*` — hay que seguir eyectando) vs **calor** que sube (`PANSPERMIA_HEAT_*`); una eyección que sobrecaliente = **MISFIRE** (pierde carga). **5 sobrecargas → lanzamiento abortado → cierra por esporulación base.**
+- PL consistente: `PANSPERMIA NEGRA = 10` en `PL_REWARDS` (otorgado y logueado por `close_run`, ya no por separado).
+
+#### Singularidad (rama azul) — "Sincronización del Núcleo"
+- "accounting≥2 + ε≤0.25 + esperar 90s" → **gate de 4 condiciones de fase simultáneas** sostenidas (`NUCLEO_*`): Contabilidad≥3, Ω≥0.55, ε en banda [0.10–0.22], biomasa≥6. Un medidor de sincronía sube mientras se cumplen todas y baja al romper alguna. No es un minijuego de botón: es alcanzar y **sostener el estado** (temático de "sincronizar").
+- Al lograr Mente Colmena, el núcleo se **distribuye** (`nucleo_conciencia=false`).
+- PL variable (6 base + bonus por ε bajo) ahora logueado con su desglose (`LOG_PL_SINGULARIDAD`).
+
+#### Mente Colmena — auto-play acotado
+- El auto-play permanente ("prendé y andate") → **ráfaga activable** (botón **Override IA**, `MC_BURST_*`): la IA corre 18s (auto-click + auto-compra) y entra en cooldown 45s. El **pasivo ×3 queda permanente** como legado.
+- **Gate endurecido** (`MC_GATE_*`): de "ratio 50/50 ±2% por 180s" a sostener **100s sin romper** ratio 50/50 **+** ε en banda [0.20–0.45] **+** Δ$/s ≥ 200 simultáneos.
+
+#### Consistencia lore / log
+- Textos de "Efectos"/"Requiere" del cierre de run actualizados a los gates reworkeados (SINGULARIDAD · ESPORULACIÓN · PANSPERMIA · MENTE COLMENA, ES+EN).
+- `close_run` ya no loguea "[NG+] Bonus: +0" para rutas sin bonus NG+.
+- Los botones de final (DISPERSAR / EYECTAR / CONECTAR SINGULARIDAD) se ocultan al cerrar la run.
+
+#### Archivos
+`Balance.gd`, `EvoManager.gd`, `BiosphereEngine.gd`, `RunManager.gd`, `LegacyManager.gd`, `SaveManager.gd`, `UIManager.gd`, `main.gd`, `main.tscn`, `ReactorVisual.gd`, `LocaleManager.gd` (ES+EN), `version.gd` → **1.0.1**, `docs/rework_rama_verde.md` (nuevo).
+
+---
+
 ## [post-launch] — 2026-06-01/02
 
 ### Telemetría anónima — receptor remoto en el hub

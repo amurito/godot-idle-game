@@ -46,6 +46,24 @@ var primordio_abort_count: int = 0
 var seta_formada: bool = false
 var nucleo_conciencia := false # Hito final Rama Azul
 
+# Primordio biológico ACTIVO (Fase 2): maduración por banda de ε + integridad
+var primordio_integrity: float = 100.0
+var primordio_pert_timer: float = 0.0
+var primordio_regar_cd: float = 0.0
+
+# Panspermia (Fase 3): lanzamiento post-ESPORULACIÓN — carga vs calor (dos presiones)
+var panspermia_charge: float = 0.0
+var panspermia_heat: float = 0.0
+var panspermia_misfires: int = 0  # sobrecargas acumuladas; al llegar al máx → aborta a esporulación
+
+# Singularidad (Fase 4, rama azul): integración de cómputo — sincronía vs temperatura
+var nucleo_sync: float = 0.0
+var nucleo_temp: float = 0.0
+
+# === RAMA VERDE · COLONIZACIÓN activa (Empuje de Frontera) ===
+var colonizacion_pert_timer: float = 0.0   # acumulador hacia el próximo evento de retracción
+var colonizacion_phase_time: float = 0.0   # s en fase de empuje (escala la mordida de retracción)
+
 # === NG+ SECRETOS ===
 var allostasis_timer: float = 0.0
 var homeorhesis_timer: float = 0.0
@@ -112,6 +130,16 @@ func reset() -> void:
 	primordio_abort_count = 0
 	seta_formada = false
 	nucleo_conciencia = false
+	primordio_integrity = 100.0
+	primordio_pert_timer = 0.0
+	primordio_regar_cd = 0.0
+	panspermia_charge = 0.0
+	panspermia_heat = 0.0
+	panspermia_misfires = 0
+	nucleo_sync = 0.0
+	nucleo_temp = 0.0
+	colonizacion_pert_timer = 0.0
+	colonizacion_phase_time = 0.0
 	allostasis_timer = 0.0
 	homeorhesis_timer = 0.0
 	depredador_timer = 0.0
@@ -640,49 +668,149 @@ func update_primordio(main_ref: Node) -> void:
 		_process_primordio_mechanical(main_ref)
 
 func _process_primordio_biological(_main_ref: Node):
-	# ... (lógica anterior de primordio biológico) ...
+	# Inicio: frontera micelial empujada al 60% (Fase 1) + masa/hifas mínimas.
 	if not primordio_active and not seta_formada and red_micelial_phase == 1:
-		if BiosphereEngine.hifas >= 14.5 and BiosphereEngine.biomasa >= 8.0:
-			primordio_active = true
-			LogManager.add(tr("LOG_PRIMORDIO_ALERT"))
-			primordio_iniciado.emit()
+		if BiosphereEngine.micelio >= 60.0 and BiosphereEngine.hifas >= 14.5 and BiosphereEngine.biomasa >= 8.0:
+			_begin_primordio_biological()
 
 	if primordio_active:
-		primordio_timer += RunManager.LOGIC_TICK
+		var dt := RunManager.LOGIC_TICK
+		if primordio_regar_cd > 0.0:
+			primordio_regar_cd = max(0.0, primordio_regar_cd - dt)
 
-		# Condiciones de supervivencia (Relajadas v0.8.40)
-		var reason := ""
-		if StructuralModel.epsilon_runtime >= 0.50: reason = "Estrés Crítico (>0.50)"
-		elif BiosphereEngine.hifas >= 60.0: reason = "Inestabilidad por Hifas (>60)"
-		elif EconomyManager.delta_per_sec < 50.0: reason = "Falta de Nutrientes (<50/$s)"
+		# La maduración avanza SIEMPRE; el desafío es SOBREVIVIR las contaminaciones
+		# escalantes con el agua finita (Regar). Sin regar, la integridad colapsa antes de los 60s.
+		primordio_timer += dt
+		# Penalización por sobrecalentar (overclickear sube ε > techo): drena integridad extra.
+		if StructuralModel.epsilon_runtime > Balance.PRIMORDIO_BAND_HI:
+			primordio_integrity -= Balance.PRIMORDIO_OOB_DRAIN * dt
 
-		if reason != "":
-			_abort_primordio(reason)
+		# Contaminaciones periódicas (escalan con la maduración).
+		primordio_pert_timer += dt
+		if primordio_pert_timer >= Balance.PRIMORDIO_PERT_INTERVAL:
+			primordio_pert_timer = 0.0
+			var dmg: float = min(
+				Balance.PRIMORDIO_PERT_DMG_BASE + primordio_timer * Balance.PRIMORDIO_PERT_DMG_SCALE,
+				Balance.PRIMORDIO_PERT_DMG_MAX
+			)
+			primordio_integrity -= dmg
+			StructuralModel.epsilon_runtime += Balance.PRIMORDIO_PERT_EPS_KICK
+			LogManager.add(tr("PRIMORDIO_CONTAM_LOG") % int(dmg))
+			UIManager.show_toast(tr("PRIMORDIO_CONTAM_TOAST") % int(dmg))
+
+		primordio_integrity = clampf(primordio_integrity, 0.0, Balance.PRIMORDIO_INTEGRITY_MAX)
+
+		if primordio_integrity <= 0.0:
+			_abort_primordio(tr("PRIMORDIO_ABORT_CONTAM"))
 			return
 
-		if primordio_timer >= Balance.PRIMORDIO_DURATION:
+		if primordio_timer >= Balance.PRIMORDIO_BIO_MATURE:
 			_complete_primordio()
 
+## Arranca el primordio biológico (desde el botón o el auto-trigger): resetea la maduración activa.
+func _begin_primordio_biological() -> void:
+	primordio_active = true
+	primordio_timer = 0.0
+	primordio_integrity = Balance.PRIMORDIO_INTEGRITY_MAX
+	primordio_pert_timer = 0.0
+	primordio_regar_cd = 0.0
+	LogManager.add(tr("LOG_PRIMORDIO_ALERT"))
+	primordio_iniciado.emit()
+
+## Acción activa "Regar": gasta biomasa, restaura integridad y reencauza ε hacia el centro de banda.
+func primordio_regar() -> void:
+	if not primordio_active: return
+	if BiosphereEngine.biomasa < Balance.PRIMORDIO_REGAR_COST_BIO:
+		UIManager.show_toast(tr("PRIMORDIO_SIN_BIO") % BiosphereEngine.biomasa)
+		return
+	BiosphereEngine.biomasa -= Balance.PRIMORDIO_REGAR_COST_BIO
+	primordio_integrity = min(primordio_integrity + Balance.PRIMORDIO_REGAR_HEAL, Balance.PRIMORDIO_INTEGRITY_MAX)
+	# Enfría: baja ε hacia la zona segura (saca del sobrecalentamiento de las contaminaciones).
+	StructuralModel.epsilon_runtime = move_toward(StructuralModel.epsilon_runtime, Balance.PRIMORDIO_BAND_LO, Balance.PRIMORDIO_REGAR_EPS_PULL)
+	AudioManager.play_sfx("click")
+	UIManager.show_toast(tr("PRIMORDIO_REGADO_TOAST") % [int(Balance.PRIMORDIO_REGAR_HEAL), int(primordio_integrity)])
+
+# =============================================================
+# RAMA VERDE · PANSPERMIA NEGRA (Secuencia de Lanzamiento) — Fase 3
+# Post-ESPORULACIÓN: reformar la seta y EYECTAR N veces. Cada pulso cuesta $ (escalado)
+# y suma calor; el calor disipa con el tiempo. Sobrecarga → pulso falla (pulsar-esperar).
+# =============================================================
+
+func is_panspermia_window() -> bool:
+	return mutation_red_micelial and red_branch_selected == RedBranch.COLONIZATION \
+		and seta_formada and not RunManager.run_closed \
+		and (LegacyManager.last_run_ending == "ESPORULACIÓN" or LegacyManager.last_run_ending == "PANSPERMIA NEGRA")
+
+func panspermia_pulse_cost() -> float:
+	return Balance.PANSPERMIA_PULSE_COST
+
+## Disipa carga Y calor con el tiempo (llamado desde el logic tick). La carga decae →
+## hay que seguir eyectando; el calor decae → tras un misfire podés volver a eyectar.
+func process_panspermia(dt: float) -> void:
+	if not is_panspermia_window():
+		return
+	if panspermia_charge > 0.0:
+		panspermia_charge = max(0.0, panspermia_charge - Balance.PANSPERMIA_CHARGE_DECAY * dt)
+	if panspermia_heat > 0.0:
+		panspermia_heat = max(0.0, panspermia_heat - Balance.PANSPERMIA_HEAT_DECAY * dt)
+
+## Una eyección. Sube carga + calor. Si sobrecalienta → MISFIRE (pierde carga, no avanza).
+## Retorna true si la carga llegó a la velocidad de escape (lanzamiento exitoso).
+func panspermia_pulse() -> bool:
+	var cost: float = Balance.PANSPERMIA_PULSE_COST
+	if EconomyManager.money < cost:
+		UIManager.show_toast(tr("PANSPERMIA_NEED_MONEY") % cost)
+		return false
+	# Sobrecalentamiento: la eyección falla y la carga retrocede (penaliza el spam).
+	if panspermia_heat + Balance.PANSPERMIA_HEAT_PER_PULSE > Balance.PANSPERMIA_HEAT_MAX:
+		panspermia_heat = Balance.PANSPERMIA_HEAT_MAX
+		panspermia_charge = max(0.0, panspermia_charge - Balance.PANSPERMIA_OVERLOAD_PENALTY)
+		panspermia_misfires += 1
+		if panspermia_misfires >= Balance.PANSPERMIA_MAX_MISFIRES:
+			# Demasiadas sobrecargas: las esporas no escapan → esporulación local de respaldo (sin Panspermia).
+			var esporas := BiosphereEngine.trigger_sporulation()
+			if esporas > 1.0:
+				LegacyManager.add_spores(esporas)
+			LogManager.add(tr("PANSPERMIA_ABORTADO"))
+			RunManager.close_run("ESPORULACIÓN", tr("CLOSE_PANSPERMIA_FAIL"))
+			return false
+		UIManager.show_toast(tr("PANSPERMIA_OVERLOAD") % [panspermia_misfires, Balance.PANSPERMIA_MAX_MISFIRES])
+		return false
+	EconomyManager.money -= cost
+	panspermia_charge += Balance.PANSPERMIA_CHARGE_GAIN
+	panspermia_heat += Balance.PANSPERMIA_HEAT_PER_PULSE
+	StructuralModel.epsilon_runtime += Balance.PANSPERMIA_PULSE_EPS
+	AudioManager.play_sfx("click")
+	if panspermia_charge >= Balance.PANSPERMIA_CHARGE_GOAL:
+		return true
+	UIManager.show_toast(tr("PANSPERMIA_PULSE_OK") % [int(panspermia_charge), int(panspermia_heat)])
+	return false
+
+## SINCRONIZACIÓN (rama azul): el medidor sube mientras se cumplen TODAS las condiciones de
+## fase a la vez; si se rompe alguna, baja. No es un minijuego de botón: es alcanzar y SOSTENER
+## el estado de sincronía (acc + Ω + ε en banda + biomasa) hasta integrar el Núcleo de Conciencia.
 func _process_primordio_mechanical(_main_ref: Node):
-	# En la rama azul, el "primordio" es un proceso de Computación Estructural
-	if not primordio_active and not nucleo_conciencia and red_micelial_phase == 1:
-		# Requisitos: Contabilidad alta y estabilidad
-		if UpgradeManager.level("accounting") >= 2 and StructuralModel.epsilon_runtime <= 0.25:
-			primordio_active = true
-			LogManager.add(tr("LOG_MC_SYNC_START"))
-			UIManager.show_toast(tr("TOAST_MC_SISTEMA"))
-
-	if primordio_active:
-		# La estabilidad acelera el proceso
-		var speed_mult = clamp(1.0 + (0.5 - StructuralModel.epsilon_runtime), 0.5, 2.0)
-		primordio_timer += RunManager.LOGIC_TICK * speed_mult
-
-		if primordio_timer >= Balance.PRIMORDIO_DURATION:
-			primordio_active = false
+	if nucleo_conciencia:
+		return
+	var dt := RunManager.LOGIC_TICK
+	if _nucleo_conditions_met():
+		nucleo_sync = min(nucleo_sync + Balance.NUCLEO_SYNC_RATE * dt, Balance.NUCLEO_SYNC_GOAL)
+		if nucleo_sync >= Balance.NUCLEO_SYNC_GOAL:
 			nucleo_conciencia = true
-			LogManager.add(tr("LOG_MC_HITO"))
-			# Bonus de eficiencia tecnológica
+			primordio_active = false
 			EconomyManager.mutation_accounting_bonus += 0.2
+			LogManager.add(tr("LOG_MC_HITO"))
+			UIManager.show_toast(tr("EVO_NUCLEUS_SYNC"))
+	else:
+		nucleo_sync = max(0.0, nucleo_sync - Balance.NUCLEO_SYNC_DECAY * dt)
+
+## Las cuatro condiciones de fase del Núcleo (todas simultáneas).
+func _nucleo_conditions_met() -> bool:
+	var eps: float = StructuralModel.epsilon_runtime
+	return UpgradeManager.level("accounting") >= Balance.NUCLEO_ACC_MIN \
+		and StructuralModel.omega >= Balance.NUCLEO_OMEGA_MIN \
+		and eps >= Balance.NUCLEO_EPS_LO and eps <= Balance.NUCLEO_EPS_HI \
+		and BiosphereEngine.biomasa >= Balance.NUCLEO_BIO_MIN
 
 func try_iniciar_primordio() -> bool:
 	# Guards
@@ -696,9 +824,7 @@ func try_iniciar_primordio() -> bool:
 		return false
 	
 	BiosphereEngine.micelio -= costo
-	primordio_active = true
-	primordio_timer = 0.0
-	primordio_iniciado.emit()
+	_begin_primordio_biological()
 	return true
 
 func _abort_primordio(reason: String) -> void:
@@ -715,6 +841,42 @@ func _complete_primordio() -> void:
 	red_micelial_phase = 2  # Fase C: Seta formada, esporulación disponible
 	seta_formada_signal.emit()
 	AchievementManager.on_seta_formed()
+
+# =============================================================
+# RAMA VERDE · COLONIZACIÓN activa (Empuje de Frontera) — anti-AFK
+# El micelio ya no se llena solo: se empuja con clicks contra el decay,
+# y el sustrato muerde la frontera con retracciones que escalan.
+# =============================================================
+
+func is_colonizacion_pushable() -> bool:
+	return mutation_red_micelial and red_branch_selected == RedBranch.COLONIZATION \
+		and red_micelial_phase < 2 and not seta_formada and not primordio_active
+
+## Llamado por cada click manual (main.on_reactor_click): empuja la frontera micelial.
+func colonizacion_pulse() -> void:
+	if not is_colonizacion_pushable():
+		return
+	BiosphereEngine.micelio = min(BiosphereEngine.micelio + Balance.MICELIO_PULSE_GAIN, 100.0)
+
+## Tick de la fase: dispara retracciones periódicas cuya mordida escala con el tiempo.
+func process_colonizacion(dt: float) -> void:
+	if not is_colonizacion_pushable():
+		colonizacion_phase_time = 0.0
+		colonizacion_pert_timer = 0.0
+		return
+	colonizacion_phase_time += dt
+	colonizacion_pert_timer += dt
+	if colonizacion_pert_timer >= Balance.COLONIZ_PERT_INTERVAL:
+		colonizacion_pert_timer = 0.0
+		if BiosphereEngine.micelio <= 0.0:
+			return
+		var bite: float = min(
+			Balance.COLONIZ_PERT_BITE_BASE + colonizacion_phase_time * Balance.COLONIZ_PERT_BITE_SCALE,
+			Balance.COLONIZ_PERT_BITE_MAX
+		)
+		BiosphereEngine.micelio = max(BiosphereEngine.micelio - bite, 0.0)
+		LogManager.add(tr("COLONIZ_RETRACCION_LOG") % int(bite))
+		UIManager.show_toast(tr("COLONIZ_RETRACCION_TOAST") % int(bite))
 
 # =============================================================
 # COLOR DEL REACTOR — Fuente Única de Verdad (v0.8.27)

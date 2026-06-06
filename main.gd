@@ -20,6 +20,7 @@ const PARASITISM_STATUS_INTERVAL := 45.0
 var _met_oscuro_seal_btn: Button = null
 var _esclerocio_btn: Button = null
 var _depredador_buytime_btn: Button = null
+var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
 var _colapso_controlado_btn: Button = null
 var _reset_btn: Button = null
@@ -168,6 +169,37 @@ func _update_depredador_buytime_button():
 func _on_depredador_buytime_pressed():
 	EvoManager.buy_depredador_time()
 	_update_depredador_buytime_button()
+
+# MENTE COLMENA (Fase 5): botón para disparar la RÁFAGA de IA (auto-play acotado con cooldown).
+func _update_mc_override_button():
+	if RunManager.run_closed or not LegacyManager.get_buff_value("mente_colmena"):
+		if is_instance_valid(_mc_override_btn):
+			_mc_override_btn.visible = false
+		return
+	if _mc_override_btn == null or not is_instance_valid(_mc_override_btn):
+		_mc_override_btn = Button.new()
+		_mc_override_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_mc_override_btn.add_theme_color_override("font_color", Color(0.65, 0.45, 1.0))
+		_mc_override_btn.custom_minimum_size = Vector2(0, 50)
+		_mc_override_btn.pressed.connect(_on_mc_override_pressed)
+		var panel := get_node_or_null("UIRootContainer/RightPanel")
+		if panel:
+			panel.add_child(_mc_override_btn)
+			panel.move_child(_mc_override_btn, 0)
+	if RunManager.mc_burst_timer > 0.0:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_ACTIVE") % RunManager.mc_burst_timer)
+		_mc_override_btn.disabled = true
+	elif RunManager.mc_cooldown_timer > 0.0:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_COOLDOWN") % RunManager.mc_cooldown_timer)
+		_mc_override_btn.disabled = true
+	else:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_READY") % Balance.MC_BURST_DURATION)
+		_mc_override_btn.disabled = false
+	_mc_override_btn.visible = true
+
+func _on_mc_override_pressed():
+	RunManager.activate_mc_burst()
+	_update_mc_override_button()
 
 func _update_simbiosis_seal_button():
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
@@ -552,6 +584,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	var power := EconomyManager.get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
+	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
 
@@ -691,11 +724,7 @@ func _on_logic_tick():
 
 	# NG+ Mente Colmena (Juego autom�tico por IA fúngica)
 	# Sync estado con el toggle del Banco Genético (solo cuando cambia)
-	if LegacyManager.get_buff_level("mente_colmena") > 0 and not RunManager.run_closed:
-		var buff_on := LegacyManager.get_buff_value("mente_colmena")
-		if RunManager.mente_colmena_active and not buff_on:
-			RunManager.mente_colmena_active = false
-			add_lap(tr("LAP_MC_IA_DISABLED"))
+	RunManager.tick_mc_burst(dt)  # IA = ráfaga activable con cooldown (no permanente)
 	if RunManager.mente_colmena_active:
 		# Auto-click: simula 10 clicks por segundo
 		var sim_power = EconomyManager.get_click_power() * 10.0 * dt
@@ -711,19 +740,21 @@ func _on_logic_tick():
 			var ratio = ap.activo / tot
 			# Si el estrés supera 0.50, rompe la sincronizaci�n
 			var stress_too_high = StructuralModel.epsilon_runtime > 0.50
-			if abs(ratio - 0.5) <= 0.02 and not stress_too_high:
+			var eps_ok := StructuralModel.epsilon_runtime >= Balance.MC_GATE_EPS_LO and StructuralModel.epsilon_runtime <= Balance.MC_GATE_EPS_HI
+			var flow_ok := EconomyManager.get_delta_total() >= Balance.MC_GATE_DELTA_MIN
+			if abs(ratio - 0.5) <= Balance.MC_GATE_RATIO_TOL and eps_ok and flow_ok:
 				var was_zero := RunManager.mente_colmena_timer == 0.0
 				RunManager.mente_colmena_timer += dt
 				if was_zero:
-					add_lap(tr("LAP_MC_SINCRONIA"))
-				if RunManager.mente_colmena_timer >= 180.0:
+					add_lap(tr("LAP_MC_SINCRONIA") % Balance.MC_GATE_HOLD)
+				if RunManager.mente_colmena_timer >= Balance.MC_GATE_HOLD:
 					RunManager.activate_mente_colmena()
 				else:
-					var pct := int(RunManager.mente_colmena_timer / 180.0 * 100.0)
-					var prev_pct := int((RunManager.mente_colmena_timer - dt) / 180.0 * 100.0)
+					var pct := int(RunManager.mente_colmena_timer / Balance.MC_GATE_HOLD * 100.0)
+					var prev_pct := int((RunManager.mente_colmena_timer - dt) / Balance.MC_GATE_HOLD * 100.0)
 					if int(pct / 25.0) > int(prev_pct / 25.0): # lap cada 25%
-						add_lap(tr("LAP_MC_SYNC_PCT") % [pct, RunManager.mente_colmena_timer])
-					show_system_toast("?? MENTE COLMENA — %d%% (%.0f/180s) — ratio %.1f%%/%.1f%%" % [pct, RunManager.mente_colmena_timer, ap.activo, ap.pasivo])
+						add_lap(tr("LAP_MC_SYNC_PCT") % [pct, RunManager.mente_colmena_timer, Balance.MC_GATE_HOLD])
+					show_system_toast("?? MENTE COLMENA — %d%% (%.0f/%.0fs) — ratio %.1f%%/%.1f%%" % [pct, RunManager.mente_colmena_timer, Balance.MC_GATE_HOLD, ap.activo, ap.pasivo])
 			else:
 				if RunManager.mente_colmena_timer > 0.0:
 					if stress_too_high:
@@ -746,6 +777,7 @@ func _on_logic_tick():
 	elif EvoManager.depredador_timer > 0.0 and EvoManager.depredador_timer < 30.0:
 		EvoManager.process_depredador_progress(dt)
 
+	_update_mc_override_button()  # botón de ráfaga IA (Mente Colmena acotada)
 	EvoManager.process_glitch(dt)
 
 	# 1) Econom�a base
@@ -863,7 +895,9 @@ func _on_logic_tick():
 		_update_simbiosis_seal_button()
 	if EvoManager.mutation_red_micelial:
 		EvoManager.check_red_micelial_transition(self)
+		EvoManager.process_colonizacion(dt)  # Retracciones de la frontera (anti-AFK)
 		EvoManager.update_primordio(self)  # Timer del ciclo biológico
+		EvoManager.process_panspermia(dt)  # Disipa el calor del lanzamiento (Fase 3)
 	# homeostasis_mode genera shocks peri�dicos � NO aplica durante SIMBIOSIS
 	if RunManager.homeostasis_mode and not EvoManager.mutation_symbiosis:
 		RunManager.update_homeostasis_mode(dt)
@@ -1088,7 +1122,17 @@ func _on_seta_formada() -> void:
 	LogManager.add(tr("LOG_SETA"))
 	update_ui()
 
+func _on_colonize_pulse_pressed() -> void:
+	# RAMA VERDE · Empuje de Frontera: el botón dedicado empuja la frontera micelial.
+	EvoManager.colonizacion_pulse()
+	UIManager.update_fungal_cycle_bar()
+
 func _on_primordio_button_pressed() -> void:
+	# Durante el primordio el botón es la acción activa de la rama; antes, inicia el primordio (verde).
+	if EvoManager.primordio_active:
+		EvoManager.primordio_regar()   # rama verde: regar el primordio (la rama azul sincroniza por condiciones, sin botón)
+		UIManager.update_fungal_cycle_bar()
+		return
 	if not EvoManager.try_iniciar_primordio():
 		LogManager.add(tr("LOG_PRIMORDIO_NA"))
 
@@ -1101,26 +1145,29 @@ func _on_sporulation_final_pressed() -> void:
 		var pl := 6 + int(bonus_efficiency)
 		
 		LegacyManager.add_pl(pl)
+		LogManager.add(tr("LOG_PL_SINGULARIDAD") % [pl, pl - 6])  # split 6 base + bonus por estabilidad ε
 		show_system_toast(tr("TOAST_SINGULARIDAD_PL") % pl)
 		RunManager.close_run("SINGULARIDAD", tr("CLOSE_SINGULARIDAD"))
 		
+	elif EvoManager.seta_formada and EvoManager.is_panspermia_window():
+		# FINAL SECRETO: PANSPERMIA NEGRA — secuencia de lanzamiento (Fase 3)
+		if EvoManager.panspermia_pulse():
+			# Velocidad de escape alcanzada → lanzamiento exitoso.
+			if not LegacyManager.get_buff_value("semilla_cosmica"):
+				LegacyManager.grant_buff("semilla_cosmica")
+				show_system_toast(tr("TOAST_SEMILLA_COSMICA"))
+			# El PL (+10) lo otorga y loguea close_run vía Balance.PL_REWARDS (consistencia lore/log).
+			RunManager.close_run("PANSPERMIA NEGRA", tr("CLOSE_PANSPERMIA"))
+		else:
+			update_ui()  # refresca el contador de eyección del botón
+
 	elif EvoManager.seta_formada:
 		# FINAL: ESPORULACIÓN BIOLÓGICA
 		var esporas := BiosphereEngine.trigger_sporulation()
 		if esporas > 1.0: # Umbral mínimo bajado para asegurar PL
 			LegacyManager.add_spores(esporas)
-		
+
 		RunManager.close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
-		
-	elif LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.primordio_active and EconomyManager.money >= 100000.0:
-		# FINAL SECRETO: PANSPERMIA NEGRA
-		EconomyManager.money -= 100000.0
-		if not LegacyManager.get_buff_value("semilla_cosmica"):
-			LegacyManager.grant_buff("semilla_cosmica")
-			show_system_toast("? Has desbloqueado el legado: SEMILLA CÓSMICA")
-			
-		LegacyManager.add_pl(10)
-		RunManager.close_run("PANSPERMIA NEGRA", tr("CLOSE_PANSPERMIA"))
 		
 func _on_legacy_pressed():
 	var lp_title = legacy_panel.find_child("Title")

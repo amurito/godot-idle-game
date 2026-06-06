@@ -1212,10 +1212,10 @@ func apply_legacy_buffs() -> void:
 			UpgradeManager.states["cognitive"].level += bonus_int
 			LogManager.add("✦ [Legado] Bonus Cognitivo: nivel_cognitivo +%d" % bonus_int)
 
-	# NG+ MENTE COLMENA: activa el auto-click permanente si el buff está activo
+	# NG+ MENTE COLMENA: el auto-play ya NO arranca solo. La IA es una RÁFAGA activable
+	# con cooldown (RunManager.activate_mc_burst). El pasivo ×3 del legado sigue permanente.
 	if get_buff_value("mente_colmena"):
-		RunManager.mente_colmena_active = true
-		LogManager.add("🧠 [NG+] Mente Colmena — IA distribuida activa desde el inicio (auto-click ×10)")
+		LogManager.add("🧠 [NG+] Mente Colmena — IA distribuida disponible (ráfaga activable) + pasivo ×3")
 
 	# LEGADO ALOSTASIS: Ω_min garantizado ≥ 0.45
 	if get_buff_value("legado_alostasis"):

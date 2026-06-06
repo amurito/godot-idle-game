@@ -85,6 +85,9 @@ var btn_colonization         # Botón Colonización
 var btn_symbiosis            # Botón Simbiosis
 var primordio_button         # Botón Primordio (Ciclo Biológico)
 var sporulation_final_button # Botón final (Seta/Singularidad/Panspermia)
+var colonize_pulse_button    # Botón dedicado de Empuje de Frontera (Colonización)
+var _fungal_bar_label        # Label de número sobre FungalCycleBar (lazy)
+var _fungal_bar_style        # StyleBoxFlat de relleno verde de FungalCycleBar (lazy)
 
 func setup(ui_root: Control):
 	root = ui_root
@@ -203,6 +206,7 @@ func setup(ui_root: Control):
 	btn_symbiosis = _find_scene("BtnSymbiosis")
 	primordio_button = _find_scene("PrimordioButton")
 	sporulation_final_button = _find_scene("SporulationFinalButton")
+	colonize_pulse_button = _find_scene("ColonizePulseButton")
 
 	print("🎨 [UIManager] Todos los nodos vinculados. Header=%s" % str(is_instance_valid(header_money_value)))
 
@@ -812,24 +816,20 @@ func build_evo_checklist(_main: Node) -> String:
 	if EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		t += "[b]" + tr("EVO_RED_OBJ_MECH") + "[/b]\n"
 
-		# Hito 1: Estabilidad
-		var eps_ok: bool = StructuralModel.epsilon_runtime <= 0.25 or EvoManager.nucleo_conciencia
-		ch = ok_color + "[x] " if eps_ok else fail_color + "[ ] "
-		t += ch + "Estabilidad estructural (ε <= 0.25) (" + str(snapped(StructuralModel.epsilon_runtime, 0.01)) + ")[/color]\n"
-
-		# Hito 2: Sincronización (Primordio normal O Mente Colmena NG+)
-		if EvoManager.primordio_active:
-			t += "[color=cyan]" + tr("EVO_SYNC_PCT") % str(int(EvoManager.primordio_timer / Balance.PRIMORDIO_DURATION * 100.0)) + "[/color]\n"
-		elif EvoManager.nucleo_conciencia:
+		# SINCRONIZACIÓN: cuatro condiciones de fase simultáneas + medidor de sincronía
+		if EvoManager.nucleo_conciencia:
 			t += ok_color + "[x] " + tr("EVO_NUCLEUS_SYNC") + "[/color]\n"
 		else:
-			var acc_ok := acc >= 2
-			ch = ok_color + "[x] " if acc_ok else fail_color + "[ ] "
-			t += ch + tr("EVO_MAINFRAME_ACC") + "[/color]\n"
-
-		# Hito 3: Núcleo
-		ch = ok_color + "[x] " if EvoManager.nucleo_conciencia else fail_color + "[ ] "
-		t += ch + tr("EVO_SINGULARITY_RDY") + "[/color]\n"
+			var n_eps := StructuralModel.epsilon_runtime
+			ch = ok_color + "[x] " if acc >= Balance.NUCLEO_ACC_MIN else fail_color + "[ ] "
+			t += ch + (tr("NUCLEO_COND_ACC") % [acc, Balance.NUCLEO_ACC_MIN]) + "[/color]\n"
+			ch = ok_color + "[x] " if StructuralModel.omega >= Balance.NUCLEO_OMEGA_MIN else fail_color + "[ ] "
+			t += ch + (tr("NUCLEO_COND_OMEGA") % [Balance.NUCLEO_OMEGA_MIN, snapped(StructuralModel.omega, 0.01)]) + "[/color]\n"
+			ch = ok_color + "[x] " if (n_eps >= Balance.NUCLEO_EPS_LO and n_eps <= Balance.NUCLEO_EPS_HI) else fail_color + "[ ] "
+			t += ch + (tr("NUCLEO_COND_EPS") % [Balance.NUCLEO_EPS_LO, Balance.NUCLEO_EPS_HI, snapped(n_eps, 0.01)]) + "[/color]\n"
+			ch = ok_color + "[x] " if BiosphereEngine.biomasa >= Balance.NUCLEO_BIO_MIN else fail_color + "[ ] "
+			t += ch + (tr("NUCLEO_COND_BIO") % [snapped(BiosphereEngine.biomasa, 0.1), Balance.NUCLEO_BIO_MIN]) + "[/color]\n"
+			t += "[color=cyan]" + (tr("NUCLEO_SYNC_METER") % int(EvoManager.nucleo_sync)) + "[/color]\n"
 
 		# NG+ MENTE COLMENA — ruta alternativa cuando last_run == "SINGULARIDAD"
 		if LegacyManager.last_run_ending == "SINGULARIDAD" or LegacyManager.last_run_ending == "MENTE COLMENA DISTRIBUIDA":
@@ -839,12 +839,12 @@ func build_evo_checklist(_main: Node) -> String:
 			if mc_active:
 				t += ok_color + "[x] " + tr("EVO_MC_ACTIVE") + "[/color]\n"
 			elif mc_timer > 0.0:
-				var mc_pct := int(mc_timer / 180.0 * 100.0)
+				var mc_pct := int(mc_timer / Balance.MC_GATE_HOLD * 100.0)
 				var filled := int(mc_pct / 5.0)   # 20 bloques = 100%
 				var bar := ""
 				for i in range(20):
 					bar += "█" if i < filled else "░"
-				t += "[color=cyan]" + tr("EVO_MC_SYNC_BAR") % [bar, mc_pct, mc_timer] + "[/color]\n"
+				t += "[color=cyan]" + tr("EVO_MC_SYNC_BAR") % [bar, mc_pct, mc_timer, Balance.MC_GATE_HOLD] + "[/color]\n"
 				# Mostrar ratio actual
 				var ap :Dictionary = EconomyManager.get_active_passive_breakdown()
 				var r_act := int(ap.activo)
@@ -858,14 +858,20 @@ func build_evo_checklist(_main: Node) -> String:
 	elif EvoManager.mutation_red_micelial and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		t += "[b]" + tr("EVO_RED_OBJ_BIO") + "[/b]\n"
 
-		# Hito 1: Micelio
+		# Hito 1: Micelio (Empuje de Frontera — anti-AFK)
 		var mic_ok: bool = BiosphereEngine.micelio >= 60.0 or EvoManager.seta_formada
 		ch = ok_color + "[x] " if mic_ok else fail_color + "[ ] "
 		t += ch + tr("EVO_MICELIO_DEV") % int(BiosphereEngine.micelio) + "[/color]\n"
+		if not mic_ok and EvoManager.is_colonizacion_pushable():
+			t += "[color=#88cc44]    " + (tr("EVO_COLONIZ_HINT") % [Balance.MICELIO_PULSE_GAIN, Balance.MICELIO_COLONIZ_DECAY]) + "[/color]\n"
 
-		# Hito 2: Primordio
+		# Hito 2: Primordio (maduración activa — banda de ε + integridad)
 		if EvoManager.primordio_active:
-			t += "[color=yellow]" + tr("EVO_PRIMORDIO_CURSO") % int(EvoManager.primordio_timer) + "[/color]\n"
+			var p_eps: float = StructuralModel.epsilon_runtime
+			var p_overheated: bool = p_eps > Balance.PRIMORDIO_BAND_HI
+			var band_col: String = fail_color if p_overheated else ok_color
+			t += band_col + tr("PRIMORDIO_BAND_STATUS") % [p_eps, Balance.PRIMORDIO_BAND_HI] + "[/color]\n"
+			t += "[color=#88cc44]    " + (tr("PRIMORDIO_PROG_STATUS") % [int(EvoManager.primordio_timer / Balance.PRIMORDIO_BIO_MATURE * 100.0), int(EvoManager.primordio_integrity)]) + "[/color]\n"
 		elif EvoManager.seta_formada:
 			t += ok_color + "[x] " + tr("EVO_BIO_CYCLE_DONE") + "[/color]\n"
 		else:
@@ -1565,52 +1571,94 @@ func update_fungal_cycle_bar() -> void:
 			bar.visible = (EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION)
 			if bar.visible:
 				bar.value = BiosphereEngine.micelio
+				_ensure_fungal_bar_style(bar)
 				if EvoManager.seta_formada:
 					bar.tooltip_text = tr("TOOLTIP_CYCLE_COMPLETE")
-					bar.value = 100.0
+					bar.value = EvoManager.panspermia_charge if EvoManager.is_panspermia_window() else 100.0
+					if _fungal_bar_style != null:
+						_fungal_bar_style.bg_color = Color(0.45, 0.85, 0.15)
 				elif EvoManager.primordio_active:
-					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
+					bar.value = EvoManager.primordio_timer / Balance.PRIMORDIO_BIO_MATURE * 100.0
+					var t_left := Balance.PRIMORDIO_BIO_MATURE - EvoManager.primordio_timer
 					bar.tooltip_text = tr("TOOLTIP_PRIMORDIO") % t_left
+					if _fungal_bar_style != null:
+						var integ: float = EvoManager.primordio_integrity / Balance.PRIMORDIO_INTEGRITY_MAX
+						_fungal_bar_style.bg_color = Color(0.85, 0.2, 0.15).lerp(Color(0.45, 0.85, 0.15), integ)
 				else:
 					bar.tooltip_text = tr("TOOLTIP_MICELIO_CYCLE") % int(BiosphereEngine.micelio)
+					if _fungal_bar_style != null:
+						_fungal_bar_style.bg_color = Color(0.45, 0.85, 0.15)
+				if is_instance_valid(_fungal_bar_label):
+					if EvoManager.primordio_active:
+						_fungal_bar_label.text = tr("PRIMORDIO_BAR_LABEL") % [int(bar.value), int(EvoManager.primordio_integrity)]
+					else:
+						_fungal_bar_label.text = (tr("PANSPERMIA_BAR_LABEL") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat)]) if EvoManager.is_panspermia_window() else (tr("COLONIZ_BAR_LABEL") % int(bar.value))
+				if is_instance_valid(colonize_pulse_button):
+					colonize_pulse_button.visible = EvoManager.is_colonizacion_pushable()
+					if colonize_pulse_button.visible:
+						colonize_pulse_button.text = tr("COLONIZ_BTN_EXPAND") % Balance.MICELIO_PULSE_GAIN
 
 		if is_instance_valid(primordio_button):
 			if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 				var puede_iniciar := BiosphereEngine.micelio >= 60.0 and not EvoManager.primordio_active and not EvoManager.seta_formada
 				primordio_button.visible = not EvoManager.seta_formada
-				primordio_button.disabled = not puede_iniciar
+				primordio_button.disabled = not (puede_iniciar or EvoManager.primordio_active)
 				if EvoManager.primordio_active:
-					var t_left := Balance.PRIMORDIO_DURATION - EvoManager.primordio_timer
-					primordio_button.text = tr("EVO_PRIM_ACTIVE") % t_left
-					primordio_button.disabled = true
+					primordio_button.text = tr("PRIMORDIO_BTN_REGAR") % [Balance.PRIMORDIO_REGAR_COST_BIO, BiosphereEngine.biomasa]
+					primordio_button.disabled = false  # siempre clickeable: el click riega o avisa "sin biomasa"
 				elif puede_iniciar:
 					var costo := 20.0 * (1.0 + EvoManager.primordio_abort_count * 0.2)
 					primordio_button.text = tr("EVO_PRIM_INIT_FULL") % costo
 				else:
 					primordio_button.text = tr("EVO_PRIM_INIT_LOW")
+			elif EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS and EvoManager.primordio_active and not EvoManager.nucleo_conciencia:
+				primordio_button.visible = true
+				primordio_button.disabled = false
+				primordio_button.text = tr("NUCLEO_BTN_INTEGRAR") % [int(EvoManager.nucleo_sync), int(EvoManager.nucleo_temp)]
 			else:
 				primordio_button.visible = false
 
 		if is_instance_valid(sporulation_final_button):
-			var show_panspermia = LegacyManager.last_run_ending == "ESPORULACIÓN" and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION and EvoManager.primordio_active
-			sporulation_final_button.visible = EvoManager.seta_formada or EvoManager.nucleo_conciencia or show_panspermia
+			sporulation_final_button.visible = (EvoManager.seta_formada or EvoManager.nucleo_conciencia) and not RunManager.run_closed
 			sporulation_final_button.disabled = false
 
 			if EvoManager.nucleo_conciencia:
 				sporulation_final_button.text = tr("EVO_BTN_CONNECT_SIN")
 				sporulation_final_button.modulate = Color(0.1, 1.0, 1.0)
+			elif EvoManager.seta_formada and EvoManager.is_panspermia_window():
+				var p_cost: float = EvoManager.panspermia_pulse_cost()
+				sporulation_final_button.text = tr("EVO_BTN_PANSPERMIA") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat)]
+				sporulation_final_button.disabled = EconomyManager.money < p_cost
+				sporulation_final_button.modulate = Color(0.8, 0.2, 1.0)
 			elif EvoManager.seta_formada:
 				sporulation_final_button.text = tr("EVO_BTN_DISPERSE")
 				sporulation_final_button.modulate = Color(0.4, 1.0, 0.2)
-			elif show_panspermia:
-				if EconomyManager.money >= 100000.0:
-					sporulation_final_button.text = tr("EVO_BTN_PANSPERMIA")
-					sporulation_final_button.modulate = Color(0.8, 0.2, 1.0)
-				else:
-					sporulation_final_button.text = tr("EVO_BTN_PAN_REQ")
-					sporulation_final_button.disabled = true
-					sporulation_final_button.modulate = Color(0.4, 0.1, 0.5)
 	else:
 		if is_instance_valid(bar): bar.visible = false
 		if is_instance_valid(primordio_button): primordio_button.visible = false
 		if is_instance_valid(sporulation_final_button): sporulation_final_button.visible = false
+		if is_instance_valid(colonize_pulse_button): colonize_pulse_button.visible = false
+
+## Crea (lazy) el relleno verde lima + el label de número sobre la barra de frontera micelial.
+func _ensure_fungal_bar_style(bar) -> void:
+	if _fungal_bar_style == null:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.45, 0.85, 0.15)  # verde lima (rama colonización)
+		sb.corner_radius_top_left = 4
+		sb.corner_radius_top_right = 4
+		sb.corner_radius_bottom_left = 4
+		sb.corner_radius_bottom_right = 4
+		_fungal_bar_style = sb
+		bar.add_theme_stylebox_override("fill", sb)
+	if not is_instance_valid(_fungal_bar_label):
+		var lbl := Label.new()
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl.add_theme_color_override("font_color", Color.WHITE)
+		lbl.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.65))
+		lbl.add_theme_constant_override("shadow_outline_size", 3)
+		lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+		bar.add_child(lbl)
+		_fungal_bar_label = lbl

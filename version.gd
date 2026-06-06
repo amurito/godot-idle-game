@@ -8,8 +8,8 @@ const NAME := "génesis"
 
 const MAJOR := 1
 const MINOR := 0
-const PATCH := 0
-const HOTFIX := 10  # Incrementar para hotfixes: 1.0.0.1, 1.0.0.2, etc.
+const PATCH := 1
+const HOTFIX := 0  # v1.0.1.0 — rework rama verde. Incrementar para hotfixes: 1.0.1.1, etc.
 
 
 func get_env(var_name: String) -> String:
