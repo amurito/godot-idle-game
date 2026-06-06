@@ -1020,7 +1020,7 @@ func on_run_closed(route: String) -> void:
 		"mutations_this_run":     _mutations_this_run,
 		"seta_formed":            _seta_formed_this_run,
 		"bought_accounting":      _bought_accounting_this_run,
-		"reencarnacion_active":   RunManager.reencarnacion_active,
+		"reencarnacion_active":   RouteManager.is_active("reencarnacion"),
 	}
 	push_event("run_closed", payload)
 	# Logros especiales que dependen de estado interno cruzado

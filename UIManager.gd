@@ -307,14 +307,17 @@ func update_route_badge() -> void:
 		return
 	var text := ""
 	var color := Color.WHITE
-	if RunManager.vacio_hambriento_active:
+	if RouteManager.is_active("vacio"):
 		text = "🕳️  " + tr("ROUTE_VACIO_HAMBRIENTO") + "  ×100"
 		color = Color(0.75, 0.2, 1.0)
-	elif RunManager.carnaval_active:
-		var mut :String= RunManager.carnaval_mutations[RunManager.carnaval_index] if not RunManager.carnaval_mutations.is_empty() else "?"
+	elif RouteManager.is_active("carnaval"):
+		var rs: Dictionary = RouteManager.get_extra_state()
+		var muts: Array = rs.get("mutations", [])
+		var idx: int = rs.get("index", 0)
+		var mut: String = muts[idx] if not muts.is_empty() else "?"
 		text = "🎭  " + tr("ROUTE_CARNAVAL") + "  [%s]" % mut
 		color = Color(1.0, 0.5, 0.1)
-	elif RunManager.reencarnacion_active:
+	elif RouteManager.is_active("reencarnacion"):
 		text = "⚱️  " + tr("ROUTE_REENCARNACION")
 		color = Color(0.3, 0.95, 0.6)
 	if text == "":
@@ -468,7 +471,7 @@ func build_formula_text(_main: Node) -> String:
 		active_term += " · [color=#44ee88]rs[/color]"
 	if LegacyManager.get_buff_value("aura_dorada"):
 		active_term += " · [color=#ffdd44]au[/color]"
-	if RunManager.vacio_hambriento_active:
+	if RouteManager.is_active("vacio"):
 		active_term += " · [color=#bb44ff]vh[/color]"
 
 	var formula_main = active_term
@@ -600,8 +603,8 @@ func update_click_stats_panel(_main: Node) -> String:
 		t += "b = %.2f   " % b + tr("LAB_MULTIPLICADOR") + "\n"
 	if StructuralModel.persistence_upgrade_unlocked:
 		t += "c_n(actual) = %.2f\n" % c_n
-	if RunManager.vacio_hambriento_active:
-		t += "vh = %.0f\n" % RunManager.vacio_hambriento_mult
+	if RouteManager.is_active("vacio"):
+		t += "vh = %.0f\n" % RouteManager.production_mult()
 	if LegacyManager.get_buff_value("impulso_manual"):
 		t += "im = 2.00   " + tr("LAB_IMPULSO_MANUAL") + "\n"
 	t += "\n"
@@ -1089,7 +1092,7 @@ func _build_run_end_lore(route: String) -> String:
 func build_genome_text() -> String:
 	var t := ""
 	# Ruta post-trascendencia activa
-	if RunManager.vacio_hambriento_active:
+	if RouteManager.is_active("vacio"):
 		t += "[b][color=#bb44ff]🕳️ " + tr("GENOME_VACIO_TITLE") + "[/color][/b]\n"
 		t += "[color=#888888]" + tr("GENOME_VACIO_DESC") + "[/color]\n"
 		var _gen: float = EconomyManager.money
@@ -1109,21 +1112,26 @@ func build_genome_text() -> String:
 			var eps_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if eps_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			var clk_s: String = "[color=%s]OK[/color]" % AccessibilityManager.cok_hex() if clk_ok else "[color=%s]FALLA[/color]" % AccessibilityManager.cno_hex()
 			t += tr("GENOME_ASCESIS_BIO_LBL") + ": " + bio_s + "  " + tr("GENOME_ASCESIS_PAS_LBL") + ": " + pas_s + "  e: " + eps_s + "  " + tr("GENOME_ASCESIS_CLK_LBL") + ": " + clk_s + "\n"
-			var prog: float = clamp(RunManager.ascesis_timer / float(Balance.ASCESIS_DURATION), 0.0, 1.0)
+			var _rs: Dictionary = RouteManager.get_extra_state()
+			var ascesis_t: float = _rs.get("ascesis_timer", 0.0)
+			var prog: float = clamp(ascesis_t / float(Balance.ASCESIS_DURATION), 0.0, 1.0)
 			var filled: int = int(prog * 20)
 			var bar: String = "[" + "X".repeat(filled) + ".".repeat(20 - filled) + "]"
-			t += bar + " %ds/%ds\n\n" % [int(RunManager.ascesis_timer), Balance.ASCESIS_DURATION]
-	elif RunManager.carnaval_active and not RunManager.carnaval_mutations.is_empty():
-		var idx := RunManager.carnaval_index
-		var muts := RunManager.carnaval_mutations
-		t += "[b][color=#ff8833]🎭 " + tr("ROUTE_CARNAVAL") + "[/color][/b]\n"
-		t += tr("GENOME_CARNAVAL_ROT") % ["[color=#ffaa55]" + muts[idx] + "[/color]", muts[(idx+1)%3], muts[(idx+2)%3]] + "\n"
-		var secs_left := int(Balance.CARNAVAL_INTERVAL - RunManager.carnaval_timer)
-		t += "[color=#888888]" + tr("GENOME_CARNAVAL_NEXT") % secs_left + "[/color]\n"
-		var rot := RunManager.carnaval_total_rotations
-		var peak := RunManager.carnaval_peak_money
-		t += "[color=#ffdd44]" + tr("GENOME_CARNAVAL_STATS") % [rot, peak/1000.0] + "[/color]\n\n"
-	elif RunManager.reencarnacion_active:
+			t += bar + " %ds/%ds\n\n" % [int(ascesis_t), Balance.ASCESIS_DURATION]
+	elif RouteManager.is_active("carnaval"):
+		var rs: Dictionary = RouteManager.get_extra_state()
+		var muts: Array = rs.get("mutations", [])
+		var idx: int = rs.get("index", 0)
+		var timer: float = rs.get("timer", 0.0)
+		var rot: int = rs.get("total_rotations", 0)
+		var peak: float = rs.get("peak_money", 0.0)
+		if not muts.is_empty():
+			t += "[b][color=#ff8833]🎭 " + tr("ROUTE_CARNAVAL") + "[/color][/b]\n"
+			t += tr("GENOME_CARNAVAL_ROT") % ["[color=#ffaa55]" + muts[idx] + "[/color]", muts[(idx+1)%3], muts[(idx+2)%3]] + "\n"
+			var secs_left: int = int(Balance.CARNAVAL_INTERVAL - timer)
+			t += "[color=#888888]" + tr("GENOME_CARNAVAL_NEXT") % secs_left + "[/color]\n"
+			t += "[color=#ffdd44]" + tr("GENOME_CARNAVAL_STATS") % [rot, peak/1000.0] + "[/color]\n\n"
+	elif RouteManager.is_active("reencarnacion"):
 		t += "[b][color=#44ee99]⚱️ " + tr("ROUTE_REENCARNACION") + "[/color][/b]\n"
 		t += "[color=#888888]" + tr("GENOME_REENC_DESC") + "[/color]\n\n"
 	t += tr("GENOME_FUNGICO") + "\n"
@@ -1305,7 +1313,7 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		t += "\n" + tr("INST_NET_WARN")
 	# En rutas post-trascendencia el árbol de mutaciones normal no aplica:
 	# no mostrar "Próxima transición" ni las mutaciones candidatas.
-	var _post_tras: bool = RunManager.vacio_hambriento_active or RunManager.carnaval_active or RunManager.reencarnacion_active
+	var _post_tras: bool = RouteManager.has_active_route()
 	if main != null and not _post_tras:
 		t += build_evo_checklist(main)
 	genome_summary_label.visible = true

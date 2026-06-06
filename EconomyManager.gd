@@ -119,8 +119,8 @@ func get_click_power() -> float:
 			power *= (1.0 + acc_lvl * cog_mult)
 
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción a cambio de buffs cósmicos
-	if RunManager.vacio_hambriento_active:
-		power *= RunManager.vacio_hambriento_mult
+	if RouteManager.is_active("vacio"):
+		power *= RouteManager.production_mult()
 
 	return power
 
@@ -247,8 +247,8 @@ func get_passive_total() -> float:
 			total *= (1.0 + acc_lvl * cog_mult)
 
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción
-	if RunManager.vacio_hambriento_active:
-		total *= RunManager.vacio_hambriento_mult
+	if RouteManager.is_active("vacio"):
+		total *= RouteManager.production_mult()
 
 	return total
 

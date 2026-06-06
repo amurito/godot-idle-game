@@ -48,23 +48,10 @@ const MENTE_COLMENA_BUY_PRIORITY: Array = [
 	"cognitive", "persistence", "specialization", "click_mult", "click",
 ]
 
-# ==================== POST-TRASCENDENCIA (v0.9.8) ====================
-# VACÍO HAMBRIENTO
-var vacio_hambriento_active: bool = false
-var vacio_hambriento_mult: float = 1.0   # ×100 si activo
-var ascesis_timer: float = 0.0
-
-# REENCARNACIÓN HEREDADA
-var reencarnacion_active: bool = false
-
-# CARNAVAL DE MUTACIONES
-var carnaval_active: bool = false
-var carnaval_mutations: Array = []        # 3 ids de mutación seleccionados al azar
-var carnaval_index: int = 0
-var carnaval_timer: float = 0.0
-var carnaval_total_rotations: int = 0    # Cuenta rotaciones para POLIMORFÍA TOTAL
-var carnaval_peak_money: float = 0.0     # Pico de dinero alcanzado en carnaval
-const CARNAVAL_POOL := ["homeostasis", "simbiosis", "red_micelial", "parasitismo", "hiperasimilacion"]
+# ==================== POST-TRASCENDENCIA ====================
+# Estado de rutas movido a RouteManager + clases routes/Route*.gd (Opción B)
+# Estos getters de compatibilidad permiten que saves/código externo viejo no explote
+# durante el período de migración; los nuevos consumers deben usar RouteManager directamente.
 
 # ==================== INICIALIZACIÓN ====================
 func reset():
@@ -84,16 +71,7 @@ func reset():
 	extreme_shocks_recovered = 0
 	omega_min_peak = 0.0
 	legacy_homeostasis = false
-	vacio_hambriento_active = false
-	vacio_hambriento_mult = 1.0
-	ascesis_timer = 0.0
-	reencarnacion_active = false
-	carnaval_active = false
-	carnaval_mutations = []
-	carnaval_index = 0
-	carnaval_timer = 0.0
-	carnaval_total_rotations = 0
-	carnaval_peak_money = 0.0
+	RouteManager.reset()
 	mente_colmena_active = false
 	mente_colmena_timer = 0.0
 	_mente_colmena_buy_timer = 0.0
@@ -157,6 +135,7 @@ func close_run(route: String, reason: String):
 		var ng_bonus := 0
 		var ng_formula := ""
 		var cap: int = Balance.NG_CAPS.get(route, 0)
+		var _rs: Dictionary = RouteManager.get_extra_state()
 		match route:
 			# ── Tier 1 ──
 			"HOMEOSTASIS":
@@ -197,13 +176,15 @@ func close_run(route: String, reason: String):
 				ng_bonus = min(raw, cap)
 				ng_formula = "devoured %d / 8 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
-				var raw := int(floor(carnaval_total_rotations / 2.0))
+				var rotaciones: int = _rs.get("total_rotations", 0)
+				var raw := int(floor(rotaciones / 2.0))
 				ng_bonus = min(raw, cap)
-				ng_formula = "rotaciones %d / 2 = %d (cap %d)" % [carnaval_total_rotations, ng_bonus, cap]
+				ng_formula = "rotaciones %d / 2 = %d (cap %d)" % [rotaciones, ng_bonus, cap]
 			"DOMADOR DEL CAOS":
-				var raw := int(floor(carnaval_peak_money / 500_000.0))
+				var pico: float = _rs.get("peak_money", 0.0)
+				var raw := int(floor(pico / 500_000.0))
 				ng_bonus = min(raw, cap)
-				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap %d)" % [carnaval_peak_money / 1_000_000.0, ng_bonus, cap]
+				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap %d)" % [pico / 1_000_000.0, ng_bonus, cap]
 			"ASCESIS_PROFUNDA":
 				var raw := int(floor(omega_min_peak * 10.0))
 				ng_bonus = min(raw, cap)
@@ -271,7 +252,7 @@ func enter_post_homeostasis():
 var homeostasis_tier_reached := 0  # 0=ninguno, 1=homeostasis, 2=allostasis, 3=homeorhesis
 
 func check_homeostasis_final(delta: float):
-	if carnaval_active or run_closed or not EvoManager.mutation_homeostasis:
+	if not RouteManager.allows_bifurcation() or run_closed or not EvoManager.mutation_homeostasis:
 		if not EvoManager.mutation_homeostasis:
 			homeostasis_timer = max(homeostasis_timer - delta * 2.0, 0.0)
 		return
@@ -345,7 +326,7 @@ func check_homeorhesis_final(_delta: float):
 	pass # Integrado en check_homeostasis_final como tiers progresivos
 
 func check_symbiosis_final(_delta: float):
-	if carnaval_active or run_closed or not EvoManager.mutation_symbiosis:
+	if not RouteManager.allows_bifurcation() or run_closed or not EvoManager.mutation_symbiosis:
 		return
 
 	var stable_band: bool = (
@@ -369,7 +350,7 @@ func check_symbiosis_final(_delta: float):
 func is_fractura_epistemica_available() -> bool:
 	# Rework v1.0.0.10 (profundidad): requiere HIPER ya mutada (solo posible en gate Depredador),
 	# ε > 0.90, run > 4min y biomasa mínima. Debe sostenerse 20s para disparar.
-	return not carnaval_active and not run_closed \
+	return RouteManager.allows_bifurcation() and not run_closed \
 		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
 		and EvoManager.mutation_hyperassimilation \
 		and StructuralModel.epsilon_runtime > 0.90 \
@@ -399,7 +380,7 @@ func check_fractura_epistemica(dt: float):
 		close_run("COLAPSO CONTROLADO", tr("CLOSE_COLAPSO_CONTROLADO"))
 
 func check_parasitism_final(_delta: float):
-	if carnaval_active or run_closed or not EvoManager.mutation_parasitism:
+	if not RouteManager.allows_bifurcation() or run_closed or not EvoManager.mutation_parasitism:
 		return
 
 	# Opción A: Colapso estructural clásico
@@ -417,7 +398,7 @@ func check_parasitism_final(_delta: float):
 		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_MASA"))
 
 func check_sporulation_trigger(_delta: float):
-	if carnaval_active or run_closed or EvoManager.mutation_sporulation:
+	if not RouteManager.allows_bifurcation() or run_closed or EvoManager.mutation_sporulation:
 		return
 
 	if not EvoManager.mutation_red_micelial or EvoManager.red_micelial_phase != 2:
@@ -545,112 +526,16 @@ func check_perfect_homeostasis():
 
 # ==================== POST-TRASCENDENCIA: ACTIVACIÓN ====================
 
-## Llamado desde main.gd en _ready(), después de que los sistemas están inicializados
+## Llamado desde main.gd en _ready(), después de que los sistemas están inicializados.
+## Delega a RouteManager que instancia la clase concreta de la ruta.
 func activate_post_tras_route() -> void:
-	var route := LegacyManager.post_tras_route
+	var route: String = LegacyManager.post_tras_route
 	if route == "":
 		return
-
-	match route:
-		"vacio":
-			_activate_vacio_hambriento()
-		"carnaval":
-			_activate_carnaval()
-		"reencarnacion":
-			_activate_reencarnacion()
-
+	RouteManager.activate(route)
 	# La ruta se consume: se borra para no re-aplicarla en reinicios sin trascendencia
 	LegacyManager.post_tras_route = ""
 	LegacyManager.save_legacy()
-
-func _activate_vacio_hambriento() -> void:
-	AchievementManager.push_event("post_tras_route", {"route": "vacio"})
-	# Contar y consumir todos los buffs cósmicos activos
-	var consumed := 0
-	for id in LegacyManager.cosmic_unlocked.keys():
-		if LegacyManager.cosmic_unlocked[id]:
-			LegacyManager.cosmic_unlocked[id] = false
-			consumed += 1
-
-	vacio_hambriento_active = true
-	vacio_hambriento_mult = Balance.VACIO_HAMBRIENTO_MULT
-	LegacyManager.save_legacy()
-	print("🕳️ [VACÍO HAMBRIENTO] %d buffs cósmicos consumidos → ×%.0f producción" % [consumed, vacio_hambriento_mult])
-	LogManager.add(tr("LOG_VACIO") % consumed)
-
-func _activate_carnaval() -> void:
-	AchievementManager.push_event("post_tras_route", {"route": "carnaval"})
-	# Seleccionar 3 mutaciones aleatorias sin repetición del pool
-	var pool := CARNAVAL_POOL.duplicate()
-	pool.shuffle()
-	carnaval_mutations = pool.slice(0, 3)
-	carnaval_index = 0
-	carnaval_timer = 0.0
-	carnaval_total_rotations = 0
-	carnaval_peak_money = 0.0
-	carnaval_active = true
-	# Aplicar la primera inmediatamente
-	EvoManager.carnaval_set_mutation(carnaval_mutations[0])
-	print("🎭 [CARNAVAL] Mutaciones: %s" % str(carnaval_mutations))
-	LogManager.add(tr("LOG_CARNAVAL_START") % [carnaval_mutations[0], carnaval_mutations[1], carnaval_mutations[2]])
-
-func _activate_reencarnacion() -> void:
-	AchievementManager.push_event("post_tras_route", {"route": "reencarnacion"})
-	reencarnacion_active = true
-	UpgradeManager.apply_reencarnacion_snapshot(LegacyManager.reencarnacion_snapshot)
-	print("⚱️ [REENCARNACIÓN] Snapshot aplicado")
-	LogManager.add(tr("LOG_REENCARNACION"))
-
-## Tick del Carnaval: rotar mutación cada Balance.CARNAVAL_INTERVAL segundos
-func update_carnaval(delta: float) -> void:
-	if run_closed or not carnaval_active or carnaval_mutations.is_empty():
-		return
-	carnaval_timer += delta
-
-	# Actualizar pico de dinero alcanzado en carnaval
-	carnaval_peak_money = max(carnaval_peak_money, EconomyManager.money)
-
-	if carnaval_timer >= Balance.CARNAVAL_INTERVAL:
-		carnaval_timer = 0.0
-		carnaval_index = (carnaval_index + 1) % carnaval_mutations.size()
-		carnaval_total_rotations += 1
-		var next_mut :String= carnaval_mutations[carnaval_index]
-		EvoManager.carnaval_set_mutation(next_mut)
-		LogManager.add(tr("LOG_CARNAVAL_ROT") % [carnaval_total_rotations, next_mut])
-
-		# CHEQUEO: POLIMORFÍA TOTAL
-		if carnaval_total_rotations >= 12:
-			var biomasa := BiosphereEngine.biomasa
-			var omega := StructuralModel.omega
-			var dinero := EconomyManager.money
-			if biomasa >= 8.0 and omega >= 0.35 and dinero >= 300000.0:
-				close_run("POLIMORFÍA TOTAL", tr("CLOSE_POLIMORFIA") % [biomasa, omega, dinero/1000.0])
-				return
-
-		# CHEQUEO: DOMADOR DEL CAOS
-		if carnaval_total_rotations >= 3 and carnaval_peak_money >= 1000000.0:
-			close_run("DOMADOR DEL CAOS", tr("CLOSE_DOMADOR_CAOS") % [carnaval_peak_money / 1000000.0])
-			return
-
-# ==================== ASCESIS PROFUNDA (sub-ruta VACÍO HAMBRIENTO) ====================
-func check_ascesis_profunda(delta: float) -> void:
-	if run_closed:
-		return
-	# Requisitos previos: run madura y dinero generado SOLO por clicks (sin pasivo)
-	if run_time < Balance.ASCESIS_MIN_RUN_TIME or EconomyManager.money < Balance.ASCESIS_MONEY_REQ:
-		ascesis_timer = 0.0
-		return
-	# Condiciones simultáneas: sin biósfera, sin pasivo comprado, sistema calmo
-	var biomasa_ok := BiosphereEngine.biomasa < 0.5
-	var sin_pasivo := UpgradeManager.level("auto") == 0 and UpgradeManager.level("trueque") == 0
-	var epsilon_ok := StructuralModel.epsilon_runtime < 0.25
-	# Anti-AFK: la ascesis es renuncia ACTIVA — hay que sostener el clickeo, no esperar quieto
-	var click_activo := EconomyManager.time_since_last_click < Balance.ASCESIS_CLICK_TIMEOUT
-	if biomasa_ok and sin_pasivo and epsilon_ok and click_activo:
-		ascesis_timer += delta
-		if ascesis_timer >= Balance.ASCESIS_DURATION:
-			close_run("ASCESIS_PROFUNDA", tr("CLOSE_ASCESIS"))
-	# Si fallan las condiciones el timer se pausa (no se resetea)
 
 # ==================== UI EVOLUCIÓN ====================
 func _show_evolution_button(target: String):
