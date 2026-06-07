@@ -89,6 +89,13 @@ var colonize_pulse_button    # Botón dedicado de Empuje de Frontera (Colonizaci
 var _fungal_bar_label        # Label de número sobre FungalCycleBar (lazy)
 var _fungal_bar_style        # StyleBoxFlat de relleno verde de FungalCycleBar (lazy)
 
+# ========== NG+ DYNAMIC BUTTONS (Panel Derecho) ==========
+var _met_oscuro_seal_btn: Button = null
+var _esclerocio_btn: Button = null
+var _depredador_buytime_btn: Button = null
+var _mc_override_btn: Button = null
+var _simbiosis_seal_btn: Button = null
+
 func setup(ui_root: Control):
 	root = ui_root
 	scene = ui_root.get_parent()  # UIRoot (scene root) — contains HeaderBar as sibling
@@ -662,6 +669,453 @@ func update_fungal_cycle_bar() -> void:
 		if is_instance_valid(primordio_button): primordio_button.visible = false
 		if is_instance_valid(sporulation_final_button): sporulation_final_button.visible = false
 		if is_instance_valid(colonize_pulse_button): colonize_pulse_button.visible = false
+
+# =====================================================
+# NG+ DYNAMIC BUTTONS
+# =====================================================
+
+func _right_panel() -> Node:
+	return root.get_node_or_null("RightPanel")
+
+## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
+func update_ng_plus_buttons() -> void:
+	_update_met_oscuro_seal_button()
+	_update_esclerocio_button()
+	_update_depredador_buytime_button()
+	_update_mc_override_button()
+	_update_simbiosis_seal_button()
+
+func _update_met_oscuro_seal_button() -> void:
+	if RunManager.run_closed:
+		return
+	var bio := BiosphereEngine.biomasa
+	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
+	var seal_label := EmojiToRichText.strip("🌑 " + tr("BTN_SEAL_MO") % pl_seal)
+	if _met_oscuro_seal_btn == null or not is_instance_valid(_met_oscuro_seal_btn):
+		if not EvoManager.mutation_met_oscuro:
+			return
+		_met_oscuro_seal_btn = Button.new()
+		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_met_oscuro_seal_btn.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
+		_met_oscuro_seal_btn.custom_minimum_size = Vector2(0, 70)
+		_met_oscuro_seal_btn.pressed.connect(_on_met_oscuro_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_met_oscuro_seal_btn)
+			panel.move_child(_met_oscuro_seal_btn, 0)
+	if not EvoManager.mutation_met_oscuro or RunManager.run_closed:
+		_met_oscuro_seal_btn.visible = false
+		return
+	_met_oscuro_seal_btn.text = seal_label
+	_met_oscuro_seal_btn.visible = true
+
+func _on_met_oscuro_seal_pressed() -> void:
+	if RunManager.run_closed:
+		return
+	var bio := BiosphereEngine.biomasa
+	var pl_bonus := 0 if bio < 50.0 else (-2 if bio < 100.0 else 2)
+	if pl_bonus < 0:
+		LegacyManager.add_pl(-2)
+	elif pl_bonus > 0:
+		LegacyManager.add_pl(2)
+	if is_instance_valid(_met_oscuro_seal_btn):
+		_met_oscuro_seal_btn.visible = false
+	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
+	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
+
+func _update_esclerocio_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro:
+		if is_instance_valid(_esclerocio_btn):
+			_esclerocio_btn.visible = false
+		return
+	var devoured_ok: bool = EvoManager.met_oscuro_devoured_count >= Balance.ESCLEROCIO_DEVOURED_REQ
+	var bio_ok: bool = BiosphereEngine.biomasa >= Balance.ESCLEROCIO_BIO_REQ
+	var eps_ok: bool = StructuralModel.epsilon_runtime < Balance.ESCLEROCIO_EPS_MAX
+	if not (devoured_ok and bio_ok and eps_ok):
+		if is_instance_valid(_esclerocio_btn):
+			_esclerocio_btn.visible = false
+		return
+	if _esclerocio_btn == null or not is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn = Button.new()
+		_esclerocio_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_esclerocio_btn.add_theme_color_override("font_color", Color(0.7, 0.6, 0.75))
+		_esclerocio_btn.custom_minimum_size = Vector2(0, 70)
+		_esclerocio_btn.pressed.connect(_on_esclerocio_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_esclerocio_btn)
+			panel.move_child(_esclerocio_btn, 0)
+	_esclerocio_btn.text = EmojiToRichText.strip("🌑 " + tr("BTN_ESCLEROCIO"))
+	_esclerocio_btn.visible = true
+
+func _on_esclerocio_pressed() -> void:
+	if RunManager.run_closed:
+		return
+	if is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn.visible = false
+	RunManager.close_run("ESCLEROCIO OSCURO", tr("CLOSE_ESCLEROCIO"))
+
+func _update_depredador_buytime_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
+		if is_instance_valid(_depredador_buytime_btn):
+			_depredador_buytime_btn.visible = false
+		return
+	var cost := EvoManager.depredador_time_cost()
+	var ext := Balance.DEP_TIME_EXTENSION
+	var btn_label := EmojiToRichText.strip("⏳ " + tr("BTN_DEP_BUYTIME") % [ext, cost])
+	if _depredador_buytime_btn == null or not is_instance_valid(_depredador_buytime_btn):
+		_depredador_buytime_btn = Button.new()
+		_depredador_buytime_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(18))
+		_depredador_buytime_btn.add_theme_color_override("font_color", Color(1.0, 0.55, 0.2))
+		_depredador_buytime_btn.custom_minimum_size = Vector2(0, 60)
+		_depredador_buytime_btn.pressed.connect(_on_depredador_buytime_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_depredador_buytime_btn)
+			panel.move_child(_depredador_buytime_btn, 0)
+	_depredador_buytime_btn.text = btn_label
+	_depredador_buytime_btn.disabled = BiosphereEngine.biomasa < cost
+	_depredador_buytime_btn.visible = true
+
+func _on_depredador_buytime_pressed() -> void:
+	EvoManager.buy_depredador_time()
+	_update_depredador_buytime_button()
+
+func _update_mc_override_button() -> void:
+	if RunManager.run_closed or not LegacyManager.get_buff_value("mente_colmena"):
+		if is_instance_valid(_mc_override_btn):
+			_mc_override_btn.visible = false
+		return
+	if _mc_override_btn == null or not is_instance_valid(_mc_override_btn):
+		_mc_override_btn = Button.new()
+		_mc_override_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_mc_override_btn.add_theme_color_override("font_color", Color(0.65, 0.45, 1.0))
+		_mc_override_btn.custom_minimum_size = Vector2(0, 50)
+		_mc_override_btn.pressed.connect(_on_mc_override_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_mc_override_btn)
+			panel.move_child(_mc_override_btn, 0)
+	if RunManager.mc_burst_timer > 0.0:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_ACTIVE") % RunManager.mc_burst_timer)
+		_mc_override_btn.disabled = true
+	elif RunManager.mc_cooldown_timer > 0.0:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_COOLDOWN") % RunManager.mc_cooldown_timer)
+		_mc_override_btn.disabled = true
+	else:
+		_mc_override_btn.text = EmojiToRichText.strip(tr("BTN_MC_READY") % Balance.MC_BURST_DURATION)
+		_mc_override_btn.disabled = false
+	_mc_override_btn.visible = true
+
+func _on_mc_override_pressed() -> void:
+	RunManager.activate_mc_burst()
+	_update_mc_override_button()
+
+func _update_simbiosis_seal_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
+		if is_instance_valid(_simbiosis_seal_btn):
+			_simbiosis_seal_btn.visible = false
+		return
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
+		if is_instance_valid(_simbiosis_seal_btn):
+			_simbiosis_seal_btn.visible = false
+		return
+	if RunManager.run_time < 60.0:
+		return
+	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn = Button.new()
+		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 " + tr("BTN_SEAL_SIMB"))
+		_simbiosis_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
+		_simbiosis_seal_btn.pressed.connect(_on_simbiosis_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_simbiosis_seal_btn)
+			panel.move_child(_simbiosis_seal_btn, 0)
+	_simbiosis_seal_btn.visible = true
+
+func _on_simbiosis_seal_pressed() -> void:
+	if is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn.visible = false
+	RunManager.close_run("SIMBIOSIS", tr("CLOSE_SIMBIOSIS_BASE"))
+
+# =====================================================
+# LEGACY STORE (Banco Genético)
+# =====================================================
+
+func open_legacy_panel() -> void:
+	var lp := scene.legacy_panel as Control
+	var lp_title := lp.find_child("Title")
+	if lp_title is RichTextLabel:
+		lp_title.clear()
+		lp_title.append_text(EmojiToRichText.rich("[center]🧬 " + tr("BANCO_GENETICO_TITLE") + "[/center]"))
+	lp.visible = true
+	scene.get_node("DimmerBackground").visible = true
+	var vp := scene.get_viewport_rect()
+	var margin := 24.0
+	var ps := Vector2(vp.size.x - margin * 2, vp.size.y - margin * 2)
+	lp.custom_minimum_size = ps
+	lp.size = ps
+	lp.position = Vector2(margin, margin)
+	refresh_legacy_store()
+	update_legacy_indicators()
+
+func close_legacy_panel() -> void:
+	scene.legacy_panel.visible = false
+	scene.get_node("DimmerBackground").visible = false
+
+func refresh_legacy_store() -> void:
+	update_legacy_indicators()
+	var pl := LegacyManager.legacy_points
+	var buffer := LegacyManager.internal_spores_total
+	scene.pl_label.text = tr("GAME_PL_COUNTER") % [pl, buffer]
+	for child in scene.legacy_list.get_children():
+		child.queue_free()
+
+	var col_groups: Array = [
+		["economia"],
+		["estructura"],
+		["biologia", "conocimiento"],
+		["ruta"],
+		["ng_plus", "secreto"],
+	]
+	var cat_colors: Dictionary = {
+		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
+		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
+		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
+		"secreto": Color(0.5, 0.5, 0.5),
+	}
+
+	var h_cols: HBoxContainer = HBoxContainer.new()
+	h_cols.add_theme_constant_override("separation", 10)
+	h_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scene.legacy_list.add_child(h_cols)
+
+	for group in col_groups:
+		var col: VBoxContainer = VBoxContainer.new()
+		col.custom_minimum_size.x = 300
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 3)
+		var col_has_items: bool = false
+		for cat in group:
+			var cat_ids: Array = []
+			for id in LegacyManager.LEGACY_DEFS:
+				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+				if def.get("cat", "") == cat and LegacyManager.is_revealed(id):
+					cat_ids.append(id)
+			if cat_ids.is_empty():
+				continue
+			if col_has_items:
+				col.add_child(HSeparator.new())
+			var hdr: Label = Label.new()
+			hdr.text = "-- %s --" % tr("LEGACY_CAT_" + cat.to_upper())
+			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+			hdr.modulate = cat_colors.get(cat, Color.WHITE)
+			hdr.custom_minimum_size.y = 22
+			col.add_child(hdr)
+			for id in cat_ids:
+				col.add_child(_build_legacy_item(id))
+			col_has_items = true
+		if col_has_items:
+			h_cols.add_child(col)
+		else:
+			col.queue_free()
+
+func _build_legacy_item(id: String) -> Control:
+	var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+	var lvl: int = LegacyManager.get_buff_level(id)
+	var max_lvl: int = int(def.get("max_level", 1))
+	var is_maxed: bool = lvl >= max_lvl
+	var cost: int = LegacyManager.get_current_cost(id)
+
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 1)
+
+	var name_str: String = tr("LEGACY_" + id.to_upper() + "_NAME")
+	if max_lvl > 1:
+		name_str += "  [%d/%d]" % [lvl, max_lvl]
+	var l_title: Label = Label.new()
+	l_title.text = name_str
+	l_title.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var is_enabled: bool = LegacyManager.buff_enabled.get(id, true)
+	if lvl > 0 and not is_enabled:
+		l_title.modulate = Color(0.45, 0.45, 0.45)
+	elif is_maxed:
+		l_title.modulate = Color.GREEN
+	elif lvl > 0:
+		l_title.modulate = Color(0.5, 0.9, 0.6)
+
+	var l_desc: Label = Label.new()
+	l_desc.text = tr("LEGACY_" + id.to_upper() + "_FLAVOR")
+	l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l_desc.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
+	l_desc.modulate = Color(0.6, 0.6, 0.6)
+
+	v.add_child(l_title)
+	v.add_child(l_desc)
+
+	if lvl > 0:
+		var is_on: bool = LegacyManager.buff_enabled.get(id, true)
+		var toggle_btn: Button = Button.new()
+		toggle_btn.custom_minimum_size.y = 22
+		toggle_btn.text = tr("GAME_BUFF_ACTIVE") if is_on else tr("GAME_BUFF_INACTIVE")
+		toggle_btn.modulate = Color(0.4, 1.0, 0.5) if is_on else Color(0.6, 0.6, 0.6)
+		toggle_btn.pressed.connect(func():
+			var new_state: bool = LegacyManager.toggle_buff_enabled(id)
+			if id == "mente_colmena" and not RunManager.run_closed:
+				RunManager.mente_colmena_active = new_state
+				scene.add_lap(tr("LAP_MC_IA_MANUAL") % (tr("GAME_BUFF_ACTIVE").to_lower() if new_state else tr("GAME_BUFF_INACTIVE").to_lower()))
+			refresh_legacy_store()
+			show_toast(tr("GAME_BUFF_ACTIVE") + ": " + def.get("name", id) if new_state else tr("GAME_BUFF_INACTIVE") + ": " + def.get("name", id))
+			scene.update_ui()
+		)
+		v.add_child(toggle_btn)
+		if not is_maxed:
+			var lvl_btn: Button = Button.new()
+			lvl_btn.custom_minimum_size.y = 22
+			lvl_btn.text = tr("GAME_BTN_LEVEL") % [lvl + 1, cost]
+			lvl_btn.disabled = not LegacyManager.can_afford(id)
+			lvl_btn.pressed.connect(func():
+				if LegacyManager.purchase_legacy(id):
+					refresh_legacy_store()
+					show_toast("Banco: Compraste " + def.get("name", id))
+			)
+			v.add_child(lvl_btn)
+	else:
+		var btn: Button = Button.new()
+		btn.custom_minimum_size.y = 22
+		if not LegacyManager.is_unlockable(id):
+			btn.text = tr("GAME_BTN_LOCKED")
+			btn.disabled = true
+		elif def.get("cost", 0) == 0:
+			btn.text = tr("GAME_BTN_FREE")
+		else:
+			btn.text = "%d PL" % cost
+			btn.disabled = not LegacyManager.can_afford(id)
+		btn.pressed.connect(func():
+			if LegacyManager.purchase_legacy(id):
+				refresh_legacy_store()
+				show_toast("Banco: Compraste " + def.get("name", id))
+		)
+		v.add_child(btn)
+
+	v.add_child(HSeparator.new())
+	return v
+
+func update_legacy_indicators() -> void:
+	var ind := scene.get_node_or_null("HeaderBar/HeaderContent/LegacyIndicators")
+	if not is_instance_valid(ind):
+		return
+	ind.mouse_filter = Control.MOUSE_FILTER_PASS
+	for c in ind.get_children():
+		c.queue_free()
+
+	var _add_chip := func(text: String, tooltip: String, color: Color) -> void:
+		var chip := Label.new()
+		chip.text = EmojiToRichText.strip(text)
+		chip.tooltip_text = tooltip
+		chip.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+		chip.modulate = color
+		chip.mouse_filter = Control.MOUSE_FILTER_STOP
+		chip.mouse_entered.connect(func(): _show_header_tip(tooltip))
+		chip.mouse_exited.connect(func(): _clear_header_tip())
+		ind.add_child(chip)
+
+	var click_mult := 1.0
+	var click_tip := "Click legado:"
+	if LegacyManager.get_buff_value("impulso_manual"):
+		click_mult *= 2.0;   click_tip += "\n• Impulso Manual ×2.0"
+	if LegacyManager.get_buff_value("resonancia_simbionte"):
+		var rs_mult: float = min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
+		click_mult *= rs_mult
+		click_tip += "\n• Resonancia Simbionte ×%.2f (bio=%.1f)" % [rs_mult, BiosphereEngine.biomasa]
+	if LegacyManager.get_buff_value("aura_dorada"):
+		click_mult *= 2.5;   click_tip += "\n• Aura Dorada ×2.5 (solo click)"
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		click_mult *= 2.0;   click_tip += "\n• Semilla Cósmica ×2.0"
+	var eco := LegacyManager.get_effect_value("all_income_mult")
+	if eco > 0.0:
+		click_mult *= (1.0 + eco)
+		click_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
+	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
+		var cc := 1.0 + LegacyManager.trascendencia_count * 0.05
+		click_mult *= cc
+		click_tip += "\n• Convergencia Cíclica ×%.2f (T=%d)" % [cc, LegacyManager.trascendencia_count]
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		click_tip += "\n• Metabolismo Oscuro ×1.5 (si ε>0.40)*"
+	var cog_mult_val: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
+	if cog_mult_val > 0.0:
+		click_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
+
+	var pasivo_mult := 1.0
+	var pas_tip := "Pasivo legado:"
+	if LegacyManager.get_buff_value("semilla_cosmica"):
+		pasivo_mult *= 2.0;  pas_tip += "\n• Semilla Cósmica ×2.0"
+	if LegacyManager.get_buff_value("semilla_cosmica_oscura"):
+		pasivo_mult *= Balance.SEMILLA_OSCURA_PASIVO_MULT
+		pas_tip += "\n• Semilla Cósmica Oscura ×%.1f" % Balance.SEMILLA_OSCURA_PASIVO_MULT
+	if LegacyManager.get_buff_value("mente_colmena"):
+		pasivo_mult *= 3.0;  pas_tip += "\n• Mente Colmena ×3.0"
+	if eco > 0.0:
+		pasivo_mult *= (1.0 + eco)
+		pas_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
+	if LegacyManager.get_buff_value("metabolismo_glitch"):
+		pas_tip += "\n• Metabolismo Oscuro ×1.8 (si e>0.40)*"
+	if LegacyManager.get_buff_value("glitch_persistente"):
+		pas_tip += "\n• Glitch Persistente ×1.15 (red micelial)*"
+	if cog_mult_val > 0.0:
+		pas_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
+
+	var omega_min := 0.0
+	var omega_tip := "O garantizado:"
+	if LegacyManager.get_buff_value("plasticidad_adaptativa"):
+		omega_min = max(omega_min, 0.30);  omega_tip += "\n• Plasticidad Adaptativa =0.30"
+	if LegacyManager.get_buff_value("legado_alostasis"):
+		omega_min = max(omega_min, 0.45);  omega_tip += "\n• Resiliencia Alostática =0.45"
+	if LegacyManager.get_buff_value("legado_homeorresis"):
+		omega_min = max(omega_min, 0.55);  omega_tip += "\n• Trascendencia Cristalina ≥0.55"
+	var omega_rec := LegacyManager.get_effect_value("omega_recovery_speed")
+	if omega_rec > 0.0:
+		omega_tip += "\n• Regeneración Ω ×%.2f" % omega_rec
+	if LegacyManager.get_buff_value("cristalizacion_permanente"):
+		omega_tip += "\n• Cristalización Permanente: shock -50%"
+
+	if click_mult > 1.01:
+		_add_chip.call("click×%.1f" % click_mult, click_tip, Color(0.4, 0.95, 0.5))
+	if pasivo_mult > 1.01:
+		_add_chip.call("pas×%.1f" % pasivo_mult, pas_tip, Color(0.85, 0.45, 1.0))
+	var alostasis_active := LegacyManager.get_buff_value("legado_alostasis")
+	var eq_bonus_active := LegacyManager.get_effect_value("omega_min_per_disturbance") > 0.0
+	if omega_min > 0.0 or omega_rec > 0.0 or LegacyManager.get_buff_value("cristalizacion_permanente") \
+			or alostasis_active or eq_bonus_active:
+		var omega_lbl := "Ω≥%.2f" % omega_min if omega_min > 0.0 else "Ω↑"
+		if alostasis_active:
+			omega_tip += "\n• Resiliencia Alostática: +0.02/shock*"
+		if eq_bonus_active:
+			omega_tip += "\n• Equilibrio Heredado: +0.04/shock*"
+		if (alostasis_active or eq_bonus_active or omega_rec > 0.0) and "↑" not in omega_lbl:
+			omega_lbl += " ↑"
+		_add_chip.call(omega_lbl, omega_tip, Color(0.4, 0.9, 1.0))
+	if LegacyManager.get_buff_value("deriva_esporada"):
+		_add_chip.call("PL×1.25", "Deriva Esporada\nPL ganados ×1.25", Color(0.9, 0.85, 0.4))
+	var bio_mult := 1.0
+	var bio_tip := "Bio legado:"
+	if LegacyManager.get_buff_value("sangre_negra"):
+		bio_mult *= 1.3;  bio_tip += "\n• Sangre Negra: inicio ×1.30"
+	var absorb := LegacyManager.get_effect_value("nutrient_absorb_mult")
+	if absorb > 0.0:
+		bio_tip += "\n• Absorción Mejorada +%.0f%%" % (absorb * 100)
+	if bio_mult > 1.01 or absorb > 0.0:
+		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
+	if RunManager.mente_colmena_active:
+		_add_chip.call(EmojiToRichText.strip("🧠IA"), tr("CHIP_MENTE_COLMENA"), Color(0.9, 0.3, 0.9))
+	if RunManager.is_memoria_oscura_active():
+		var mo_tip := tr("CHIP_MEMORIA_OSCURA_TIP")
+		if RunManager._has_permanent_dark_legacy():
+			mo_tip += "\n" + tr("CHIP_MEMORIA_OSCURA_PERM")
+		_add_chip.call(EmojiToRichText.strip("🌑 " + tr("CHIP_MEMORIA_OSCURA")), mo_tip, Color(0.82, 0.55, 1.0))
 
 ## Crea (lazy) el relleno verde lima + el label de número sobre la barra de frontera micelial.
 func _ensure_fungal_bar_style(bar) -> void:
