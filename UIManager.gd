@@ -852,7 +852,7 @@ func open_legacy_panel() -> void:
 		lp_title.append_text(EmojiToRichText.rich("[center]🧬 " + tr("BANCO_GENETICO_TITLE") + "[/center]"))
 	lp.visible = true
 	scene.get_node("DimmerBackground").visible = true
-	var vp := scene.get_viewport_rect()
+	var vp: Rect2 = scene.get_viewport_rect()
 	var margin := 24.0
 	var ps := Vector2(vp.size.x - margin * 2, vp.size.y - margin * 2)
 	lp.custom_minimum_size = ps
