@@ -450,12 +450,16 @@ func _check_milestones() -> void:
 		notify_milestone("first_trascendencia", tr("TUTO_MT_TRAS_TITLE"), tr("TUTO_MT_TRAS_BODY"), Color(0.8, 0.4, 1.0))
 
 	# Rutas post-trascendencia (ayuda al entrar por primera vez)
-	if not _milestones_seen.has("route_vacio") and RouteManager.is_active("vacio"):
-		notify_milestone("route_vacio", tr("TUTO_MT_VACIO_TITLE"), tr("TUTO_MT_VACIO_BODY"), Color(0.55, 0.3, 0.85))
-	if not _milestones_seen.has("route_carnaval") and RouteManager.is_active("carnaval"):
-		notify_milestone("route_carnaval", tr("TUTO_MT_CARNAVAL_TITLE"), tr("TUTO_MT_CARNAVAL_BODY"), Color(0.95, 0.3, 0.7))
-	if not _milestones_seen.has("route_reencarnacion") and RouteManager.is_active("reencarnacion"):
-		notify_milestone("route_reencarnacion", tr("TUTO_MT_REENCARN_TITLE"), tr("TUTO_MT_REENCARN_BODY"), Color(0.85, 0.7, 0.35))
+	var _active_route_id: String = RouteManager.get_active_id()
+	if _active_route_id != "":
+		var _milestone_id := "route_" + _active_route_id
+		if not _milestones_seen.has(_milestone_id):
+			var _def: Dictionary = RouteManager.ROUTE_DEFS.get(_active_route_id, {})
+			var _tk: String = _def.get("milestone_title_key", "")
+			var _bk: String = _def.get("milestone_body_key", "")
+			if _tk != "" and _bk != "":
+				notify_milestone(_milestone_id, tr(_tk), tr(_bk),
+					_def.get("milestone_color", Color(1.0, 0.82, 0.1)))
 
 	# Detección de nuevas mutaciones
 	if not _all_mutations_seen:

@@ -27,16 +27,25 @@ const ROUTE_DEFS: Dictionary = {
 		"tier": "basica", "min_tras": 1, "consumable": true,
 		"icon": "🕳️", "name_key": "ROUTE_VACIO_HAMBRIENTO", "desc_key": "ROUTE_VACIO_DESC",
 		"color": Color(0.55, 0.0, 0.8),
+		"milestone_title_key": "TUTO_MT_VACIO_TITLE",
+		"milestone_body_key": "TUTO_MT_VACIO_BODY",
+		"milestone_color": Color(0.55, 0.3, 0.85),
 	},
 	"carnaval": {
 		"tier": "basica", "min_tras": 1, "consumable": true,
 		"icon": "🎭", "name_key": "ROUTE_CARNAVAL", "desc_key": "ROUTE_CARNAVAL_DESC",
 		"color": Color(1.0, 0.4, 0.1),
+		"milestone_title_key": "TUTO_MT_CARNAVAL_TITLE",
+		"milestone_body_key": "TUTO_MT_CARNAVAL_BODY",
+		"milestone_color": Color(0.95, 0.3, 0.7),
 	},
 	"reencarnacion": {
 		"tier": "basica", "min_tras": 1, "consumable": true,
 		"icon": "⚱️", "name_key": "ROUTE_REENCARNACION", "desc_key": "ROUTE_REENCARNACION_DESC",
 		"color": Color(0.3, 0.9, 0.6),
+		"milestone_title_key": "TUTO_MT_REENCARN_TITLE",
+		"milestone_body_key": "TUTO_MT_REENCARN_BODY",
+		"milestone_color": Color(0.85, 0.7, 0.35),
 	},
 }
 
