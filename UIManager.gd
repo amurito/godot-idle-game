@@ -677,6 +677,21 @@ func update_fungal_cycle_bar() -> void:
 func _right_panel() -> Node:
 	return root.get_node_or_null("RightPanel")
 
+## Libera los botones dinámicos de NG+ al resetear la run (llamado desde main.reset_local_state).
+func reset_ng_plus_buttons() -> void:
+	if is_instance_valid(_met_oscuro_seal_btn):
+		_met_oscuro_seal_btn.queue_free()
+		_met_oscuro_seal_btn = null
+	if is_instance_valid(_depredador_buytime_btn):
+		_depredador_buytime_btn.queue_free()
+		_depredador_buytime_btn = null
+	if is_instance_valid(_simbiosis_seal_btn):
+		_simbiosis_seal_btn.queue_free()
+		_simbiosis_seal_btn = null
+	if is_instance_valid(_esclerocio_btn):
+		_esclerocio_btn.queue_free()
+		_esclerocio_btn = null
+
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
 	_update_met_oscuro_seal_button()

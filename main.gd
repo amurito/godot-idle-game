@@ -31,6 +31,8 @@ var show_institutions_panel: bool = false
 # =============== SESIÓN / LAB MODE ===================
 
 var _debug_panel: Panel = null
+var _reset_btn: Button = null
+var _colapso_controlado_btn: Button = null
 
 # Timers — tick system (no more manual accumulation in _process)
 var _logic_timer: Timer
@@ -205,18 +207,7 @@ func reset_local_state():
 	# Sólo borramos el estado efímero (timers, contadores de click, etc.)
 	AchievementManager.reset_run_state()
 	_parasitism_status_timer = 0.0
-	if is_instance_valid(_met_oscuro_seal_btn):
-		_met_oscuro_seal_btn.queue_free()
-		_met_oscuro_seal_btn = null
-	if is_instance_valid(_depredador_buytime_btn):
-		_depredador_buytime_btn.queue_free()
-		_depredador_buytime_btn = null
-	if is_instance_valid(_simbiosis_seal_btn):
-		_simbiosis_seal_btn.queue_free()
-		_simbiosis_seal_btn = null
-	if is_instance_valid(_esclerocio_btn):
-		_esclerocio_btn.queue_free()
-		_esclerocio_btn = null
+	UIManager.reset_ng_plus_buttons()
 	if is_instance_valid(_colapso_controlado_btn):
 		_colapso_controlado_btn.queue_free()
 		_colapso_controlado_btn = null
