@@ -43,22 +43,12 @@ AccessibilityManager="*res://AccessibilityManager.gd"
 LocaleManager="*res://LocaleManager.gd"
 Balance="*res://Balance.gd"
 
-[audio]
-
-buses/default_bus_layout="res://default_bus_layout.tres"
-general/default_playback_type.web=1
-
 [display]
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[audio]
-
-buses/default_bus_layout="res://default_bus_layout.tres"
-general/default_playback_type.web=1
 
 [editor]
 

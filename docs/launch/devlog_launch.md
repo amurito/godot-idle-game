@@ -30,13 +30,11 @@
 
 **El micelio ya no espera**
 
-Hace unas semanas prometí dos cosas: que el ESCLEROCIO OSCURO estaba casi listo, y que el organismo no había terminado de mostrarse.
+**v1.0.1 está disponible.** Dos cambios. Uno que extiende el endgame oscuro; otro que rehízo desde adentro una rama entera.
 
-Ambas eran ciertas.
+🌑 **ESCLEROCIO OSCURO** es nuevo en esta versión. Algunos hongos, sabiendo que el colapso es inevitable, no esperan a morir: se encapsulan. Endurecen su micelio en una cápsula de dormancia, y algo de esa bioquímica que nunca debió existir *pasa al ciclo siguiente*. Si llegaste al Metabolismo Oscuro, ya estás cerca de la puerta. Si no: ahí empieza.
 
-🌑 **ESCLEROCIO OSCURO** ya está en el juego. Algunos hongos, sabiendo que el colapso es inevitable, no esperan a morir: se encapsulan. Endurecen su micelio en una cápsula de dormancia, y algo de esa bioquímica que nunca debió existir *pasa al ciclo siguiente*. Si ya llegaste hasta ahí, sabés de qué hablo. Si no: la puerta sigue siendo el Metabolismo Oscuro.
-
-Pero el cambio que realmente transformó el juego en esta versión fue otro.
+El otro cambio fue más profundo.
 
 La **Red Micelial** siempre fue la rama silenciosa. Extendés. Esperás. El sistema hace su trabajo. Era suficiente.
 
@@ -60,13 +58,11 @@ Autólisis. Necrosis. Un protocolo donde Ω llega a cero. Una única ruta que el
 
 **The mycelium doesn't wait anymore**
 
-A few weeks ago I promised two things: that Dark Sclerotium was almost ready, and that the organism hadn't finished showing itself.
+**v1.0.1 is out.** Two changes. One that extends the dark endgame; one that rebuilt an entire branch from the inside.
 
-Both were true.
+🌑 **Dark Sclerotium** is new in this version. Some fungi, knowing collapse is inevitable, don't wait to die: they encapsulate. They harden their mycelium into a dormant capsule — and something of that biochemistry that was never supposed to exist *carries into the next cycle*. If you've reached Dark Metabolism, you're already close to the door. If not: that's where it starts.
 
-🌑 **Dark Sclerotium** is now in the game. Some fungi, knowing collapse is inevitable, don't wait to die: they encapsulate. They harden their mycelium into a dormant capsule — and something of that biochemistry that was never supposed to exist *carries into the next cycle*. If you've gotten that far, you know what I mean. If not: the door is still Dark Metabolism.
-
-But the change that truly transformed the game in this version was something else.
+The other change went deeper.
 
 The **Mycelial Network** was always the quiet branch. You spread. You wait. The system does its work. It was enough.
 

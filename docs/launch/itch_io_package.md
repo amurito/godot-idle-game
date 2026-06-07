@@ -156,25 +156,16 @@ idle, incremental, clicker, simulation, evolution, biology, godot, prestige, sin
 HYPHAE: genesis — an idle with 10 mutation FSMs, multi-layer prestige & structural-stress mechanics [browser/free]
 ```
 
-**Cuerpo:**
-```
-Hi all! I just released HYPHAE: genesis, a free idle/incremental I've been building in Godot.
-
-You manage an evolving fungal organism: generate energy, keep structural stress (ε) and
-stability (Ω) in check, and transcend the cycle to unlock mutation routes that actually
-change how the loop plays — not just bigger numbers.
-
+Hi all! I released HYPHAE: genesis a week ago — a free idle/incremental built in Godot 4, just updated to v1.0.1.
+You manage an evolving fungal organism: generate energy, keep structural stress (ε) and stability (Ω) in check, and transcend the cycle to unlock mutation routes that actually change how the loop plays — not just bigger numbers.
 - 10 mutations driven by a state machine; each reshapes the run
 - Multi-layer prestige (Genetic Bank + Cosmic Bank)
-- Distinct endings/routes (Symbiosis, Dark Metabolism, Singularity…) + post-transcendence
-  routes that change the rules (Hungry Void, Carnival, Reincarnation)
-- Bilingual EN/ES, accessibility options, save export/import
+- Distinct endings (Symbiosis, Dark Metabolism, Singularity…) + 3 post-transcendence routes that rewrite the rules (Hungry Void, Carnival of Mutations, Reincarnation)
+- v1.0.1: Dark Sclerotium (dark endgame extension) + Mycelial Network rework — one mutation, now five distinct ways to end the run
+- Bilingual EN/ES, accessibility options, save slots
+Browser + Windows, free: [https://amurito.itch.io/hyphae-genesis]
+First incremental I've shipped — feedback very welcome, especially on early pacing and which routes land best. Thanks for taking a look!
 
-Browser + Windows, free: [LINK itch.io]
-
-It's my first incremental release — feedback very welcome, especially on early-game pacing
-and which routes feel best. Thanks for taking a look!
-```
 *(Reemplazá `[LINK itch.io]`. Insertá el GIF en el cuerpo. Leé las reglas del sub antes de postear — algunos exigen tag de plataforma.)*
 
 ### r/godot (cross-post — Día +2, ángulo técnico)
