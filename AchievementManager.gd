@@ -183,16 +183,16 @@ func get_progress(id: String) -> Dictionary:
 		current = float(count)
 	# For reino_subterraneo: count unlocked MICELIO+ESPORA+FRUTO achievements (target is dynamic)
 	elif id == "reino_subterraneo":
-		var unlocked_count := 0
-		var total_count := 0
+		var _uc := 0
+		var _tc := 0
 		for aid in DEFS:
 			var adef: Dictionary = DEFS[aid]
 			if adef["tier"] == Tier.ANCESTRAL or adef["tier"] == Tier.MYTHIC: continue
-			total_count += 1
-			if is_unlocked(aid): unlocked_count += 1
-		current = float(unlocked_count)
-		var ratio_rs := clampf(current / float(total_count), 0.0, 1.0) if total_count > 0 else 0.0
-		return {"current": current, "target": float(total_count), "ratio": ratio_rs}
+			_tc += 1
+			if is_unlocked(aid): _uc += 1
+		current = float(_uc)
+		var ratio_rs := clampf(current / float(_tc), 0.0, 1.0) if _tc > 0 else 0.0
+		return {"current": current, "target": float(_tc), "ratio": ratio_rs}
 	var target: float = float(def.get("target", 1))
 	var ratio := clampf(current / target, 0.0, 1.0) if target > 0.0 else 0.0
 	return {"current": current, "target": target, "ratio": ratio}

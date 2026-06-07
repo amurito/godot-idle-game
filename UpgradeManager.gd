@@ -222,7 +222,7 @@ func apply_reencarnacion_snapshot(snapshot: Dictionary) -> void:
 		if not states.has(id):
 			continue
 		var snap = snapshot[id]
-		var lvl: int = snap.get("level", 0)
+		var lvl: int = int(snap.get("level", 0))
 		if lvl <= 0:
 			continue
 		var def = get_def(id)

@@ -43,7 +43,6 @@ const AUTOSAVE_INTERVAL := 30.0
 
 # ================= REFERENCIAS UI ===================
 @onready var ui_root = $UIRootContainer
-@onready var _legacy_indicators := $HeaderBar/HeaderContent/LegacyIndicators
 @onready var evolution_bar = $UIRootContainer/LeftPanel/CenterPanel/EvolutionProgressBar
 @onready var bottom_left_panel = $BottomLeftControls
 @onready var evo_choice_panel = $EvoChoicePanel
@@ -1084,7 +1083,7 @@ func format_time(t: float) -> String:
 func update_epsilon_sticky():
 	if not UIManager.epsilon_sticky_label:
 		return
-	UIManager.epsilon_sticky_label.text = EmojiToRichText.strip(UIManager.build_epsilon_sticky_text(self))
+	UIManager.epsilon_sticky_label.text = EmojiToRichText.strip(UITextBuilders.build_epsilon_sticky_text(self))
 
 func get_system_phase() -> String:
 	return UIManager.get_system_phase(StructuralModel.omega)

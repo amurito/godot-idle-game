@@ -1534,9 +1534,9 @@ func _on_locale_changed(_new_locale: String) -> void:
 			btn_continue.text = EmojiToRichText.strip(tr("MM_NEW_RUN_POSTRANSCEND"))
 
 	if is_instance_valid(btn_new_game):
-		var has_meta := LegacyManager.legacy_points > 0 or LegacyManager.trascendencia_count > 0 or LegacyManager.total_runs > 0
-		btn_new_game.text = tr("MM_NEW_RUN") if has_meta else tr("MM_NEW_GAME")
-		btn_new_game.tooltip_text = tr("MM_NEW_RUN_TOOLTIP") if has_meta else ""
+		var has_meta_state := LegacyManager.legacy_points > 0 or LegacyManager.trascendencia_count > 0 or LegacyManager.total_runs > 0
+		btn_new_game.text = tr("MM_NEW_RUN") if has_meta_state else tr("MM_NEW_GAME")
+		btn_new_game.tooltip_text = tr("MM_NEW_RUN_TOOLTIP") if has_meta_state else ""
 
 	_refresh_nav_badges()
 

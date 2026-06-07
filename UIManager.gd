@@ -1182,7 +1182,7 @@ func update_lab_metrics() -> void:
 		var bar_len := 20
 		var fc := int(c_pct / 100.0 * bar_len)
 		var fd := int(d_pct / 100.0 * bar_len)
-		var fe: int = max(bar_len - fc - fd, 0)
+		var fe: int = int(max(bar_len - fc - fd, 0))
 		var bar := "[color=#ff8844]" + "█".repeat(fc) + "[/color]"
 		bar += "[color=#44aaff]" + "█".repeat(fd) + "[/color]"
 		bar += "[color=#00ffcc]" + "█".repeat(fe) + "[/color]"

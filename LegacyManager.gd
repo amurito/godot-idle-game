@@ -788,7 +788,7 @@ func transcend() -> int:
 func get_trascendencia_title() -> String:
 	if trascendencia_count <= 0:
 		return ""
-	var idx: int = min(trascendencia_count, TRASCENDENCIA_TITLES.size() - 1)
+	var idx: int = int(min(trascendencia_count, TRASCENDENCIA_TITLES.size() - 1))
 	return TRASCENDENCIA_TITLES[idx]
 
 # =====================================================

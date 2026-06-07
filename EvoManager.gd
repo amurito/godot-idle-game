@@ -8,8 +8,11 @@
 signal mutation_unlocked(mutation_id: String)
 signal mutation_activated(mutation_id: String, display_name: String)
 signal run_ended_by_mutation(route: String, reason: String)
+@warning_ignore("unused_signal")
 signal primordio_iniciado()
+@warning_ignore("unused_signal")
 signal primordio_abortado(abort_count: int, reason: String)
+@warning_ignore("unused_signal")
 signal seta_formada_signal()
 
 var genome := {

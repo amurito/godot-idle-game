@@ -117,7 +117,7 @@ func close_run(route: String, reason: String):
 	AchievementManager.on_run_closed(route)
 
 	# SINGULARIDAD: PL variable (6 + bonus épsilon) ya otorgado en main.gd antes de close_run()
-	var pl_to_add: int = Balance.PL_REWARDS.get(route, 0)
+	var pl_to_add: int = int(Balance.PL_REWARDS.get(route, 0))
 	var _total_pl := pl_to_add
 
 	if pl_to_add > 0:
@@ -138,7 +138,7 @@ func close_run(route: String, reason: String):
 	if LegacyManager.trascendencia_count >= 1:
 		var ng_bonus := 0
 		var ng_formula := ""
-		var cap: int = Balance.NG_CAPS.get(route, 0)
+		var cap: int = int(Balance.NG_CAPS.get(route, 0))
 		var _rs: Dictionary = RouteManager.get_extra_state()
 		match route:
 			# ── Tier 1 ──
@@ -180,7 +180,7 @@ func close_run(route: String, reason: String):
 				ng_bonus = min(raw, cap)
 				ng_formula = "devoured %d / 8 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
-				var rotaciones: int = _rs.get("total_rotations", 0)
+				var rotaciones: int = int(_rs.get("total_rotations", 0))
 				var raw := int(floor(rotaciones / 2.0))
 				ng_bonus = min(raw, cap)
 				ng_formula = "rotaciones %d / 2 = %d (cap %d)" % [rotaciones, ng_bonus, cap]
@@ -705,7 +705,7 @@ func get_predicted_route() -> String:
 ## Calcula el bonus NG+ actual para la ruta dada sin efectos secundarios.
 ## Devuelve {bonus, cap, raw, saturated}.
 func compute_ng_bonus(route: String) -> Dictionary:
-	var cap: int = Balance.NG_CAPS.get(route, 0)
+	var cap: int = int(Balance.NG_CAPS.get(route, 0))
 	var _rs: Dictionary = RouteManager.get_extra_state()
 	var raw := 0
 	match route:
@@ -741,7 +741,7 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = EvoManager.met_oscuro_devoured_count * 2
 		"PANSPERMIA NEGRA":
 			raw = int(floor(BiosphereEngine.micelio / 20.0))
-	var bonus: int = min(raw, cap)
+	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
 ## Notifica una sola vez por run cuando el bonus NG+ satura el cap.
