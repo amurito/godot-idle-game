@@ -7,7 +7,7 @@
 
 const SETTINGS_PATH := "user://locale_settings.json"
 const SUPPORTED_LOCALES := ["es", "en"]
-const DEFAULT_LOCALE := "es"
+const DEFAULT_LOCALE := "en"
 
 signal locale_changed(new_locale: String)
 
@@ -2503,6 +2503,10 @@ func _save_settings() -> void:
 
 func _load_settings() -> void:
 	if not FileAccess.file_exists(SETTINGS_PATH):
+		# Sin preferencia guardada: detectar idioma del sistema.
+		# Si el OS reporta español → "es", cualquier otro → "en" (default).
+		var sys_locale := OS.get_locale_language()
+		current_locale = "es" if sys_locale == "es" else DEFAULT_LOCALE
 		return
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
 	if not f: return
