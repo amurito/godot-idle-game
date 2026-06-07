@@ -675,6 +675,7 @@ func _on_logic_tick():
 
 	# --- SHOCK TRACKING --- (delegado a RunManager)
 	RunManager.check_shock_tracking()
+	RunManager.check_ng_cap()
 
 	# --- TICK DE RUTA POST-TRASCENDENCIA ---
 	RouteManager.tick(dt)

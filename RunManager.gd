@@ -34,6 +34,9 @@ var omega_min_peak: float = 0.0  # Máximo histórico de omega_min en la run
 var _fractura_carga_timer: float = 0.0
 const FRACTURA_CARGA_DURATION := 20.0  # segundos de ε > 0.90 sostenido con HIPER activa
 
+# NG+ CAP — notificación una sola vez por run cuando el bonus variable satura el cap
+var _ng_cap_notified: bool = false
+
 var evolution_button: Button = null
 var target_evolution: String = ""
 
@@ -78,6 +81,7 @@ func reset():
 	mc_burst_timer = 0.0
 	mc_cooldown_timer = 0.0
 	_fractura_carga_timer = 0.0
+	_ng_cap_notified = false
 
 # ==================== HELPERS ====================
 func get_en_banda_homeostatica() -> bool:
@@ -676,3 +680,80 @@ func _mente_colmena_auto_buy() -> void:
 		var label_str := def.label if def else bought_id
 		LogManager.add(tr("LOG_AI_BOUGHT") % [label_str, bought_cost])
 		UIManager.show_toast(tr("TOAST_AI_BOUGHT") % label_str)
+
+# ==================== NG+ CAP NOTIFICATION ====================
+
+## Ruta de cierre más probable dado el estado actual de mutaciones.
+func get_predicted_route() -> String:
+	if LegacyManager.trascendencia_count == 0:
+		return ""
+	if RouteManager.is_active("vacio"):            return "ASCESIS_PROFUNDA"
+	if RouteManager.is_active("carnaval"):         return "POLIMORFÍA TOTAL"
+	if EvoManager.mutation_depredador:             return "DEPREDADOR DE REALIDADES"
+	if EvoManager.mutation_met_oscuro:             return "METABOLISMO OSCURO"
+	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
+	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
+	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
+	if EvoManager.mutation_allostasis:             return "ALLOSTASIS"
+	if EvoManager.mutation_homeostasis:            return "HOMEOSTASIS"
+	if EvoManager.mutation_symbiosis:              return "SIMBIOSIS"
+	if EvoManager.mutation_red_micelial:           return "ESPORULACIÓN"
+	if EvoManager.mutation_parasitism:             return "PARASITISMO"
+	if EvoManager.mutation_hyperassimilation:      return "HIPERASIMILACIÓN"
+	return ""
+
+## Calcula el bonus NG+ actual para la ruta dada sin efectos secundarios.
+## Devuelve {bonus, cap, raw, saturated}.
+func compute_ng_bonus(route: String) -> Dictionary:
+	var cap: int = Balance.NG_CAPS.get(route, 0)
+	var _rs: Dictionary = RouteManager.get_extra_state()
+	var raw := 0
+	match route:
+		"HOMEOSTASIS":
+			raw = int(floor(resilience_score / 50.0))
+		"SIMBIOSIS":
+			raw = int(floor(run_time / 300.0))
+		"HIPERASIMILACION", "HIPERASIMILACIÓN":
+			raw = int(floor(StructuralModel.epsilon_peak * 5.0))
+		"PARASITISMO":
+			raw = int(floor(BiosphereEngine.biomasa / 8.0))
+		"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL":
+			raw = int(floor(BiosphereEngine.micelio / 20.0))
+		"ALLOSTASIS":
+			raw = disturbances_survived
+		"HOMEORHESIS":
+			raw = int(floor(omega_min_peak * 10.0))
+		"MUTACION_FINAL", "METABOLISMO OSCURO":
+			raw = EvoManager.met_oscuro_devoured_count * 2
+		"ESCLEROCIO OSCURO":
+			raw = int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
+		"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
+			raw = int(floor(_rs.get("total_rotations", 0) / 2.0))
+		"DOMADOR DEL CAOS":
+			raw = int(floor(_rs.get("peak_money", 0.0) / 500_000.0))
+		"ASCESIS_PROFUNDA":
+			raw = int(floor(omega_min_peak * 10.0))
+		"MENTE COLMENA DISTRIBUIDA":
+			raw = int(floor(run_time / 600.0))
+		"DEPREDADOR DE REALIDADES":
+			raw = EvoManager.met_oscuro_devoured_count
+		"COLAPSO DEPREDATORIO":
+			raw = EvoManager.met_oscuro_devoured_count * 2
+		"PANSPERMIA NEGRA":
+			raw = int(floor(BiosphereEngine.micelio / 20.0))
+	var bonus := min(raw, cap)
+	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
+
+## Notifica una sola vez por run cuando el bonus NG+ satura el cap.
+## Llamado desde main.gd _on_logic_tick().
+func check_ng_cap() -> void:
+	if run_closed or _ng_cap_notified or LegacyManager.trascendencia_count == 0:
+		return
+	var route := get_predicted_route()
+	if route.is_empty():
+		return
+	var info := compute_ng_bonus(route)
+	if info.saturated:
+		_ng_cap_notified = true
+		UIManager.show_toast(tr("TOAST_NG_CAP") % [info.bonus, info.cap, route])
+		LogManager.add(tr("LOG_NG_CAP") % [info.bonus, route])

@@ -1178,6 +1178,15 @@ func update_lab_metrics() -> void:
 		txt += "[color=#44aaff]● Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
 		txt += "[color=#00ffcc]● Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
 		txt += "[color=#555555][%s][/color]" % bar
+		# NG+ bonus live estimate — solo si hay al menos 1 trascendencia
+		if LegacyManager.trascendencia_count >= 1:
+			var ng_route := RunManager.get_predicted_route()
+			if not ng_route.is_empty():
+				var ng_info := RunManager.compute_ng_bonus(ng_route)
+				var ng_col := "[color=#ffd700]" if ng_info.saturated else "[color=#aaaaaa]"
+				var cap_mark := " ✓" if ng_info.saturated else ""
+				var ng_line := ng_col + "✦ NG+ %d/%d%s — %s[/color]" % [ng_info.bonus, ng_info.cap, cap_mark, ng_route]
+				txt += "\n" + ng_line
 		sys_breakdown_label.clear()
 		sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
 
