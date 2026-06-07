@@ -149,7 +149,7 @@ static func update_click_stats_panel(_main: Node) -> String:
 	var me := UpgradeManager.value("trueque_net")
 
 	var ap := EconomyManager.get_active_passive_breakdown()
-	var push := ap.push_abs
+	var push: float = ap.push_abs
 
 	var t := "[b]" + TranslationServer.translate("LAB_APORTE_ACTUAL") + "[/b]\n"
 	t += "[color=#cccccc]" + TranslationServer.translate("LAB_CLICK_PUSH_LINE") % push + "\n"
@@ -425,13 +425,13 @@ static func build_evo_checklist(_main: Node) -> String:
 		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism \
 		and not EvoManager.mutation_symbiosis:
 		var ap_snap := EconomyManager.get_active_passive_breakdown()
-		var pasivo_domina := ap_snap.pasivo > ap_snap.activo
-		var activo_domina := ap_snap.activo > ap_snap.pasivo
+		var pasivo_domina: bool = ap_snap.pasivo > ap_snap.activo
+		var activo_domina: bool = ap_snap.activo > ap_snap.pasivo
 		t += "[b]" + TranslationServer.translate("EVO_RED_TITLE") + "[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 11.5 else fail_color + "[ ] "
-		t += ch + "Hifas >= 12  (" + sTranslationServer.translate(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
+		t += ch + "Hifas >= 12  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.biomasa >= 5.0 else fail_color + "[ ] "
-		t += ch + "Biomasa >= 5  (" + sTranslationServer.translate(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
+		t += ch + "Biomasa >= 5  (" + str(snapped(BiosphereEngine.biomasa, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.epsilon_runtime < 0.65 else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_EPS_RT_LT65") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
@@ -440,9 +440,9 @@ static func build_evo_checklist(_main: Node) -> String:
 		t += ch + TranslationServer.translate("EVO_PASSIVE_DOM") % [int(ap_snap.pasivo), int(ap_snap.activo)] + "[/color]\n"
 		t += "\n[b]" + TranslationServer.translate("EVO_SIM_TITLE") + "[/b]\n"
 		ch = ok_color + "[x] " if BiosphereEngine.hifas >= 5.0 else fail_color + "[ ] "
-		t += ch + "Hifas >= 5  (" + sTranslationServer.translate(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
+		t += ch + "Hifas >= 5  (" + str(snapped(BiosphereEngine.hifas, 0.1)) + ")[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.omega >= 0.40 else fail_color + "[ ] "
-		t += ch + "Ω >= 0.40  (" + sTranslationServer.translate(snapped(StructuralModel.omega, 0.01)) + ")[/color]\n"
+		t += ch + "Ω >= 0.40  (" + str(snapped(StructuralModel.omega, 0.01)) + ")[/color]\n"
 		ch = ok_color + "[x] " if acc >= 1 else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if activo_domina else fail_color + "[ ] "
@@ -855,7 +855,7 @@ static func build_bifurcation_data() -> Dictionary:
 			h_txt += "[color=%s]%s " % [AccessibilityManager.cok_hex() if h_ok_red else AccessibilityManager.cno_hex(), "[x]" if h_ok_red else "[ ]"] + TranslationServer.translate("EVO_HOME_DE") + "[/color]\n"
 
 		if EvoManager.mutation_homeostasis and RunManager.homeostasis_timer > 0.1:
-			var ratio := min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
+			var ratio: float = min(RunManager.homeostasis_timer / Balance.HOMEOSTASIS_TIME_REQUIRED, 1.0) * 100.0
 			h_txt += "\n[color=#ffff00]" + TranslationServer.translate("EVO_HOME_STAB_PCT") % int(ratio) + "[/color][/center]"
 		else:
 			h_txt += "\n[color=#555555]" + TranslationServer.translate("EVO_HOME_STAB_REQ") + "[/color][/center]"
