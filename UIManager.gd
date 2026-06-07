@@ -1226,3 +1226,41 @@ func _ensure_fungal_bar_style(bar) -> void:
 		lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
 		bar.add_child(lbl)
 		_fungal_bar_label = lbl
+
+func get_reactor_color() -> Color:
+	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
+		return Color(0.12, 0.0, 0.02)
+	if EvoManager.mutation_met_oscuro:
+		return Color(0.53, 0.27, 0.67)
+	if EvoManager.mutation_depredador:
+		return Color(1.0, 0.0, 0.33)
+	if RouteManager.is_active("vacio"):
+		return Color(0.75, 0.2, 1.0)
+	if EvoManager.seta_formada:
+		return Color(0.65, 1.2, 0.2)
+	if EvoManager.mutation_sporulation:
+		return Color(0.7, 1.0, 0.4)
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+		return Color(0.45, 1.0, 0.05)
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
+		return Color(0.0, 0.9, 1.0)
+	if EvoManager.mutation_hyperassimilation:
+		if RunManager._fractura_carga_timer > 0.0:
+			var t := clampf(RunManager._fractura_carga_timer / RunManager.FRACTURA_CARGA_DURATION, 0.0, 1.0)
+			return Color(0.95, 0.05, 0.05).lerp(Color(1.1, 0.85, 0.05), t)
+		return Color(0.95, 0.05, 0.05)
+	if EvoManager.mutation_homeorhesis:
+		return Color(0.55, 1.0, 0.92)
+	if EvoManager.mutation_allostasis:
+		return Color(0.2, 1.0, 0.88)
+	if EvoManager.mutation_homeostasis:
+		return Color(0.05, 0.88, 0.68)
+	if EvoManager.mutation_parasitism:
+		return Color(1.0, 0.45, 0.0)
+	if EvoManager.nucleo_conciencia:
+		return Color(0.2, 0.5, 1.0)
+	if EvoManager.mutation_red_micelial:
+		return Color(0.3, 1.0, 0.3)
+	if EvoManager.mutation_symbiosis:
+		return Color(0.4, 0.9, 0.7)
+	return Color(0.15, 0.65, 1.0)

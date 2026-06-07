@@ -155,7 +155,7 @@ func _process(delta: float) -> void:
 	var epsilon: float    = StructuralModel.epsilon_runtime
 	var biomasa: float    = BiosphereEngine.biomasa
 	var seta_bonus: float = 1.25 if EvoManager.seta_formada else 1.0
-	target_tint = EvoManager.get_reactor_color()
+	target_tint = UIManager.get_reactor_color()
 
 	current_scale = lerp(current_scale, target_scale * seta_bonus, 0.12)
 	var display_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.06

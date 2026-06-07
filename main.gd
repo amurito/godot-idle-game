@@ -1140,9 +1140,9 @@ func _sync_reactor_color() -> void:
 	if not is_instance_valid(reactor_visual):
 		reactor_visual = $UIRootContainer/LeftPanel/CenterPanel/BigClickButton/ReactorVisual
 		return
-	reactor_visual.set_tint(EvoManager.get_reactor_color())
+	reactor_visual.set_tint(UIManager.get_reactor_color())
 	if _use_3d_reactor and is_instance_valid(reactor_3d):
-		reactor_3d.set_tint(EvoManager.get_reactor_color())
+		reactor_3d.set_tint(UIManager.get_reactor_color())
 func update_ui():
 	update_epsilon_sticky()
 	UIManager.update_bifurcation_panel()
