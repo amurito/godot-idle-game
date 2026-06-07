@@ -114,6 +114,12 @@ func get_extra_state() -> Dictionary:
 		return {}
 	return _active_route.get_extra_state()
 
+## Badge de header para la ruta activa. {"text": String, "color": Color}; text vacío = sin badge.
+func get_badge() -> Dictionary:
+	if _active_route == null:
+		return {"text": "", "color": Color.WHITE}
+	return _active_route.get_badge()
+
 ## Lista de ids de rutas que el jugador puede elegir en la pantalla post-trascendencia.
 ## Único lugar con lógica de gating.
 func get_selectable_routes() -> Array:

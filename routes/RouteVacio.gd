@@ -59,3 +59,9 @@ func get_extra_state() -> Dictionary:
 		"mult": mult,
 		"ascesis_timer": ascesis_timer,
 	}
+
+func get_badge() -> Dictionary:
+	return {
+		"text": "🕳️  " + tr("ROUTE_VACIO_HAMBRIENTO") + "  ×%.0f" % mult,
+		"color": Color(0.75, 0.2, 1.0),
+	}

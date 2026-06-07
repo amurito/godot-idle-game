@@ -85,3 +85,10 @@ func get_extra_state() -> Dictionary:
 		"total_rotations": total_rotations,
 		"peak_money": peak_money,
 	}
+
+func get_badge() -> Dictionary:
+	var mut: String = mutations[index] if not mutations.is_empty() else "?"
+	return {
+		"text": "🎭  " + tr("ROUTE_CARNAVAL") + "  [%s]" % mut,
+		"color": Color(1.0, 0.5, 0.1),
+	}

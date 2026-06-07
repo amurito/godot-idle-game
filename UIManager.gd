@@ -305,24 +305,12 @@ func show_countdown(secs: int, event: String) -> void:
 func update_route_badge() -> void:
 	if not is_instance_valid(route_badge_label):
 		return
-	var text := ""
-	var color := Color.WHITE
-	if RouteManager.is_active("vacio"):
-		text = "🕳️  " + tr("ROUTE_VACIO_HAMBRIENTO") + "  ×100"
-		color = Color(0.75, 0.2, 1.0)
-	elif RouteManager.is_active("carnaval"):
-		var rs: Dictionary = RouteManager.get_extra_state()
-		var muts: Array = rs.get("mutations", [])
-		var idx: int = rs.get("index", 0)
-		var mut: String = muts[idx] if not muts.is_empty() else "?"
-		text = "🎭  " + tr("ROUTE_CARNAVAL") + "  [%s]" % mut
-		color = Color(1.0, 0.5, 0.1)
-	elif RouteManager.is_active("reencarnacion"):
-		text = "⚱️  " + tr("ROUTE_REENCARNACION")
-		color = Color(0.3, 0.95, 0.6)
+	var badge: Dictionary = RouteManager.get_badge()
+	var text: String = badge.get("text", "")
 	if text == "":
 		route_badge_label.visible = false
 		return
+	var color: Color = badge.get("color", Color.WHITE)
 	var hex := "#%s" % color.to_html(false)
 	route_badge_label.text = "[color=%s]%s[/color]" % [hex, EmojiToRichText.rich(text)]
 	route_badge_label.visible = true

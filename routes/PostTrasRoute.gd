@@ -35,3 +35,8 @@ func deserialize(_d: Dictionary) -> void:
 ## Las claves dependen de la ruta concreta; los consumidores usan .get(key, default).
 func get_extra_state() -> Dictionary:
 	return {}
+
+## Badge de header para esta ruta. Retornar {"text": String, "color": Color}.
+## text vacío = no mostrar badge.
+func get_badge() -> Dictionary:
+	return {"text": "", "color": Color.WHITE}

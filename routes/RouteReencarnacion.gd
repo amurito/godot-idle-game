@@ -17,3 +17,9 @@ func serialize() -> Dictionary:
 
 func deserialize(_d: Dictionary) -> void:
 	pass
+
+func get_badge() -> Dictionary:
+	return {
+		"text": "⚱️  " + tr("ROUTE_REENCARNACION"),
+		"color": Color(0.3, 0.95, 0.6),
+	}
