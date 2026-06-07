@@ -48,6 +48,8 @@ var unlocked_me := false
 const K_PERSISTENCE := 1.25
 const ALPHA_KAPPA := 0.55
 const COGNITIVE_MULTIPLIER := 0.05
+const EPS_PASSIVE_SCALE := 0.24
+const PASSIVE_RATIO_START := 0.60
 
 # ==================== PERSISTENCIA UPGRADE ====================
 var persistence_upgrade_unlocked := false
@@ -220,3 +222,91 @@ func apply_flexibility_modifier(factor: float):
 
 func enable_persistence_inertia(factor: float):
 	persistence_inertia = factor
+
+# ==================== CÁLCULO DE ÉPSILON / OMEGA ====================
+func update_runtime() -> void:
+	if baseline_delta_structural <= 0.0 or EconomyManager.delta_per_sec <= 0.0:
+		epsilon_runtime = 0.0
+		epsilon_active = 0.0
+		epsilon_passive = 0.0
+		epsilon_complex = 0.0
+		return
+
+	var n_struct := get_effective_structural_n()
+	var k_eff := get_k_eff()
+
+	var expected_delta := baseline_delta_structural * pow(k_eff, 1.0 - (1.0 / n_struct))
+	var epsilon_prod := 0.0
+	if expected_delta > 0.0:
+		epsilon_prod = max(0.0, (EconomyManager.delta_per_sec / expected_delta) - 1.0)
+
+	var active := EconomyManager.get_click_power()
+	var passive := EconomyManager.get_passive_total()
+	var total := active + passive
+	var active_ratio := 0.0
+	var passive_ratio := 0.0
+	if total > 0.0:
+		active_ratio = active / total
+		passive_ratio = passive / total
+
+	var t: float = clamp(n_struct / 40.0, 0.0, 1.0)
+	var target_active: float = lerp(0.8, 0.4, t)
+	var epsilon_comp: float = abs(active_ratio - target_active)
+	epsilon_comp *= (1.0 - get_accounting_effect())
+	var decay_factor := clamp(1.0 - (EconomyManager.time_since_last_click / 5.0), 0.0, 1.0)
+	epsilon_active = (epsilon_prod + epsilon_comp) * decay_factor
+
+	epsilon_passive = 0.0
+	if passive_ratio > PASSIVE_RATIO_START:
+		var excess := passive_ratio - PASSIVE_RATIO_START
+		var rigidity := (1.0 - omega)
+		var size_factor := log(1.0 + n_struct) * 0.45
+		epsilon_passive = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - get_accounting_effect())
+
+	epsilon_complex = 0.0012 * n_struct * k_eff
+
+	var epsilon_raw := epsilon_active + epsilon_passive + epsilon_complex
+	var bio_absorption := 1.0
+	if epsilon_effective < epsilon_runtime and epsilon_runtime > 0.1:
+		bio_absorption = clamp(epsilon_effective / epsilon_runtime, 0.4, 1.0)
+	var eps_target := epsilon_raw * bio_absorption
+	if RunManager.is_memoria_oscura_active() and eps_target > epsilon_runtime:
+		eps_target = epsilon_runtime + (eps_target - epsilon_runtime) * Balance.MEMORIA_OSCURA_EPS_RISE_DAMP
+	epsilon_runtime = lerp(epsilon_runtime, eps_target, 0.045)
+	epsilon_runtime = clamp(epsilon_runtime, 0.0, 2.0)
+
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+		epsilon_runtime = max(epsilon_runtime, 0.25)
+	epsilon_peak = max(epsilon_peak, epsilon_runtime)
+
+	omega = EcoModel.get_omega(epsilon_runtime, k_eff, n_struct)
+	if omega > omega_min:
+		omega_min = move_toward(omega_min, omega, 0.002)
+	if EvoManager.mutation_homeostasis:
+		omega_min = max(omega_min, 0.35)
+	omega = max(omega, omega_min)
+
+	if EvoManager.mutation_allostasis:
+		omega = max(omega, 0.60)
+	elif LegacyManager.get_buff_value("legado_homeorresis"):
+		omega = max(omega, 0.55)
+	elif LegacyManager.get_buff_value("legado_alostasis"):
+		omega = max(omega, 0.45)
+
+	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
+		omega = max(omega, 0.50)
+
+	if EvoManager.mutation_parasitism:
+		omega = min(omega, 0.25)
+		omega_min = min(omega_min, 0.25)
+
+	if EvoManager.mutation_hyperassimilation:
+		omega = min(omega, 0.75)
+		persistence_dynamic = lerp(persistence_dynamic, 1.0, 0.001)
+
+	if EvoManager.mutation_met_oscuro:
+		omega_min = min(omega_min, 0.10)
+		omega = min(omega, 0.10)
+
+	if epsilon_debug:
+		print("e breakdown: act=", epsilon_active, " pas=", epsilon_passive, " cmp=", epsilon_complex, " O=", omega)

@@ -1117,6 +1117,92 @@ func update_legacy_indicators() -> void:
 			mo_tip += "\n" + tr("CHIP_MEMORIA_OSCURA_PERM")
 		_add_chip.call(EmojiToRichText.strip("🌑 " + tr("CHIP_MEMORIA_OSCURA")), mo_tip, Color(0.82, 0.55, 1.0))
 
+func update_lab_metrics() -> void:
+	var contrib: Dictionary = EconomyManager.get_contribution_breakdown()
+	var ap: Dictionary = EconomyManager.get_active_passive_breakdown()
+
+	if sys_delta_label:
+		sys_delta_label.text = "∂$ estimado / s = +%s" % snapped(contrib.total, 0.01)
+
+	if delta_total_label:
+		var t: float = contrib.total
+		var t_str: String
+		if t >= 1_000_000_000.0:
+			t_str = "+$%.2fB/s" % (t / 1_000_000_000.0)
+		elif t >= 1_000_000.0:
+			t_str = "+$%.2fM/s" % (t / 1_000_000.0)
+		elif t >= 1_000.0:
+			t_str = "+$%.1fK/s" % (t / 1_000.0)
+		else:
+			t_str = "+$%.2f/s" % t
+		delta_total_label.text = t_str
+
+	update_timer(RunManager.run_time)
+
+	if sys_active_passive_label:
+		var pct_act := int(ap.activo)
+		var pct_pas := int(ap.pasivo)
+		var bar_len := 20
+		var filled := int(pct_act / 100.0 * bar_len)
+		var bar := ""
+		for i in range(bar_len):
+			if i < filled:
+				bar += "[color=#00ff88]█[/color]"
+			else:
+				bar += "[color=#ffcc00]█[/color]"
+		var act_col := "[color=#00ff88]" if pct_act >= pct_pas else "[color=#aaaaaa]"
+		var pas_col := "[color=#ffcc00]" if pct_pas > pct_act else "[color=#aaaaaa]"
+		var push_str := format_compact(ap.push_abs)
+		var pass_str := format_compact(ap.passive_abs)
+		var txt := act_col + "▲ ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
+		txt += pas_col + "▼ PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
+		txt += "[color=#555555][%s][/color]" % bar
+		sys_active_passive_label.clear()
+		sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
+
+	if sys_breakdown_label:
+		var c_pct := int(contrib.click)
+		var d_pct := int(contrib.d)
+		var e_pct := int(contrib.e)
+		var bar_len := 20
+		var fc := int(c_pct / 100.0 * bar_len)
+		var fd := int(d_pct / 100.0 * bar_len)
+		var fe: int = max(bar_len - fc - fd, 0)
+		var bar := "[color=#ff8844]" + "█".repeat(fc) + "[/color]"
+		bar += "[color=#44aaff]" + "█".repeat(fd) + "[/color]"
+		bar += "[color=#00ffcc]" + "█".repeat(fe) + "[/color]"
+		var click_str := format_compact(ap.push_abs)
+		var auto_str := format_compact(EconomyManager.get_auto_income_effective())
+		var trueq_str := format_compact(EconomyManager.get_trueque_income_effective())
+		var txt := "[color=#ff8844]● Click %d%% +%s/s[/color]  " % [c_pct, click_str]
+		txt += "[color=#44aaff]● Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
+		txt += "[color=#00ffcc]● Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
+		txt += "[color=#555555][%s][/color]" % bar
+		sys_breakdown_label.clear()
+		sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
+
+func update_core_labels() -> void:
+	update_money(EconomyManager.money)
+	if formula_label:
+		formula_label.clear()
+		formula_label.append_text(EmojiToRichText.rich(UITextBuilders.build_formula_text(scene)))
+	if click_stats_label:
+		click_stats_label.clear()
+		click_stats_label.append_text(EmojiToRichText.rich(UITextBuilders.update_click_stats_panel(scene)))
+
+func update_buttons() -> void:
+	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):
+		if btn.has_method("update_appearance"):
+			btn.update_appearance(EconomyManager.money)
+	var rb: Button = scene.get("_reset_btn") as Button
+	if is_instance_valid(rb):
+		if RunManager.run_closed:
+			rb.text = tr("GAME_BTN_NEW_RUN")
+			rb.modulate = Color(0.4, 0.85, 0.55)
+		else:
+			rb.text = tr("GAME_BTN_RESET")
+			rb.modulate = Color(0.8, 0.4, 0.4)
+
 ## Crea (lazy) el relleno verde lima + el label de número sobre la barra de frontera micelial.
 func _ensure_fungal_bar_style(bar) -> void:
 	if _fungal_bar_style == null:

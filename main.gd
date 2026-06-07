@@ -27,10 +27,6 @@ var _telemetry_sample_timer: float = 0.0
 var institutions_unlocked: bool = false
 var show_institutions_panel: bool = false
 
-# === ε PASIVO (v0.8) ===
-const EPS_PASSIVE_SCALE := 0.24
-const PASSIVE_RATIO_START := 0.60
-
 
 # =============== SESIÓN / LAB MODE ===================
 
@@ -60,30 +56,15 @@ const AUTOSAVE_INTERVAL := 30.0
 #  GENOMA FÚNGICO � v0.1
 # ============================
 
-# =====================================================
-#  FORMATO TEXTO FÓRMULA
-# =====================================================
 
-func build_formula_text() -> String:
-	return UIManager.build_formula_text(self)
-
-func build_formula_values() -> String:
-	return UIManager.build_formula_values(self)
-
-# ===============================
-#   HUD CIENT�FICO � segmentado por capas
-# ===============================
-func update_click_stats_panel() -> void:
-	if UIManager.click_stats_label:
-		UIManager.click_stats_label.clear()
-		UIManager.click_stats_label.append_text(EmojiToRichText.rich(UIManager.update_click_stats_panel(self)))
 
 
 # =====================================================
 #  VISUALIZACI�N DE LAPS
 # =====================================================
 func _on_ToggleLapViewButton_pressed():
-	toggle_lap_view()
+	LogManager.toggle_view()
+	LogManager.update_toggle_button()
 
 func _on_upgrade_bought_signal(id: String) -> void:
 	update_ui()
@@ -261,8 +242,7 @@ func _ready():
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.pressed.connect(AudioManager._unlock_audio)
 	LogManager.show_all_laps = false
-	update_lap_toggle_button()
-	update_lap_toggle_button()
+	LogManager.update_toggle_button()
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
 		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run " + tr("UI_EXPORT_PENDING"))
@@ -611,8 +591,8 @@ func _on_logic_tick():
 		TelemetryManager.sample_metrics(self)
 	update_economy(dt)
 
-	# 2) Estr�s del sistema
-	update_epsilon_runtime()
+	# 2) Estrés del sistema
+	StructuralModel.update_runtime()
 
 	# 3) Bi�sfera y nutrientes
 	# Pasamos solo el ingreso pasivo (no total) para que hifas no escale con clicks ni legados activos
@@ -685,7 +665,7 @@ func _on_logic_tick():
 		StructuralModel.omega = min(StructuralModel.omega, 0.10)
 
 	# FLOORS DE LEGADO � re-aplicados aqu� porque el c�lculo de omega con e_effective
-	# (paso 8) sobreescribe los floors aplicados en update_epsilon_runtime()
+	# (paso 8) sobreescribe los floors aplicados en StructuralModel.update_runtime()
 	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
 		StructuralModel.omega = max(StructuralModel.omega, StructuralModel.omega_min)
 		if EvoManager.mutation_allostasis:
@@ -986,141 +966,7 @@ func _on_sporulation_final_pressed() -> void:
 		RunManager.close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
 		
 # ESTRUCTURALES v0.7.3
-func update_epsilon_runtime():
-	if StructuralModel.baseline_delta_structural <= 0.0 or EconomyManager.delta_per_sec <= 0.0:
-		StructuralModel.epsilon_runtime = 0.0
-		StructuralModel.epsilon_active = 0.0
-		StructuralModel.epsilon_passive = 0.0
-		StructuralModel.epsilon_complex = 0.0
-		return
 
-	var n_struct := StructuralModel.get_effective_structural_n()
-	var k_eff := StructuralModel.get_k_eff()
-
-	# =================================================
-	# 1) e_activo � producci�n / composici�n (actual)
-	# =================================================
-	var expected_delta := StructuralModel.baseline_delta_structural * pow(
-		k_eff,
-		1.0 - (1.0 / n_struct)
-	)
-
-	var epsilon_prod := 0.0
-	if expected_delta > 0.0:
-		epsilon_prod = max(0.0, (EconomyManager.delta_per_sec / expected_delta) - 1.0)
-
-	var active := EconomyManager.get_click_power()
-	var passive := EconomyManager.get_passive_total()
-	var total := active + passive
-
-	var active_ratio := 0.0
-	var passive_ratio := 0.0
-	if total > 0.0:
-		active_ratio = active / total
-		passive_ratio = passive / total
-
-	# target din�mico
-	var t :float = clamp(n_struct / 40.0, 0.0, 1.0)
-	var target_active :float = lerp(0.8, 0.4, t)
-
-	var epsilon_comp :float = abs(active_ratio - target_active)
-	epsilon_comp *= (1.0 - StructuralModel.get_accounting_effect()) # Use function
-
-	# DECAY DE ESTR�S ACTIVO (v0.8.8)
-	# Si no clickeas por m�s de 3s, el ruido del potencial de click se disipa.
-	var decay_factor = clamp(1.0 - (EconomyManager.time_since_last_click / 5.0), 0.0, 1.0)
-	StructuralModel.epsilon_active = (epsilon_prod + epsilon_comp) * decay_factor
-
-	# =================================================
-	# 2) e_pasivo � rigidez / cristalizaci�n
-	# =================================================
-	StructuralModel.epsilon_passive = 0.0
-
-	if passive_ratio > PASSIVE_RATIO_START:
-		var excess := passive_ratio - PASSIVE_RATIO_START
-		var rigidity := (1.0 - StructuralModel.omega)
-		var size_factor := log(1.0 + n_struct) * 0.45
-		StructuralModel.epsilon_passive = excess * size_factor * rigidity * EPS_PASSIVE_SCALE * (1.0 - StructuralModel.get_accounting_effect()) # Use function
-
-	# =================================================
-	# 3) Complejidad estructural
-	# =================================================
-	StructuralModel.epsilon_complex = 0.0012 * n_struct * k_eff
-
-	# 4) Mezcla final y AMORTIGUACI�N BIOLÓGICA (v0.8.6)
-	var epsilon_raw := StructuralModel.epsilon_active + StructuralModel.epsilon_passive + StructuralModel.epsilon_complex
-	
-	# El hongo intenta absorber parte del estrés bruto antes de que se convierta en runtime
-	var bio_absorption := 1.0
-	if StructuralModel.epsilon_effective < StructuralModel.epsilon_runtime and StructuralModel.epsilon_runtime > 0.1:
-		# Si el hongo es eficiente, ayuda a enfriar el sistema
-		bio_absorption = clamp(StructuralModel.epsilon_effective / StructuralModel.epsilon_runtime, 0.4, 1.0)
-
-	var eps_target := epsilon_raw * bio_absorption
-	# MEMORIA OSCURA (Esclerocio): el sistema "recuerda" la estabilidad oscura y resiste la entropía
-	# → su subida se amortigua 30% (interpretación beneficiosa de "ε decae más lento").
-	if RunManager.is_memoria_oscura_active() and eps_target > StructuralModel.epsilon_runtime:
-		eps_target = StructuralModel.epsilon_runtime + (eps_target - StructuralModel.epsilon_runtime) * Balance.MEMORIA_OSCURA_EPS_RISE_DAMP
-	StructuralModel.epsilon_runtime = lerp(StructuralModel.epsilon_runtime, eps_target, 0.045)
-	StructuralModel.epsilon_runtime = clamp(StructuralModel.epsilon_runtime, 0.0, 2.0)
-	
-	# RAMA COLONIZACI�N: Piso de estrés 0.25 (v0.8.40)
-	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		StructuralModel.epsilon_runtime = max(StructuralModel.epsilon_runtime, 0.25)
-		
-	StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak, StructuralModel.epsilon_runtime)
-
-	# =================================================
-	# 5) O (flexibilidad)
-	# =================================================
-	StructuralModel.omega = EcoModel.get_omega(StructuralModel.epsilon_runtime, k_eff, n_struct)
-	# omega_min sube lentamente cuando omega est� por encima (siempre, incluso en homeostasis)
-	if StructuralModel.omega > StructuralModel.omega_min:
-		StructuralModel.omega_min = move_toward(StructuralModel.omega_min, StructuralModel.omega, 0.002)
-	# En homeostasis: piso m�nimo de seguridad estructural
-	if EvoManager.mutation_homeostasis:
-		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.35)
-	# CR�TICO: omega_min no solo registra el m�nimo, PROTEGE el piso real de O
-	StructuralModel.omega = max(StructuralModel.omega, StructuralModel.omega_min)
-
-	# ALOSTASIS: Piso de estabilidad adaptativo (O >= 0.60)
-	if EvoManager.mutation_allostasis:
-		StructuralModel.omega = max(StructuralModel.omega, 0.60)
-	elif LegacyManager.get_buff_value("legado_homeorresis"):
-		StructuralModel.omega = max(StructuralModel.omega, 0.55) # Trascendencia: Ω permanente superior
-	elif LegacyManager.get_buff_value("legado_alostasis"):
-		StructuralModel.omega = max(StructuralModel.omega, 0.45) # Beneficio persistente del legado
-
-	# RAMA SIMBIOSIS: Piso de omega 0.50 (v0.8.5)
-	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		StructuralModel.omega = max(StructuralModel.omega, 0.50)
-
-	# PARASITISMO: Techo de omega 0.25 � el hongo degrada la flexibilidad estructural
-	if EvoManager.mutation_parasitism:
-		StructuralModel.omega = min(StructuralModel.omega, 0.25)
-		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.25)
-		
-	# HIPERASIMILACIÓN: Colapso Estructural y Fragilidad
-	if EvoManager.mutation_hyperassimilation:
-		StructuralModel.omega = min(StructuralModel.omega, 0.75) # Cap de fragilidad
-		# Decaimiento de persistencia (Inercia negativa)
-		StructuralModel.persistence_dynamic = lerp(StructuralModel.persistence_dynamic, 1.0, 0.001)
-
-	# METABOLISMO OSCURO: Techo duro de O 0.10 (fragilidad extrema � debe ir �ltimo)
-	if EvoManager.mutation_met_oscuro:
-		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
-		StructuralModel.omega = min(StructuralModel.omega, 0.10)
-
-	# ====================================================
-	#  6) DEBUG EPSILON OUTPUT v0.8.2
-	# =====================================================
-	if StructuralModel.epsilon_debug:
-		print("e breakdown:",
-		"act=", StructuralModel.epsilon_active,
-		"pas=", StructuralModel.epsilon_passive,
-		"cmp=", StructuralModel.epsilon_complex,
-		"O=", StructuralModel.omega
-	)
 func _input(event):
 	if event.is_action_pressed("ui_debug"):
 		StructuralModel.epsilon_debug = !StructuralModel.epsilon_debug
@@ -1153,7 +999,8 @@ func _input(event):
 			if UIManager.genome_scroll:
 				UIManager.genome_scroll.visible = UIManager.lab_mode
 			if LogManager.show_all_laps != UIManager.lab_mode:
-				toggle_lap_view()
+				LogManager.toggle_view()
+				LogManager.update_toggle_button()
 			if UIManager.lab_mode:
 				TutorialManager.notify_lab_opened()
 
@@ -1280,82 +1127,6 @@ func on_institutions_unlocked():
 
 # =====================================================
 # UI HELPERS � v0.8
-func update_core_labels():
-	UIManager.update_money(EconomyManager.money)
-	if UIManager.formula_label:
-		UIManager.formula_label.clear()
-		UIManager.formula_label.append_text(EmojiToRichText.rich(build_formula_text()))
-	
-	update_click_stats_panel()
-
-
-func update_lab_metrics():
-	var contrib :Dictionary= EconomyManager.get_contribution_breakdown()
-	var ap :Dictionary= EconomyManager.get_active_passive_breakdown()
-
-	if UIManager.sys_delta_label:
-		UIManager.sys_delta_label.text = "?$ estimado / s = +%s" % snapped(contrib.total, 0.01)
-
-	# DeltaTotalLabel � compact with suffix
-	if UIManager.delta_total_label:
-		var t :float= contrib.total
-		var t_str: String
-		if t >= 1_000_000_000.0:
-			t_str = "+$%.2fB/s" % (t / 1_000_000_000.0)
-		elif t >= 1_000_000.0:
-			t_str = "+$%.2fM/s" % (t / 1_000_000.0)
-		elif t >= 1_000.0:
-			t_str = "+$%.1fK/s" % (t / 1_000.0)
-		else:
-			t_str = "+$%.2f/s" % t
-		UIManager.delta_total_label.text = t_str
-
-	UIManager.update_timer(RunManager.run_time)
-
-	# Activo vs Pasivo � visual bar
-	if UIManager.sys_active_passive_label:
-		var pct_act := int(ap.activo)
-		var pct_pas := int(ap.pasivo)
-		var bar_len := 20
-		var filled := int(pct_act / 100.0 * bar_len)
-		var bar := ""
-		for i in range(bar_len):
-			if i < filled:
-				bar += "[color=#00ff88]█[/color]"
-			else:
-				bar += "[color=#ffcc00]█[/color]"
-		var act_col := "[color=#00ff88]" if pct_act >= pct_pas else "[color=#aaaaaa]"
-		var pas_col := "[color=#ffcc00]" if pct_pas > pct_act else "[color=#aaaaaa]"
-		var push_str := UIManager.format_compact(ap.push_abs)
-		var pass_str := UIManager.format_compact(ap.passive_abs)
-		var txt := act_col + "▲ ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
-		txt += pas_col + "▼ PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
-		txt += "[color=#555555][%s][/color]" % bar
-		UIManager.sys_active_passive_label.clear()
-		UIManager.sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
-
-	# Distribuci�n por fuente � colored bar
-	if UIManager.sys_breakdown_label:
-		var c_pct := int(contrib.click)
-		var d_pct := int(contrib.d)
-		var e_pct := int(contrib.e)
-		var bar_len := 20
-		var fc := int(c_pct / 100.0 * bar_len)
-		var fd := int(d_pct / 100.0 * bar_len)
-		var fe :int= max(bar_len - fc - fd, 0)
-		var bar := "[color=#ff8844]" + "█".repeat(fc) + "[/color]"
-		bar += "[color=#44aaff]" + "█".repeat(fd) + "[/color]"
-		bar += "[color=#00ffcc]" + "█".repeat(fe) + "[/color]"
-		var click_str := UIManager.format_compact(ap.push_abs)
-		var auto_str  := UIManager.format_compact(EconomyManager.get_auto_income_effective())
-		var trueq_str := UIManager.format_compact(EconomyManager.get_trueque_income_effective())
-		var txt := "[color=#ff8844]● Click %d%% +%s/s[/color]  " % [c_pct, click_str]
-		txt += "[color=#44aaff]● Manual %d%% +%s/s[/color]  " % [d_pct, auto_str]
-		txt += "[color=#00ffcc]● Trueque %d%% +%s/s[/color]\n" % [e_pct, trueq_str]
-		txt += "[color=#555555][%s][/color]" % bar
-		UIManager.sys_breakdown_label.clear()
-		UIManager.sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
-
 func _sync_reactor_color() -> void:
 	# Especial: Bloqueo de Escalado Alostático si no viene de Homeostasis
 	if UpgradeManager.states.has("trueque_allo"):
@@ -1372,38 +1143,6 @@ func _sync_reactor_color() -> void:
 	reactor_visual.set_tint(EvoManager.get_reactor_color())
 	if _use_3d_reactor and is_instance_valid(reactor_3d):
 		reactor_3d.set_tint(EvoManager.get_reactor_color())
-func update_buttons():
-	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):
-		if btn.has_method("update_appearance"):
-			btn.update_appearance(EconomyManager.money)
-	if is_instance_valid(_reset_btn):
-		if RunManager.run_closed:
-			_reset_btn.text = tr("GAME_BTN_NEW_RUN")
-			_reset_btn.modulate = Color(0.4, 0.85, 0.55)
-		else:
-			_reset_btn.text = tr("GAME_BTN_RESET")
-			_reset_btn.modulate = Color(0.8, 0.4, 0.4)
-
-func is_major_lap(event: String) -> bool:
-	return LogManager.is_major(event)
-
-func update_lap_log():
-	LogManager.update_log_label()
-
-func update_lap_toggle_button():
-	LogManager.update_toggle_button()
-
-func toggle_lap_view():
-	LogManager.toggle_view()
-	update_lap_toggle_button()
-# =====================================================
-
-
-# =====================================================
-#  UI � SOLO LEE RESULTADOS (v0.6.3 � HUD cient�fico)
-# =====================================================
-
-
 func update_ui():
 	update_epsilon_sticky()
 	UIManager.update_bifurcation_panel()
@@ -1412,8 +1151,8 @@ func update_ui():
 	check_dominance_transition()
 	check_achievements()
 	update_achievements_label()
-	update_core_labels()
-	update_buttons()
+	UIManager.update_core_labels()
+	UIManager.update_buttons()
 
 	# Header bar
 	UIManager.update_header_money(EconomyManager.money, EconomyManager.delta_per_sec)
@@ -1441,8 +1180,8 @@ func update_ui():
 	else:
 		pass
 
-	update_lab_metrics()
-	update_lap_log()
+	UIManager.update_lab_metrics()
+	LogManager.update_log_label()
 
 	if is_instance_valid(btn_evolve):
 		if RunManager.run_closed:
