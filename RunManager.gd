@@ -741,7 +741,7 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = EvoManager.met_oscuro_devoured_count * 2
 		"PANSPERMIA NEGRA":
 			raw = int(floor(BiosphereEngine.micelio / 20.0))
-	var bonus := min(raw, cap)
+	var bonus: int = min(raw, cap)
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
 ## Notifica una sola vez por run cuando el bonus NG+ satura el cap.
