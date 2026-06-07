@@ -231,7 +231,7 @@ static func update_click_stats_panel(_main: Node) -> String:
 		income_section += TranslationServer.translate("LAB_MC_LINE") + "\n"; has_income_buff = true
 	if LegacyManager.get_buff_value("metabolismo_glitch"):
 		var mg_active := StructuralModel.epsilon_runtime > 0.40
-		var mg_state := TranslationServer.translate("LAB_MG_ACTIVO") if mg_active else TranslationServer.translate("LAB_MG_INACTIVO") % StructuralModel.epsilon_runtime
+		var mg_state: String = TranslationServer.translate("LAB_MG_ACTIVO") if mg_active else TranslationServer.translate("LAB_MG_INACTIVO") % StructuralModel.epsilon_runtime
 		income_section += TranslationServer.translate("LAB_MG_LINE") % mg_state + "\n"
 		has_income_buff = true
 	var eco_mult: float = LegacyManager.get_effect_value("all_income_mult")
