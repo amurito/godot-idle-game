@@ -548,6 +548,11 @@ func _show_mutation_toast(m_id: String) -> void:
 	var key: String = _MUTATION_KEYS.get(m_id, "")
 	if key == "":
 		return
+	if not _milestones_seen.has("first_mutation"):
+		notify_milestone("first_mutation",
+			tr("TUTO_MT_FIRST_MUT_TITLE"),
+			tr("TUTO_MT_FIRST_MUT_BODY"),
+			Color(0.35, 0.92, 0.45))
 	_show_toast(tr("TUTO_TOAST_MUT_TITLE"), tr(key), Color(0.35, 0.92, 0.45))
 
 
