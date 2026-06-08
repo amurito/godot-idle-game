@@ -805,7 +805,7 @@ func _update_autolisis_button() -> void:
 	if _autolisis_btn == null or not is_instance_valid(_autolisis_btn):
 		_autolisis_btn = Button.new()
 		_autolisis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
-		_autolisis_btn.add_theme_color_override("font_color", Color(0.9, 0.4, 0.1))
+		_autolisis_btn.add_theme_color_override("font_color", Color(0.9, 0.35, 0.45))
 		_autolisis_btn.custom_minimum_size = Vector2(0, 70)
 		_autolisis_btn.pressed.connect(_on_autolisis_pressed)
 		var panel := _right_panel()
@@ -830,7 +830,7 @@ func _fmt_money_short(amount: float) -> String:
 		return "$%.1fK" % (amount / 1e3)
 	return "$%.0f" % amount
 
-## Crea un botón de la zona autofagia (estética naranja) en el RightPanel.
+## Crea un botón de la zona autofagia (estética carmesí) en el RightPanel.
 func _make_autofagia_btn(callback: Callable, font_color: Color) -> Button:
 	var b := Button.new()
 	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
@@ -849,7 +849,7 @@ func _update_autofagia_upgrade_buttons() -> void:
 	# Enzimas Líticas (acelerar)
 	if active:
 		if _autofagia_speed_btn == null or not is_instance_valid(_autofagia_speed_btn):
-			_autofagia_speed_btn = _make_autofagia_btn(_on_autofagia_speed_pressed, Color(1.0, 0.65, 0.2))
+			_autofagia_speed_btn = _make_autofagia_btn(_on_autofagia_speed_pressed, Color(0.95, 0.5, 0.6))
 		var cs: Dictionary = EvoManager.autofagia_upgrade_cost("speed")
 		if cs.maxed:
 			_autofagia_speed_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_AUTOFAGIA_SPEED_MAX"))
@@ -863,7 +863,7 @@ func _update_autofagia_upgrade_buttons() -> void:
 	# Fagocitosis Doble
 	if active:
 		if _autofagia_double_btn == null or not is_instance_valid(_autofagia_double_btn):
-			_autofagia_double_btn = _make_autofagia_btn(_on_autofagia_double_pressed, Color(1.0, 0.5, 0.3))
+			_autofagia_double_btn = _make_autofagia_btn(_on_autofagia_double_pressed, Color(0.95, 0.4, 0.55))
 		var cd: Dictionary = EvoManager.autofagia_upgrade_cost("double")
 		if cd.maxed:
 			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_MAX"))
@@ -879,7 +879,7 @@ func _update_autofagia_upgrade_buttons() -> void:
 	var colapso_ok: bool = active and EvoManager.autolisis_devour_count >= Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS
 	if colapso_ok:
 		if _autofagia_colapso_btn == null or not is_instance_valid(_autofagia_colapso_btn):
-			_autofagia_colapso_btn = _make_autofagia_btn(_on_autofagia_colapso_pressed, Color(1.0, 0.85, 0.4))
+			_autofagia_colapso_btn = _make_autofagia_btn(_on_autofagia_colapso_pressed, Color(1.0, 0.78, 0.82))
 		_autofagia_colapso_btn.text = EmojiToRichText.strip("💥 " + tr("BTN_AUTOFAGIA_COLAPSO"))
 		_autofagia_colapso_btn.visible = true
 	elif is_instance_valid(_autofagia_colapso_btn):
@@ -1379,7 +1379,7 @@ func get_reactor_color() -> Color:
 	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
 		return Color(0.12, 0.0, 0.02)
 	if EvoManager.mutation_autolisis:
-		return Color(0.85, 0.3, 0.0)
+		return Color(0.65, 0.04, 0.18)
 	if EvoManager.mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)
 	if EvoManager.mutation_depredador:
