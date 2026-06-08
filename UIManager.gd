@@ -706,7 +706,9 @@ func update_ng_plus_buttons() -> void:
 	_update_simbiosis_seal_button()
 
 func _update_met_oscuro_seal_button() -> void:
-	if RunManager.run_closed:
+	if RunManager.run_closed or EvoManager.mutation_autolisis:
+		if is_instance_valid(_met_oscuro_seal_btn):
+			_met_oscuro_seal_btn.visible = false
 		return
 	var bio := BiosphereEngine.biomasa
 	var pl_seal := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
@@ -744,7 +746,7 @@ func _on_met_oscuro_seal_pressed() -> void:
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
 
 func _update_esclerocio_button() -> void:
-	if RunManager.run_closed or not EvoManager.mutation_met_oscuro:
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis:
 		if is_instance_valid(_esclerocio_btn):
 			_esclerocio_btn.visible = false
 		return

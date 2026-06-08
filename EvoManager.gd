@@ -418,13 +418,15 @@ func process_met_oscuro(dt: float) -> bool:
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
 		LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
-		LegacyManager.add_pl(2)
-		RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
-		return false
-	if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-		RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_MILLONARIO"))
-		return false
+	# Autólisis toma el control del cierre — saltar los auto-cierres de MO
+	if not mutation_autolisis:
+		if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
+			LegacyManager.add_pl(2)
+			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
+			return false
+		if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
+			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_MILLONARIO"))
+			return false
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func activate_autolisis() -> void:
