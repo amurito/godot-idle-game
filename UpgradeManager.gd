@@ -82,8 +82,10 @@ func can_buy(id: String, money: float) -> bool:
 	if def == null: return false
 	if def.one_shot and s.level > 0: return false
 
-	# MET.OSCURO: upgrades bloqueados (bioquímica reemplazó la infraestructura)
-	if EvoManager.mutation_met_oscuro:
+	# MET.OSCURO: upgrades bloqueados (bioquímica reemplazó la infraestructura).
+	# EXCEPCIÓN — Autólisis Dirigida: las compras se reabren para REALIMENTAR la autofagia
+	# (el devour da burst proporcional al costo → recomprás material para extender la run).
+	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis:
 		return false
 
 	# Usa cost() que aplica todos los descuentos (memoria_recurso, memoria_estructural, presión_rentable)

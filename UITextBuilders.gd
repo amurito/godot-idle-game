@@ -664,9 +664,14 @@ static func build_genome_text() -> String:
 		t += TranslationServer.translate("MUT_LABEL_MO") + ": " + TranslationServer.translate("MUT_STATE_" + mo_state.to_upper()) + "\n"
 
 	if EvoManager.mutation_met_oscuro:
-		t += "[b][color=#8844aa]🌑 " + TranslationServer.translate("GENOME_MO_TITLE") + "[/color][/b]\n"
-		t += "[color=#00ff00]" + TranslationServer.translate("GENOME_MO_BUFF") + "[/color]\n"
-		t += "[color=#ff4444]" + TranslationServer.translate("GENOME_MO_NERF") + "[/color]\n"
+		if EvoManager.mutation_autolisis:
+			t += "[b][color=#d94d00]🔥 " + TranslationServer.translate("GENOME_AUTOLISIS_TITLE") + "[/color][/b]\n"
+			t += "[color=#00ff00]" + TranslationServer.translate("GENOME_AUTOLISIS_BUFF") + "[/color]\n"
+			t += "[color=#ff4444]" + TranslationServer.translate("GENOME_AUTOLISIS_NERF") + "[/color]\n"
+		else:
+			t += "[b][color=#8844aa]🌑 " + TranslationServer.translate("GENOME_MO_TITLE") + "[/color][/b]\n"
+			t += "[color=#00ff00]" + TranslationServer.translate("GENOME_MO_BUFF") + "[/color]\n"
+			t += "[color=#ff4444]" + TranslationServer.translate("GENOME_MO_NERF") + "[/color]\n"
 	elif EvoManager.mutation_depredador:
 		t += "[b][color=#ff0055]☠️ " + TranslationServer.translate("GENOME_DEP_TITLE") + "[/color][/b]\n"
 		t += "[color=#00ff00]" + TranslationServer.translate("GENOME_DEP_BUFF") + "[/color]\n"
@@ -704,7 +709,7 @@ static func build_mutation_status_text() -> String:
 	var buff := "[color=#00ff00]+"
 	var nerf := "[color=#ff4444]-"
 
-	if EvoManager.mutation_hyperassimilation:
+	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
 		t += "[b][color=magenta]⚠️ " + TranslationServer.translate("MSTAT_HIPERAS_TITLE") + "[/color][/b]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_HIPERAS_B1") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_HIPERAS_N1") + "[/color]\n"
@@ -742,7 +747,8 @@ static func build_mutation_status_text() -> String:
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B3") + "[/color]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B4") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N1") + "[/color]\n"
-		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N2") + "[/color]\n"
+		if not EvoManager.mutation_autolisis:
+			t += nerf + " " + TranslationServer.translate("MSTAT_MO_N2") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N3") + "[/color]\n"
 		if EvoManager.mutation_autolisis:
 			var devours: int = EvoManager.autolisis_devour_count
@@ -751,6 +757,7 @@ static func build_mutation_status_text() -> String:
 			t += "\n[b][color=#d94d00]🔥 " + TranslationServer.translate("MSTAT_AUTOLISIS_TITLE") + "[/color][/b]\n"
 			t += "[color=#ff8855]" + TranslationServer.translate("MSTAT_AUTOLISIS_STATUS") % [devours, levels_left] + "[/color]\n"
 			t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_NEXT") % next_in + "[/color]\n"
+			t += "[color=#88ff88]  " + TranslationServer.translate("MSTAT_AUTOLISIS_FEED") + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa
 			var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))

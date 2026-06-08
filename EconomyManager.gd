@@ -61,7 +61,8 @@ func get_click_power() -> float:
 		power *= 2.5
 	if EvoManager.mutation_red_micelial:
 		power *= 0.5
-	if EvoManager.mutation_hyperassimilation:
+	# Hiperasimilación: el ×10 deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
+	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
 		power *= 10.0 # RUSH DE CLICK EXTREMO
 
 	# HOMEOSTASIS: Orden Administrativo — +50% solo mientras ε está en banda (0.03–0.30)
@@ -179,7 +180,8 @@ func get_passive_total() -> float:
 		total *= 0.5
 	if EvoManager.mutation_red_micelial:
 		total *= 2.5
-	if EvoManager.mutation_hyperassimilation:
+	# Hiperasimilación: el nerf de pasivo deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
+	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
 		total *= 0.25 # Sacrifica el pasivo por el núcleo
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		total *= 1.5 # Orden Administrativa (+50% — solo activo mientras ε en banda 0.03–0.30)
