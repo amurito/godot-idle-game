@@ -34,7 +34,7 @@ const MEMORIA_OSCURA_MO_THRESH_MULT := 0.90  # −10% al threshold de activació
 # Legado permanente desbloqueado por el cruce ESCLEROCIO → PANSPERMIA NEGRA
 const SEMILLA_OSCURA_PASIVO_MULT    := 3.0   # ×pasivo del legado Semilla Cósmica Oscura
 
-# ── AUTÓLISIS DIRIGIDA (sub-ruta de Met. Oscuro, post-Esclerocio) ─
+# ── AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro, post-Esclerocio) ─
 # El hongo digiere sus propias estructuras para liberar energía. Irreversible.
 const AUTOLISIS_BIO_REQ         := 50.0   # biomasa mínima para iniciar la autofagia
 const AUTOLISIS_UPGRADES_REQ    := 5      # niveles de upgrades disponibles mínimos al activar
@@ -43,6 +43,20 @@ const AUTOLISIS_BIO_BURST       := 8.0    # biomasa fija por devour (además del
 const AUTOLISIS_MONEY_BURST_MULT := 3.0   # el burst de $ = costo del upgrade devorado × este mult
 const AUTOLISIS_CLICK_MULT      := 5.0    # click ×5 mientras autólisis activa (reemplaza ×3 de MO)
 const AUTOLISIS_PASSIVE_MULT    := 2.0    # pasivo ×2 (restaura el pasivo anulado por MO)
+# Cierre voluntario: botón "colapsar núcleo" disponible tras N devours.
+const AUTOFAGIA_COLAPSO_MIN_DEVOURS := 3  # devours mínimos para habilitar el colapso voluntario
+# ── Mejoras de autofagia (multinivel, costo en biomasa + dinero, capeadas) ──
+# Enzimas Líticas: aceleran el intervalo entre devours (piso 5s).
+const AUTOFAGIA_SPEED_MAX_LEVEL    := 5      # 30s → 5s (-5s por nivel)
+const AUTOFAGIA_SPEED_REDUCTION    := 5.0    # s que resta cada nivel al intervalo
+const AUTOFAGIA_DEVOUR_FLOOR       := 5.0    # piso del intervalo entre devours
+# Fagocitosis Doble: % de devorar 2 upgrades en vez de 1 (cap 100% = siempre 2).
+const AUTOFAGIA_DOUBLE_MAX_LEVEL   := 5      # 5 × 20% = 100%
+const AUTOFAGIA_DOUBLE_PER_LEVEL   := 0.20   # +20% chance de devour doble por nivel
+# Costo de las mejoras: escala con el nivel (mismo growth para ambas).
+const AUTOFAGIA_UPG_BIO_BASE       := 150.0    # biomasa del 1er nivel
+const AUTOFAGIA_UPG_MONEY_BASE     := 80000.0  # dinero del 1er nivel
+const AUTOFAGIA_UPG_COST_GROWTH    := 2.0      # multiplicador de costo por nivel comprado
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
@@ -154,7 +168,7 @@ const PL_REWARDS: Dictionary = {
 	"MUTACION_FINAL":            4,
 	"METABOLISMO OSCURO":        4,
 	"ESCLEROCIO OSCURO":         6,
-	"AUTÓLISIS DIRIGIDA":        6,
+	"AUTOFAGIA NECRÓTICA":        6,
 	"MENTE COLMENA DISTRIBUIDA": 8,
 	"DEPREDADOR DE REALIDADES":  12,
 	"COLAPSO DEPREDATORIO":      8,
@@ -182,7 +196,7 @@ const NG_CAPS: Dictionary = {
 	"MUTACION_FINAL":            8,
 	"METABOLISMO OSCURO":        8,
 	"ESCLEROCIO OSCURO":         8,
-	"AUTÓLISIS DIRIGIDA":        8,
+	"AUTOFAGIA NECRÓTICA":        8,
 	"POLIMORFÍA TOTAL":          8,
 	"POLIMORFIA TOTAL":          8,
 	"DOMADOR DEL CAOS":          8,

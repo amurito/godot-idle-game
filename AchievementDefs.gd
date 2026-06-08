@@ -422,7 +422,7 @@ const DEFS := {
 	},
 	"autolisis_perfecta": {
 		"name": "Autofagia Perfecta",
-		"desc": "Cerrar AUTÓLISIS DIRIGIDA habiendo consumido 15 o más upgrades.",
+		"desc": "Cerrar AUTOFAGIA NECRÓTICA habiendo consumido 15 o más upgrades.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "autolisis_perfecta",
 	},

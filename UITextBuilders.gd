@@ -575,7 +575,7 @@ static func _build_run_end_lore(route: String) -> String:
 			"buffs": [TranslationServer.translate("LORE_ESCLEROCIO_B1"), TranslationServer.translate("LORE_ESCLEROCIO_B2"), TranslationServer.translate("LORE_ESCLEROCIO_B3")],
 			"nerfs": [TranslationServer.translate("LORE_ESCLEROCIO_N1"), TranslationServer.translate("LORE_ESCLEROCIO_N2")]
 		},
-		"AUTÓLISIS DIRIGIDA": {
+		"AUTOFAGIA NECRÓTICA": {
 			"emoji": "🔥", "color": "#d94d00",
 			"lore": TranslationServer.translate("LORE_AUTOLISIS_LORE"),
 			"buffs": [TranslationServer.translate("LORE_AUTOLISIS_B1"), TranslationServer.translate("LORE_AUTOLISIS_B2")],
@@ -752,12 +752,20 @@ static func build_mutation_status_text() -> String:
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N3") + "[/color]\n"
 		if EvoManager.mutation_autolisis:
 			var devours: int = EvoManager.autolisis_devour_count
-			var next_in: float = Balance.AUTOLISIS_DEVOUR_INTERVAL - EvoManager.autolisis_devour_timer
+			var interval: float = EvoManager.autofagia_devour_interval()
+			var next_in: float = max(0.0, interval - EvoManager.autolisis_devour_timer)
 			var levels_left: int = UpgradeManager.get_owned_levels_count()
+			var dbl_pct: int = int(EvoManager.autofagia_double_chance() * 100)
 			t += "\n[b][color=#d94d00]🔥 " + TranslationServer.translate("MSTAT_AUTOLISIS_TITLE") + "[/color][/b]\n"
 			t += "[color=#ff8855]" + TranslationServer.translate("MSTAT_AUTOLISIS_STATUS") % [devours, levels_left] + "[/color]\n"
-			t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_NEXT") % next_in + "[/color]\n"
+			t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_NEXT2") % [next_in, interval] + "[/color]\n"
+			if dbl_pct > 0:
+				t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_DOUBLE") % dbl_pct + "[/color]\n"
 			t += "[color=#88ff88]  " + TranslationServer.translate("MSTAT_AUTOLISIS_FEED") + "[/color]\n"
+			if devours >= Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS:
+				t += "[color=#ffdd66]  " + TranslationServer.translate("MSTAT_AUTOLISIS_CLOSE_READY") + "[/color]\n"
+			else:
+				t += "[color=#888888]  " + TranslationServer.translate("MSTAT_AUTOLISIS_CLOSE_WAIT") % Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa
 			var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))

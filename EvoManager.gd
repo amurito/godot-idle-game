@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # EvoManager.gd — Autoload
 # Maneja la evolución del genoma y las mutaciones irreversibles.
@@ -97,10 +97,13 @@ var _met_oscuro_status_timer: float = 0.0
 var _met_oscuro_active_time: float = 0.0
 const MET_OSCURO_STATUS_INTERVAL := 12.0
 
-# === AUTÓLISIS DIRIGIDA (sub-ruta de Met. Oscuro) ===
+# === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
 var mutation_autolisis := false
 var autolisis_devour_count: int = 0
 var autolisis_devour_timer: float = 0.0
+# Mejoras de autofagia (multinivel capeadas): aceleran/duplican los devours
+var autofagia_speed_level: int = 0   # Enzimas Líticas → -5s por nivel (piso 5s)
+var autofagia_double_level: int = 0  # Fagocitosis Doble → +20% chance devour doble por nivel
 
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
@@ -165,6 +168,8 @@ func reset() -> void:
 	mutation_autolisis = false
 	autolisis_devour_count = 0
 	autolisis_devour_timer = 0.0
+	autofagia_speed_level = 0
+	autofagia_double_level = 0
 	_glitch_was_active = false
 
 func update_genome():
@@ -438,25 +443,88 @@ func activate_autolisis() -> void:
 	UIManager.show_toast(tr("TOAST_AUTOLISIS_START"))
 	LogManager.add(tr("LOG_AUTOLISIS_START"))
 
-## Tick de autólisis. Cada AUTOLISIS_DEVOUR_INTERVAL devora el upgrade más caro.
-## Cada devour da un burst de $ (proporcional al costo del upgrade) + bio fija.
-## Cuando no quedan upgrades → run closes por agotamiento.
-func process_autolisis(dt: float) -> void:
-	autolisis_devour_timer += dt
-	if autolisis_devour_timer < Balance.AUTOLISIS_DEVOUR_INTERVAL:
-		return
-	autolisis_devour_timer = 0.0
+## Intervalo efectivo entre devours, acortado por Enzimas Líticas (piso AUTOFAGIA_DEVOUR_FLOOR).
+func autofagia_devour_interval() -> float:
+	var reduced: float = Balance.AUTOLISIS_DEVOUR_INTERVAL - autofagia_speed_level * Balance.AUTOFAGIA_SPEED_REDUCTION
+	return max(Balance.AUTOFAGIA_DEVOUR_FLOOR, reduced)
+
+## Probabilidad [0,1] de devorar 2 upgrades en vez de 1 (Fagocitosis Doble).
+func autofagia_double_chance() -> float:
+	return min(1.0, autofagia_double_level * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL)
+
+## Devora el upgrade más caro y aplica el burst. Retorna true si quedaba material.
+func _autofagia_consume_one() -> bool:
 	var result: Dictionary = UpgradeManager.devour_most_expensive_upgrade()
 	if not result.devoured:
-		if not RunManager.run_closed:
-			RunManager.close_run("AUTÓLISIS DIRIGIDA", tr("CLOSE_AUTOLISIS_AGOTADO"))
-		return
+		return false
 	autolisis_devour_count += 1
 	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
 	EconomyManager.money += burst_money
 	BiosphereEngine.biomasa += Balance.AUTOLISIS_BIO_BURST
 	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % autolisis_devour_count)
 	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money])
+	return true
+
+## Tick de autólisis. Cada intervalo (acortable) devora el upgrade más caro; con
+## Fagocitosis Doble puede devorar 2. Cuando no queda material → cierra por agotamiento.
+func process_autolisis(dt: float) -> void:
+	autolisis_devour_timer += dt
+	if autolisis_devour_timer < autofagia_devour_interval():
+		return
+	autolisis_devour_timer = 0.0
+	if not _autofagia_consume_one():
+		if not RunManager.run_closed:
+			RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
+		return
+	# Fagocitosis Doble: chance de un segundo devour en el mismo tick.
+	if randf() < autofagia_double_chance():
+		if not _autofagia_consume_one():
+			if not RunManager.run_closed:
+				RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
+
+## Colapso voluntario del núcleo (cierre manual). Disponible tras N devours.
+func autofagia_colapsar() -> void:
+	if RunManager.run_closed or not mutation_autolisis:
+		return
+	if autolisis_devour_count < Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS:
+		return
+	RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOFAGIA_COLAPSO"))
+
+# ── Mejoras de autofagia: costo (bio + dinero) y compra ──────────────────────
+## kind: "speed" | "double". Retorna {bio, money, level, maxed}.
+func autofagia_upgrade_cost(kind: String) -> Dictionary:
+	var lvl: int = autofagia_speed_level if kind == "speed" else autofagia_double_level
+	var maxv: int = Balance.AUTOFAGIA_SPEED_MAX_LEVEL if kind == "speed" else Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL
+	var scale: float = pow(Balance.AUTOFAGIA_UPG_COST_GROWTH, lvl)
+	return {
+		"bio": Balance.AUTOFAGIA_UPG_BIO_BASE * scale,
+		"money": Balance.AUTOFAGIA_UPG_MONEY_BASE * scale,
+		"level": lvl,
+		"maxed": lvl >= maxv,
+	}
+
+func can_buy_autofagia_upgrade(kind: String) -> bool:
+	if not mutation_autolisis or RunManager.run_closed:
+		return false
+	var c: Dictionary = autofagia_upgrade_cost(kind)
+	if c.maxed:
+		return false
+	return BiosphereEngine.biomasa >= c.bio and EconomyManager.money >= c.money
+
+func buy_autofagia_upgrade(kind: String) -> bool:
+	if not can_buy_autofagia_upgrade(kind):
+		return false
+	var c: Dictionary = autofagia_upgrade_cost(kind)
+	BiosphereEngine.biomasa -= c.bio
+	EconomyManager.money -= c.money
+	if kind == "speed":
+		autofagia_speed_level += 1
+		LogManager.add(tr("LOG_AUTOFAGIA_SPEED") % autofagia_speed_level)
+	else:
+		autofagia_double_level += 1
+		LogManager.add(tr("LOG_AUTOFAGIA_DOUBLE") % int(autofagia_double_chance() * 100))
+	AudioManager.play_sfx("upgrade")
+	return true
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

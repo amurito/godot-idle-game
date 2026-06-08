@@ -69,7 +69,7 @@ func get_click_power() -> float:
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		power *= 1.5
 
-	# MET.OSCURO: energía alternativa ×3; ×5 durante Autólisis Dirigida
+	# MET.OSCURO: energía alternativa ×3; ×5 durante Autofagia Necrótica
 	if EvoManager.mutation_met_oscuro:
 		power *= Balance.AUTOLISIS_CLICK_MULT if EvoManager.mutation_autolisis else 3.0
 

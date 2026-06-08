@@ -93,6 +93,9 @@ var _fungal_bar_style        # StyleBoxFlat de relleno verde de FungalCycleBar (
 var _met_oscuro_seal_btn: Button = null
 var _esclerocio_btn: Button = null
 var _autolisis_btn: Button = null
+var _autofagia_speed_btn: Button = null
+var _autofagia_double_btn: Button = null
+var _autofagia_colapso_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -695,12 +698,22 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_autolisis_btn):
 		_autolisis_btn.queue_free()
 		_autolisis_btn = null
+	if is_instance_valid(_autofagia_speed_btn):
+		_autofagia_speed_btn.queue_free()
+		_autofagia_speed_btn = null
+	if is_instance_valid(_autofagia_double_btn):
+		_autofagia_double_btn.queue_free()
+		_autofagia_double_btn = null
+	if is_instance_valid(_autofagia_colapso_btn):
+		_autofagia_colapso_btn.queue_free()
+		_autofagia_colapso_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
 	_update_met_oscuro_seal_button()
 	_update_esclerocio_button()
 	_update_autolisis_button()
+	_update_autofagia_upgrade_buttons()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
@@ -808,6 +821,78 @@ func _on_autolisis_pressed() -> void:
 	if is_instance_valid(_autolisis_btn):
 		_autolisis_btn.visible = false
 	EvoManager.activate_autolisis()
+
+## Formato corto de dinero para etiquetas de botón ($1.2K / $3.4M).
+func _fmt_money_short(amount: float) -> String:
+	if amount >= 1e6:
+		return "$%.2fM" % (amount / 1e6)
+	elif amount >= 1e3:
+		return "$%.1fK" % (amount / 1e3)
+	return "$%.0f" % amount
+
+## Crea un botón de la zona autofagia (estética naranja) en el RightPanel.
+func _make_autofagia_btn(callback: Callable, font_color: Color) -> Button:
+	var b := Button.new()
+	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+	b.add_theme_color_override("font_color", font_color)
+	b.custom_minimum_size = Vector2(0, 52)
+	b.pressed.connect(callback)
+	var panel := _right_panel()
+	if panel:
+		panel.add_child(b)
+		panel.move_child(b, 0)
+	return b
+
+## Botones de mejoras de autofagia + colapso voluntario (solo durante autólisis activa).
+func _update_autofagia_upgrade_buttons() -> void:
+	var active: bool = EvoManager.mutation_autolisis and not RunManager.run_closed
+	# Enzimas Líticas (acelerar)
+	if active:
+		if _autofagia_speed_btn == null or not is_instance_valid(_autofagia_speed_btn):
+			_autofagia_speed_btn = _make_autofagia_btn(_on_autofagia_speed_pressed, Color(1.0, 0.65, 0.2))
+		var cs: Dictionary = EvoManager.autofagia_upgrade_cost("speed")
+		if cs.maxed:
+			_autofagia_speed_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_AUTOFAGIA_SPEED_MAX"))
+			_autofagia_speed_btn.disabled = true
+		else:
+			_autofagia_speed_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_AUTOFAGIA_SPEED") % [cs.level, Balance.AUTOFAGIA_SPEED_MAX_LEVEL, cs.bio, _fmt_money_short(cs.money)])
+			_autofagia_speed_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("speed")
+		_autofagia_speed_btn.visible = true
+	elif is_instance_valid(_autofagia_speed_btn):
+		_autofagia_speed_btn.visible = false
+	# Fagocitosis Doble
+	if active:
+		if _autofagia_double_btn == null or not is_instance_valid(_autofagia_double_btn):
+			_autofagia_double_btn = _make_autofagia_btn(_on_autofagia_double_pressed, Color(1.0, 0.5, 0.3))
+		var cd: Dictionary = EvoManager.autofagia_upgrade_cost("double")
+		if cd.maxed:
+			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_MAX"))
+			_autofagia_double_btn.disabled = true
+		else:
+			var next_pct: int = int(min(1.0, (cd.level + 1) * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL) * 100)
+			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, next_pct, cd.bio, _fmt_money_short(cd.money)])
+			_autofagia_double_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("double")
+		_autofagia_double_btn.visible = true
+	elif is_instance_valid(_autofagia_double_btn):
+		_autofagia_double_btn.visible = false
+	# Colapso voluntario (cierre)
+	var colapso_ok: bool = active and EvoManager.autolisis_devour_count >= Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS
+	if colapso_ok:
+		if _autofagia_colapso_btn == null or not is_instance_valid(_autofagia_colapso_btn):
+			_autofagia_colapso_btn = _make_autofagia_btn(_on_autofagia_colapso_pressed, Color(1.0, 0.85, 0.4))
+		_autofagia_colapso_btn.text = EmojiToRichText.strip("💥 " + tr("BTN_AUTOFAGIA_COLAPSO"))
+		_autofagia_colapso_btn.visible = true
+	elif is_instance_valid(_autofagia_colapso_btn):
+		_autofagia_colapso_btn.visible = false
+
+func _on_autofagia_speed_pressed() -> void:
+	EvoManager.buy_autofagia_upgrade("speed")
+
+func _on_autofagia_double_pressed() -> void:
+	EvoManager.buy_autofagia_upgrade("double")
+
+func _on_autofagia_colapso_pressed() -> void:
+	EvoManager.autofagia_colapsar()
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
