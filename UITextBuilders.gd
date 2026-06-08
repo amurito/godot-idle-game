@@ -733,21 +733,33 @@ static func build_mutation_status_text() -> String:
 	if EvoManager.mutation_met_oscuro:
 		t += "[b][color=#8844aa]🌑 " + TranslationServer.translate("MSTAT_MO_TITLE") + "[/color][/b]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B1") + "[/color]\n"
-		t += buff + " " + TranslationServer.translate("MSTAT_MO_B2") + "[/color]\n"
+		if EvoManager.mutation_autolisis:
+			t += buff + " " + TranslationServer.translate("MSTAT_AUTOLISIS_B_CLICK") + "[/color]\n"
+			t += buff + " " + TranslationServer.translate("MSTAT_AUTOLISIS_B_PASIVO") + "[/color]\n"
+		else:
+			t += buff + " " + TranslationServer.translate("MSTAT_MO_B2") + "[/color]\n"
+			t += nerf + " " + TranslationServer.translate("MSTAT_MO_N4") + "[/color]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B3") + "[/color]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B4") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N1") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N2") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N3") + "[/color]\n"
-		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N4") + "[/color]\n"
-		var bio_now: float = BiosphereEngine.biomasa
-		var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
-		var bar_filled: int = int(bio_pct / 5.0)
-		var bio_bar: String = "█".repeat(bar_filled) + "░".repeat(20 - bar_filled)
-		var pl_label: String = "+6 PL" if bio_now >= 100.0 else ("+4 PL" if bio_now >= 50.0 else "+2 PL")
-		t += "\n[color=#aa66cc]" + TranslationServer.translate("MSTAT_MO_SAT") % pl_label + "[/color]\n"
-		t += "[color=#8844aa][%s][/color] [color=white]%.0f / 100[/color]\n" % [bio_bar, bio_now]
-		t += "[color=#666688]  " + TranslationServer.translate("MSTAT_MO_SEAL_HINT") + "[/color]\n"
+		if EvoManager.mutation_autolisis:
+			var devours: int = EvoManager.autolisis_devour_count
+			var next_in: float = Balance.AUTOLISIS_DEVOUR_INTERVAL - EvoManager.autolisis_devour_timer
+			var levels_left: int = UpgradeManager.get_owned_levels_count()
+			t += "\n[b][color=#d94d00]🔥 " + TranslationServer.translate("MSTAT_AUTOLISIS_TITLE") + "[/color][/b]\n"
+			t += "[color=#ff8855]" + TranslationServer.translate("MSTAT_AUTOLISIS_STATUS") % [devours, levels_left] + "[/color]\n"
+			t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_NEXT") % next_in + "[/color]\n"
+		else:
+			var bio_now: float = BiosphereEngine.biomasa
+			var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
+			var bar_filled: int = int(bio_pct / 5.0)
+			var bio_bar: String = "█".repeat(bar_filled) + "░".repeat(20 - bar_filled)
+			var pl_label: String = "+6 PL" if bio_now >= 100.0 else ("+4 PL" if bio_now >= 50.0 else "+2 PL")
+			t += "\n[color=#aa66cc]" + TranslationServer.translate("MSTAT_MO_SAT") % pl_label + "[/color]\n"
+			t += "[color=#8844aa][%s][/color] [color=white]%.0f / 100[/color]\n" % [bio_bar, bio_now]
+			t += "[color=#666688]  " + TranslationServer.translate("MSTAT_MO_SEAL_HINT") + "[/color]\n"
 	elif EvoManager.mutation_depredador:
 		t += "[b][color=#ff0055]☠️ " + TranslationServer.translate("MSTAT_DEP_TITLE") + "[/color][/b]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_DEP_B1") + "[/color]\n"
