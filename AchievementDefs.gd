@@ -420,6 +420,12 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "esclerocio_contingencia",
 	},
+	"autolisis_perfecta": {
+		"name": "Autofagia Perfecta",
+		"desc": "Cerrar AUTÓLISIS DIRIGIDA habiendo consumido 15 o más upgrades.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "autolisis_perfecta",
+	},
 	"ruta_ascesis": {
 		"name": "Ascesis Profunda",
 		"desc": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",

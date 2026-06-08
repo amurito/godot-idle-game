@@ -293,6 +293,41 @@ func apply_bought_effects(id: String) -> void:
 			StructuralModel.epsilon_runtime *= 0.85
 			StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak * 0.9, StructuralModel.epsilon_runtime)
 
+## Devuelve cuántos niveles de upgrades están comprados en total.
+func get_owned_levels_count() -> int:
+	var total: int = 0
+	for k in states.keys():
+		total += states[k].level
+	return total
+
+## Devora el upgrade con mayor current_cost (el más caro actualmente).
+## Retorna {devoured: bool, cost: float} — cost = precio del nivel devorado.
+func devour_most_expensive_upgrade() -> Dictionary:
+	var best_key: String = ""
+	var best_cost: float = -1.0
+	for k in states.keys():
+		var s = states[k]
+		if s.level > 0 and s.current_cost > best_cost:
+			best_cost = s.current_cost
+			best_key = k
+	if best_key.is_empty():
+		return {"devoured": false, "cost": 0.0}
+	var s = states[best_key]
+	var def = get_def(best_key)
+	var devoured_cost: float = s.current_cost
+	s.level -= 1
+	s.current_value = def.base_value
+	if def.is_multiplicative:
+		for i in range(s.level):
+			s.current_value *= def.gain
+	else:
+		s.current_value += def.gain * s.level
+	var effective_cost_scale: float = def.cost_scale
+	if LegacyManager.get_buff_value("deflacion"):
+		effective_cost_scale = 1.0 + (def.cost_scale - 1.0) * 0.95
+	s.current_cost /= effective_cost_scale
+	return {"devoured": true, "cost": devoured_cost}
+
 func devour_random_upgrade() -> bool:
 	var valid_keys = []
 	for k in states.keys():

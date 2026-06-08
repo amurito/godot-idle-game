@@ -38,7 +38,9 @@ var _colapso_controlado_btn: Button = null
 var _logic_timer: Timer
 var _ui_timer: Timer
 var _autosave_timer: Timer
-const UI_TICK := 0.1      # 10 Hz — labels & buttons
+var _last_ui_tick_ms: int = 0  # debounce: evita update_ui() doble en click + tick simultáneos
+const UI_TICK := 0.1                  # 10 Hz — labels & buttons (desktop)
+const UI_TICK_WEB := 0.25             # 4 Hz  — web: reduce callUserCallback overhead
 const AUTOSAVE_INTERVAL := 30.0
 
 # ================= REFERENCIAS UI ===================
@@ -221,6 +223,7 @@ func _ready():
 	show()
 	add_to_group("main")
 
+
 	# Aplicar escala de fuente base vía Theme (afecta labels/buttons sin override explícito)
 	if AccessibilityManager.font_scale != 1.0:
 		var t := Theme.new()
@@ -302,7 +305,7 @@ func _ready():
 	add_child(_logic_timer)
 
 	_ui_timer = Timer.new()
-	_ui_timer.wait_time = UI_TICK
+	_ui_timer.wait_time = UI_TICK_WEB if OS.has_feature("web") else UI_TICK
 	_ui_timer.autostart = true
 	_ui_timer.timeout.connect(_on_ui_tick)
 	add_child(_ui_timer)
@@ -393,7 +396,10 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	if _use_3d_reactor and is_instance_valid(reactor_3d):
 		reactor_3d.set_active_delta(power)
 
-	update_ui()
+	# Web: debounce — evita update_ui() doble si el tick acaba de correr (<80ms)
+	var ms_since_tick := Time.get_ticks_msec() - _last_ui_tick_ms
+	if not OS.has_feature("web") or ms_since_tick > 80:
+		update_ui()
 	
 func register_reactor(rv: Node):
 	reactor_visual = rv
@@ -506,10 +512,10 @@ func adjust_scroll_for_dlc():
 		sc.add_theme_constant_override("margin_top", int(h))
 
 func _process(delta):
-	# Solo lo que NECESITA 60 Hz: tiempo de sesi�n y animaciones
+	# Solo lo que NECESITA 60 Hz: contadores de tiempo
 	RunManager.run_time += delta
 	EconomyManager.time_since_last_click += delta
-	_sync_reactor_color()
+	# _sync_reactor_color() movido a _on_ui_tick — no necesita 60 Hz
 
 func _on_logic_tick():
 	# === 5 Hz � toda la l�gica de simulaci�n ===
@@ -563,6 +569,8 @@ func _on_logic_tick():
 	# NG++ Metabolismo Oscuro (Post-Depredador) — congela el devorar, metaboliza biomasa
 	if EvoManager.mutation_met_oscuro:
 		EvoManager.process_met_oscuro(dt)
+		if EvoManager.mutation_autolisis:
+			EvoManager.process_autolisis(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)
@@ -712,7 +720,9 @@ func _on_logic_tick():
 	RunManager.check_sporulation_trigger(dt)
 
 func _on_ui_tick():
-	# === 10 Hz — actualizar labels y botones ===
+	# === 4/10 Hz — actualizar labels y botones ===
+	_sync_reactor_color()  # movido desde _process: no necesita 60 Hz
+	_last_ui_tick_ms = Time.get_ticks_msec()
 	if is_instance_valid(_debug_panel) and _debug_panel.visible:
 		_debug_panel.refresh_info()
 	update_ui()

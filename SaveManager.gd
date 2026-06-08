@@ -69,6 +69,9 @@ func build_save_data(main: Node) -> Dictionary:
 			"mutation_homeorhesis": EvoManager.mutation_homeorhesis,
 			"mutation_depredador": EvoManager.mutation_depredador,
 			"mutation_met_oscuro": EvoManager.mutation_met_oscuro,
+			"mutation_autolisis": EvoManager.mutation_autolisis,
+			"autolisis_devour_count": EvoManager.autolisis_devour_count,
+			"autolisis_devour_timer": EvoManager.autolisis_devour_timer,
 			"depredador_timer": EvoManager.depredador_timer,
 			"depredador_inestabilidad": EvoManager.depredador_inestabilidad,
 			"depredador_timer_buys": EvoManager.depredador_timer_buys,
@@ -182,6 +185,9 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.mutation_homeorhesis = ev.get("mutation_homeorhesis", EvoManager.mutation_homeorhesis)
 		EvoManager.mutation_depredador = ev.get("mutation_depredador", EvoManager.mutation_depredador)
 		EvoManager.mutation_met_oscuro = ev.get("mutation_met_oscuro", EvoManager.mutation_met_oscuro)
+		EvoManager.mutation_autolisis = ev.get("mutation_autolisis", false)
+		EvoManager.autolisis_devour_count = ev.get("autolisis_devour_count", 0)
+		EvoManager.autolisis_devour_timer = ev.get("autolisis_devour_timer", 0.0)
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
 		EvoManager.depredador_inestabilidad = ev.get("depredador_inestabilidad", EvoManager.depredador_inestabilidad)
 		EvoManager.depredador_timer_buys = int(ev.get("depredador_timer_buys", EvoManager.depredador_timer_buys))

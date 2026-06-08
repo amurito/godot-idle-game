@@ -575,6 +575,12 @@ static func _build_run_end_lore(route: String) -> String:
 			"buffs": [TranslationServer.translate("LORE_ESCLEROCIO_B1"), TranslationServer.translate("LORE_ESCLEROCIO_B2"), TranslationServer.translate("LORE_ESCLEROCIO_B3")],
 			"nerfs": [TranslationServer.translate("LORE_ESCLEROCIO_N1"), TranslationServer.translate("LORE_ESCLEROCIO_N2")]
 		},
+		"AUTÓLISIS DIRIGIDA": {
+			"emoji": "🔥", "color": "#d94d00",
+			"lore": TranslationServer.translate("LORE_AUTOLISIS_LORE"),
+			"buffs": [TranslationServer.translate("LORE_AUTOLISIS_B1"), TranslationServer.translate("LORE_AUTOLISIS_B2")],
+			"nerfs": [TranslationServer.translate("LORE_AUTOLISIS_N1"), TranslationServer.translate("LORE_AUTOLISIS_N2")]
+		},
 	}
 
 	var data = lore_data.get(route, null)

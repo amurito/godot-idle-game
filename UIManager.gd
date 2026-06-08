@@ -92,6 +92,7 @@ var _fungal_bar_style        # StyleBoxFlat de relleno verde de FungalCycleBar (
 # ========== NG+ DYNAMIC BUTTONS (Panel Derecho) ==========
 var _met_oscuro_seal_btn: Button = null
 var _esclerocio_btn: Button = null
+var _autolisis_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -691,11 +692,15 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_esclerocio_btn):
 		_esclerocio_btn.queue_free()
 		_esclerocio_btn = null
+	if is_instance_valid(_autolisis_btn):
+		_autolisis_btn.queue_free()
+		_autolisis_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
 	_update_met_oscuro_seal_button()
 	_update_esclerocio_button()
+	_update_autolisis_button()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
@@ -769,6 +774,38 @@ func _on_esclerocio_pressed() -> void:
 	if is_instance_valid(_esclerocio_btn):
 		_esclerocio_btn.visible = false
 	RunManager.close_run("ESCLEROCIO OSCURO", tr("CLOSE_ESCLEROCIO"))
+
+func _update_autolisis_button() -> void:
+	# Ocultar si MO no activo, ya autólisis activa, o run cerrada
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis:
+		if is_instance_valid(_autolisis_btn):
+			_autolisis_btn.visible = false
+		return
+	var bio_ok: bool = BiosphereEngine.biomasa >= Balance.AUTOLISIS_BIO_REQ
+	var upgrades_ok: bool = UpgradeManager.get_owned_levels_count() >= Balance.AUTOLISIS_UPGRADES_REQ
+	if not (bio_ok and upgrades_ok):
+		if is_instance_valid(_autolisis_btn):
+			_autolisis_btn.visible = false
+		return
+	if _autolisis_btn == null or not is_instance_valid(_autolisis_btn):
+		_autolisis_btn = Button.new()
+		_autolisis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_autolisis_btn.add_theme_color_override("font_color", Color(0.9, 0.4, 0.1))
+		_autolisis_btn.custom_minimum_size = Vector2(0, 70)
+		_autolisis_btn.pressed.connect(_on_autolisis_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_autolisis_btn)
+			panel.move_child(_autolisis_btn, 0)
+	_autolisis_btn.text = EmojiToRichText.strip("🔥 " + tr("BTN_AUTOLISIS"))
+	_autolisis_btn.visible = true
+
+func _on_autolisis_pressed() -> void:
+	if RunManager.run_closed or EvoManager.mutation_autolisis:
+		return
+	if is_instance_valid(_autolisis_btn):
+		_autolisis_btn.visible = false
+	EvoManager.activate_autolisis()
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
@@ -1254,6 +1291,8 @@ func _ensure_fungal_bar_style(bar) -> void:
 func get_reactor_color() -> Color:
 	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
 		return Color(0.12, 0.0, 0.02)
+	if EvoManager.mutation_autolisis:
+		return Color(0.85, 0.3, 0.0)
 	if EvoManager.mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)
 	if EvoManager.mutation_depredador:

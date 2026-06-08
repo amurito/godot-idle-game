@@ -76,6 +76,7 @@ func _ready() -> void:
 		"polimorfia_total":       _eval_polimorfia_total,
 		"domador_del_caos":       _eval_domador_del_caos,
 		"esclerocio_contingencia":_eval_esclerocio_contingencia,
+		"autolisis_perfecta":     _eval_autolisis_perfecta,
 		"cinco_legados":          _eval_cinco_legados,
 		"omega_inviolable":       _eval_omega_inviolable_cond,
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
@@ -431,6 +432,10 @@ func _eval_esclerocio_contingencia(_s: Dictionary) -> bool:
 	return RunManager.final_route == "ESCLEROCIO OSCURO" \
 		and EvoManager.met_oscuro_devoured_count >= 50
 
+func _eval_autolisis_perfecta(_s: Dictionary) -> bool:
+	return RunManager.final_route == "AUTÓLISIS DIRIGIDA" \
+		and EvoManager.autolisis_devour_count >= 15
+
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0
 	for id in LegacyManager.LEGACY_DEFS:
@@ -525,6 +530,8 @@ func on_run_closed(route: String) -> void:
 		unlock("domador_del_caos")
 	if route == "ESCLEROCIO OSCURO" and EvoManager.met_oscuro_devoured_count >= 50:
 		unlock("esclerocio_contingencia")
+	if route == "AUTÓLISIS DIRIGIDA" and EvoManager.autolisis_devour_count >= 15:
+		unlock("autolisis_perfecta")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

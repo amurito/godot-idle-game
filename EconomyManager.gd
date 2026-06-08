@@ -68,9 +68,9 @@ func get_click_power() -> float:
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		power *= 1.5
 
-	# MET.OSCURO: energía alternativa ×3 (reemplaza el x10 de hiper)
+	# MET.OSCURO: energía alternativa ×3; ×5 durante Autólisis Dirigida
 	if EvoManager.mutation_met_oscuro:
-		power *= 3.0
+		power *= Balance.AUTOLISIS_CLICK_MULT if EvoManager.mutation_autolisis else 3.0
 
 	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 2.5 # Aura Dorada — click ×2.5 (especializado, no afecta pasivo)
@@ -187,9 +187,12 @@ func get_passive_total() -> float:
 		total *= 1.2 # Crecimiento Parásito inicial
 		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
 
-	# MET.OSCURO: pasivo estructural anulado — toda la economía viene de biomasa (en main)
+	# MET.OSCURO: pasivo anulado; Autólisis lo restaura ×2 (la digestión libera energía)
 	if EvoManager.mutation_met_oscuro:
-		total = 0.0
+		if EvoManager.mutation_autolisis:
+			total *= Balance.AUTOLISIS_PASSIVE_MULT
+		else:
+			total = 0.0
 
 	# aura_dorada ya NO afecta pasivo (rework — solo click ×2.5)
 

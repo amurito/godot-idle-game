@@ -34,6 +34,16 @@ const MEMORIA_OSCURA_MO_THRESH_MULT := 0.90  # −10% al threshold de activació
 # Legado permanente desbloqueado por el cruce ESCLEROCIO → PANSPERMIA NEGRA
 const SEMILLA_OSCURA_PASIVO_MULT    := 3.0   # ×pasivo del legado Semilla Cósmica Oscura
 
+# ── AUTÓLISIS DIRIGIDA (sub-ruta de Met. Oscuro, post-Esclerocio) ─
+# El hongo digiere sus propias estructuras para liberar energía. Irreversible.
+const AUTOLISIS_BIO_REQ         := 50.0   # biomasa mínima para iniciar la autofagia
+const AUTOLISIS_UPGRADES_REQ    := 5      # niveles de upgrades disponibles mínimos al activar
+const AUTOLISIS_DEVOUR_INTERVAL := 30.0   # s entre cada auto-devour
+const AUTOLISIS_BIO_BURST       := 8.0    # biomasa fija por devour (además del burst de $)
+const AUTOLISIS_MONEY_BURST_MULT := 3.0   # el burst de $ = costo del upgrade devorado × este mult
+const AUTOLISIS_CLICK_MULT      := 5.0    # click ×5 mientras autólisis activa (reemplaza ×3 de MO)
+const AUTOLISIS_PASSIVE_MULT    := 2.0    # pasivo ×2 (restaura el pasivo anulado por MO)
+
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
 const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
@@ -144,6 +154,7 @@ const PL_REWARDS: Dictionary = {
 	"MUTACION_FINAL":            4,
 	"METABOLISMO OSCURO":        4,
 	"ESCLEROCIO OSCURO":         6,
+	"AUTÓLISIS DIRIGIDA":        6,
 	"MENTE COLMENA DISTRIBUIDA": 8,
 	"DEPREDADOR DE REALIDADES":  12,
 	"COLAPSO DEPREDATORIO":      8,
@@ -171,6 +182,7 @@ const NG_CAPS: Dictionary = {
 	"MUTACION_FINAL":            8,
 	"METABOLISMO OSCURO":        8,
 	"ESCLEROCIO OSCURO":         8,
+	"AUTÓLISIS DIRIGIDA":        8,
 	"POLIMORFÍA TOTAL":          8,
 	"POLIMORFIA TOTAL":          8,
 	"DOMADOR DEL CAOS":          8,

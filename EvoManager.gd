@@ -97,6 +97,11 @@ var _met_oscuro_status_timer: float = 0.0
 var _met_oscuro_active_time: float = 0.0
 const MET_OSCURO_STATUS_INTERVAL := 12.0
 
+# === AUTÓLISIS DIRIGIDA (sub-ruta de Met. Oscuro) ===
+var mutation_autolisis := false
+var autolisis_devour_count: int = 0
+var autolisis_devour_timer: float = 0.0
+
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
@@ -157,6 +162,9 @@ func reset() -> void:
 	_met_oscuro_income_accum = 0.0
 	_met_oscuro_status_timer = 0.0
 	_met_oscuro_active_time = 0.0
+	mutation_autolisis = false
+	autolisis_devour_count = 0
+	autolisis_devour_timer = 0.0
 	_glitch_was_active = false
 
 func update_genome():
@@ -418,6 +426,35 @@ func process_met_oscuro(dt: float) -> bool:
 		RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_MILLONARIO"))
 		return false
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
+
+func activate_autolisis() -> void:
+	if mutation_autolisis:
+		return
+	mutation_autolisis = true
+	autolisis_devour_timer = 0.0
+	mutation_activated.emit("autolisis", tr("MUT_AUTOLISIS"))
+	UIManager.show_toast(tr("TOAST_AUTOLISIS_START"))
+	LogManager.add(tr("LOG_AUTOLISIS_START"))
+
+## Tick de autólisis. Cada AUTOLISIS_DEVOUR_INTERVAL devora el upgrade más caro.
+## Cada devour da un burst de $ (proporcional al costo del upgrade) + bio fija.
+## Cuando no quedan upgrades → run closes por agotamiento.
+func process_autolisis(dt: float) -> void:
+	autolisis_devour_timer += dt
+	if autolisis_devour_timer < Balance.AUTOLISIS_DEVOUR_INTERVAL:
+		return
+	autolisis_devour_timer = 0.0
+	var result: Dictionary = UpgradeManager.devour_most_expensive_upgrade()
+	if not result.devoured:
+		if not RunManager.run_closed:
+			RunManager.close_run("AUTÓLISIS DIRIGIDA", tr("CLOSE_AUTOLISIS_AGOTADO"))
+		return
+	autolisis_devour_count += 1
+	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
+	EconomyManager.money += burst_money
+	BiosphereEngine.biomasa += Balance.AUTOLISIS_BIO_BURST
+	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % autolisis_devour_count)
+	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money])
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

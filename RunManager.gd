@@ -179,6 +179,10 @@ func close_run(route: String, reason: String):
 				var raw := int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
 				ng_bonus = min(raw, cap)
 				ng_formula = "devoured %d / 8 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
+			"AUTÓLISIS DIRIGIDA":
+				var raw := int(floor(EvoManager.autolisis_devour_count / 3.0))
+				ng_bonus = min(raw, cap)
+				ng_formula = "autolisis_devoured %d / 3 = %d (cap %d)" % [EvoManager.autolisis_devour_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 				var rotaciones: int = int(_rs.get("total_rotations", 0))
 				var raw := int(floor(rotaciones / 2.0))
@@ -727,6 +731,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = EvoManager.met_oscuro_devoured_count * 2
 		"ESCLEROCIO OSCURO":
 			raw = int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
+		"AUTÓLISIS DIRIGIDA":
+			raw = int(floor(EvoManager.autolisis_devour_count / 3.0))
 		"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 			raw = int(floor(_rs.get("total_rotations", 0) / 2.0))
 		"DOMADOR DEL CAOS":
