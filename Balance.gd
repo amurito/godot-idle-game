@@ -57,6 +57,11 @@ const AUTOFAGIA_DOUBLE_PER_LEVEL   := 0.20   # +20% chance de devour doble por n
 const AUTOFAGIA_UPG_BIO_BASE       := 150.0    # biomasa del 1er nivel
 const AUTOFAGIA_UPG_MONEY_BASE     := 80000.0  # dinero del 1er nivel
 const AUTOFAGIA_UPG_COST_GROWTH    := 2.0      # multiplicador de costo por nivel comprado
+# Bio pasivo durante autolisis (reemplaza el 0.1/s estándar de MO).
+const AUTOLISIS_BIO_PASSIVE        := 1.0      # bio/s pasivo mientras autólisis activa (×10 del MO base)
+# Escala el burst de bio por devour: bio_burst = max(BIO_BURST, cost / divisor).
+# A $4.4M → 88 bio; a $320K → 6.4 (capped al floor BIO_BURST=8).
+const AUTOLISIS_BIO_FROM_COST_DIVISOR := 50000.0
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)

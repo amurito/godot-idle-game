@@ -417,7 +417,8 @@ func process_met_oscuro(dt: float) -> bool:
 		var gain: float = floor(_met_oscuro_income_accum)
 		EconomyManager.money += gain
 		_met_oscuro_income_accum -= gain
-	BiosphereEngine.biomasa += 0.1 * dt
+	var _bio_rate: float = Balance.AUTOLISIS_BIO_PASSIVE if mutation_autolisis else 0.1
+	BiosphereEngine.biomasa += _bio_rate * dt
 	StructuralModel.epsilon_runtime = max(0.0, StructuralModel.epsilon_runtime - 0.05 * dt)
 	_met_oscuro_status_timer += dt
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
@@ -460,7 +461,8 @@ func _autofagia_consume_one() -> bool:
 	autolisis_devour_count += 1
 	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
 	EconomyManager.money += burst_money
-	BiosphereEngine.biomasa += Balance.AUTOLISIS_BIO_BURST
+	var bio_burst: float = max(Balance.AUTOLISIS_BIO_BURST, result.cost / Balance.AUTOLISIS_BIO_FROM_COST_DIVISOR)
+	BiosphereEngine.biomasa += bio_burst
 	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % autolisis_devour_count)
 	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money])
 	return true

@@ -759,6 +759,7 @@ static func build_mutation_status_text() -> String:
 			t += "\n[b][color=#d94d00]🔥 " + TranslationServer.translate("MSTAT_AUTOLISIS_TITLE") + "[/color][/b]\n"
 			t += "[color=#ff8855]" + TranslationServer.translate("MSTAT_AUTOLISIS_STATUS") % [devours, levels_left] + "[/color]\n"
 			t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_NEXT2") % [next_in, interval] + "[/color]\n"
+			t += "[color=#88cc55]" + TranslationServer.translate("MSTAT_AUTOLISIS_BIOPASIVE") % Balance.AUTOLISIS_BIO_PASSIVE + "[/color]\n"
 			if dbl_pct > 0:
 				t += "[color=#ffaa55]" + TranslationServer.translate("MSTAT_AUTOLISIS_DOUBLE") % dbl_pct + "[/color]\n"
 			t += "[color=#88ff88]  " + TranslationServer.translate("MSTAT_AUTOLISIS_FEED") + "[/color]\n"
