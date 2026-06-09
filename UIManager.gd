@@ -1140,8 +1140,10 @@ func open_legacy_panel() -> void:
 	update_legacy_indicators()
 
 func close_legacy_panel() -> void:
-	scene.legacy_panel.visible = false
-	scene.get_node("DimmerBackground").visible = false
+	var lp := scene.get_node_or_null("LegacyPanel")
+	if lp: lp.visible = false
+	var db := scene.get_node_or_null("DimmerBackground")
+	if db: db.visible = false
 	var esc_btn := scene.get_node_or_null("LegacyEscBtn") as Button
 	if is_instance_valid(esc_btn):
 		esc_btn.visible = false

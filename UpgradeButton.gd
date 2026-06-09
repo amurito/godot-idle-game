@@ -80,7 +80,7 @@ func update_appearance(current_money: float) -> void:
 		"auto":           [true,  "/s"],
 		"trueque":        [true,  "/s"],
 		"cognitive":      [false, " μ"],
-		"accounting":     [true,  "/s"],
+		"accounting":     [false, "%/lvl"],
 		"click_mult":     [false, " clk"],
 		"auto_mult":      [false, " auto"],
 		"trueque_net":    [false, " truq."],
@@ -90,8 +90,14 @@ func update_appearance(current_money: float) -> void:
 	var _unit_info: Array = GAIN_UNIT.get(upgrade_id, [false, ""])
 	var _is_money: bool = _unit_info[0]
 	var _unit: String = _unit_info[1]
+	# Overrides para upgrades cuyo gain del .tres no refleja el efecto real
+	const GAIN_OVERRIDE := {
+		"accounting": "+5%/lvl",
+	}
 	var gain_str := ""
-	if def.is_multiplicative:
+	if upgrade_id in GAIN_OVERRIDE:
+		gain_str = GAIN_OVERRIDE[upgrade_id]
+	elif def.is_multiplicative:
 		gain_str = "×%.2f%s" % [def.gain, _unit]
 	elif _is_money:
 		gain_str = "+$%.0f%s" % [def.gain, _unit]
