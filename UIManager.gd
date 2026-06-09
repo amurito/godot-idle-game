@@ -1111,7 +1111,7 @@ func open_legacy_panel() -> void:
 		esc_btn = Button.new()
 		esc_btn.name = "LegacyEscBtn"
 		esc_btn.text = "ESC"
-		esc_btn.z_index = 10
+		esc_btn.z_index = 30
 		esc_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 		var s := StyleBoxFlat.new()
 		s.bg_color = Color(0.08, 0.05, 0.12, 0.97)
