@@ -69,12 +69,30 @@ func update_appearance(current_money: float) -> void:
 		_apply_acquired_style()
 		return
 
-	# Texto dinámico
+	# Texto dinámico — unidad según tipo de upgrade para mayor claridad
+	# [is_money, suffix]: additive con $ → "+$N/s"; sin $ → "+N μ"; multiplicativo → "×N sfx"
+	const GAIN_UNIT := {
+		"click":          [true,  "/click"],
+		"auto":           [true,  "/s"],
+		"trueque":        [true,  "/s"],
+		"cognitive":      [false, " μ"],
+		"accounting":     [true,  "/s"],
+		"click_mult":     [false, " clk"],
+		"auto_mult":      [false, " auto"],
+		"trueque_net":    [false, " truq."],
+		"specialization": [false, " all"],
+		"trueque_allo":   [false, " truq."],
+	}
+	var _unit_info: Array = GAIN_UNIT.get(upgrade_id, [false, ""])
+	var _is_money: bool = _unit_info[0]
+	var _unit: String = _unit_info[1]
 	var gain_str := ""
 	if def.is_multiplicative:
-		gain_str = "×%.2f" % def.gain
+		gain_str = "×%.2f%s" % [def.gain, _unit]
+	elif _is_money:
+		gain_str = "+$%.0f%s" % [def.gain, _unit]
 	else:
-		gain_str = "+%.1f" % def.gain
+		gain_str = "+%.0f%s" % [def.gain, _unit]
 
 	var cost :float= state.current_cost
 	var cost_str: String

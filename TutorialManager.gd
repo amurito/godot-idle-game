@@ -308,6 +308,7 @@ func toggle_shortcuts_panel(parent: Node) -> void:
 func _build_shortcuts_bbcode() -> String:
 	var t := ""
 	t += "[color=cyan][b]" + tr("TUTO_SC_GENERAL") + "[/b][/color]\n"
+	t += _shortcut_row("[Esc]", tr("TUTO_SC_ESC"))
 	t += _shortcut_row("[L]", tr("TUTO_SC_L"))
 	t += _shortcut_row("[K]", tr("TUTO_SC_K"))
 	t += _shortcut_row("[B]", tr("TUTO_SC_B"))
