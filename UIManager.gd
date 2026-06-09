@@ -1101,6 +1101,35 @@ func open_legacy_panel() -> void:
 	lp.custom_minimum_size = ps
 	lp.size = ps
 	lp.position = Vector2(margin, margin)
+
+	# Chip visual ESC en esquina superior derecha (se crea una sola vez)
+	const ESC_BTN_W := 80.0
+	const ESC_BTN_H := 44.0
+	var esc_btn := lp.find_child("LegacyEscBtn") as Button
+	if not is_instance_valid(esc_btn):
+		esc_btn = Button.new()
+		esc_btn.name = "LegacyEscBtn"
+		esc_btn.text = "ESC"
+		esc_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(0.08, 0.05, 0.12, 0.97)
+		s.set_border_width_all(2)
+		s.border_color = Color(0.75, 0.3, 0.95, 0.9)
+		s.set_corner_radius_all(10)
+		s.content_margin_left = 8.0; s.content_margin_right = 8.0
+		s.content_margin_top = 4.0;  s.content_margin_bottom = 4.0
+		var sh := s.duplicate() as StyleBoxFlat
+		sh.bg_color = Color(0.16, 0.08, 0.22, 1.0)
+		sh.border_color = Color(0.9, 0.4, 1.0, 1.0)
+		esc_btn.add_theme_stylebox_override("normal", s)
+		esc_btn.add_theme_stylebox_override("hover", sh)
+		esc_btn.add_theme_stylebox_override("pressed", sh)
+		esc_btn.custom_minimum_size = Vector2(ESC_BTN_W, ESC_BTN_H)
+		esc_btn.pressed.connect(close_legacy_panel)
+		lp.add_child(esc_btn)
+	esc_btn.position = Vector2(ps.x - ESC_BTN_W - 10.0, 10.0)
+	esc_btn.size = Vector2(ESC_BTN_W, ESC_BTN_H)
+
 	refresh_legacy_store()
 	update_legacy_indicators()
 
