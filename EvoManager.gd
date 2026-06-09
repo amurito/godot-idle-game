@@ -110,6 +110,7 @@ var mutation_necrosis := false
 var necrosis_omega: float = 0.10     # Ω controlado por la ruta (override del clamp de MO)
 var necromasa: float = 0.0           # moneda Ν acumulada (atada al flujo real)
 var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
+var necrosis_active_time: float = 0.0  # s con necrosis activa (para logro de velocidad)
 
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
@@ -180,6 +181,7 @@ func reset() -> void:
 	necrosis_omega = Balance.NECROSIS_OMEGA_START
 	necromasa = 0.0
 	necrosis_agent_count = 0
+	necrosis_active_time = 0.0
 	_glitch_was_active = false
 
 func update_genome():
@@ -558,6 +560,7 @@ func activate_necrosis() -> void:
 	necrosis_omega = Balance.NECROSIS_OMEGA_START
 	necromasa = 0.0
 	necrosis_agent_count = 0
+	necrosis_active_time = 0.0
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
 	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
 	LogManager.add(tr("LOG_NECROSIS_START"))
@@ -602,6 +605,7 @@ func buy_necrosis_agent() -> bool:
 func process_necrosis(dt: float) -> void:
 	if not mutation_necrosis or RunManager.run_closed:
 		return
+	necrosis_active_time += dt
 	var passive_flow: float = EconomyManager.get_passive_total()
 	if passive_flow > 0.0:
 		necromasa += passive_flow * Balance.NECROSIS_CONVERSION * dt

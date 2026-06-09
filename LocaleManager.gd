@@ -626,6 +626,13 @@ const TRANSLATIONS := {
 			"LORE_AUTOLISIS_B2": "Cada upgrade consumido libera un burst masivo de $ y biomasa",
 			"LORE_AUTOLISIS_N1": "Irreversible — no se puede detener una vez iniciada",
 			"LORE_AUTOLISIS_N2": "La run termina cuando no quedan upgrades disponibles",
+			"LORE_NECROSIS_LORE": "El hongo dejó de defender su forma. Descubrió que la estabilidad era un impuesto que pagaba a cada instante, y dejó de pagarlo. Cada estructura desmantelada libera la energía que antes la sostenía. Ω no es salud: es lastre. Cuanto menos queda del organismo, más puro es lo que produce. No es agonía. Es eficiencia llevada al extremo donde el cuerpo sobra.",
+			"LORE_NECROSIS_B1": "Ω se vuelve combustible: cuanto más bajo, mayor el multiplicador (hasta ×25)",
+			"LORE_NECROSIS_B2": "Doble economía: el flujo activo genera Necromasa (Ν) para comprar Agentes Necróticos",
+			"LORE_NECROSIS_B3": "Apoptosis Heredada desbloqueada: el income recuerda cómo florecer al borde del colapso",
+			"LORE_NECROSIS_N1": "Irreversible — la estructura no se reconstruye",
+			"LORE_NECROSIS_N2": "Sin flujo activo no hay Necromasa: el progreso exige economía corriendo",
+			"LORE_NECROSIS_CROSS_B": "♾️ Plasticidad Terminal: dominaste la estabilidad máxima Y el colapso total — los dos bordes de Ω son el mismo",
 
 
 		# LORE — PANSPERMIA NEGRA (variante con código oscuro del Esclerocio)
@@ -974,6 +981,8 @@ const TRANSLATIONS := {
 		"ACH_ESCLEROCIO_CONTINGENCIA_NAME": "Esporas de Contingencia",
 			"ACH_AUTOLISIS_PERFECTA_NAME": "Autofagia Perfecta",
 			"ACH_AUTOLISIS_PERFECTA_DESC": "Cerrar AUTOFAGIA NECRÓTICA habiendo consumido 15 o más upgrades.",
+			"ACH_FUNCION_PURA_NAME": "Función Pura",
+			"ACH_FUNCION_PURA_DESC": "Cerrar NECROSIS CONTROLADA en menos de 90s desde su activación.",
 		"ACH_ESCLEROCIO_CONTINGENCIA_DESC": "Cerrar ESCLEROCIO OSCURO habiendo devorado 50 o más upgrades.",
 		"ACH_RUTA_ASCESIS_NAME": "Ascesis Profunda",
 		"ACH_RUTA_ASCESIS_DESC": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",
@@ -1910,6 +1919,13 @@ const TRANSLATIONS := {
 			"LORE_AUTOLISIS_B2": "Each consumed upgrade releases a massive burst of $ and biomass",
 			"LORE_AUTOLISIS_N1": "Irreversible — cannot be stopped once initiated",
 			"LORE_AUTOLISIS_N2": "The run ends when no upgrades remain",
+			"LORE_NECROSIS_LORE": "The fungus stopped defending its shape. It realized stability was a tax it paid every instant, and stopped paying. Each dismantled structure releases the energy that once held it together. Ω isn't health: it's ballast. The less of the organism remains, the purer what it produces. This isn't agony. It's efficiency taken to the extreme where the body itself is surplus.",
+			"LORE_NECROSIS_B1": "Ω becomes fuel: the lower it gets, the higher the multiplier (up to ×25)",
+			"LORE_NECROSIS_B2": "Dual economy: active flow generates Necromass (Ν) to buy Necrotic Agents",
+			"LORE_NECROSIS_B3": "Inherited Apoptosis unlocked: income remembers how to bloom at the edge of collapse",
+			"LORE_NECROSIS_N1": "Irreversible — the structure does not rebuild",
+			"LORE_NECROSIS_N2": "No active flow means no Necromass: progress demands a running economy",
+			"LORE_NECROSIS_CROSS_B": "♾️ Terminal Plasticity: you mastered maximum stability AND total collapse — both edges of Ω are the same",
 
 
 		# LORE — BLACK PANSPERMIA (variant carrying the Sclerotium's dark code)
@@ -2258,6 +2274,8 @@ const TRANSLATIONS := {
 		"ACH_ESCLEROCIO_CONTINGENCIA_NAME": "Contingency Spores",
 			"ACH_AUTOLISIS_PERFECTA_NAME": "Perfect Autophagy",
 			"ACH_AUTOLISIS_PERFECTA_DESC": "Close NECROTIC AUTOPHAGY having consumed 15 or more upgrades.",
+			"ACH_FUNCION_PURA_NAME": "Pure Function",
+			"ACH_FUNCION_PURA_DESC": "Close CONTROLLED NECROSIS in under 90s from its activation.",
 		"ACH_ESCLEROCIO_CONTINGENCIA_DESC": "Close DARK SCLEROTIUM having devoured 50 or more upgrades.",
 		"ACH_RUTA_ASCESIS_NAME": "Deep Ascesis",
 		"ACH_RUTA_ASCESIS_DESC": "Close HUNGRY VOID by absolute renunciation (DEEP ASCESIS).",

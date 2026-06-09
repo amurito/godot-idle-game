@@ -581,6 +581,12 @@ static func _build_run_end_lore(route: String) -> String:
 			"buffs": [TranslationServer.translate("LORE_AUTOLISIS_B1"), TranslationServer.translate("LORE_AUTOLISIS_B2")],
 			"nerfs": [TranslationServer.translate("LORE_AUTOLISIS_N1"), TranslationServer.translate("LORE_AUTOLISIS_N2")]
 		},
+		"NECROSIS CONTROLADA": {
+			"emoji": "🦠", "color": "#8a9a4a",
+			"lore": TranslationServer.translate("LORE_NECROSIS_LORE"),
+			"buffs": [TranslationServer.translate("LORE_NECROSIS_B1"), TranslationServer.translate("LORE_NECROSIS_B2"), TranslationServer.translate("LORE_NECROSIS_B3")],
+			"nerfs": [TranslationServer.translate("LORE_NECROSIS_N1"), TranslationServer.translate("LORE_NECROSIS_N2")]
+		},
 	}
 
 	var data = lore_data.get(route, null)
@@ -591,6 +597,10 @@ static func _build_run_end_lore(route: String) -> String:
 		data.lore = TranslationServer.translate("LORE_PANSP_OSCURA_LORE")
 		data.buffs = data.buffs.duplicate()
 		data.buffs.append(TranslationServer.translate("LORE_PANSP_OSCURA_B1"))
+
+	if route == "NECROSIS CONTROLADA" and LegacyManager.homeorhesis_necrosis_done:
+		data.buffs = data.buffs.duplicate()
+		data.buffs.append(TranslationServer.translate("LORE_NECROSIS_CROSS_B"))
 
 	var t := ""
 	t += "[color=%s][b]%s %s[/b][/color]\n\n" % [data.color, data.emoji, route]

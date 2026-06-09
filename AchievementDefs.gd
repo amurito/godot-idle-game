@@ -426,6 +426,12 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "autolisis_perfecta",
 	},
+	"funcion_pura": {
+		"name": "Función Pura",
+		"desc": "Cerrar NECROSIS CONTROLADA en menos de 90s desde su activación.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "funcion_pura",
+	},
 	"ruta_ascesis": {
 		"name": "Ascesis Profunda",
 		"desc": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",

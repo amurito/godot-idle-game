@@ -77,6 +77,7 @@ func _ready() -> void:
 		"domador_del_caos":       _eval_domador_del_caos,
 		"esclerocio_contingencia":_eval_esclerocio_contingencia,
 		"autolisis_perfecta":     _eval_autolisis_perfecta,
+		"funcion_pura":           _eval_funcion_pura,
 		"cinco_legados":          _eval_cinco_legados,
 		"omega_inviolable":       _eval_omega_inviolable_cond,
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
@@ -438,6 +439,10 @@ func _eval_autolisis_perfecta(_s: Dictionary) -> bool:
 		and EvoManager.autofagia_speed_level >= Balance.AUTOFAGIA_SPEED_MAX_LEVEL \
 		and EvoManager.autofagia_double_level >= Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL
 
+func _eval_funcion_pura(_s: Dictionary) -> bool:
+	return RunManager.final_route == "NECROSIS CONTROLADA" \
+		and EvoManager.necrosis_active_time <= 90.0
+
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0
 	for id in LegacyManager.LEGACY_DEFS:
@@ -534,6 +539,8 @@ func on_run_closed(route: String) -> void:
 		unlock("esclerocio_contingencia")
 	if route == "AUTOFAGIA NECRÓTICA" and _eval_autolisis_perfecta({}):
 		unlock("autolisis_perfecta")
+	if route == "NECROSIS CONTROLADA" and _eval_funcion_pura({}):
+		unlock("funcion_pura")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

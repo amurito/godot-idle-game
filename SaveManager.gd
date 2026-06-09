@@ -78,6 +78,7 @@ func build_save_data(main: Node) -> Dictionary:
 			"necrosis_omega": EvoManager.necrosis_omega,
 			"necromasa": EvoManager.necromasa,
 			"necrosis_agent_count": EvoManager.necrosis_agent_count,
+			"necrosis_active_time": EvoManager.necrosis_active_time,
 			"depredador_timer": EvoManager.depredador_timer,
 			"depredador_inestabilidad": EvoManager.depredador_inestabilidad,
 			"depredador_timer_buys": EvoManager.depredador_timer_buys,
@@ -200,6 +201,7 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.necrosis_omega = ev.get("necrosis_omega", Balance.NECROSIS_OMEGA_START)
 		EvoManager.necromasa = ev.get("necromasa", 0.0)
 		EvoManager.necrosis_agent_count = int(ev.get("necrosis_agent_count", 0))
+		EvoManager.necrosis_active_time = ev.get("necrosis_active_time", 0.0)
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
 		EvoManager.depredador_inestabilidad = ev.get("depredador_inestabilidad", EvoManager.depredador_inestabilidad)
 		EvoManager.depredador_timer_buys = int(ev.get("depredador_timer_buys", EvoManager.depredador_timer_buys))
