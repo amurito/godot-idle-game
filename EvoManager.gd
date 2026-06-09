@@ -462,6 +462,8 @@ func _autofagia_consume_one() -> bool:
 	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
 	EconomyManager.money += burst_money
 	var bio_burst: float = max(Balance.AUTOLISIS_BIO_BURST, result.cost / Balance.AUTOLISIS_BIO_FROM_COST_DIVISOR)
+	if LegacyManager.get_buff_value("ciclo_catabolico"):
+		bio_burst *= Balance.CICLO_CATABOLICO_BIO_MULT
 	BiosphereEngine.biomasa += bio_burst
 	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % autolisis_devour_count)
 	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money])
@@ -550,7 +552,10 @@ func process_depredador(dt: float) -> void:
 		_depredador_active_tick = 0.0
 		var devoured: bool = UpgradeManager.devour_random_upgrade()
 		if devoured:
-			BiosphereEngine.biomasa += 15.0
+			var dep_bio: float = 15.0
+			if LegacyManager.get_buff_value("ciclo_catabolico"):
+				dep_bio *= Balance.CICLO_CATABOLICO_BIO_MULT
+			BiosphereEngine.biomasa += dep_bio
 			met_oscuro_devoured_count += 1
 			AchievementManager.push_event("depredador_devour", {})
 			UIManager.show_toast(tr("TOAST_MO_DIGEST") % met_oscuro_devoured_count)

@@ -244,6 +244,15 @@ func close_run(route: String, reason: String):
 			UIManager.show_toast(tr("TOAST_CATABOLISMO_UNLOCKED"))
 			LogManager.add(tr("LOG_CATABOLISMO_UNLOCKED"))
 
+	# DEPREDADOR DE REALIDADES + AUTOFAGIA NECRÓTICA previa → cross Ciclo Catabólico.
+	# Orden requerido: primero cerrar AUTOFAGIA, luego DEPREDADOR.
+	if route == "DEPREDADOR DE REALIDADES" \
+			and LegacyManager.endings_achieved.get("AUTOFAGIA NECRÓTICA", false) \
+			and not LegacyManager.autofagia_depredador_done:
+		LegacyManager.autofagia_depredador_done = true
+		LogManager.add(tr("LOG_CICLO_CATABOLICO_UNLOCK"))
+		UIManager.show_toast(tr("TOAST_CICLO_CATABOLICO_UNLOCK"))
+
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
 	disturbances_without_reset = 0

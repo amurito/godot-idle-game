@@ -351,6 +351,16 @@ const LEGACY_DEFS: Dictionary = {
 		# Nivel 2 (+4 PL): +20 bio. Nivel 3 (+4 PL): +30 bio.
 		# Acelera el acceso a mutaciones tempranas en runs posteriores.
 	},
+	"ciclo_catabolico": {
+		"name": "Ciclo Catabólico",
+		"flavor": "Que venga de adentro o de afuera, ya no hay distinción. Todo es sustrato.",
+		"cat": "ng_plus", "cost": 8, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "legacy_flag", "flag": "autofagia_depredador_done", "description_key": "UNLOCK_REQ_AUTOFAGIA_DEP"},
+		"unlock": {"type": "legacy_flag", "flag": "autofagia_depredador_done", "description_key": "UNLOCK_REQ_AUTOFAGIA_DEP"},
+		"effect": {"type": "ciclo_catabolico_active", "value": 1.0},
+		# Cross AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES (en ese orden).
+		# Efecto: todos los devours en Met.Oscuro (autólisis y depredador) dan ×1.5 bio.
+	},
 
 	# ────────────────────────────────────────────────
 	# SECRETOS (3)

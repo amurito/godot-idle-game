@@ -67,6 +67,9 @@ var dark_legacy_charges: int = 0
 # Flag persistente del cruce ESCLEROCIO → PANSPERMIA NEGRA. Desbloquea el legado semilla_cosmica_oscura.
 # Se preserva al trascender (como endings_achieved).
 var esclerocio_panspermia_done: bool = false
+# Flag persistente del cruce AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES.
+# Desbloquea el legado ciclo_catabolico. Se preserva al trascender.
+var autofagia_depredador_done: bool = false
 
 # Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
 # current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
@@ -235,6 +238,7 @@ func get_save_dict() -> Dictionary:
 		"post_tras_route": post_tras_route,
 		"dark_legacy_charges": dark_legacy_charges,
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
+		"autofagia_depredador_done": autofagia_depredador_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -258,6 +262,7 @@ func save_legacy():
 		"post_tras_route": post_tras_route,
 		"dark_legacy_charges": dark_legacy_charges,
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
+		"autofagia_depredador_done": autofagia_depredador_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -352,6 +357,7 @@ func load_legacy():
 	post_tras_route = data.get("post_tras_route", "")
 	dark_legacy_charges = int(data.get("dark_legacy_charges", 0))
 	esclerocio_panspermia_done = data.get("esclerocio_panspermia_done", false)
+	autofagia_depredador_done = data.get("autofagia_depredador_done", false)
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])
@@ -542,7 +548,8 @@ func describe_unlock(id: String) -> String:
 		"mu_peak_reached":
 			base = tr("UNLOCK_REQ_MU") % float(unlock.get("threshold", 2.5))
 		"legacy_flag":
-			base = tr("UNLOCK_REQ_ESCLEROCIO")
+			var desc_key: String = unlock.get("description_key", "UNLOCK_REQ_ESCLEROCIO")
+			base = tr(desc_key)
 		_:
 			base = tr("BANK_BTN_LOCKED")
 	var req_buff: String = str(unlock.get("also_requires_buff", ""))
@@ -779,7 +786,8 @@ func transcend() -> int:
 
 	# Se preservan: esencia, trascendencia_count, first_trascendencia_shown,
 	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot,
-	# esclerocio_panspermia_done (el legado semilla_cosmica_oscura sigue desbloqueable)
+	# esclerocio_panspermia_done (semilla_cosmica_oscura sigue desbloqueable),
+	# autofagia_depredador_done (ciclo_catabolico sigue desbloqueable)
 
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])

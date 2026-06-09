@@ -64,6 +64,8 @@ const AUTOLISIS_BIO_PASSIVE        := 1.0      # bio/s pasivo mientras autólisi
 const AUTOLISIS_BIO_FROM_COST_DIVISOR := 50000.0
 # NG+ Catabolismo Heredado (buff de Banco Genético al cerrar AUTOFAGIA NECRÓTICA).
 const CATABOLISMO_HEREDADO_BIO := 10.0   # +bio por nivel al inicio de cada run
+# NG+ Ciclo Catabólico (cross AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES).
+const CICLO_CATABOLICO_BIO_MULT := 1.5   # todos los devours dan ×1.5 bio
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
