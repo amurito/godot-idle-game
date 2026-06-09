@@ -823,6 +823,12 @@ func apply_legacy_buffs() -> void:
 		EconomyManager.money += run_start_money
 		LogManager.add("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
 
+	# CATABOLISMO HEREDADO: biomasa inicial (10 × level)
+	var run_start_bio: float = get_effect_value("run_start_bio")
+	if run_start_bio > 0.0 and not SaveManager._file_existed_on_load:
+		BiosphereEngine.biomasa += run_start_bio
+		LogManager.add("✦ [NG+] Catabolismo Heredado: +%.0f bio al inicio" % run_start_bio)
+
 	# PLASTICIDAD ADAPTATIVA: omega_min floor 0.30
 	if get_buff_value("plasticidad_adaptativa"):
 		var floor_val: float = get_effect_value("omega_min_floor")
@@ -872,6 +878,9 @@ func apply_legacy_buffs() -> void:
 		LogManager.add("✦ [NG+] Mente Colmena activa — pasivo ×3.0 (la singularidad se distribuyó)")
 	if get_buff_value("metabolismo_glitch"):
 		LogManager.add("✦ [NG+] Metabolismo Glitch presente — se activa con ε > 0.40 (click ×1.5, pasivo ×1.8)")
+	if get_buff_value("catabolismo_heredado"):
+		var bio_lv: int = get_buff_level("catabolismo_heredado")
+		LogManager.add("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f bio al inicio" % [bio_lv, get_effect_value("run_start_bio")])
 
 func apply_cosmic_buffs() -> void:
 	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)

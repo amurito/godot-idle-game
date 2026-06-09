@@ -62,6 +62,8 @@ const AUTOLISIS_BIO_PASSIVE        := 1.0      # bio/s pasivo mientras autólisi
 # Escala el burst de bio por devour: bio_burst = max(BIO_BURST, cost / divisor).
 # A $4.4M → 88 bio; a $320K → 6.4 (capped al floor BIO_BURST=8).
 const AUTOLISIS_BIO_FROM_COST_DIVISOR := 50000.0
+# NG+ Catabolismo Heredado (buff de Banco Genético al cerrar AUTOFAGIA NECRÓTICA).
+const CATABOLISMO_HEREDADO_BIO := 10.0   # +bio por nivel al inicio de cada run
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)

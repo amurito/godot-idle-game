@@ -237,6 +237,13 @@ func close_run(route: String, reason: String):
 			LogManager.add(tr("LOG_SEMILLA_OSCURA_UNLOCK"))
 			UIManager.show_toast(tr("TOAST_SEMILLA_OSCURA"))
 
+	# AUTOFAGIA NECRÓTICA: primera vez que cierra → desbloquear Catabolismo Heredado.
+	if route == "AUTOFAGIA NECRÓTICA":
+		if not LegacyManager.get_buff_value("catabolismo_heredado"):
+			LegacyManager.grant_buff("catabolismo_heredado")
+			UIManager.show_toast(tr("TOAST_CATABOLISMO_UNLOCKED"))
+			LogManager.add(tr("LOG_CATABOLISMO_UNLOCKED"))
+
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
 	disturbances_without_reset = 0

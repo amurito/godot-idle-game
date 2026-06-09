@@ -340,6 +340,17 @@ const LEGACY_DEFS: Dictionary = {
 		"effect": {"type": "aura_dorada_active", "value": 1.0},
 		# Efecto: click ×2.5 (solo click — no afecta pasivo)
 	},
+	"catabolismo_heredado": {
+		"name": "Catabolismo Heredado",
+		"flavor": "Las estructuras digeridas no desaparecen. Vuelven como semilla para el siguiente ciclo.",
+		"cat": "ng_plus", "cost": 4, "cost_growth": 1.0, "max_level": 3,
+		"reveal": {"type": "route_closed", "route": "AUTOFAGIA NECRÓTICA"},
+		"unlock": {"type": "route_closed", "route": "AUTOFAGIA NECRÓTICA"},
+		"effect": {"type": "run_start_bio", "value": 10.0},
+		# Nivel 1 (gratis, otorgado al cerrar la ruta): +10 bio al inicio de run.
+		# Nivel 2 (+4 PL): +20 bio. Nivel 3 (+4 PL): +30 bio.
+		# Acelera el acceso a mutaciones tempranas en runs posteriores.
+	},
 
 	# ────────────────────────────────────────────────
 	# SECRETOS (3)
