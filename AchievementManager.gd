@@ -434,7 +434,9 @@ func _eval_esclerocio_contingencia(_s: Dictionary) -> bool:
 
 func _eval_autolisis_perfecta(_s: Dictionary) -> bool:
 	return RunManager.final_route == "AUTOFAGIA NECRÓTICA" \
-		and EvoManager.autolisis_devour_count >= 15
+		and EvoManager.autolisis_devour_count >= 15 \
+		and EvoManager.autofagia_speed_level >= Balance.AUTOFAGIA_SPEED_MAX_LEVEL \
+		and EvoManager.autofagia_double_level >= Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL
 
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0
@@ -530,7 +532,7 @@ func on_run_closed(route: String) -> void:
 		unlock("domador_del_caos")
 	if route == "ESCLEROCIO OSCURO" and EvoManager.met_oscuro_devoured_count >= 50:
 		unlock("esclerocio_contingencia")
-	if route == "AUTOFAGIA NECRÓTICA" and EvoManager.autolisis_devour_count >= 15:
+	if route == "AUTOFAGIA NECRÓTICA" and _eval_autolisis_perfecta({}):
 		unlock("autolisis_perfecta")
 
 func on_upgrade_bought(id: String) -> void:

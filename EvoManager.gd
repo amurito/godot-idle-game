@@ -468,7 +468,7 @@ func _autofagia_consume_one() -> bool:
 	return true
 
 ## Tick de autólisis. Cada intervalo (acortable) devora el upgrade más caro; con
-## Fagocitosis Doble puede devorar 2. Cuando no queda material → cierra por agotamiento.
+## Fagocitosis Doble/Triple puede devorar hasta 3. Cuando no queda material → cierra por agotamiento.
 func process_autolisis(dt: float) -> void:
 	autolisis_devour_timer += dt
 	if autolisis_devour_timer < autofagia_devour_interval():
@@ -478,11 +478,18 @@ func process_autolisis(dt: float) -> void:
 		if not RunManager.run_closed:
 			RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
 		return
-	# Fagocitosis Doble: chance de un segundo devour en el mismo tick.
-	if randf() < autofagia_double_chance():
+	# Fagocitosis Doble/Triple: cada roll exitoso habilita el siguiente (cap 3 devours por tick).
+	var double_ch := autofagia_double_chance()
+	if randf() < double_ch:
 		if not _autofagia_consume_one():
 			if not RunManager.run_closed:
 				RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
+			return
+		# Triple (3er devour) — solo si el doble ya tuvo éxito, misma probabilidad.
+		if randf() < double_ch:
+			if not _autofagia_consume_one():
+				if not RunManager.run_closed:
+					RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
 
 ## Colapso voluntario del núcleo (cierre manual). Disponible tras N devours.
 func autofagia_colapsar() -> void:
