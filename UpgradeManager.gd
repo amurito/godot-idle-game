@@ -85,7 +85,9 @@ func can_buy(id: String, money: float) -> bool:
 	# MET.OSCURO: upgrades bloqueados (bioquímica reemplazó la infraestructura).
 	# EXCEPCIÓN — Autofagia Necrótica: las compras se reabren para REALIMENTAR la autofagia
 	# (el devour da burst proporcional al costo → recomprás material para extender la run).
-	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis:
+	# EXCEPCIÓN — Necrosis Controlada: compras reabiertas (necesitás el motor económico real
+	# que genera Necromasa para comprar Agentes y empujar Ω al floor).
+	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis and not EvoManager.mutation_necrosis:
 		return false
 
 	# Usa cost() que aplica todos los descuentos (memoria_recurso, memoria_estructural, presión_rentable)

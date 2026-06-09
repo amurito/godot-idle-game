@@ -74,6 +74,10 @@ func build_save_data(main: Node) -> Dictionary:
 			"autolisis_devour_timer": EvoManager.autolisis_devour_timer,
 			"autofagia_speed_level": EvoManager.autofagia_speed_level,
 			"autofagia_double_level": EvoManager.autofagia_double_level,
+			"mutation_necrosis": EvoManager.mutation_necrosis,
+			"necrosis_omega": EvoManager.necrosis_omega,
+			"necromasa": EvoManager.necromasa,
+			"necrosis_agent_count": EvoManager.necrosis_agent_count,
 			"depredador_timer": EvoManager.depredador_timer,
 			"depredador_inestabilidad": EvoManager.depredador_inestabilidad,
 			"depredador_timer_buys": EvoManager.depredador_timer_buys,
@@ -192,6 +196,10 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.autolisis_devour_timer = ev.get("autolisis_devour_timer", 0.0)
 		EvoManager.autofagia_speed_level = ev.get("autofagia_speed_level", 0)
 		EvoManager.autofagia_double_level = ev.get("autofagia_double_level", 0)
+		EvoManager.mutation_necrosis = ev.get("mutation_necrosis", false)
+		EvoManager.necrosis_omega = ev.get("necrosis_omega", Balance.NECROSIS_OMEGA_START)
+		EvoManager.necromasa = ev.get("necromasa", 0.0)
+		EvoManager.necrosis_agent_count = int(ev.get("necrosis_agent_count", 0))
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
 		EvoManager.depredador_inestabilidad = ev.get("depredador_inestabilidad", EvoManager.depredador_inestabilidad)
 		EvoManager.depredador_timer_buys = int(ev.get("depredador_timer_buys", EvoManager.depredador_timer_buys))

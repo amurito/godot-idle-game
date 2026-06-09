@@ -73,6 +73,18 @@ func get_click_power() -> float:
 	if EvoManager.mutation_met_oscuro:
 		power *= Balance.AUTOLISIS_CLICK_MULT if EvoManager.mutation_autolisis else 3.0
 
+	# NECROSIS CONTROLADA: multiplicador necrótico (cuanto más bajo Ω, más produce)
+	if EvoManager.mutation_necrosis:
+		power *= EvoManager.necrosis_mult()
+
+	# APOPTOSIS HEREDADA (NG+): income escala suavemente con Ω bajo en runs futuras
+	if LegacyManager.get_buff_value("apoptosis_heredada") and StructuralModel.omega < 0.30:
+		power *= clampf(1.0 + (0.30 - StructuralModel.omega) * 1.67, 1.0, 1.5)
+
+	# PLASTICIDAD TERMINAL (cross HOMEORHESIS→NECROSIS): premia ambos extremos de Ω
+	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
+		power *= 1.5
+
 	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 2.5 # Aura Dorada — click ×2.5 (especializado, no afecta pasivo)
 
@@ -221,6 +233,14 @@ func get_passive_total() -> float:
 	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% pasivo por trascendencia acumulada
 	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
 		total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
+
+	# APOPTOSIS HEREDADA (NG+): pasivo escala suavemente con Ω bajo
+	if LegacyManager.get_buff_value("apoptosis_heredada") and StructuralModel.omega < 0.30:
+		total *= clampf(1.0 + (0.30 - StructuralModel.omega) * 1.67, 1.0, 1.5)
+
+	# PLASTICIDAD TERMINAL (cross): premia ambos extremos de Ω
+	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
+		total *= 1.5
 
 	# Mult por Rama Evolutiva (Nodos Finales DLC)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:

@@ -767,6 +767,18 @@ static func build_mutation_status_text() -> String:
 				t += "[color=#ffdd66]  " + TranslationServer.translate("MSTAT_AUTOLISIS_CLOSE_READY") + "[/color]\n"
 			else:
 				t += "[color=#888888]  " + TranslationServer.translate("MSTAT_AUTOLISIS_CLOSE_WAIT") % Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS + "[/color]\n"
+		elif EvoManager.mutation_necrosis:
+			var nec_idx: float = EvoManager.necrosis_index()
+			var nec_pct: int = int(nec_idx * 100.0)
+			var nec_filled: int = int(nec_idx * 20.0)
+			var nec_bar: String = "█".repeat(nec_filled) + "░".repeat(20 - nec_filled)
+			var nec_mult: float = EvoManager.necrosis_mult()
+			var nec_cost: float = EvoManager.necrosis_agent_cost()
+			t += "\n[b][color=#8a9a4a]🦠 " + TranslationServer.translate("MSTAT_NECROSIS_TITLE") + "[/color][/b]\n"
+			t += "[color=#99aa55][%s] %d%%[/color]\n" % [nec_bar, nec_pct]
+			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_MASA") % [EvoManager.necromasa, nec_mult] + "[/color]\n"
+			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_AGENT") % [EvoManager.necrosis_agent_count, nec_cost] + "[/color]\n"
+			t += "[color=#88aa44]  " + TranslationServer.translate("MSTAT_NECROSIS_HINT") + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa
 			var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))

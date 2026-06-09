@@ -96,6 +96,8 @@ var _autolisis_btn: Button = null
 var _autofagia_speed_btn: Button = null
 var _autofagia_double_btn: Button = null
 var _autofagia_colapso_btn: Button = null
+var _necrosis_btn: Button = null
+var _necrosis_agent_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -707,6 +709,12 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_autofagia_colapso_btn):
 		_autofagia_colapso_btn.queue_free()
 		_autofagia_colapso_btn = null
+	if is_instance_valid(_necrosis_btn):
+		_necrosis_btn.queue_free()
+		_necrosis_btn = null
+	if is_instance_valid(_necrosis_agent_btn):
+		_necrosis_agent_btn.queue_free()
+		_necrosis_agent_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -714,6 +722,8 @@ func update_ng_plus_buttons() -> void:
 	_update_esclerocio_button()
 	_update_autolisis_button()
 	_update_autofagia_upgrade_buttons()
+	_update_necrosis_button()
+	_update_necrosis_agent_button()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
@@ -893,6 +903,67 @@ func _on_autofagia_double_pressed() -> void:
 
 func _on_autofagia_colapso_pressed() -> void:
 	EvoManager.autofagia_colapsar()
+
+# ── NECROSIS CONTROLADA ──────────────────────────────────────────────────────
+## Botón gate [NECROSIS] (verde cadavérico). Aparece en MO con bio + flujo activo.
+func _update_necrosis_button() -> void:
+	var hidden: bool = RunManager.run_closed or not EvoManager.mutation_met_oscuro \
+		or EvoManager.mutation_necrosis or EvoManager.mutation_autolisis
+	if hidden:
+		if is_instance_valid(_necrosis_btn):
+			_necrosis_btn.visible = false
+		return
+	var bio_ok: bool = BiosphereEngine.biomasa >= Balance.NECROSIS_BIO_REQ
+	var flow_ok: bool = EconomyManager.get_delta_total() >= Balance.NECROSIS_FLOW_REQ
+	if not (bio_ok and flow_ok):
+		if is_instance_valid(_necrosis_btn):
+			_necrosis_btn.visible = false
+		return
+	if _necrosis_btn == null or not is_instance_valid(_necrosis_btn):
+		_necrosis_btn = Button.new()
+		_necrosis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_necrosis_btn.add_theme_color_override("font_color", Color(0.55, 0.7, 0.35))
+		_necrosis_btn.custom_minimum_size = Vector2(0, 70)
+		_necrosis_btn.pressed.connect(_on_necrosis_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_necrosis_btn)
+			panel.move_child(_necrosis_btn, 0)
+	_necrosis_btn.text = EmojiToRichText.strip("☠️ " + tr("BTN_NECROSIS"))
+	_necrosis_btn.visible = true
+
+func _on_necrosis_pressed() -> void:
+	if RunManager.run_closed or EvoManager.mutation_necrosis:
+		return
+	if is_instance_valid(_necrosis_btn):
+		_necrosis_btn.visible = false
+	EvoManager.activate_necrosis()
+
+## Botón de compra de Agentes Necróticos (solo durante necrosis activa).
+func _update_necrosis_agent_button() -> void:
+	var active: bool = EvoManager.mutation_necrosis and not RunManager.run_closed
+	if not active:
+		if is_instance_valid(_necrosis_agent_btn):
+			_necrosis_agent_btn.visible = false
+		return
+	if _necrosis_agent_btn == null or not is_instance_valid(_necrosis_agent_btn):
+		_necrosis_agent_btn = Button.new()
+		_necrosis_agent_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_necrosis_agent_btn.add_theme_color_override("font_color", Color(0.6, 0.75, 0.4))
+		_necrosis_agent_btn.custom_minimum_size = Vector2(0, 60)
+		_necrosis_agent_btn.pressed.connect(_on_necrosis_agent_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_necrosis_agent_btn)
+			panel.move_child(_necrosis_agent_btn, 0)
+	var cost: float = EvoManager.necrosis_agent_cost()
+	var idx_pct: int = int(EvoManager.necrosis_index() * 100.0)
+	_necrosis_agent_btn.text = EmojiToRichText.strip("🧫 " + tr("BTN_NECROSIS_AGENT") % [idx_pct, EvoManager.necromasa, cost])
+	_necrosis_agent_btn.disabled = not EvoManager.can_buy_necrosis_agent()
+	_necrosis_agent_btn.visible = true
+
+func _on_necrosis_agent_pressed() -> void:
+	EvoManager.buy_necrosis_agent()
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
@@ -1254,6 +1325,9 @@ func update_legacy_indicators() -> void:
 		_add_chip.call("bio×%.1f" % bio_mult, bio_tip, Color(0.85, 0.25, 0.25))
 	if RunManager.mente_colmena_active:
 		_add_chip.call(EmojiToRichText.strip("🧠IA"), tr("CHIP_MENTE_COLMENA"), Color(0.9, 0.3, 0.9))
+	if EvoManager.mutation_necrosis:
+		var nec_tip := tr("CHIP_NECROSIS_TIP") % [EvoManager.necromasa, EvoManager.necrosis_mult(), EvoManager.necrosis_index() * 100.0]
+		_add_chip.call("Ν %.0f ×%.1f" % [EvoManager.necromasa, EvoManager.necrosis_mult()], nec_tip, Color(0.4, 0.5, 0.25))
 	if RunManager.is_memoria_oscura_active():
 		var mo_tip := tr("CHIP_MEMORIA_OSCURA_TIP")
 		if RunManager._has_permanent_dark_legacy():
@@ -1384,6 +1458,8 @@ func get_reactor_color() -> Color:
 		return Color(0.12, 0.0, 0.02)
 	if EvoManager.mutation_autolisis:
 		return Color(0.65, 0.04, 0.18)
+	if EvoManager.mutation_necrosis:
+		return Color(0.4, 0.5, 0.25)
 	if EvoManager.mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)
 	if EvoManager.mutation_depredador:

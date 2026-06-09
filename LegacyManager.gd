@@ -70,6 +70,9 @@ var esclerocio_panspermia_done: bool = false
 # Flag persistente del cruce AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES.
 # Desbloquea el legado ciclo_catabolico. Se preserva al trascender.
 var autofagia_depredador_done: bool = false
+# Flag persistente del cruce HOMEORHESIS → NECROSIS CONTROLADA.
+# Desbloquea el legado plasticidad_terminal. Se preserva al trascender.
+var homeorhesis_necrosis_done: bool = false
 
 # Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
 # current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
@@ -239,6 +242,7 @@ func get_save_dict() -> Dictionary:
 		"dark_legacy_charges": dark_legacy_charges,
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"autofagia_depredador_done": autofagia_depredador_done,
+		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -263,6 +267,7 @@ func save_legacy():
 		"dark_legacy_charges": dark_legacy_charges,
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"autofagia_depredador_done": autofagia_depredador_done,
+		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -358,6 +363,7 @@ func load_legacy():
 	dark_legacy_charges = int(data.get("dark_legacy_charges", 0))
 	esclerocio_panspermia_done = data.get("esclerocio_panspermia_done", false)
 	autofagia_depredador_done = data.get("autofagia_depredador_done", false)
+	homeorhesis_necrosis_done = data.get("homeorhesis_necrosis_done", false)
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])
@@ -787,7 +793,8 @@ func transcend() -> int:
 	# Se preservan: esencia, trascendencia_count, first_trascendencia_shown,
 	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot,
 	# esclerocio_panspermia_done (semilla_cosmica_oscura sigue desbloqueable),
-	# autofagia_depredador_done (ciclo_catabolico sigue desbloqueable)
+	# autofagia_depredador_done (ciclo_catabolico sigue desbloqueable),
+	# homeorhesis_necrosis_done (plasticidad_terminal sigue desbloqueable)
 
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])
@@ -889,6 +896,10 @@ func apply_legacy_buffs() -> void:
 	if get_buff_value("catabolismo_heredado"):
 		var bio_lv: int = get_buff_level("catabolismo_heredado")
 		LogManager.add("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f bio al inicio" % [bio_lv, get_effect_value("run_start_bio")])
+	if get_buff_value("apoptosis_heredada"):
+		LogManager.add("✦ [NG+] Apoptosis Heredada — income escala con Ω bajo (×1.5 máx)")
+	if get_buff_value("plasticidad_terminal"):
+		LogManager.add("✦ [NG+] Plasticidad Terminal — ×1.5 income en ambos extremos de Ω")
 
 func apply_cosmic_buffs() -> void:
 	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)

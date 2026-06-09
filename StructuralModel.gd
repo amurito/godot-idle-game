@@ -253,7 +253,7 @@ func update_runtime() -> void:
 	var target_active: float = lerp(0.8, 0.4, t)
 	var epsilon_comp: float = abs(active_ratio - target_active)
 	epsilon_comp *= (1.0 - get_accounting_effect())
-	var decay_factor := clamp(1.0 - (EconomyManager.time_since_last_click / 5.0), 0.0, 1.0)
+	var decay_factor :float= clamp(1.0 - (EconomyManager.time_since_last_click / 5.0), 0.0, 1.0)
 	epsilon_active = (epsilon_prod + epsilon_comp) * decay_factor
 
 	epsilon_passive = 0.0
@@ -307,6 +307,10 @@ func update_runtime() -> void:
 	if EvoManager.mutation_met_oscuro:
 		omega_min = min(omega_min, 0.10)
 		omega = min(omega, 0.10)
+		# NECROSIS CONTROLADA: la ruta controla Ω directamente (override del clamp de MO).
+		if EvoManager.mutation_necrosis:
+			omega = EvoManager.necrosis_omega
+			omega_min = min(omega_min, EvoManager.necrosis_omega)
 
 	if epsilon_debug:
 		print("e breakdown: act=", epsilon_active, " pas=", epsilon_passive, " cmp=", epsilon_complex, " O=", omega)

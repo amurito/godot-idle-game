@@ -147,6 +147,25 @@ func _build_eventos(parent: VBoxContainer) -> void:
 		LegacyManager.save_legacy()
 		print("🦠 [DEBUG] esclerocio_panspermia_done = true — Semilla Cósmica Oscura desbloqueada"))
 
+	# ── DEBUG NECROSIS CONTROLADA (temporal) ──
+	var hbox_nec := HBoxContainer.new()
+	hbox_nec.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_nec)
+	# Fuerza MO + Necrosis activa para testear el loop de doble economía.
+	_add_event_btn(hbox_nec, "Activar Necrosis", func():
+		EvoManager.mutation_met_oscuro = true
+		EvoManager.activate_necrosis()
+		print("🦠 [DEBUG] Necrosis activada — Ω = %.4f" % EvoManager.necrosis_omega))
+	# Regala Necromasa para comprar Agentes sin grindear.
+	_add_event_btn(hbox_nec, "+5000 Ν", func():
+		EvoManager.necromasa += 5000.0
+		print("🧫 [DEBUG] Necromasa = %.0f" % EvoManager.necromasa))
+	# Marca HOMEORHESIS como cerrada para testear el cross.
+	_add_event_btn(hbox_nec, "Marcar Homeorhesis", func():
+		LegacyManager.endings_achieved["HOMEORHESIS"] = true
+		LegacyManager.save_legacy()
+		print("♾️ [DEBUG] HOMEORHESIS marcada — cross Plasticidad Terminal listo"))
+
 
 func _add_event_btn(parent: HBoxContainer, label: String, fn: Callable) -> void:
 	var btn := Button.new()

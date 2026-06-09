@@ -183,6 +183,10 @@ func close_run(route: String, reason: String):
 				var raw := int(floor(EvoManager.autolisis_devour_count / 3.0))
 				ng_bonus = min(raw, cap)
 				ng_formula = "autolisis_devoured %d / 3 = %d (cap %d)" % [EvoManager.autolisis_devour_count, ng_bonus, cap]
+			"NECROSIS CONTROLADA":
+				var raw := int(floor(EvoManager.necrosis_agent_count / 2.0))
+				ng_bonus = min(raw, cap)
+				ng_formula = "agentes %d / 2 = %d (cap %d)" % [EvoManager.necrosis_agent_count, ng_bonus, cap]
 			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 				var rotaciones: int = int(_rs.get("total_rotations", 0))
 				var raw := int(floor(rotaciones / 2.0))
@@ -252,6 +256,20 @@ func close_run(route: String, reason: String):
 		LegacyManager.autofagia_depredador_done = true
 		LogManager.add(tr("LOG_CICLO_CATABOLICO_UNLOCK"))
 		UIManager.show_toast(tr("TOAST_CICLO_CATABOLICO_UNLOCK"))
+
+	# NECROSIS CONTROLADA: primera vez que cierra → desbloquear Apoptosis Heredada.
+	if route == "NECROSIS CONTROLADA":
+		if not LegacyManager.get_buff_value("apoptosis_heredada"):
+			LegacyManager.grant_buff("apoptosis_heredada")
+			UIManager.show_toast(tr("TOAST_APOPTOSIS_UNLOCKED"))
+			LogManager.add(tr("LOG_APOPTOSIS_UNLOCKED"))
+		# Cross HOMEORHESIS → NECROSIS: dominio de ambos extremos de Ω.
+		# Orden requerido: HOMEORHESIS completada alguna vez, luego cerrar NECROSIS.
+		if LegacyManager.endings_achieved.get("HOMEORHESIS", false) \
+				and not LegacyManager.homeorhesis_necrosis_done:
+			LegacyManager.homeorhesis_necrosis_done = true
+			LogManager.add(tr("LOG_PLASTICIDAD_TERMINAL_UNLOCK"))
+			UIManager.show_toast(tr("TOAST_PLASTICIDAD_TERMINAL_UNLOCK"))
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -749,6 +767,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
 		"AUTOFAGIA NECRÓTICA":
 			raw = int(floor(EvoManager.autolisis_devour_count / 3.0))
+		"NECROSIS CONTROLADA":
+			raw = int(floor(EvoManager.necrosis_agent_count / 2.0))
 		"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
 			raw = int(floor(_rs.get("total_rotations", 0) / 2.0))
 		"DOMADOR DEL CAOS":

@@ -105,6 +105,12 @@ var autolisis_devour_timer: float = 0.0
 var autofagia_speed_level: int = 0   # Enzimas Líticas → -5s por nivel (piso 5s)
 var autofagia_double_level: int = 0  # Fagocitosis Doble → +20% chance devour doble por nivel
 
+# === NECROSIS CONTROLADA (sub-ruta de Met. Oscuro, doble economía Ν) ===
+var mutation_necrosis := false
+var necrosis_omega: float = 0.10     # Ω controlado por la ruta (override del clamp de MO)
+var necromasa: float = 0.0           # moneda Ν acumulada (atada al flujo real)
+var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
+
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
@@ -170,6 +176,10 @@ func reset() -> void:
 	autolisis_devour_timer = 0.0
 	autofagia_speed_level = 0
 	autofagia_double_level = 0
+	mutation_necrosis = false
+	necrosis_omega = Balance.NECROSIS_OMEGA_START
+	necromasa = 0.0
+	necrosis_agent_count = 0
 	_glitch_was_active = false
 
 func update_genome():
@@ -424,8 +434,8 @@ func process_met_oscuro(dt: float) -> bool:
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
 		LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	# Autólisis toma el control del cierre — saltar los auto-cierres de MO
-	if not mutation_autolisis:
+	# Autólisis/Necrosis toman el control del cierre — saltar los auto-cierres de MO
+	if not mutation_autolisis and not mutation_necrosis:
 		if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 			LegacyManager.add_pl(2)
 			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
@@ -536,6 +546,65 @@ func buy_autofagia_upgrade(kind: String) -> bool:
 		LogManager.add(tr("LOG_AUTOFAGIA_DOUBLE") % int(autofagia_double_chance() * 100))
 	AudioManager.play_sfx("upgrade")
 	return true
+
+# ── NECROSIS CONTROLADA ──────────────────────────────────────────────────────
+## Activa la sub-ruta. Necrosis toma control de Ω (override del clamp de MO) y
+## abre la doble economía: el flujo real genera Necromasa (Ν), Ν compra Agentes
+## que empujan Ω hacia el floor. Irreversible.
+func activate_necrosis() -> void:
+	if mutation_necrosis:
+		return
+	mutation_necrosis = true
+	necrosis_omega = Balance.NECROSIS_OMEGA_START
+	necromasa = 0.0
+	necrosis_agent_count = 0
+	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
+	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
+	LogManager.add(tr("LOG_NECROSIS_START"))
+
+## Multiplicador necrótico: rampa suave que premia cada paso, capeada cerca del floor.
+func necrosis_mult() -> float:
+	if not mutation_necrosis:
+		return 1.0
+	var safe_omega: float = max(necrosis_omega, Balance.NECROSIS_OMEGA_FLOOR)
+	return clampf(Balance.NECROSIS_OMEGA_START / safe_omega, 1.0, Balance.NECROSIS_MULT_CAP)
+
+## Índice necrótico [0,1]: progreso desde Ω inicial hasta el floor (para barra de progreso).
+func necrosis_index() -> float:
+	var span: float = Balance.NECROSIS_OMEGA_START - Balance.NECROSIS_OMEGA_FLOOR
+	return clampf((Balance.NECROSIS_OMEGA_START - necrosis_omega) / max(span, 0.0001), 0.0, 1.0)
+
+## Costo en Ν del próximo Agente Necrótico (escala con la cantidad comprada).
+func necrosis_agent_cost() -> float:
+	return Balance.NECROSIS_AGENT_COST_BASE * pow(Balance.NECROSIS_AGENT_COST_GROWTH, necrosis_agent_count)
+
+func can_buy_necrosis_agent() -> bool:
+	if not mutation_necrosis or RunManager.run_closed:
+		return false
+	return necromasa >= necrosis_agent_cost()
+
+## Compra un Agente Necrótico: baja Ω (×factor) y sube el multiplicador. Cierra al cruzar el floor.
+func buy_necrosis_agent() -> bool:
+	if not can_buy_necrosis_agent():
+		return false
+	necromasa -= necrosis_agent_cost()
+	necrosis_agent_count += 1
+	necrosis_omega *= Balance.NECROSIS_AGENT_OMEGA_FACTOR
+	AudioManager.play_sfx("upgrade")
+	LogManager.add(tr("LOG_NECROSIS_AGENT") % [necrosis_agent_count, necrosis_omega])
+	if necrosis_omega <= Balance.NECROSIS_OMEGA_FLOOR and not RunManager.run_closed:
+		necrosis_omega = Balance.NECROSIS_OMEGA_FLOOR
+		RunManager.close_run("NECROSIS CONTROLADA", tr("CLOSE_NECROSIS"))
+	return true
+
+## Tick de necrosis: la Necromasa también acumula del flujo pasivo realizado (0 bajo MO puro;
+## la fuente principal es el click manual, en main.on_reactor_click). Anti-AFK: sin flujo, no hay Ν.
+func process_necrosis(dt: float) -> void:
+	if not mutation_necrosis or RunManager.run_closed:
+		return
+	var passive_flow: float = EconomyManager.get_passive_total()
+	if passive_flow > 0.0:
+		necromasa += passive_flow * Balance.NECROSIS_CONVERSION * dt
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

@@ -67,6 +67,19 @@ const CATABOLISMO_HEREDADO_BIO := 10.0   # +bio por nivel al inicio de cada run
 # NG+ Ciclo Catabólico (cross AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES).
 const CICLO_CATABOLICO_BIO_MULT := 1.5   # todos los devours dan ×1.5 bio
 
+# ── NECROSIS CONTROLADA (sub-ruta de Met. Oscuro, doble economía Ν) ─
+# El hongo desmantela su estructura para liberar energía. Ω deja de ser salud
+# y se vuelve combustible: cuanto más bajo, más produce. Cierre al floor.
+const NECROSIS_BIO_REQ            := 50.0    # biomasa mínima para activar
+const NECROSIS_FLOW_REQ           := 200.0   # Δ$ total mínimo (economía activa corriendo)
+const NECROSIS_OMEGA_START        := 0.10    # Ω inicial (heredado del clamp de MO)
+const NECROSIS_OMEGA_FLOOR        := 0.001   # Ω de cierre (función pura sin overhead)
+const NECROSIS_MULT_CAP           := 25.0    # tope del multiplicador necrótico
+const NECROSIS_CONVERSION         := 0.15    # Ν generada = poder de click × esto (por click)
+const NECROSIS_AGENT_OMEGA_FACTOR := 0.7     # cada Agente Necrótico: Ω ×= esto
+const NECROSIS_AGENT_COST_BASE    := 100.0   # costo en Ν del 1er agente
+const NECROSIS_AGENT_COST_GROWTH  := 1.6     # ×costo en Ν por agente comprado
+
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
 const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
@@ -178,6 +191,7 @@ const PL_REWARDS: Dictionary = {
 	"METABOLISMO OSCURO":        4,
 	"ESCLEROCIO OSCURO":         6,
 	"AUTOFAGIA NECRÓTICA":        6,
+	"NECROSIS CONTROLADA":       5,
 	"MENTE COLMENA DISTRIBUIDA": 8,
 	"DEPREDADOR DE REALIDADES":  12,
 	"COLAPSO DEPREDATORIO":      8,
@@ -206,6 +220,7 @@ const NG_CAPS: Dictionary = {
 	"METABOLISMO OSCURO":        8,
 	"ESCLEROCIO OSCURO":         8,
 	"AUTOFAGIA NECRÓTICA":        8,
+	"NECROSIS CONTROLADA":       8,
 	"POLIMORFÍA TOTAL":          8,
 	"POLIMORFIA TOTAL":          8,
 	"DOMADOR DEL CAOS":          8,

@@ -361,6 +361,26 @@ const LEGACY_DEFS: Dictionary = {
 		# Cross AUTOFAGIA NECRÓTICA → DEPREDADOR DE REALIDADES (en ese orden).
 		# Efecto: todos los devours en Met.Oscuro (autólisis y depredador) dan ×1.5 bio.
 	},
+	"apoptosis_heredada": {
+		"name": "Apoptosis Heredada",
+		"flavor": "La muerte celular programada ya no es un final. Es una herramienta.",
+		"cat": "ng_plus", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "NECROSIS CONTROLADA"},
+		"unlock": {"type": "route_closed", "route": "NECROSIS CONTROLADA"},
+		"effect": {"type": "apoptosis_heredada_active", "value": 1.0},
+		# Otorgado gratis al cerrar NECROSIS CONTROLADA por 1ª vez.
+		# Efecto: con Ω<0.30, click y pasivo escalan clampf(1+(0.30−Ω)×1.67, 1, 1.5).
+	},
+	"plasticidad_terminal": {
+		"name": "Plasticidad Terminal",
+		"flavor": "El extremo de la estabilidad y el extremo del colapso son el mismo borde.",
+		"cat": "ng_plus", "cost": 8, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "legacy_flag", "flag": "homeorhesis_necrosis_done", "description_key": "UNLOCK_REQ_HOMEORHESIS_NECROSIS"},
+		"unlock": {"type": "legacy_flag", "flag": "homeorhesis_necrosis_done", "description_key": "UNLOCK_REQ_HOMEORHESIS_NECROSIS"},
+		"effect": {"type": "plasticidad_terminal_active", "value": 1.0},
+		# Cross HOMEORHESIS → NECROSIS CONTROLADA (homeorhesis completada alguna vez, luego necrosis).
+		# Efecto: ×1.5 income (click y pasivo) cuando Ω>0.55 O Ω<0.10 — premia ambos extremos.
+	},
 
 	# ────────────────────────────────────────────────
 	# SECRETOS (3)

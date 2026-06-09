@@ -384,6 +384,9 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	var power := EconomyManager.get_click_power()
 	EconomyManager.money += power
 	AchievementManager.on_click()
+	# NECROSIS CONTROLADA: el flujo activo (click) genera Necromasa (Ν). Sin clicks, no hay progreso.
+	if EvoManager.mutation_necrosis:
+		EvoManager.necromasa += power * Balance.NECROSIS_CONVERSION
 	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
@@ -571,6 +574,8 @@ func _on_logic_tick():
 		EvoManager.process_met_oscuro(dt)
 		if EvoManager.mutation_autolisis:
 			EvoManager.process_autolisis(dt)
+		if EvoManager.mutation_necrosis:
+			EvoManager.process_necrosis(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)
