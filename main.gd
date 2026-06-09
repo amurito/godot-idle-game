@@ -386,7 +386,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	AchievementManager.on_click()
 	# NECROSIS CONTROLADA: el flujo activo (click) genera Necromasa (Ν). Sin clicks, no hay progreso.
 	if EvoManager.mutation_necrosis:
-		EvoManager.necromasa += power * Balance.NECROSIS_CONVERSION
+		EvoManager.add_necromasa_from_click(power)
 	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})

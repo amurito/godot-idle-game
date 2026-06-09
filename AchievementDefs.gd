@@ -428,7 +428,7 @@ const DEFS := {
 	},
 	"funcion_pura": {
 		"name": "Función Pura",
-		"desc": "Cerrar NECROSIS CONTROLADA en menos de 90s desde su activación.",
+		"desc": "Cerrar NECROSIS CONTROLADA en menos de 75s y sin saturar nunca la toxicidad.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "funcion_pura",
 	},

@@ -441,7 +441,8 @@ func _eval_autolisis_perfecta(_s: Dictionary) -> bool:
 
 func _eval_funcion_pura(_s: Dictionary) -> bool:
 	return RunManager.final_route == "NECROSIS CONTROLADA" \
-		and EvoManager.necrosis_active_time <= 90.0
+		and EvoManager.necrosis_active_time <= 75.0 \
+		and not EvoManager.necrosis_tox_maxed
 
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0

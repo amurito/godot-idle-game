@@ -75,10 +75,19 @@ const NECROSIS_FLOW_REQ           := 200.0   # Δ$ total mínimo (economía acti
 const NECROSIS_OMEGA_START        := 0.10    # Ω inicial (heredado del clamp de MO)
 const NECROSIS_OMEGA_FLOOR        := 0.001   # Ω de cierre (función pura sin overhead)
 const NECROSIS_MULT_CAP           := 25.0    # tope del multiplicador necrótico
-const NECROSIS_CONVERSION         := 0.15    # Ν generada = poder de click × esto (por click)
-const NECROSIS_AGENT_OMEGA_FACTOR := 0.7     # cada Agente Necrótico: Ω ×= esto
+# Ν generada por click = pow(poder, MASA_EXP) × CONVERSION × (1−toxicidad).
+# Sublineal (sqrt) → desacopla la Ν del click power gigante de late-game.
+const NECROSIS_CONVERSION         := 0.8     # coeficiente de generación de Ν
+const NECROSIS_MASA_EXP           := 0.5     # exponente sublineal sobre el poder de click
+const NECROSIS_AGENT_OMEGA_FACTOR := 0.72    # cada Agente Necrótico: Ω ×= esto (~14 al floor)
 const NECROSIS_AGENT_COST_BASE    := 100.0   # costo en Ν del 1er agente
-const NECROSIS_AGENT_COST_GROWTH  := 1.6     # ×costo en Ν por agente comprado
+const NECROSIS_AGENT_COST_GROWTH  := 1.75    # ×costo en Ν por agente comprado
+# Toxicidad Necrótica: cada agente envenena el sustrato y frena la generación de Ν.
+const NECROSIS_TOX_PER_AGENT      := 0.20    # +toxicidad por agente desplegado
+const NECROSIS_TOX_DECAY          := 0.03    # toxicidad/s que decae pasivamente
+# Depuración: gastás Ν para limpiar toxicidad (decisión: banco Ν vs mantener ritmo).
+const NECROSIS_PURGE_FRACTION     := 0.4     # toxicidad ×= esto al purgar (limpia 60%)
+const NECROSIS_PURGE_COST_BASE    := 150.0   # costo base en Ν · escala con la toxicidad actual
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)

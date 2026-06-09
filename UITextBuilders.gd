@@ -784,9 +784,15 @@ static func build_mutation_status_text() -> String:
 			var nec_bar: String = "█".repeat(nec_filled) + "░".repeat(20 - nec_filled)
 			var nec_mult: float = EvoManager.necrosis_mult()
 			var nec_cost: float = EvoManager.necrosis_agent_cost()
+			var tox: float = EvoManager.necrosis_toxicidad
+			var tox_filled: int = int(tox * 20.0)
+			var tox_bar: String = "█".repeat(tox_filled) + "░".repeat(20 - tox_filled)
+			var tox_col: String = "#88aa44" if tox < 0.5 else ("#ccaa44" if tox < 0.85 else "#dd5544")
+			var eff_pct: int = int(EvoManager.necrosis_efficiency() * 100.0)
 			t += "\n[b][color=#8a9a4a]🦠 " + TranslationServer.translate("MSTAT_NECROSIS_TITLE") + "[/color][/b]\n"
 			t += "[color=#99aa55][%s] %d%%[/color]\n" % [nec_bar, nec_pct]
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_MASA") % [EvoManager.necromasa, nec_mult] + "[/color]\n"
+			t += "[color=%s]☣ " % tox_col + TranslationServer.translate("MSTAT_NECROSIS_TOX") % [tox_bar, tox * 100.0, eff_pct] + "[/color]\n"
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_AGENT") % [EvoManager.necrosis_agent_count, nec_cost] + "[/color]\n"
 			t += "[color=#88aa44]  " + TranslationServer.translate("MSTAT_NECROSIS_HINT") + "[/color]\n"
 		else:

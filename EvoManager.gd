@@ -111,6 +111,8 @@ var necrosis_omega: float = 0.10     # Ω controlado por la ruta (override del c
 var necromasa: float = 0.0           # moneda Ν acumulada (atada al flujo real)
 var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
 var necrosis_active_time: float = 0.0  # s con necrosis activa (para logro de velocidad)
+var necrosis_toxicidad: float = 0.0    # [0,1] envenenamiento del sustrato (frena la Ν)
+var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse (overdosis)
 
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
@@ -182,6 +184,8 @@ func reset() -> void:
 	necromasa = 0.0
 	necrosis_agent_count = 0
 	necrosis_active_time = 0.0
+	necrosis_toxicidad = 0.0
+	necrosis_tox_maxed = false
 	_glitch_was_active = false
 
 func update_genome():
@@ -561,6 +565,8 @@ func activate_necrosis() -> void:
 	necromasa = 0.0
 	necrosis_agent_count = 0
 	necrosis_active_time = 0.0
+	necrosis_toxicidad = 0.0
+	necrosis_tox_maxed = false
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
 	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
 	LogManager.add(tr("LOG_NECROSIS_START"))
@@ -586,13 +592,17 @@ func can_buy_necrosis_agent() -> bool:
 		return false
 	return necromasa >= necrosis_agent_cost()
 
-## Compra un Agente Necrótico: baja Ω (×factor) y sube el multiplicador. Cierra al cruzar el floor.
+## Compra un Agente Necrótico: baja Ω (×factor), sube el multiplicador Y la toxicidad.
+## Cierra al cruzar el floor.
 func buy_necrosis_agent() -> bool:
 	if not can_buy_necrosis_agent():
 		return false
 	necromasa -= necrosis_agent_cost()
 	necrosis_agent_count += 1
 	necrosis_omega *= Balance.NECROSIS_AGENT_OMEGA_FACTOR
+	necrosis_toxicidad = min(1.0, necrosis_toxicidad + Balance.NECROSIS_TOX_PER_AGENT)
+	if necrosis_toxicidad >= 0.99:
+		necrosis_tox_maxed = true
 	AudioManager.play_sfx("upgrade")
 	LogManager.add(tr("LOG_NECROSIS_AGENT") % [necrosis_agent_count, necrosis_omega])
 	if necrosis_omega <= Balance.NECROSIS_OMEGA_FLOOR and not RunManager.run_closed:
@@ -600,15 +610,44 @@ func buy_necrosis_agent() -> bool:
 		RunManager.close_run("NECROSIS CONTROLADA", tr("CLOSE_NECROSIS"))
 	return true
 
-## Tick de necrosis: la Necromasa también acumula del flujo pasivo realizado (0 bajo MO puro;
-## la fuente principal es el click manual, en main.on_reactor_click). Anti-AFK: sin flujo, no hay Ν.
+## Factor de eficiencia [0,1] de generación de Ν: el sustrato envenenado produce menos.
+func necrosis_efficiency() -> float:
+	return clampf(1.0 - necrosis_toxicidad, 0.0, 1.0)
+
+## Ν generada por un click (sublineal en el poder, gateada por toxicidad). Llamado desde main.
+func add_necromasa_from_click(power: float) -> void:
+	if not mutation_necrosis or RunManager.run_closed:
+		return
+	var base: float = pow(max(power, 0.0), Balance.NECROSIS_MASA_EXP) * Balance.NECROSIS_CONVERSION
+	necromasa += base * necrosis_efficiency()
+
+## Costo de una Depuración (limpia toxicidad). Escala con la toxicidad actual.
+func necrosis_purge_cost() -> float:
+	return Balance.NECROSIS_PURGE_COST_BASE * (1.0 + necrosis_toxicidad * 2.0)
+
+func can_purge_necrosis() -> bool:
+	if not mutation_necrosis or RunManager.run_closed:
+		return false
+	return necrosis_toxicidad > 0.05 and necromasa >= necrosis_purge_cost()
+
+## Depuración: gastás Ν para limpiar el 60% de la toxicidad (mantener el ritmo de despliegue).
+func purge_necrosis() -> bool:
+	if not can_purge_necrosis():
+		return false
+	necromasa -= necrosis_purge_cost()
+	necrosis_toxicidad *= Balance.NECROSIS_PURGE_FRACTION
+	AudioManager.play_sfx("upgrade")
+	LogManager.add(tr("LOG_NECROSIS_PURGE") % (necrosis_toxicidad * 100.0))
+	return true
+
+## Tick de necrosis: cuenta el tiempo activo y decae la toxicidad. La Ν se genera por click
+## (main.on_reactor_click). Anti-AFK: sin clicks no hay Ν.
 func process_necrosis(dt: float) -> void:
 	if not mutation_necrosis or RunManager.run_closed:
 		return
 	necrosis_active_time += dt
-	var passive_flow: float = EconomyManager.get_passive_total()
-	if passive_flow > 0.0:
-		necromasa += passive_flow * Balance.NECROSIS_CONVERSION * dt
+	if necrosis_toxicidad > 0.0:
+		necrosis_toxicidad = max(0.0, necrosis_toxicidad - Balance.NECROSIS_TOX_DECAY * dt)
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

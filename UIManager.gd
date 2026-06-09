@@ -98,6 +98,7 @@ var _autofagia_double_btn: Button = null
 var _autofagia_colapso_btn: Button = null
 var _necrosis_btn: Button = null
 var _necrosis_agent_btn: Button = null
+var _necrosis_purge_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -715,6 +716,9 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_necrosis_agent_btn):
 		_necrosis_agent_btn.queue_free()
 		_necrosis_agent_btn = null
+	if is_instance_valid(_necrosis_purge_btn):
+		_necrosis_purge_btn.queue_free()
+		_necrosis_purge_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -724,6 +728,7 @@ func update_ng_plus_buttons() -> void:
 	_update_autofagia_upgrade_buttons()
 	_update_necrosis_button()
 	_update_necrosis_agent_button()
+	_update_necrosis_purge_button()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
@@ -958,12 +963,40 @@ func _update_necrosis_agent_button() -> void:
 			panel.move_child(_necrosis_agent_btn, 0)
 	var cost: float = EvoManager.necrosis_agent_cost()
 	var idx_pct: int = int(EvoManager.necrosis_index() * 100.0)
-	_necrosis_agent_btn.text = EmojiToRichText.strip("🧫 " + tr("BTN_NECROSIS_AGENT") % [idx_pct, EvoManager.necromasa, cost])
+	var tox_pct: int = int(EvoManager.necrosis_toxicidad * 100.0)
+	_necrosis_agent_btn.text = EmojiToRichText.strip("🧫 " + tr("BTN_NECROSIS_AGENT") % [idx_pct, EvoManager.necromasa, cost, tox_pct])
 	_necrosis_agent_btn.disabled = not EvoManager.can_buy_necrosis_agent()
 	_necrosis_agent_btn.visible = true
 
 func _on_necrosis_agent_pressed() -> void:
 	EvoManager.buy_necrosis_agent()
+
+## Botón de Depuración (limpia toxicidad gastando Ν).
+func _update_necrosis_purge_button() -> void:
+	var active: bool = EvoManager.mutation_necrosis and not RunManager.run_closed \
+		and EvoManager.necrosis_toxicidad > 0.05
+	if not active:
+		if is_instance_valid(_necrosis_purge_btn):
+			_necrosis_purge_btn.visible = false
+		return
+	if _necrosis_purge_btn == null or not is_instance_valid(_necrosis_purge_btn):
+		_necrosis_purge_btn = Button.new()
+		_necrosis_purge_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_necrosis_purge_btn.add_theme_color_override("font_color", Color(0.7, 0.85, 0.5))
+		_necrosis_purge_btn.custom_minimum_size = Vector2(0, 52)
+		_necrosis_purge_btn.pressed.connect(_on_necrosis_purge_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_necrosis_purge_btn)
+			panel.move_child(_necrosis_purge_btn, 0)
+	var pcost: float = EvoManager.necrosis_purge_cost()
+	var tox_pct: int = int(EvoManager.necrosis_toxicidad * 100.0)
+	_necrosis_purge_btn.text = EmojiToRichText.strip("💧 " + tr("BTN_NECROSIS_PURGE") % [tox_pct, pcost])
+	_necrosis_purge_btn.disabled = not EvoManager.can_purge_necrosis()
+	_necrosis_purge_btn.visible = true
+
+func _on_necrosis_purge_pressed() -> void:
+	EvoManager.purge_necrosis()
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
@@ -1326,8 +1359,9 @@ func update_legacy_indicators() -> void:
 	if RunManager.mente_colmena_active:
 		_add_chip.call(EmojiToRichText.strip("🧠IA"), tr("CHIP_MENTE_COLMENA"), Color(0.9, 0.3, 0.9))
 	if EvoManager.mutation_necrosis:
-		var nec_tip := tr("CHIP_NECROSIS_TIP") % [EvoManager.necromasa, EvoManager.necrosis_mult(), EvoManager.necrosis_index() * 100.0]
-		_add_chip.call("Ν %.0f ×%.1f" % [EvoManager.necromasa, EvoManager.necrosis_mult()], nec_tip, Color(0.4, 0.5, 0.25))
+		var nec_tip := tr("CHIP_NECROSIS_TIP") % [EvoManager.necromasa, EvoManager.necrosis_mult(), EvoManager.necrosis_index() * 100.0, EvoManager.necrosis_toxicidad * 100.0]
+		var tox_col := Color(0.4, 0.5, 0.25).lerp(Color(0.7, 0.2, 0.2), EvoManager.necrosis_toxicidad)
+		_add_chip.call("Ν %.0f ×%.1f ☣%d%%" % [EvoManager.necromasa, EvoManager.necrosis_mult(), int(EvoManager.necrosis_toxicidad * 100.0)], nec_tip, tox_col)
 	if RunManager.is_memoria_oscura_active():
 		var mo_tip := tr("CHIP_MEMORIA_OSCURA_TIP")
 		if RunManager._has_permanent_dark_legacy():
