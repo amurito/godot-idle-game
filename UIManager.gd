@@ -1102,14 +1102,16 @@ func open_legacy_panel() -> void:
 	lp.size = ps
 	lp.position = Vector2(margin, margin)
 
-	# Chip visual ESC en esquina superior derecha (se crea una sola vez)
+	# Chip visual ESC en esquina superior derecha — hermano de LegacyPanel
+	# (no hijo: PanelContainer estiraría cualquier hijo a pantalla completa)
 	const ESC_BTN_W := 80.0
 	const ESC_BTN_H := 44.0
-	var esc_btn := lp.find_child("LegacyEscBtn") as Button
+	var esc_btn := scene.get_node_or_null("LegacyEscBtn") as Button
 	if not is_instance_valid(esc_btn):
 		esc_btn = Button.new()
 		esc_btn.name = "LegacyEscBtn"
 		esc_btn.text = "ESC"
+		esc_btn.z_index = 10
 		esc_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
 		var s := StyleBoxFlat.new()
 		s.bg_color = Color(0.08, 0.05, 0.12, 0.97)
@@ -1126,9 +1128,11 @@ func open_legacy_panel() -> void:
 		esc_btn.add_theme_stylebox_override("pressed", sh)
 		esc_btn.custom_minimum_size = Vector2(ESC_BTN_W, ESC_BTN_H)
 		esc_btn.pressed.connect(close_legacy_panel)
-		lp.add_child(esc_btn)
-	esc_btn.position = Vector2(ps.x - ESC_BTN_W - 10.0, 10.0)
+		scene.add_child(esc_btn)
+	# Posición: esquina sup-der del panel (lp.position + lp.size)
+	esc_btn.position = lp.position + Vector2(ps.x - ESC_BTN_W - 10.0, 10.0)
 	esc_btn.size = Vector2(ESC_BTN_W, ESC_BTN_H)
+	esc_btn.visible = true
 
 	refresh_legacy_store()
 	update_legacy_indicators()
@@ -1136,6 +1140,9 @@ func open_legacy_panel() -> void:
 func close_legacy_panel() -> void:
 	scene.legacy_panel.visible = false
 	scene.get_node("DimmerBackground").visible = false
+	var esc_btn := scene.get_node_or_null("LegacyEscBtn") as Button
+	if is_instance_valid(esc_btn):
+		esc_btn.visible = false
 
 func refresh_legacy_store() -> void:
 	update_legacy_indicators()

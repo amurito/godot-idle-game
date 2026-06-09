@@ -1,4 +1,4 @@
-﻿extends Control
+extends Control
 
 # =====================================================
 # IDLE � v0.8 DLC "Fungi"
@@ -982,11 +982,16 @@ func _input(event):
 		StructuralModel.epsilon_debug = !StructuralModel.epsilon_debug
 		print("e DEBUG =", StructuralModel.epsilon_debug)
 
-	# ESC — cerrar panel activo (Settings > Banco Genético > EvoChoice)
+	# ESC — cerrar panel activo (Settings > Shortcuts > Banco Genético > EvoChoice)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			if is_instance_valid(AudioManager._settings_panel):
 				AudioManager._close_settings_panel()
+				get_viewport().set_input_as_handled()
+				return
+			if is_instance_valid(TutorialManager._shortcuts_panel):
+				TutorialManager._shortcuts_panel.queue_free()
+				TutorialManager._shortcuts_panel = null
 				get_viewport().set_input_as_handled()
 				return
 			if is_instance_valid(legacy_panel) and legacy_panel.visible:
