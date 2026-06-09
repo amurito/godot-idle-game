@@ -61,7 +61,11 @@ func update_appearance(current_money: float) -> void:
 	
 	# Visibilidad basada en desbloqueo
 	visible = state.unlocked
-	
+
+	# Tooltip descriptivo (hover)
+	var _tip_key := "UPG_TIP_" + upgrade_id.to_upper()
+	tooltip_text = tr(_tip_key) if tr(_tip_key) != _tip_key else ""
+
 	var _label := tr("UPG_" + upgrade_id.to_upper())
 	if def.one_shot and state.level > 0:
 		text = EmojiToRichText.strip(_label + "\n" + tr("UPG_ACQUIRED"))

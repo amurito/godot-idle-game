@@ -291,7 +291,18 @@ const TRANSLATIONS := {
 		"UPG_PERSISTENCE": "Memoria Operativa del Sistema (c₀ +25%)",
 		"UPG_TRUEQUE_ALLO": "Escalado Alostático",
 		"UPG_ACQUIRED": "✓ ADQUIRIDO",
-
+			# === UPGRADE TOOLTIPS ===
+			"UPG_TIP_CLICK": "+$1 por click por nivel. El ingreso base que escala con todos los multiplicadores.",
+			"UPG_TIP_CLICK_MULT": "Multiplica tu ingreso por click ×1.06 por nivel. Se acumula con otros bonos de click.",
+			"UPG_TIP_AUTO": "+$1/s de ingreso pasivo por nivel. Genera dinero automáticamente, incluso sin hacer click.",
+			"UPG_TIP_AUTO_MULT": "Multiplica todo el ingreso pasivo ×1.06 por nivel. Afecta Trabajo Manual y Especialización.",
+			"UPG_TIP_TRUEQUE": "+$6/s de la red de intercambio por nivel. Escala con μ (Capital Cognitivo) y β (Biomasa).",
+			"UPG_TIP_TRUEQUE_NET": "Multiplica todo el ingreso de trueque ×1.12 por nivel.",
+			"UPG_TIP_SPECIALIZATION": "Multiplica el ingreso pasivo y de trueque ×1.10 por nivel. El multiplicador global más versátil.",
+			"UPG_TIP_COGNITIVE": "+1 μ por nivel. Capital Cognitivo amplifica click, pasivo e intercambio simultáneamente — un multiplicador global.",
+			"UPG_TIP_ACCOUNTING": "+$1/s de ingreso pasivo Y mejora la eficiencia de μ y el auto-multiplicador en +5% por nivel.",
+			"UPG_TIP_TRUEQUE_ALLO": "Duplica todo el ingreso de trueque. Inversión única de alto impacto.",
+			"UPG_TIP_PERSISTENCE": "Aumenta el piso estructural c₀ en +25%. Ω se mantiene más alto y tu productividad resiste mejor el caos.",
 		# === MUTATION NAMES ===
 		"MUT_ALLOSTASIS": "Resiliencia Alostática",
 		"MUT_HOMEORHESIS": "Trascendencia Cristalina",
@@ -1588,6 +1599,18 @@ const TRANSLATIONS := {
 		"UPG_PERSISTENCE": "System Operative Memory (c₀ +25%)",
 		"UPG_TRUEQUE_ALLO": "Allostatic Scaling",
 		"UPG_ACQUIRED": "✓ ACQUIRED",
+			# === UPGRADE TOOLTIPS ===
+			"UPG_TIP_CLICK": "+$1 click income per level. Base income that scales with all your multipliers.",
+			"UPG_TIP_CLICK_MULT": "Multiplies total click income by ×1.06 per level. Stacks with other click bonuses.",
+			"UPG_TIP_AUTO": "+$1/s passive income per level. Generates money automatically, even while idle.",
+			"UPG_TIP_AUTO_MULT": "Multiplies all passive income by ×1.06 per level. Affects Manual Labor and Specialization.",
+			"UPG_TIP_TRUEQUE": "+$6/s exchange income per level. Scales with μ (Cognitive Capital) and β (Biomass).",
+			"UPG_TIP_TRUEQUE_NET": "Multiplies all exchange income by ×1.12 per level.",
+			"UPG_TIP_SPECIALIZATION": "Multiplies passive and exchange income by ×1.10 per level. Most versatile global multiplier.",
+			"UPG_TIP_COGNITIVE": "+1 μ per level. Cognitive Capital amplifies click, passive, and exchange income simultaneously — a global multiplier.",
+			"UPG_TIP_ACCOUNTING": "+$1/s passive income AND improves μ scaling and auto-multiplier efficiency by +5% per level.",
+			"UPG_TIP_TRUEQUE_ALLO": "Doubles all exchange income. High-impact one-time investment.",
+			"UPG_TIP_PERSISTENCE": "Increases structural floor c₀ by +25%. Ω stays higher longer, protecting your productivity against chaos.",
 
 		# === MUTATION NAMES ===
 		"MUT_ALLOSTASIS": "Allostatic Resilience",
