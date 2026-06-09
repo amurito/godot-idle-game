@@ -276,6 +276,25 @@ func _apply_bio_header_style() -> void:
 		"HifasMetric":   ["HifasBar",         "UI_TIP_HIFAS"],
 		"NutrientesMetric": ["NutrientesBar", "UI_TIP_NUTRIENTES"],
 	}
+	# Subtítulos siempre visibles debajo del valor de cada métrica del header
+	var metric_subtitles := {
+		"EpsilonMetric":   "HEADER_SUB_EPSILON",
+		"OmegaMetric":     "HEADER_SUB_OMEGA",
+		"BiomasaMetric":   "HEADER_SUB_BIOMASA",
+		"HifasMetric":     "HEADER_SUB_HIFAS",
+		"NutrientesMetric":"HEADER_SUB_NUTRIENTES",
+	}
+	for container_name in metric_subtitles:
+		var container = _find_scene(container_name)
+		if container:
+			var sub := Label.new()
+			sub.text = tr(metric_subtitles[container_name])
+			sub.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
+			sub.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.75))
+			sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			container.add_child(sub)
+
 	for container_name in metric_tooltips:
 		var bar_name: String = metric_tooltips[container_name][0]
 		var tip_key: String  = metric_tooltips[container_name][1]
