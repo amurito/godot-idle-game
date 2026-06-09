@@ -298,9 +298,9 @@ const TRANSLATIONS := {
 			"UPG_TIP_AUTO_MULT": "Multiplica todo el ingreso pasivo ×1.06 por nivel. Afecta Trabajo Manual y Especialización.",
 			"UPG_TIP_TRUEQUE": "+$6/s de la red de intercambio por nivel. Escala con μ (Capital Cognitivo) y β (Biomasa).",
 			"UPG_TIP_TRUEQUE_NET": "Multiplica todo el ingreso de trueque ×1.12 por nivel.",
-			"UPG_TIP_SPECIALIZATION": "Multiplica el ingreso pasivo y de trueque ×1.10 por nivel. El multiplicador global más versátil.",
+			"UPG_TIP_SPECIALIZATION": "Multiplica el ingreso pasivo (Trabajo Manual) ×1.10 por nivel. No afecta el ingreso de trueque.",
 			"UPG_TIP_COGNITIVE": "+1 μ por nivel. Capital Cognitivo amplifica click, pasivo e intercambio simultáneamente — un multiplicador global.",
-			"UPG_TIP_ACCOUNTING": "+$1/s de ingreso pasivo Y mejora la eficiencia de μ y el auto-multiplicador en +5% por nivel.",
+			"UPG_TIP_ACCOUNTING": "+5% al ingreso pasivo y de trueque por nivel. También reduce la complejidad estructural, manteniendo Ω más saludable.",
 			"UPG_TIP_TRUEQUE_ALLO": "Duplica todo el ingreso de trueque. Inversión única de alto impacto.",
 			"UPG_TIP_PERSISTENCE": "Aumenta el piso estructural c₀ en +25%. Ω se mantiene más alto y tu productividad resiste mejor el caos.",
 		# === MUTATION NAMES ===
@@ -1606,9 +1606,9 @@ const TRANSLATIONS := {
 			"UPG_TIP_AUTO_MULT": "Multiplies all passive income by ×1.06 per level. Affects Manual Labor and Specialization.",
 			"UPG_TIP_TRUEQUE": "+$6/s exchange income per level. Scales with μ (Cognitive Capital) and β (Biomass).",
 			"UPG_TIP_TRUEQUE_NET": "Multiplies all exchange income by ×1.12 per level.",
-			"UPG_TIP_SPECIALIZATION": "Multiplies passive and exchange income by ×1.10 per level. Most versatile global multiplier.",
+			"UPG_TIP_SPECIALIZATION": "Multiplies passive (auto) income by ×1.10 per level. Does not affect exchange income.",
 			"UPG_TIP_COGNITIVE": "+1 μ per level. Cognitive Capital amplifies click, passive, and exchange income simultaneously — a global multiplier.",
-			"UPG_TIP_ACCOUNTING": "+$1/s passive income AND improves μ scaling and auto-multiplier efficiency by +5% per level.",
+			"UPG_TIP_ACCOUNTING": "+5% bonus to passive and exchange income per level. Also reduces structural complexity, keeping Ω healthier longer.",
 			"UPG_TIP_TRUEQUE_ALLO": "Doubles all exchange income. High-impact one-time investment.",
 			"UPG_TIP_PERSISTENCE": "Increases structural floor c₀ by +25%. Ω stays higher longer, protecting your productivity against chaos.",
 
