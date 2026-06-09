@@ -1104,7 +1104,11 @@ func _build_legacy_item(id: String) -> Control:
 		toggle_btn.pressed.connect(func():
 			var new_state: bool = LegacyManager.toggle_buff_enabled(id)
 			if id == "mente_colmena" and not RunManager.run_closed:
-				RunManager.mente_colmena_active = new_state
+				# Solo cancela rafaga activa si se desactiva el buff.
+				# NO activa directamente: la rafaga solo arranca con activate_mc_burst().
+				if not new_state:
+					RunManager.mente_colmena_active = false
+					RunManager.mc_burst_timer = 0.0
 				scene.add_lap(tr("LAP_MC_IA_MANUAL") % (tr("GAME_BUFF_ACTIVE").to_lower() if new_state else tr("GAME_BUFF_INACTIVE").to_lower()))
 			refresh_legacy_store()
 			show_toast(tr("GAME_BUFF_ACTIVE") + ": " + def.get("name", id) if new_state else tr("GAME_BUFF_INACTIVE") + ": " + def.get("name", id))

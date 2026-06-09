@@ -836,6 +836,10 @@ func _on_close_evo_button_pressed():
 	$DimmerBackground.visible = false
 
 
+func _on_close_legacy_pressed() -> void:
+	UIManager.close_legacy_panel()
+
+
 func _on_btn_homeostasis_pressed():
 	if EvoManager.mutation_homeostasis:
 		if EvoManager.is_allostasis_ready():
