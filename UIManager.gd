@@ -1126,6 +1126,8 @@ func open_legacy_panel() -> void:
 		esc_btn.add_theme_stylebox_override("normal", s)
 		esc_btn.add_theme_stylebox_override("hover", sh)
 		esc_btn.add_theme_stylebox_override("pressed", sh)
+		esc_btn.add_theme_color_override("font_color", Color(0.92, 0.85, 1.0, 1.0))
+		esc_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
 		esc_btn.custom_minimum_size = Vector2(ESC_BTN_W, ESC_BTN_H)
 		esc_btn.pressed.connect(close_legacy_panel)
 		scene.add_child(esc_btn)
