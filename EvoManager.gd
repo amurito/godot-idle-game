@@ -584,7 +584,8 @@ func buy_autofagia_upgrade(kind: String) -> bool:
 # ── Digestión Masiva (late — ambas mejoras en MAX) ────────────────────────────
 const AUTOFAGIA_BURST_COOLDOWN := 60.0  # s entre usos del botón
 
-## True si la Digestión Masiva está disponible: ambas mejoras en MAX, ≥ 3 upgrades restantes y sin cooldown.
+## True si la Digestión Masiva está disponible: ambas mejoras en MAX, recursos suficientes,
+## ≥ 3 upgrades restantes y sin cooldown.
 func can_autofagia_digest_burst() -> bool:
 	if not mutation_autolisis or RunManager.run_closed:
 		return false
@@ -594,12 +595,16 @@ func can_autofagia_digest_burst() -> bool:
 		return false
 	if UpgradeManager.get_owned_levels_count() < 3:
 		return false
-	return autofagia_burst_cooldown <= 0.0
+	if autofagia_burst_cooldown > 0.0:
+		return false
+	return BiosphereEngine.biomasa >= Balance.AUTOFAGIA_BURST_BIO_COST and EconomyManager.money >= Balance.AUTOFAGIA_BURST_MONEY_COST
 
-## Consume la mitad de los upgrades restantes de golpe. Retorna la cantidad devorada.
+## Consume la mitad de los upgrades restantes de golpe, pagando el costo previo. Retorna devours hechos.
 func autofagia_digest_burst() -> int:
 	if not can_autofagia_digest_burst():
 		return 0
+	BiosphereEngine.biomasa -= Balance.AUTOFAGIA_BURST_BIO_COST
+	EconomyManager.money -= Balance.AUTOFAGIA_BURST_MONEY_COST
 	var levels: int = UpgradeManager.get_owned_levels_count()
 	var to_devour: int = maxi(1, levels / 2)
 	var done: int = 0

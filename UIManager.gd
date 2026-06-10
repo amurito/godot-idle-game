@@ -948,7 +948,7 @@ func _update_autofagia_upgrade_buttons() -> void:
 			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST_CD") % [int(cd_left)])
 			_autofagia_burst_btn.disabled = true
 		else:
-			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST") % [to_eat])
+			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST") % [to_eat, Balance.AUTOFAGIA_BURST_BIO_COST, _fmt_money_short(Balance.AUTOFAGIA_BURST_MONEY_COST)])
 			_autofagia_burst_btn.disabled = not EvoManager.can_autofagia_digest_burst()
 		_autofagia_burst_btn.visible = true
 	elif is_instance_valid(_autofagia_burst_btn):
