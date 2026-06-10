@@ -1006,6 +1006,7 @@ func _ensure_dice_overlay() -> void:
 	cap.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
 	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(cap)
+	pc.visible = false  # oculto hasta el primer roll
 	scene.add_child(pc)
 	_dice_overlay = pc
 	_dice_face = face
@@ -1027,6 +1028,7 @@ func _on_autofagia_dice_rolled(roll: int, success_min: int, extra: int) -> void:
 	_dice_caption.add_theme_color_override("font_color", result_col)
 
 	# Posición centrada (parte superior-central, sobre el reactor)
+	_dice_overlay.modulate.a = 1.0
 	_dice_overlay.visible = true
 	_dice_overlay.reset_size()
 	var vp: Vector2 = root.get_viewport_rect().size
@@ -1034,6 +1036,7 @@ func _on_autofagia_dice_rolled(roll: int, success_min: int, extra: int) -> void:
 
 	if is_instance_valid(_dice_tween):
 		_dice_tween.kill()
+		_dice_overlay.visible = false  # asegura que no quede pegado si el kill canceló _hide_dice_overlay
 
 	var animate: bool = AccessibilityManager.show_dice_animation and not AccessibilityManager.reduce_motion
 	if not animate:
