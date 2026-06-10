@@ -498,8 +498,8 @@ func _autofagia_consume_one() -> bool:
 	if LegacyManager.get_buff_value("ciclo_catabolico"):
 		bio_burst *= Balance.CICLO_CATABOLICO_BIO_MULT
 	BiosphereEngine.biomasa += bio_burst
-	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % autolisis_devour_count)
-	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money])
+	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money, bio_burst])
+	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money, bio_burst])
 	return true
 
 ## Tick de autólisis. Cada intervalo (acortable) devora el upgrade más caro; con
