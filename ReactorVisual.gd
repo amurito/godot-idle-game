@@ -60,7 +60,13 @@ func _ready():
 	z_index = 10
 	label_container = Node2D.new()
 	add_child(label_container)
-	
+
+	# Web: desactivar partículas y Ring — BLEND_MODE_ADD en cada capa causa getParameter stall en Firefox
+	if OS.has_feature("web"):
+		particles.emitting = false
+		particles.process_mode = Node.PROCESS_MODE_DISABLED
+		ring.visible = false  # elimina una capa ADD extra
+
 	# Inicializar tentáculos (v0.8.45)
 	var tendrils = get_node_or_null("Tendrils")
 	if tendrils:

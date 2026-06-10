@@ -107,7 +107,7 @@ static func update_met_oscuro(ctx: Dictionary) -> void:
 		var prev_mt := EvoManager.met_oscuro_timer
 		EvoManager.met_oscuro_timer += RunManager.LOGIC_TICK
 		if prev_mt == 0.0 and EvoManager.met_oscuro_timer > 0.0:
-			LogManager.add(tr("LOG_BIOQUIMICA") % [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), EvoManager.met_oscuro_devoured_count, ctx.biomasa])
+			LogManager.add(TranslationServer.translate("LOG_BIOQUIMICA") % [EconomyManager.money, int(Balance.MET_OSCURO_REQUIRED_TIME), EvoManager.met_oscuro_devoured_count, ctx.biomasa])
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timers -40%
 		var threshold := Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		# MEMORIA OSCURA (Esclerocio): la run recuerda cómo entrar en oscuridad → -10% al threshold.
@@ -144,7 +144,7 @@ static func update_depredador(ctx: Dictionary) -> void:
 		EvoManager.depredador_timer += RunManager.LOGIC_TICK
 		# Notificar al iniciar la carga
 		if prev_timer == 0.0 and EvoManager.depredador_timer > 0.0:
-			LogManager.add(tr("LOG_DEPREDADOR_DETECTED") % ctx.epsilon)
+			LogManager.add(TranslationServer.translate("LOG_DEPREDADOR_DETECTED") % ctx.epsilon)
 		# ÁRBOL ACELERADO (Banco Cósmico T2): timer Depredador -40%
 		var threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
 		EvoManager._set_genome_state("depredador", "activo" if EvoManager.depredador_timer >= threshold else "latente")
@@ -166,7 +166,7 @@ static func update_depredador(ctx: Dictionary) -> void:
 		if secs_left in [30, 20, 10, 5, 4, 3, 2, 1]:
 			UIManager.show_countdown(secs_left, "HIPERASIMILACIÓN (colapso)")
 		if EvoManager._hyper_active_timer >= timeout:
-			LogManager.add(tr("LOG_HIPER_TIMEOUT") % int(timeout))
+			LogManager.add(TranslationServer.translate("LOG_HIPER_TIMEOUT") % int(timeout))
 			EvoManager.run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema colapsó por saturación — ε insuficiente para Depredador")
 
 
@@ -307,4 +307,3 @@ static func check_automatic_activations():
 
 	if EvoManager.genome.esporulacion == "activo" and not EvoManager.mutation_sporulation and EvoManager.red_micelial_phase == 2:
 		EvoManager.activate_sporulation()
-

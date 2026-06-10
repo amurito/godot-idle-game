@@ -19,8 +19,8 @@ static func check_red_micelial_transition(_main_ref: Node):
 		and StructuralModel.epsilon_runtime <= eps_req \
 		and RunManager.run_time >= 200.0:
 			EvoManager.red_micelial_phase = 1
-			LogManager.add(tr("LOG_RED_FASE_B"))
-			UIManager.show_toast(tr("TOAST_RED_INTEGRACION"))
+			LogManager.add(TranslationServer.translate("LOG_RED_FASE_B"))
+			UIManager.show_toast(TranslationServer.translate("TOAST_RED_INTEGRACION"))
 
 static func update_primordio(main_ref: Node) -> void:
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
@@ -56,13 +56,13 @@ static func _process_primordio_biological(_main_ref: Node):
 			)
 			EvoManager.primordio_integrity -= dmg
 			StructuralModel.epsilon_runtime += Balance.PRIMORDIO_PERT_EPS_KICK
-			LogManager.add(tr("PRIMORDIO_CONTAM_LOG") % int(dmg))
-			UIManager.show_toast(tr("PRIMORDIO_CONTAM_TOAST") % int(dmg))
+			LogManager.add(TranslationServer.translate("PRIMORDIO_CONTAM_LOG") % int(dmg))
+			UIManager.show_toast(TranslationServer.translate("PRIMORDIO_CONTAM_TOAST") % int(dmg))
 
 		EvoManager.primordio_integrity = clampf(EvoManager.primordio_integrity, 0.0, Balance.PRIMORDIO_INTEGRITY_MAX)
 
 		if EvoManager.primordio_integrity <= 0.0:
-			_abort_primordio(tr("PRIMORDIO_ABORT_CONTAM"))
+			_abort_primordio(TranslationServer.translate("PRIMORDIO_ABORT_CONTAM"))
 			return
 
 		if EvoManager.primordio_timer >= Balance.PRIMORDIO_BIO_MATURE:
@@ -75,21 +75,21 @@ static func _begin_primordio_biological() -> void:
 	EvoManager.primordio_integrity = Balance.PRIMORDIO_INTEGRITY_MAX
 	EvoManager.primordio_pert_timer = 0.0
 	EvoManager.primordio_regar_cd = 0.0
-	LogManager.add(tr("LOG_PRIMORDIO_ALERT"))
+	LogManager.add(TranslationServer.translate("LOG_PRIMORDIO_ALERT"))
 	EvoManager.primordio_iniciado.emit()
 
 ## Acción activa "Regar": gasta biomasa, restaura integridad y reencauza ε hacia el centro de banda.
 static func primordio_regar() -> void:
 	if not EvoManager.primordio_active: return
 	if BiosphereEngine.biomasa < Balance.PRIMORDIO_REGAR_COST_BIO:
-		UIManager.show_toast(tr("PRIMORDIO_SIN_BIO") % BiosphereEngine.biomasa)
+		UIManager.show_toast(TranslationServer.translate("PRIMORDIO_SIN_BIO") % BiosphereEngine.biomasa)
 		return
 	BiosphereEngine.biomasa -= Balance.PRIMORDIO_REGAR_COST_BIO
 	EvoManager.primordio_integrity = min(EvoManager.primordio_integrity + Balance.PRIMORDIO_REGAR_HEAL, Balance.PRIMORDIO_INTEGRITY_MAX)
 	# Enfría: baja ε hacia la zona segura (saca del sobrecalentamiento de las contaminaciones).
 	StructuralModel.epsilon_runtime = move_toward(StructuralModel.epsilon_runtime, Balance.PRIMORDIO_BAND_LO, Balance.PRIMORDIO_REGAR_EPS_PULL)
 	AudioManager.play_sfx("click")
-	UIManager.show_toast(tr("PRIMORDIO_REGADO_TOAST") % [int(Balance.PRIMORDIO_REGAR_HEAL), int(EvoManager.primordio_integrity)])
+	UIManager.show_toast(TranslationServer.translate("PRIMORDIO_REGADO_TOAST") % [int(Balance.PRIMORDIO_REGAR_HEAL), int(EvoManager.primordio_integrity)])
 
 # =============================================================
 # RAMA VERDE · PANSPERMIA NEGRA (Secuencia de Lanzamiento) — Fase 3
@@ -120,7 +120,7 @@ static func process_panspermia(dt: float) -> void:
 static func panspermia_pulse() -> bool:
 	var cost: float = Balance.PANSPERMIA_PULSE_COST
 	if EconomyManager.money < cost:
-		UIManager.show_toast(tr("PANSPERMIA_NEED_MONEY") % cost)
+		UIManager.show_toast(TranslationServer.translate("PANSPERMIA_NEED_MONEY") % cost)
 		return false
 	# Sobrecalentamiento: la eyección falla y la carga retrocede (penaliza el spam).
 	if EvoManager.panspermia_heat + Balance.PANSPERMIA_HEAT_PER_PULSE > Balance.PANSPERMIA_HEAT_MAX:
@@ -132,10 +132,10 @@ static func panspermia_pulse() -> bool:
 			var esporas := BiosphereEngine.trigger_sporulation()
 			if esporas > 1.0:
 				LegacyManager.add_spores(esporas)
-			LogManager.add(tr("PANSPERMIA_ABORTADO"))
-			RunManager.close_run("ESPORULACIÓN", tr("CLOSE_PANSPERMIA_FAIL"))
+			LogManager.add(TranslationServer.translate("PANSPERMIA_ABORTADO"))
+			RunManager.close_run("ESPORULACIÓN", TranslationServer.translate("CLOSE_PANSPERMIA_FAIL"))
 			return false
-		UIManager.show_toast(tr("PANSPERMIA_OVERLOAD") % [EvoManager.panspermia_misfires, Balance.PANSPERMIA_MAX_MISFIRES])
+		UIManager.show_toast(TranslationServer.translate("PANSPERMIA_OVERLOAD") % [EvoManager.panspermia_misfires, Balance.PANSPERMIA_MAX_MISFIRES])
 		return false
 	EconomyManager.money -= cost
 	EvoManager.panspermia_charge += Balance.PANSPERMIA_CHARGE_GAIN
@@ -144,7 +144,7 @@ static func panspermia_pulse() -> bool:
 	AudioManager.play_sfx("click")
 	if EvoManager.panspermia_charge >= Balance.PANSPERMIA_CHARGE_GOAL:
 		return true
-	UIManager.show_toast(tr("PANSPERMIA_PULSE_OK") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat)])
+	UIManager.show_toast(TranslationServer.translate("PANSPERMIA_PULSE_OK") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat)])
 	return false
 
 ## SINCRONIZACIÓN (rama azul): el medidor sube mientras se cumplen TODAS las condiciones de
@@ -160,8 +160,8 @@ static func _process_primordio_mechanical(_main_ref: Node):
 			EvoManager.nucleo_conciencia = true
 			EvoManager.primordio_active = false
 			EconomyManager.mutation_accounting_bonus += 0.2
-			LogManager.add(tr("LOG_MC_HITO"))
-			UIManager.show_toast(tr("EVO_NUCLEUS_SYNC"))
+			LogManager.add(TranslationServer.translate("LOG_MC_HITO"))
+			UIManager.show_toast(TranslationServer.translate("EVO_NUCLEUS_SYNC"))
 	else:
 		EvoManager.nucleo_sync = max(0.0, EvoManager.nucleo_sync - Balance.NUCLEO_SYNC_DECAY * dt)
 
@@ -236,8 +236,8 @@ static func process_colonizacion(dt: float) -> void:
 			Balance.COLONIZ_PERT_BITE_MAX
 		)
 		BiosphereEngine.micelio = max(BiosphereEngine.micelio - bite, 0.0)
-		LogManager.add(tr("COLONIZ_RETRACCION_LOG") % int(bite))
-		UIManager.show_toast(tr("COLONIZ_RETRACCION_TOAST") % int(bite))
+		LogManager.add(TranslationServer.translate("COLONIZ_RETRACCION_LOG") % int(bite))
+		UIManager.show_toast(TranslationServer.translate("COLONIZ_RETRACCION_TOAST") % int(bite))
 
 # =============================================================
 # COLOR DEL REACTOR — Fuente Única de Verdad (v0.8.27)

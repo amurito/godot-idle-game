@@ -1022,28 +1022,30 @@ func _on_autofagia_dice_rolled(roll: int, success_min: int, extra: int) -> void:
 	_ensure_dice_overlay()
 	if not is_instance_valid(_dice_overlay) or not is_instance_valid(_dice_face) or not is_instance_valid(_dice_caption):
 		return
+
+	# 1. Matar tween anterior primero → siempre ocultar por si el kill canceló _hide_dice_overlay
+	if is_instance_valid(_dice_tween):
+		_dice_tween.kill()
+	_dice_overlay.visible = false
+
+	# 2. Setup texto/caption
 	var result_col := _dice_result_color(extra)
 	var cap_text: String = tr("DICE_EXTRA_2") if extra >= 2 else (tr("DICE_EXTRA_1") if extra == 1 else tr("DICE_EXTRA_0"))
 	_dice_caption.text = "%s  (≥%d)" % [cap_text, success_min]
 	_dice_caption.add_theme_color_override("font_color", result_col)
 
-	# Posición centrada (parte superior-central, sobre el reactor)
+	# 3. Mostrar y posicionar (después del kill, nunca antes)
 	_dice_overlay.modulate.a = 1.0
 	_dice_overlay.visible = true
 	_dice_overlay.reset_size()
 	var vp: Vector2 = root.get_viewport_rect().size
 	_dice_overlay.position = Vector2(vp.x * 0.5 - _dice_overlay.size.x * 0.5, vp.y * 0.22)
 
-	if is_instance_valid(_dice_tween):
-		_dice_tween.kill()
-		_dice_overlay.visible = false  # asegura que no quede pegado si el kill canceló _hide_dice_overlay
-
 	var animate: bool = AccessibilityManager.show_dice_animation and not AccessibilityManager.reduce_motion
 	if not animate:
 		# Solo resultado: número final fijo, fade-out tras una pausa
 		_dice_face.text = str(roll)
 		_dice_face.add_theme_color_override("font_color", result_col)
-		_dice_overlay.modulate.a = 1.0
 		_dice_tween = create_tween()
 		_dice_tween.tween_interval(0.9)
 		_dice_tween.tween_property(_dice_overlay, "modulate:a", 0.0, 0.4)
@@ -1052,7 +1054,6 @@ func _on_autofagia_dice_rolled(roll: int, success_min: int, extra: int) -> void:
 
 	# Animación: giro de caras (~0.7s) → asentado en el resultado → fade-out
 	_dice_face.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
-	_dice_overlay.modulate.a = 1.0
 	_dice_tween = create_tween()
 	_dice_tween.tween_method(_dice_spin, 0.0, 1.0, 0.7)
 	_dice_tween.tween_callback(_settle_dice.bind(roll, result_col))

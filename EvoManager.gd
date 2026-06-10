@@ -445,7 +445,9 @@ func process_met_oscuro(dt: float) -> bool:
 	_met_oscuro_status_timer += dt
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
-		LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
+		# Suprimir tick genérico cuando autofagia/necrosis están activas — tienen su propio log
+		if not mutation_autolisis and not mutation_necrosis:
+			LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	# Autólisis/Necrosis toman el control del cierre — saltar los auto-cierres de MO
 	if not mutation_autolisis and not mutation_necrosis:
 		if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
@@ -770,7 +772,8 @@ func process_depredador_progress(dt: float) -> void:
 	_depredador_status_timer += dt
 	if _depredador_status_timer >= DEPREDADOR_STATUS_INTERVAL:
 		_depredador_status_timer = 0.0
-		var pct := int((depredador_timer / 30.0) * 100.0)
+		var dep_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		var pct := int((depredador_timer / dep_threshold) * 100.0)
 		var bar_len := int(pct / 5.0)
 		var bar := ""
 		for i in range(20):

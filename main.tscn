@@ -402,7 +402,6 @@ text = "🟡 Iniciar Primordio"
 [node name="FormulaLabel" type="RichTextLabel" parent="UIRootContainer/LeftPanel/CenterPanel"]
 unique_name_in_owner = true
 visible = false
-clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0

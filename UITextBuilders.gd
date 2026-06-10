@@ -673,9 +673,25 @@ static func build_genome_text() -> String:
 	var dep_state: String = EvoManager.genome.get("depredador", "dormido")
 	if dep_state != "dormido" or EvoManager.mutation_depredador:
 		t += TranslationServer.translate("MUT_LABEL_DEP") + ": " + TranslationServer.translate("MUT_STATE_" + dep_state.to_upper()) + "\n"
+	# Timer de carga Depredador visible en el panel cuando está en latente y acumulando
+	if dep_state == "latente" and EvoManager.depredador_timer > 0.0:
+		var dep_thresh: float = 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		var dep_pct: float = clampf(EvoManager.depredador_timer / dep_thresh, 0.0, 1.0)
+		var dep_filled: int = int(dep_pct * 10)
+		var dep_bar: String = "[" + "X".repeat(dep_filled) + ".".repeat(10 - dep_filled) + "]"
+		t += "[color=#ff4477]  ⏳ " + dep_bar + " %.1fs/%.0fs[/color]\n" % [EvoManager.depredador_timer, dep_thresh]
 	var mo_state: String = EvoManager.genome.get("met_oscuro", "dormido")
 	if mo_state != "dormido" or EvoManager.mutation_met_oscuro:
 		t += TranslationServer.translate("MUT_LABEL_MO") + ": " + TranslationServer.translate("MUT_STATE_" + mo_state.to_upper()) + "\n"
+	# Timer de carga Met. Oscuro visible cuando está acumulando
+	if mo_state == "latente" and EvoManager.met_oscuro_timer > 0.0:
+		var mo_thresh: float = Balance.MET_OSCURO_REQUIRED_TIME * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
+		if RunManager.is_memoria_oscura_active():
+			mo_thresh *= Balance.MEMORIA_OSCURA_MO_THRESH_MULT
+		var mo_pct: float = clampf(EvoManager.met_oscuro_timer / mo_thresh, 0.0, 1.0)
+		var mo_filled: int = int(mo_pct * 10)
+		var mo_bar: String = "[" + "X".repeat(mo_filled) + ".".repeat(10 - mo_filled) + "]"
+		t += "[color=#9955dd]  ⏳ " + mo_bar + " %.1fs/%.0fs[/color]\n" % [EvoManager.met_oscuro_timer, mo_thresh]
 
 	if EvoManager.mutation_met_oscuro:
 		if EvoManager.mutation_autolisis:
