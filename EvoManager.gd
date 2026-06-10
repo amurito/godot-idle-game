@@ -452,7 +452,7 @@ func process_met_oscuro(dt: float) -> bool:
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func activate_autolisis() -> void:
-	if mutation_autolisis:
+	if mutation_autolisis or mutation_necrosis:
 		return
 	mutation_autolisis = true
 	autolisis_devour_timer = 0.0
@@ -558,7 +558,7 @@ func buy_autofagia_upgrade(kind: String) -> bool:
 ## abre la doble economía: el flujo real genera Necromasa (Ν), Ν compra Agentes
 ## que empujan Ω hacia el floor. Irreversible.
 func activate_necrosis() -> void:
-	if mutation_necrosis:
+	if mutation_necrosis or mutation_autolisis:
 		return
 	mutation_necrosis = true
 	necrosis_omega = Balance.NECROSIS_OMEGA_START

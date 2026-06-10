@@ -793,7 +793,7 @@ func _on_met_oscuro_seal_pressed() -> void:
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
 
 func _update_esclerocio_button() -> void:
-	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis:
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
 		if is_instance_valid(_esclerocio_btn):
 			_esclerocio_btn.visible = false
 		return
@@ -825,8 +825,8 @@ func _on_esclerocio_pressed() -> void:
 	RunManager.close_run("ESCLEROCIO OSCURO", tr("CLOSE_ESCLEROCIO"))
 
 func _update_autolisis_button() -> void:
-	# Ocultar si MO no activo, ya autólisis activa, o run cerrada
-	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis:
+	# Ocultar si MO no activo, ya autólisis activa, necrosis activa (exclusión mutua), o run cerrada
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
 		if is_instance_valid(_autolisis_btn):
 			_autolisis_btn.visible = false
 		return
@@ -850,7 +850,7 @@ func _update_autolisis_button() -> void:
 	_autolisis_btn.visible = true
 
 func _on_autolisis_pressed() -> void:
-	if RunManager.run_closed or EvoManager.mutation_autolisis:
+	if RunManager.run_closed or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
 		return
 	if is_instance_valid(_autolisis_btn):
 		_autolisis_btn.visible = false
