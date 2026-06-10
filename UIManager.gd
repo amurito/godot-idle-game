@@ -96,6 +96,10 @@ var _autolisis_btn: Button = null
 var _autofagia_speed_btn: Button = null
 var _autofagia_double_btn: Button = null
 var _autofagia_colapso_btn: Button = null
+var _dice_overlay: Control = null   # Overlay del dado d20 de Fagocitosis Doble (lazy)
+var _dice_face: Label = null        # Label del número del dado
+var _dice_caption: Label = null     # Label del resultado (+devours)
+var _dice_tween: Tween = null
 var _necrosis_btn: Button = null
 var _necrosis_agent_btn: Button = null
 var _necrosis_purge_btn: Button = null
@@ -106,7 +110,11 @@ var _simbiosis_seal_btn: Button = null
 func setup(ui_root: Control):
 	root = ui_root
 	scene = ui_root.get_parent()  # UIRoot (scene root) — contains HeaderBar as sibling
-	
+
+	# Señal del dado d20 de Fagocitosis Doble (conectar una sola vez)
+	if not EvoManager.autofagia_dice_rolled.is_connected(_on_autofagia_dice_rolled):
+		EvoManager.autofagia_dice_rolled.connect(_on_autofagia_dice_rolled)
+
 	# Labels
 	money_label = _find("MoneyLabel")
 	sys_delta_label = _find("SystemDeltaLabel")
@@ -903,9 +911,15 @@ func _update_autofagia_upgrade_buttons() -> void:
 			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_MAX"))
 			_autofagia_double_btn.disabled = true
 		else:
-			var next_pct: int = int(min(1.0, (cd.level + 1) * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL) * 100)
-			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, next_pct, cd.bio, _fmt_money_short(cd.money)])
-			_autofagia_double_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("double")
+			var gate_req: int = EvoManager.autofagia_double_gate_req()
+			if EvoManager.autolisis_devour_count < gate_req:
+				# Gateado por devours: aún no se desbloqueó este nivel.
+				_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_GATE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, EvoManager.autolisis_devour_count, gate_req])
+				_autofagia_double_btn.disabled = true
+			else:
+				var next_pct: int = int(min(Balance.AUTOFAGIA_DOUBLE_MAX_CHANCE, (cd.level + 1) * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL) * 100)
+				_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, next_pct, cd.bio, _fmt_money_short(cd.money)])
+				_autofagia_double_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("double")
 		_autofagia_double_btn.visible = true
 	elif is_instance_valid(_autofagia_double_btn):
 		_autofagia_double_btn.visible = false
@@ -927,6 +941,107 @@ func _on_autofagia_double_pressed() -> void:
 
 func _on_autofagia_colapso_pressed() -> void:
 	EvoManager.autofagia_colapsar()
+
+# ── Dado d20 de Fagocitosis Doble ────────────────────────────────────────────
+## Color del resultado según devours extra logrados: 0=rojo (falla), 1=verde, 2=dorado (crítico).
+func _dice_result_color(extra: int) -> Color:
+	if extra >= 2:
+		return Color(1.0, 0.82, 0.25)   # dorado — crítico (triple)
+	elif extra == 1:
+		return Color(0.45, 0.95, 0.5)   # verde — 2º devour
+	return Color(0.95, 0.4, 0.4)        # rojo — sin extra
+
+## Crea (lazy) el overlay del dado: PanelContainer centrado con un Label grande.
+func _ensure_dice_overlay() -> void:
+	if is_instance_valid(_dice_overlay):
+		return
+	var pc := PanelContainer.new()
+	pc.name = "AutofagiaDiceOverlay"
+	pc.z_index = 40
+	pc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.10, 0.04, 0.06, 0.92)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(0.95, 0.4, 0.55, 0.9)
+	sb.set_corner_radius_all(10)
+	sb.set_content_margin_all(14)
+	pc.add_theme_stylebox_override("panel", sb)
+	var vb := VBoxContainer.new()
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pc.add_child(vb)
+	var face := Label.new()
+	face.name = "DiceFace"
+	face.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	face.add_theme_font_size_override("font_size", AccessibilityManager.fs(40))
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(face)
+	var cap := Label.new()
+	cap.name = "DiceCaption"
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(cap)
+	scene.add_child(pc)
+	_dice_overlay = pc
+	_dice_face = face
+	_dice_caption = cap
+
+## Tick del giro del dado (usado por tween_method; evita lambda multilínea con args).
+func _dice_spin(_t: float) -> void:
+	if is_instance_valid(_dice_face):
+		_dice_face.text = str(randi_range(1, 20))
+
+## Recibe la tirada del d20 desde EvoManager y la muestra (animada o directa según ajustes).
+func _on_autofagia_dice_rolled(roll: int, success_min: int, extra: int) -> void:
+	_ensure_dice_overlay()
+	if not is_instance_valid(_dice_overlay) or not is_instance_valid(_dice_face) or not is_instance_valid(_dice_caption):
+		return
+	var result_col := _dice_result_color(extra)
+	var cap_text: String = tr("DICE_EXTRA_2") if extra >= 2 else (tr("DICE_EXTRA_1") if extra == 1 else tr("DICE_EXTRA_0"))
+	_dice_caption.text = "%s  (≥%d)" % [cap_text, success_min]
+	_dice_caption.add_theme_color_override("font_color", result_col)
+
+	# Posición centrada (parte superior-central, sobre el reactor)
+	_dice_overlay.visible = true
+	_dice_overlay.reset_size()
+	var vp: Vector2 = root.get_viewport_rect().size
+	_dice_overlay.position = Vector2(vp.x * 0.5 - _dice_overlay.size.x * 0.5, vp.y * 0.22)
+
+	if is_instance_valid(_dice_tween):
+		_dice_tween.kill()
+
+	var animate: bool = AccessibilityManager.show_dice_animation and not AccessibilityManager.reduce_motion
+	if not animate:
+		# Solo resultado: número final fijo, fade-out tras una pausa
+		_dice_face.text = str(roll)
+		_dice_face.add_theme_color_override("font_color", result_col)
+		_dice_overlay.modulate.a = 1.0
+		_dice_tween = create_tween()
+		_dice_tween.tween_interval(0.9)
+		_dice_tween.tween_property(_dice_overlay, "modulate:a", 0.0, 0.4)
+		_dice_tween.tween_callback(_hide_dice_overlay)
+		return
+
+	# Animación: giro de caras (~0.7s) → asentado en el resultado → fade-out
+	_dice_face.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
+	_dice_overlay.modulate.a = 1.0
+	_dice_tween = create_tween()
+	_dice_tween.tween_method(_dice_spin, 0.0, 1.0, 0.7)
+	_dice_tween.tween_callback(_settle_dice.bind(roll, result_col))
+	_dice_tween.tween_interval(0.8)
+	_dice_tween.tween_property(_dice_overlay, "modulate:a", 0.0, 0.4)
+	_dice_tween.tween_callback(_hide_dice_overlay)
+
+func _settle_dice(roll: int, col: Color) -> void:
+	if is_instance_valid(_dice_face):
+		_dice_face.text = str(roll)
+		_dice_face.add_theme_color_override("font_color", col)
+	AudioManager.play_sfx("upgrade")
+
+func _hide_dice_overlay() -> void:
+	if is_instance_valid(_dice_overlay):
+		_dice_overlay.visible = false
 
 # ── NECROSIS CONTROLADA ──────────────────────────────────────────────────────
 ## Botón gate [NECROSIS] (verde cadavérico). Aparece en MO con bio + flujo activo.

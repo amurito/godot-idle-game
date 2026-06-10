@@ -147,6 +147,8 @@ func _unlock_audio() -> void:
 func play_sfx(id: String) -> void:
 	if sfx_muted:
 		return
+	if not _audio_unlocked:
+		return  # Web: contexto de audio no desbloqueado todavía (Firefox)
 	if not _sfx_streams.has(id):
 		return  # asset todavía no agregado
 	var player: AudioStreamPlayer = _sfx_players[_sfx_next]
@@ -577,6 +579,14 @@ func _build_accessibility_row(parent: VBoxContainer) -> void:
 	motion_cb.toggled.connect(func(pressed: bool):
 		AccessibilityManager.set_reduce_motion(pressed))
 	box.add_child(motion_cb)
+
+	# ── Animación del dado (Fagocitosis Doble) ───────
+	var dice_cb := CheckBox.new()
+	dice_cb.text = tr("SET_DICE_ANIM")
+	dice_cb.button_pressed = AccessibilityManager.show_dice_animation
+	dice_cb.toggled.connect(func(pressed: bool):
+		AccessibilityManager.set_show_dice_animation(pressed))
+	box.add_child(dice_cb)
 
 	# ── Alto contraste ───────────────────────────────
 	var contrast_cb := CheckBox.new()

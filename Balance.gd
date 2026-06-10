@@ -40,6 +40,7 @@ const AUTOLISIS_BIO_REQ         := 50.0   # biomasa mínima para iniciar la auto
 const AUTOLISIS_UPGRADES_REQ    := 5      # niveles de upgrades disponibles mínimos al activar
 const AUTOLISIS_DEVOUR_INTERVAL := 30.0   # s entre cada auto-devour
 const AUTOLISIS_BIO_BURST       := 8.0    # biomasa fija por devour (además del burst de $)
+const AUTOLISIS_BIO_BURST_CAP   := 400.0  # techo de bio que un SOLO devour puede liberar (anti-snowball)
 const AUTOLISIS_MONEY_BURST_MULT := 3.0   # el burst de $ = costo del upgrade devorado × este mult
 const AUTOLISIS_CLICK_MULT      := 5.0    # click ×5 mientras autólisis activa (reemplaza ×3 de MO)
 const AUTOLISIS_PASSIVE_MULT    := 2.0    # pasivo ×2 (restaura el pasivo anulado por MO)
@@ -50,9 +51,14 @@ const AUTOFAGIA_COLAPSO_MIN_DEVOURS := 3  # devours mínimos para habilitar el c
 const AUTOFAGIA_SPEED_MAX_LEVEL    := 5      # 30s → 5s (-5s por nivel)
 const AUTOFAGIA_SPEED_REDUCTION    := 5.0    # s que resta cada nivel al intervalo
 const AUTOFAGIA_DEVOUR_FLOOR       := 5.0    # piso del intervalo entre devours
-# Fagocitosis Doble: % de devorar 2 upgrades en vez de 1 (cap 100% = siempre 2).
-const AUTOFAGIA_DOUBLE_MAX_LEVEL   := 5      # 5 × 20% = 100%
-const AUTOFAGIA_DOUBLE_PER_LEVEL   := 0.20   # +20% chance de devour doble por nivel
+# Fagocitosis Doble: chance de devorar 1 extra (2º devour) en cada tick, vía tirada d20.
+const AUTOFAGIA_DOUBLE_MAX_LEVEL   := 5      # 5 × 16% = 80% (techo, nunca garantizado)
+const AUTOFAGIA_DOUBLE_PER_LEVEL   := 0.16   # +16% chance de devour extra por nivel
+const AUTOFAGIA_DOUBLE_MAX_CHANCE  := 0.80   # cap duro de la chance del 2º devour
+const AUTOFAGIA_TRIPLE_CRIT        := 20     # crítico natural en d20 → 3er devour (triple)
+# Gate por devours: para comprar el nivel N de Fagocitosis Doble se requieren ≥ devours acumulados.
+# Premia jugar la mecánica (no solo tener recursos) para desbloquear el techo de chance.
+const AUTOFAGIA_DOUBLE_GATE := {4: 6, 5: 12}  # {nivel_destino: devours_requeridos}
 # Costo de las mejoras: escala con el nivel (mismo growth para ambas).
 const AUTOFAGIA_UPG_BIO_BASE       := 150.0    # biomasa del 1er nivel
 const AUTOFAGIA_UPG_MONEY_BASE     := 80000.0  # dinero del 1er nivel

@@ -24,6 +24,9 @@ var colorblind_mode: int = ColorblindMode.OFF
 ## Si true, muestra reactor 3D; si false, muestra reactor 2D con efectos por ruta
 var reactor_3d_enabled: bool = false
 
+## Si true, anima la tirada del dado d20 de Fagocitosis Doble; si false, muestra solo el resultado
+var show_dice_animation: bool = true
+
 signal settings_changed
 
 
@@ -105,6 +108,12 @@ func set_reactor_3d(v: bool) -> void:
 	settings_changed.emit()
 
 
+func set_show_dice_animation(v: bool) -> void:
+	show_dice_animation = v
+	_save_settings()
+	settings_changed.emit()
+
+
 func _load_settings() -> void:
 	if not FileAccess.file_exists(SETTINGS_PATH):
 		return
@@ -122,6 +131,7 @@ func _load_settings() -> void:
 	high_contrast      = bool(data.get("high_contrast",      false))
 	colorblind_mode    = int(data.get("colorblind_mode",     0))
 	reactor_3d_enabled = bool(data.get("reactor_3d_enabled", false))
+	show_dice_animation = bool(data.get("show_dice_animation", true))
 
 
 func _save_settings() -> void:
@@ -131,6 +141,7 @@ func _save_settings() -> void:
 		"high_contrast":      high_contrast,
 		"colorblind_mode":    colorblind_mode,
 		"reactor_3d_enabled": reactor_3d_enabled,
+		"show_dice_animation": show_dice_animation,
 	}
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file:

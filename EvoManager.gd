@@ -15,6 +15,10 @@ signal primordio_abortado(abort_count: int, reason: String)
 @warning_ignore("unused_signal")
 signal seta_formada_signal()
 
+## Emitida en cada tick de autólisis que tira el d20 de Fagocitosis Doble.
+## roll: cara obtenida (1-20); success_min: cara mínima para el 2º devour; extra: devours extra logrados (0/1/2).
+signal autofagia_dice_rolled(roll: int, success_min: int, extra: int)
+
 var genome := {
 	"hiperasimilacion": "dormido",
 	"parasitismo": "dormido",
@@ -465,9 +469,17 @@ func autofagia_devour_interval() -> float:
 	var reduced: float = Balance.AUTOLISIS_DEVOUR_INTERVAL - autofagia_speed_level * Balance.AUTOFAGIA_SPEED_REDUCTION
 	return max(Balance.AUTOFAGIA_DEVOUR_FLOOR, reduced)
 
-## Probabilidad [0,1] de devorar 2 upgrades en vez de 1 (Fagocitosis Doble).
+## Probabilidad [0,1] del 2º devour por tick (Fagocitosis Doble). Capeada en MAX_CHANCE (80%).
 func autofagia_double_chance() -> float:
-	return min(1.0, autofagia_double_level * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL)
+	return min(Balance.AUTOFAGIA_DOUBLE_MAX_CHANCE, autofagia_double_level * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL)
+
+## Tira 1 d20 contra una chance. Fallan round(20*(1-chance)) caras bajas.
+## Retorna {roll, success_min, success}: con chance 0.80 → success_min=5 (≥5 acierta = 16/20 = 80%).
+func _roll_autofagia_d20(chance: float) -> Dictionary:
+	var fail_faces: int = clampi(int(round(20.0 * (1.0 - chance))), 0, 20)
+	var success_min: int = fail_faces + 1
+	var roll: int = randi_range(1, 20)
+	return {"roll": roll, "success_min": success_min, "success": roll >= success_min}
 
 ## Devora el upgrade más caro y aplica el burst. Retorna true si quedaba material.
 func _autofagia_consume_one() -> bool:
@@ -478,6 +490,9 @@ func _autofagia_consume_one() -> bool:
 	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
 	EconomyManager.money += burst_money
 	var bio_burst: float = max(Balance.AUTOLISIS_BIO_BURST, result.cost / Balance.AUTOLISIS_BIO_FROM_COST_DIVISOR)
+	# Techo anti-snowball: un solo devour no puede liberar más de AUTOLISIS_BIO_BURST_CAP bio.
+	# El multiplicador NG+ (ciclo_catabolico) se aplica DESPUÉS, premiando la meta-progresión.
+	bio_burst = min(bio_burst, Balance.AUTOLISIS_BIO_BURST_CAP)
 	if LegacyManager.get_buff_value("ciclo_catabolico"):
 		bio_burst *= Balance.CICLO_CATABOLICO_BIO_MULT
 	BiosphereEngine.biomasa += bio_burst
@@ -496,18 +511,20 @@ func process_autolisis(dt: float) -> void:
 		if not RunManager.run_closed:
 			RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
 		return
-	# Fagocitosis Doble/Triple: cada roll exitoso habilita el siguiente (cap 3 devours por tick).
-	var double_ch := autofagia_double_chance()
-	if randf() < double_ch:
+	# Fagocitosis Doble: 1 tirada d20. ≥ success_min → 2º devour; nat 20 → además 3er (triple).
+	var chance := autofagia_double_chance()
+	if chance <= 0.0:
+		return
+	var d := _roll_autofagia_d20(chance)
+	var extra: int = 0
+	if d.success:
+		extra = 2 if d.roll >= Balance.AUTOFAGIA_TRIPLE_CRIT else 1
+	autofagia_dice_rolled.emit(d.roll, d.success_min, extra)
+	for _i in range(extra):
 		if not _autofagia_consume_one():
 			if not RunManager.run_closed:
 				RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
 			return
-		# Triple (3er devour) — solo si el doble ya tuvo éxito, misma probabilidad.
-		if randf() < double_ch:
-			if not _autofagia_consume_one():
-				if not RunManager.run_closed:
-					RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
 
 ## Colapso voluntario del núcleo (cierre manual). Disponible tras N devours.
 func autofagia_colapsar() -> void:
@@ -530,11 +547,18 @@ func autofagia_upgrade_cost(kind: String) -> Dictionary:
 		"maxed": lvl >= maxv,
 	}
 
+## Devours requeridos para comprar el SIGUIENTE nivel de Fagocitosis Doble (0 si no hay gate).
+func autofagia_double_gate_req() -> int:
+	var next_level: int = autofagia_double_level + 1
+	return int(Balance.AUTOFAGIA_DOUBLE_GATE.get(next_level, 0))
+
 func can_buy_autofagia_upgrade(kind: String) -> bool:
 	if not mutation_autolisis or RunManager.run_closed:
 		return false
 	var c: Dictionary = autofagia_upgrade_cost(kind)
 	if c.maxed:
+		return false
+	if kind == "double" and autolisis_devour_count < autofagia_double_gate_req():
 		return false
 	return BiosphereEngine.biomasa >= c.bio and EconomyManager.money >= c.money
 
