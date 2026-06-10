@@ -40,8 +40,9 @@ const AUTOLISIS_BIO_REQ         := 50.0   # biomasa mínima para iniciar la auto
 const AUTOLISIS_UPGRADES_REQ    := 5      # niveles de upgrades disponibles mínimos al activar
 const AUTOLISIS_DEVOUR_INTERVAL := 30.0   # s entre cada auto-devour
 const AUTOLISIS_BIO_BURST       := 8.0    # biomasa fija por devour (además del burst de $)
-const AUTOLISIS_BIO_BURST_CAP   := 400.0  # techo de bio que un SOLO devour puede liberar (anti-snowball)
-const AUTOLISIS_MONEY_BURST_MULT := 3.0   # el burst de $ = costo del upgrade devorado × este mult
+const AUTOLISIS_BIO_BURST_CAP   := 400.0        # techo de bio que un SOLO devour puede liberar (anti-snowball)
+const AUTOLISIS_MONEY_BURST_MULT := 3.0          # el burst de $ = costo del upgrade devorado × este mult
+const AUTOLISIS_MONEY_BURST_CAP  := 100_000_000.0 # techo de $ que un SOLO devour puede liberar ($100M)
 const AUTOLISIS_CLICK_MULT      := 5.0    # click ×5 mientras autólisis activa (reemplaza ×3 de MO)
 const AUTOLISIS_PASSIVE_MULT    := 2.0    # pasivo ×2 (restaura el pasivo anulado por MO)
 # Cierre voluntario: botón "colapsar núcleo" disponible tras N devours.
@@ -58,7 +59,7 @@ const AUTOFAGIA_DOUBLE_MAX_CHANCE  := 0.80   # cap duro de la chance del 2º dev
 const AUTOFAGIA_TRIPLE_CRIT        := 20     # crítico natural en d20 → 3er devour (triple)
 # Gate por devours: para comprar el nivel N de Fagocitosis Doble se requieren ≥ devours acumulados.
 # Premia jugar la mecánica (no solo tener recursos) para desbloquear el techo de chance.
-const AUTOFAGIA_DOUBLE_GATE := {4: 6, 5: 12}  # {nivel_destino: devours_requeridos}
+const AUTOFAGIA_DOUBLE_GATE := {4: 30, 5: 40}  # {nivel_destino: devours_requeridos}
 # Costo de las mejoras: escala con el nivel (mismo growth para ambas).
 const AUTOFAGIA_UPG_BIO_BASE       := 150.0    # biomasa del 1er nivel
 const AUTOFAGIA_UPG_MONEY_BASE     := 80000.0  # dinero del 1er nivel

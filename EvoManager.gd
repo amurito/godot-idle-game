@@ -107,7 +107,8 @@ var autolisis_devour_count: int = 0
 var autolisis_devour_timer: float = 0.0
 # Mejoras de autofagia (multinivel capeadas): aceleran/duplican los devours
 var autofagia_speed_level: int = 0   # Enzimas Líticas → -5s por nivel (piso 5s)
-var autofagia_double_level: int = 0  # Fagocitosis Doble → +20% chance devour doble por nivel
+var autofagia_double_level: int = 0  # Fagocitosis Doble → chance devour extra por nivel
+var autofagia_burst_cooldown: float = 0.0  # Digestión Masiva: cooldown restante (s)
 
 # === NECROSIS CONTROLADA (sub-ruta de Met. Oscuro, doble economía Ν) ===
 var mutation_necrosis := false
@@ -183,6 +184,7 @@ func reset() -> void:
 	autolisis_devour_timer = 0.0
 	autofagia_speed_level = 0
 	autofagia_double_level = 0
+	autofagia_burst_cooldown = 0.0
 	mutation_necrosis = false
 	necrosis_omega = Balance.NECROSIS_OMEGA_START
 	necromasa = 0.0
@@ -487,7 +489,7 @@ func _autofagia_consume_one() -> bool:
 	if not result.devoured:
 		return false
 	autolisis_devour_count += 1
-	var burst_money: float = result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT
+	var burst_money: float = min(result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT, Balance.AUTOLISIS_MONEY_BURST_CAP)
 	EconomyManager.money += burst_money
 	var bio_burst: float = max(Balance.AUTOLISIS_BIO_BURST, result.cost / Balance.AUTOLISIS_BIO_FROM_COST_DIVISOR)
 	# Techo anti-snowball: un solo devour no puede liberar más de AUTOLISIS_BIO_BURST_CAP bio.
@@ -503,6 +505,8 @@ func _autofagia_consume_one() -> bool:
 ## Tick de autólisis. Cada intervalo (acortable) devora el upgrade más caro; con
 ## Fagocitosis Doble/Triple puede devorar hasta 3. Cuando no queda material → cierra por agotamiento.
 func process_autolisis(dt: float) -> void:
+	if autofagia_burst_cooldown > 0.0:
+		autofagia_burst_cooldown = max(0.0, autofagia_burst_cooldown - dt)
 	autolisis_devour_timer += dt
 	if autolisis_devour_timer < autofagia_devour_interval():
 		return
@@ -576,6 +580,38 @@ func buy_autofagia_upgrade(kind: String) -> bool:
 		LogManager.add(tr("LOG_AUTOFAGIA_DOUBLE") % int(autofagia_double_chance() * 100))
 	AudioManager.play_sfx("upgrade")
 	return true
+
+# ── Digestión Masiva (late — ambas mejoras en MAX) ────────────────────────────
+const AUTOFAGIA_BURST_COOLDOWN := 60.0  # s entre usos del botón
+
+## True si la Digestión Masiva está disponible: ambas mejoras en MAX, ≥ 3 upgrades restantes y sin cooldown.
+func can_autofagia_digest_burst() -> bool:
+	if not mutation_autolisis or RunManager.run_closed:
+		return false
+	if autofagia_speed_level < Balance.AUTOFAGIA_SPEED_MAX_LEVEL:
+		return false
+	if autofagia_double_level < Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL:
+		return false
+	if UpgradeManager.get_owned_levels_count() < 3:
+		return false
+	return autofagia_burst_cooldown <= 0.0
+
+## Consume la mitad de los upgrades restantes de golpe. Retorna la cantidad devorada.
+func autofagia_digest_burst() -> int:
+	if not can_autofagia_digest_burst():
+		return 0
+	var levels: int = UpgradeManager.get_owned_levels_count()
+	var to_devour: int = maxi(1, levels / 2)
+	var done: int = 0
+	for _i in range(to_devour):
+		if not _autofagia_consume_one():
+			break
+		done += 1
+	autofagia_burst_cooldown = AUTOFAGIA_BURST_COOLDOWN
+	if done > 0:
+		UIManager.show_toast(tr("TOAST_AUTOFAGIA_BURST") % done)
+		LogManager.add(tr("LOG_AUTOFAGIA_BURST") % [done, autolisis_devour_count])
+	return done
 
 # ── NECROSIS CONTROLADA ──────────────────────────────────────────────────────
 ## Activa la sub-ruta. Necrosis toma control de Ω (override del clamp de MO) y

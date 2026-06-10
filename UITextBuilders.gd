@@ -292,6 +292,10 @@ static func build_evo_checklist(_main: Node) -> String:
 	if RunManager.run_closed:
 		return _build_run_end_lore(RunManager.final_route)
 
+	# Sub-rutas de MO muestran su propio panel; el checklist genérico no aplica aquí.
+	if EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
+		return ""
+
 	var t := "[color=cyan][b]" + TranslationServer.translate("EVO_NEXT_TRANS") + "[/b][/color]\n"
 	var acc := UpgradeManager.level("accounting")
 	var ch: String
@@ -756,7 +760,8 @@ static func build_mutation_status_text() -> String:
 			t += nerf + " " + TranslationServer.translate("MSTAT_MO_N4") + "[/color]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B3") + "[/color]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B4") + "[/color]\n"
-		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N1") + "[/color]\n"
+		if not EvoManager.mutation_autolisis:  # Autofagia activa: devour NO está detenido
+			t += nerf + " " + TranslationServer.translate("MSTAT_MO_N1") + "[/color]\n"
 		if not EvoManager.mutation_autolisis:
 			t += nerf + " " + TranslationServer.translate("MSTAT_MO_N2") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_MO_N3") + "[/color]\n"

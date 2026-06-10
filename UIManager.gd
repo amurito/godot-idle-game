@@ -96,6 +96,7 @@ var _autolisis_btn: Button = null
 var _autofagia_speed_btn: Button = null
 var _autofagia_double_btn: Button = null
 var _autofagia_colapso_btn: Button = null
+var _autofagia_burst_btn: Button = null   # Digestión Masiva (late: ambas mejoras MAX)
 var _dice_overlay: Control = null   # Overlay del dado d20 de Fagocitosis Doble (lazy)
 var _dice_face: Label = null        # Label del número del dado
 var _dice_caption: Label = null     # Label del resultado (+devours)
@@ -737,6 +738,9 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_autofagia_colapso_btn):
 		_autofagia_colapso_btn.queue_free()
 		_autofagia_colapso_btn = null
+	if is_instance_valid(_autofagia_burst_btn):
+		_autofagia_burst_btn.queue_free()
+		_autofagia_burst_btn = null
 	if is_instance_valid(_necrosis_btn):
 		_necrosis_btn.queue_free()
 		_necrosis_btn = null
@@ -932,6 +936,23 @@ func _update_autofagia_upgrade_buttons() -> void:
 		_autofagia_colapso_btn.visible = true
 	elif is_instance_valid(_autofagia_colapso_btn):
 		_autofagia_colapso_btn.visible = false
+	# Digestión Masiva (late): disponible con ambas mejoras en MAX
+	var burst_available: bool = active and (EvoManager.autofagia_speed_level >= Balance.AUTOFAGIA_SPEED_MAX_LEVEL) and (EvoManager.autofagia_double_level >= Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL)
+	if burst_available:
+		if _autofagia_burst_btn == null or not is_instance_valid(_autofagia_burst_btn):
+			_autofagia_burst_btn = _make_autofagia_btn(_on_autofagia_burst_pressed, Color(1.0, 0.62, 0.2))
+		var cd_left: float = EvoManager.autofagia_burst_cooldown
+		var levels_left: int = UpgradeManager.get_owned_levels_count()
+		var to_eat: int = maxi(1, levels_left / 2)
+		if cd_left > 0.0:
+			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST_CD") % [int(cd_left)])
+			_autofagia_burst_btn.disabled = true
+		else:
+			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST") % [to_eat])
+			_autofagia_burst_btn.disabled = not EvoManager.can_autofagia_digest_burst()
+		_autofagia_burst_btn.visible = true
+	elif is_instance_valid(_autofagia_burst_btn):
+		_autofagia_burst_btn.visible = false
 
 func _on_autofagia_speed_pressed() -> void:
 	EvoManager.buy_autofagia_upgrade("speed")
@@ -941,6 +962,9 @@ func _on_autofagia_double_pressed() -> void:
 
 func _on_autofagia_colapso_pressed() -> void:
 	EvoManager.autofagia_colapsar()
+
+func _on_autofagia_burst_pressed() -> void:
+	EvoManager.autofagia_digest_burst()
 
 # ── Dado d20 de Fagocitosis Doble ────────────────────────────────────────────
 ## Color del resultado según devours extra logrados: 0=rojo (falla), 1=verde, 2=dorado (crítico).
