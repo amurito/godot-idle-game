@@ -122,6 +122,14 @@ var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
+## Guarda inmediatamente tras una activación irreversible importante.
+## Previene el bug: autosave captura MO activo sin subruta activa + money>1M
+## → reload cierra la run como METABOLISMO OSCURO en el primer tick.
+func _save_after_mutation() -> void:
+	var main := get_tree().get_first_node_in_group("main")
+	if is_instance_valid(main):
+		SaveManager.save_game(main)
+
 func reset() -> void:
 	genome = {
 		"hiperasimilacion": "dormido",
@@ -295,6 +303,7 @@ func activate_depredador():
 	if not LegacyManager.get_buff_value("metabolismo_glitch"):
 		LegacyManager.grant_buff("metabolismo_glitch")
 		UIManager.show_toast(tr("TOAST_MG_UNLOCKED"))
+	_save_after_mutation()
 
 func activate_met_oscuro():
 	if mutation_met_oscuro: return
@@ -308,6 +317,7 @@ func activate_met_oscuro():
 	# Recalcular estrés/omega tras aplicar los nerfs permanentes
 	StructuralModel.omega = 0.10
 	StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
+	_save_after_mutation()
 
 func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
@@ -467,6 +477,10 @@ func activate_autolisis() -> void:
 	mutation_activated.emit("autolisis", tr("MUT_AUTOLISIS"))
 	UIManager.show_toast(tr("TOAST_AUTOLISIS_START"))
 	LogManager.add(tr("LOG_AUTOLISIS_START"))
+	# Guardar inmediatamente: el autosave puede haberse ejecutado antes de esta activación,
+	# lo que provocaría que reload vea mutation_met_oscuro=true + money>$1M sin autolisis
+	# → process_met_oscuro cierra la run como METABOLISMO OSCURO en el primer tick.
+	_save_after_mutation()
 
 ## Intervalo efectivo entre devours, acortado por Enzimas Líticas (piso AUTOFAGIA_DEVOUR_FLOOR).
 func autofagia_devour_interval() -> float:
@@ -637,6 +651,7 @@ func activate_necrosis() -> void:
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
 	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
 	LogManager.add(tr("LOG_NECROSIS_START"))
+	_save_after_mutation()  # mismo motivo que autolisis
 
 ## Multiplicador necrótico: rampa suave que premia cada paso, capeada cerca del floor.
 func necrosis_mult() -> float:
