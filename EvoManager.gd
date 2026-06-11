@@ -726,6 +726,7 @@ func buy_necrosis_catalyst() -> bool:
 		return false
 	necromasa -= necrosis_catalyst_cost()
 	necrosis_catalyst_level += 1
+	AchievementManager.push_event("necrosis_catalyst_bought", {})
 	AudioManager.play_sfx("upgrade")
 	LogManager.add(tr("LOG_NECROSIS_CATALYST") % [necrosis_catalyst_level, int(necrosis_catalyst_mult() * 100.0)])
 	return true

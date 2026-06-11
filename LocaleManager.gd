@@ -886,6 +886,7 @@ const TRANSLATIONS := {
 		"ACH_PROGFMT_DEVOURED": "{current} / {target} upgrades devorados",
 		"ACH_PROGFMT_ENDINGS": "{current} / {target} finales",
 		"ACH_PROGFMT_ACHIEVEMENTS": "{current} / {target} logros",
+		"ACH_PROGFMT_CATALYSTS": "{current} / {target} catalizadores",
 		# MICELIO
 		"ACH_PRIMERA_ESPORA_NAME": "Primera Espora",
 		"ACH_PRIMERA_ESPORA_DESC": "Completar la primera run con cualquier final.",
@@ -1011,6 +1012,8 @@ const TRANSLATIONS := {
 			"ACH_AUTOLISIS_PERFECTA_DESC": "Cerrar AUTOFAGIA NECRÓTICA habiendo consumido 15 o más upgrades.",
 			"ACH_FUNCION_PURA_NAME": "Función Pura",
 			"ACH_FUNCION_PURA_DESC": "Cerrar NECROSIS CONTROLADA en menos de 75s y sin saturar nunca la toxicidad.",
+			"ACH_CATALIZADOR_MAESTRO_NAME": "Maestro del Catalizador",
+			"ACH_CATALIZADOR_MAESTRO_DESC": "Comprar 10 niveles de Catalizador Necrótico en una sola run.",
 		"ACH_ESCLEROCIO_CONTINGENCIA_DESC": "Cerrar ESCLEROCIO OSCURO habiendo devorado 50 o más upgrades.",
 		"ACH_RUTA_ASCESIS_NAME": "Ascesis Profunda",
 		"ACH_RUTA_ASCESIS_DESC": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",
@@ -2212,6 +2215,7 @@ const TRANSLATIONS := {
 		"ACH_PROGFMT_DEVOURED": "{current} / {target} upgrades devoured",
 		"ACH_PROGFMT_ENDINGS": "{current} / {target} endings",
 		"ACH_PROGFMT_ACHIEVEMENTS": "{current} / {target} achievements",
+		"ACH_PROGFMT_CATALYSTS": "{current} / {target} catalysts",
 		# MICELIO
 		"ACH_PRIMERA_ESPORA_NAME": "First Spore",
 		"ACH_PRIMERA_ESPORA_DESC": "Complete the first run with any ending.",
@@ -2337,6 +2341,8 @@ const TRANSLATIONS := {
 			"ACH_AUTOLISIS_PERFECTA_DESC": "Close NECROTIC AUTOPHAGY having consumed 15 or more upgrades.",
 			"ACH_FUNCION_PURA_NAME": "Pure Function",
 			"ACH_FUNCION_PURA_DESC": "Close CONTROLLED NECROSIS in under 75s and without ever maxing out toxicity.",
+			"ACH_CATALIZADOR_MAESTRO_NAME": "Catalyst Master",
+			"ACH_CATALIZADOR_MAESTRO_DESC": "Buy 10 levels of Necrotic Catalyst in a single run.",
 		"ACH_ESCLEROCIO_CONTINGENCIA_DESC": "Close DARK SCLEROTIUM having devoured 50 or more upgrades.",
 		"ACH_RUTA_ASCESIS_NAME": "Deep Ascesis",
 		"ACH_RUTA_ASCESIS_DESC": "Close HUNGRY VOID by absolute renunciation (DEEP ASCESIS).",

@@ -535,6 +535,13 @@ const DEFS := {
 		"trigger": "custom", "evaluator": "reino_subterraneo",
 		"progress_key": "ACH_PROGFMT_ACHIEVEMENTS",
 	},
+	"catalizador_maestro": {
+		"name": "Maestro del Catalizador",
+		"desc": "Comprar 10 niveles de Catalizador Necrótico en una sola run.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event_count", "event_name": "necrosis_catalyst_bought", "target": 10,
+		"progress_key": "ACH_PROGFMT_CATALYSTS",
+	},
 	"ultima_espora": {
 		"name": "Última Espora",
 		"desc": "Desbloquear todos los logros del juego.",

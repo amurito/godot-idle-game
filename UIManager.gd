@@ -430,7 +430,7 @@ func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa
 	if header_epsilon_value:
 		header_epsilon_value.text = "%.2f" % epsilon
 	if header_omega_value:
-		header_omega_value.text = "%.2f" % omega
+		header_omega_value.text = ("%.4f" if omega < 0.01 else "%.2f") % omega
 	if header_biomasa_value:
 		header_biomasa_value.text = "%.1f/%.0f" % [biomasa, biomasa_max]
 	if header_hifas_value:
@@ -459,7 +459,7 @@ func update_structural_metrics(epsilon: float, omega: float, persistence: float,
 			omg_col = Color(1.0, 0.75, 0.2)  # naranja — precario
 		else:
 			omg_col = Color(1.0, 0.3, 0.3)   # rojo — colapso
-		structural_omg_value.text = "%.2f" % omega
+		structural_omg_value.text = ("%.4f" if omega < 0.01 else "%.2f") % omega
 		structural_omg_value.add_theme_color_override("font_color", omg_col)
 
 	if structural_pers_value:
@@ -1733,7 +1733,7 @@ func get_reactor_color() -> Color:
 	if EvoManager.mutation_autolisis:
 		return Color(0.65, 0.04, 0.18)
 	if EvoManager.mutation_necrosis:
-		return Color(0.55, 0.85, 0.2)  # verde necrótico tóxico (brillante, distinto del violeta MO)
+		return Color(0.25, 0.5, 0.08)  # verde necrótico muerto (apagado, distinto del lima brillante de Esporulación)
 	if EvoManager.mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)
 	if EvoManager.mutation_depredador:
