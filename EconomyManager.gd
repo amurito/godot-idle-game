@@ -201,10 +201,13 @@ func get_passive_total() -> float:
 		total *= 1.2 # Crecimiento Parásito inicial
 		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
 
-	# MET.OSCURO: pasivo anulado; Autólisis lo restaura ×2 (la digestión libera energía)
+	# MET.OSCURO: pasivo anulado; Autólisis lo restaura ×2; Necrosis lo restaura ×1
+	# (el desmantelamiento controlado libera energía estructural acumulada)
 	if EvoManager.mutation_met_oscuro:
 		if EvoManager.mutation_autolisis:
 			total *= Balance.AUTOLISIS_PASSIVE_MULT
+		elif EvoManager.mutation_necrosis:
+			pass  # pasivo normal durante necrosis (×1.0 — el desmantelamiento lo libera)
 		else:
 			total = 0.0
 
