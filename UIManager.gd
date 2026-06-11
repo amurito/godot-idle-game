@@ -771,7 +771,8 @@ func update_ng_plus_buttons() -> void:
 	_update_simbiosis_seal_button()
 
 func _update_met_oscuro_seal_button() -> void:
-	if RunManager.run_closed or EvoManager.mutation_autolisis:
+	# Ocultar durante autofagia y necrosis: esas sub-rutas tienen su propio cierre.
+	if RunManager.run_closed or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
 		if is_instance_valid(_met_oscuro_seal_btn):
 			_met_oscuro_seal_btn.visible = false
 		return
@@ -1701,7 +1702,7 @@ func get_reactor_color() -> Color:
 	if EvoManager.mutation_autolisis:
 		return Color(0.65, 0.04, 0.18)
 	if EvoManager.mutation_necrosis:
-		return Color(0.4, 0.5, 0.25)
+		return Color(0.55, 0.85, 0.2)  # verde necrótico tóxico (brillante, distinto del violeta MO)
 	if EvoManager.mutation_met_oscuro:
 		return Color(0.53, 0.27, 0.67)
 	if EvoManager.mutation_depredador:

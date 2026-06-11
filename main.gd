@@ -673,6 +673,13 @@ func _on_logic_tick():
 		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
 		StructuralModel.omega = min(StructuralModel.omega, 0.10)
 
+	# NECROSIS CONTROLADA: Ω es combustible — sigue a necrosis_omega, que baja del 0.10
+	# hacia el floor con cada Agente desplegado. Debe ir DESPUÉS del clamp de MO (que lo
+	# fijaría a 0.10 permanente) para que el HUD muestre la progresión real hacia el cierre.
+	if EvoManager.mutation_necrosis:
+		StructuralModel.omega = EvoManager.necrosis_omega
+		StructuralModel.omega_min = min(StructuralModel.omega_min, EvoManager.necrosis_omega)
+
 	# FLOORS DE LEGADO � re-aplicados aqu� porque el c�lculo de omega con e_effective
 	# (paso 8) sobreescribe los floors aplicados en StructuralModel.update_runtime()
 	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
