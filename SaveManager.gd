@@ -271,11 +271,15 @@ func _migrate(data: Dictionary) -> Dictionary:
 		ev["genome"] = genome
 		data["evolution"] = ev
 
-	# v0.9.x — saves con mutaciones finales activas sin run_closed
+	# v0.9.x — saves con mutaciones finales activas sin run_closed.
+	# IMPORTANTE: en el diseño actual Hiperasimilación NO es terminal — es la puerta a
+	# Depredador → Met.Oscuro → Autofagia/Necrosis. mutation_hyperassimilation queda en
+	# true durante TODA esa cadena, así que NO debe forzar cierre (eso cerraba cualquier
+	# run de la cadena al recargar → "se cierra la run y desaparecen los botones").
+	# Solo Esporulación sigue siendo terminal.
 	if flags.has("run_closed") and not flags["run_closed"]:
-		var hyper: bool = data.get("evolution", {}).get("mutation_hyperassimilation", false)
 		var spor: bool = data.get("evolution", {}).get("mutation_sporulation", false)
-		if hyper or spor:
+		if spor:
 			flags["run_closed"] = true
 			if flags.get("final_route", "") == "":
 				flags["final_route"] = "MUTACION_FINAL"
