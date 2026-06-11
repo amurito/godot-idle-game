@@ -822,6 +822,10 @@ static func build_mutation_status_text() -> String:
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_AGENT") % [EvoManager.necrosis_agent_count, nec_cost] + "[/color]\n"
 			if EvoManager.necrosis_catalyst_level > 0:
 				t += "[color=#bccc77]⚗️ " + TranslationServer.translate("MSTAT_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, int(EvoManager.necrosis_catalyst_mult() * 100.0)] + "[/color]\n"
+			# Fórmula explícita de generación de Ν
+			var click_prev: float = EvoManager.necrosis_click_preview()
+			var passive_prev: float = EvoManager.necrosis_passive_rate()
+			t += "[color=#99bb55]  Ν/click ≈ %.1f  ·  Ν/s ≈ %.2f[/color]\n" % [click_prev, passive_prev]
 			t += "[color=#88aa44]  " + TranslationServer.translate("MSTAT_NECROSIS_HINT") + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa

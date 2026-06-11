@@ -709,12 +709,25 @@ func _trigger_necrosis_overdose() -> void:
 	LogManager.add(tr("LOG_NECROSIS_OVERDOSE"))
 
 ## Factor de eficiencia [piso,1] de generación de Ν.
-## En sobredosis = 0.0 (castigo severo: sin generación hasta recuperar).
-## Normal: clampf al piso para evitar soft-lock pasivo.
+## En sobredosis = 0.0. Normal: basado en EXCESO sobre el floor (en floor = 100%).
+## Solo penaliza la toxicidad que está por encima del nivel adaptado.
 func necrosis_efficiency() -> float:
 	if necrosis_overdose:
 		return 0.0
-	return clampf(1.0 - necrosis_toxicidad, Balance.NECROSIS_EFF_FLOOR, 1.0)
+	var tox_excess: float = maxf(0.0, necrosis_toxicidad - necrosis_tox_floor())
+	return clampf(1.0 - tox_excess, Balance.NECROSIS_EFF_FLOOR, 1.0)
+
+## Tasa de Ν pasiva (% del pasivo de economía, gateada por eficiencia y catalizador).
+func necrosis_passive_rate() -> float:
+	if not mutation_necrosis or RunManager.run_closed:
+		return 0.0
+	return EconomyManager.get_passive_total() * Balance.NECROSIS_PASSIVE_FRACTION * necrosis_efficiency() * necrosis_catalyst_mult()
+
+## Ν estimada por el próximo click (para display en MSTAT). Usa el click power actual.
+func necrosis_click_preview() -> float:
+	var power: float = EconomyManager.get_click_power()
+	var base: float = pow(maxf(power, 0.0), Balance.NECROSIS_MASA_EXP) * Balance.NECROSIS_CONVERSION
+	return base * necrosis_efficiency() * necrosis_catalyst_mult()
 
 ## Multiplicador de Ν del Catalizador Necrótico (aditivo: 1 + nivel×0.20).
 func necrosis_catalyst_mult() -> float:
@@ -786,6 +799,8 @@ func process_necrosis(dt: float) -> void:
 	if necrosis_overdose and necrosis_toxicidad < Balance.NECROSIS_TOX_OVERDOSE_RECOVER:
 		necrosis_overdose = false
 		LogManager.add(tr("LOG_NECROSIS_OVERDOSE_RECOVER"))
+	# Ν pasiva: % del flujo pasivo de economía (gateada por eficiencia y catalizador)
+	necromasa += necrosis_passive_rate() * dt
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

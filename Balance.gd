@@ -99,6 +99,7 @@ const NECROSIS_TOX_FLOOR_PER_AGENT := 0.03   # floor permanente por agente: tox 
 const NECROSIS_TOX_DECAY          := 0.006   # toxicidad/s que decae pasivamente (muy lento → purga obligatoria)
 const NECROSIS_EFF_FLOOR          := 0.15    # piso de eficiencia de Ν (nunca trabás del todo, excepto en sobredosis)
 const NECROSIS_TOX_OVERDOSE_RECOVER := 0.80  # sobredosis se recupera cuando tox baja de este umbral
+const NECROSIS_PASSIVE_FRACTION    := 0.01   # % del pasivo de economía que se convierte en Ν/s
 # Depuración: gastás Ν para limpiar toxicidad (decisión: banco Ν vs mantener ritmo).
 const NECROSIS_PURGE_FRACTION     := 0.4     # toxicidad ×= esto al purgar (limpia 60%)
 const NECROSIS_PURGE_COST_BASE    := 150.0   # costo base en Ν · escala con la toxicidad actual
