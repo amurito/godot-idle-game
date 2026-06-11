@@ -1147,8 +1147,9 @@ func _on_necrosis_agent_pressed() -> void:
 
 ## Botón de Depuración (limpia toxicidad gastando Ν).
 func _update_necrosis_purge_button() -> void:
+	# Solo visible si hay tox significativa por encima del floor (purgar cuando = floor no sirve)
 	var active: bool = EvoManager.mutation_necrosis and not RunManager.run_closed \
-		and EvoManager.necrosis_toxicidad > 0.05
+		and EvoManager.necrosis_toxicidad > EvoManager.necrosis_tox_floor() + 0.05
 	if not active:
 		if is_instance_valid(_necrosis_purge_btn):
 			_necrosis_purge_btn.visible = false
@@ -1165,7 +1166,8 @@ func _update_necrosis_purge_button() -> void:
 			panel.move_child(_necrosis_purge_btn, 0)
 	var pcost: float = EvoManager.necrosis_purge_cost()
 	var tox_pct: int = int(EvoManager.necrosis_toxicidad * 100.0)
-	_necrosis_purge_btn.text = EmojiToRichText.strip("💧 " + tr("BTN_NECROSIS_PURGE") % [tox_pct, pcost])
+	var tox_after: int = int(maxf(EvoManager.necrosis_tox_floor(), EvoManager.necrosis_toxicidad * Balance.NECROSIS_PURGE_FRACTION) * 100.0)
+	_necrosis_purge_btn.text = EmojiToRichText.strip("💧 " + tr("BTN_NECROSIS_PURGE") % [tox_pct, tox_after, pcost])
 	_necrosis_purge_btn.disabled = not EvoManager.can_purge_necrosis()
 	_necrosis_purge_btn.visible = true
 

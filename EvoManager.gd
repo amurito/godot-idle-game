@@ -747,21 +747,27 @@ func buy_necrosis_catalyst() -> bool:
 	LogManager.add(tr("LOG_NECROSIS_CATALYST") % [necrosis_catalyst_level, int(necrosis_catalyst_mult() * 100.0)])
 	return true
 
-## Costo de una Depuración (limpia toxicidad). Escala con la toxicidad actual.
+## Costo de una Depuración. Cuadrático en toxicidad: purgar barato con tox baja,
+## caro si la dejaste acumular (incentiva purgas frecuentes).
 func necrosis_purge_cost() -> float:
-	return Balance.NECROSIS_PURGE_COST_BASE * (1.0 + necrosis_toxicidad * 2.0)
+	return Balance.NECROSIS_PURGE_COST_BASE * (1.0 + necrosis_toxicidad * necrosis_toxicidad * 5.0)
+
+## Floor de toxicidad según agentes desplegados (tox nunca decae por debajo de esto).
+func necrosis_tox_floor() -> float:
+	return necrosis_agent_count * Balance.NECROSIS_TOX_FLOOR_PER_AGENT
 
 func can_purge_necrosis() -> bool:
 	if not mutation_necrosis or RunManager.run_closed:
 		return false
-	return necrosis_toxicidad > 0.05 and necromasa >= necrosis_purge_cost()
+	# Solo disponible cuando hay tox significativa POR ENCIMA del floor
+	return necrosis_toxicidad > necrosis_tox_floor() + 0.05 and necromasa >= necrosis_purge_cost()
 
-## Depuración: gastás Ν para limpiar el 60% de la toxicidad (mantener el ritmo de despliegue).
+## Depuración: gastás Ν para reducir la toxicidad, clampea al floor (no puede bajar de n×0.03).
 func purge_necrosis() -> bool:
 	if not can_purge_necrosis():
 		return false
 	necromasa -= necrosis_purge_cost()
-	necrosis_toxicidad *= Balance.NECROSIS_PURGE_FRACTION
+	necrosis_toxicidad = maxf(necrosis_tox_floor(), necrosis_toxicidad * Balance.NECROSIS_PURGE_FRACTION)
 	AudioManager.play_sfx("upgrade")
 	LogManager.add(tr("LOG_NECROSIS_PURGE") % (necrosis_toxicidad * 100.0))
 	return true
@@ -773,7 +779,7 @@ func process_necrosis(dt: float) -> void:
 		return
 	necrosis_active_time += dt
 	# Decay con floor acumulado: tox nunca baja de n_agentes × FLOOR_PER_AGENT
-	var tox_floor: float = necrosis_agent_count * Balance.NECROSIS_TOX_FLOOR_PER_AGENT
+	var tox_floor: float = necrosis_tox_floor()
 	if necrosis_toxicidad > tox_floor:
 		necrosis_toxicidad = maxf(tox_floor, necrosis_toxicidad - Balance.NECROSIS_TOX_DECAY * dt)
 	# Recuperación de sobredosis cuando tox baja del umbral
