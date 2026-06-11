@@ -815,6 +815,8 @@ static func build_mutation_status_text() -> String:
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_MASA") % [EvoManager.necromasa, nec_mult] + "[/color]\n"
 			t += "[color=%s]☣ " % tox_col + TranslationServer.translate("MSTAT_NECROSIS_TOX") % [tox_bar, tox * 100.0, eff_pct] + "[/color]\n"
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_AGENT") % [EvoManager.necrosis_agent_count, nec_cost] + "[/color]\n"
+			if EvoManager.necrosis_catalyst_level > 0:
+				t += "[color=#bccc77]⚗️ " + TranslationServer.translate("MSTAT_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, int(EvoManager.necrosis_catalyst_mult() * 100.0)] + "[/color]\n"
 			t += "[color=#88aa44]  " + TranslationServer.translate("MSTAT_NECROSIS_HINT") + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa

@@ -118,6 +118,7 @@ var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
 var necrosis_active_time: float = 0.0  # s con necrosis activa (para logro de velocidad)
 var necrosis_toxicidad: float = 0.0    # [0,1] envenenamiento del sustrato (frena la Ν)
 var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse (overdosis)
+var necrosis_catalyst_level: int = 0   # Catalizador Necrótico: niveles de multiplicador de Ν
 
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
@@ -200,6 +201,7 @@ func reset() -> void:
 	necrosis_active_time = 0.0
 	necrosis_toxicidad = 0.0
 	necrosis_tox_maxed = false
+	necrosis_catalyst_level = 0
 	_glitch_was_active = false
 
 func update_genome():
@@ -648,6 +650,7 @@ func activate_necrosis() -> void:
 	necrosis_active_time = 0.0
 	necrosis_toxicidad = 0.0
 	necrosis_tox_maxed = false
+	necrosis_catalyst_level = 0
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
 	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
 	LogManager.add(tr("LOG_NECROSIS_START"))
@@ -692,16 +695,40 @@ func buy_necrosis_agent() -> bool:
 		RunManager.close_run("NECROSIS CONTROLADA", tr("CLOSE_NECROSIS"))
 	return true
 
-## Factor de eficiencia [0,1] de generación de Ν: el sustrato envenenado produce menos.
+## Factor de eficiencia [piso,1] de generación de Ν: el sustrato envenenado produce menos,
+## pero nunca por debajo del piso (evita soft-lock: con eficiencia 0 no podrías ni purgar).
 func necrosis_efficiency() -> float:
-	return clampf(1.0 - necrosis_toxicidad, 0.0, 1.0)
+	return clampf(1.0 - necrosis_toxicidad, Balance.NECROSIS_EFF_FLOOR, 1.0)
 
-## Ν generada por un click (sublineal en el poder, gateada por toxicidad). Llamado desde main.
+## Multiplicador de Ν del Catalizador Necrótico (aditivo: 1 + nivel×0.20).
+func necrosis_catalyst_mult() -> float:
+	return 1.0 + necrosis_catalyst_level * Balance.NECROSIS_CATALYST_PER_LEVEL
+
+## Ν generada por un click (sublineal en el poder, gateada por toxicidad, ×catalizador). Llamado desde main.
 func add_necromasa_from_click(power: float) -> void:
 	if not mutation_necrosis or RunManager.run_closed:
 		return
 	var base: float = pow(max(power, 0.0), Balance.NECROSIS_MASA_EXP) * Balance.NECROSIS_CONVERSION
-	necromasa += base * necrosis_efficiency()
+	necromasa += base * necrosis_efficiency() * necrosis_catalyst_mult()
+
+## Costo en Ν del próximo nivel de Catalizador (escala ×2 por nivel).
+func necrosis_catalyst_cost() -> float:
+	return Balance.NECROSIS_CATALYST_COST_BASE * pow(Balance.NECROSIS_CATALYST_COST_GROWTH, necrosis_catalyst_level)
+
+func can_buy_necrosis_catalyst() -> bool:
+	if not mutation_necrosis or RunManager.run_closed:
+		return false
+	return necromasa >= necrosis_catalyst_cost()
+
+## Compra un nivel de Catalizador: gasta Ν y sube el multiplicador de generación de Ν.
+func buy_necrosis_catalyst() -> bool:
+	if not can_buy_necrosis_catalyst():
+		return false
+	necromasa -= necrosis_catalyst_cost()
+	necrosis_catalyst_level += 1
+	AudioManager.play_sfx("upgrade")
+	LogManager.add(tr("LOG_NECROSIS_CATALYST") % [necrosis_catalyst_level, int(necrosis_catalyst_mult() * 100.0)])
+	return true
 
 ## Costo de una Depuración (limpia toxicidad). Escala con la toxicidad actual.
 func necrosis_purge_cost() -> float:

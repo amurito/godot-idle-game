@@ -94,10 +94,15 @@ const NECROSIS_AGENT_COST_BASE    := 100.0   # costo en Ν del 1er agente
 const NECROSIS_AGENT_COST_GROWTH  := 1.75    # ×costo en Ν por agente comprado
 # Toxicidad Necrótica: cada agente envenena el sustrato y frena la generación de Ν.
 const NECROSIS_TOX_PER_AGENT      := 0.20    # +toxicidad por agente desplegado
-const NECROSIS_TOX_DECAY          := 0.03    # toxicidad/s que decae pasivamente
+const NECROSIS_TOX_DECAY          := 0.015   # toxicidad/s que decae pasivamente (lento → la purga importa)
+const NECROSIS_EFF_FLOOR          := 0.15    # piso de eficiencia de Ν (nunca trabás del todo)
 # Depuración: gastás Ν para limpiar toxicidad (decisión: banco Ν vs mantener ritmo).
 const NECROSIS_PURGE_FRACTION     := 0.4     # toxicidad ×= esto al purgar (limpia 60%)
 const NECROSIS_PURGE_COST_BASE    := 150.0   # costo base en Ν · escala con la toxicidad actual
+# Catalizador Necrótico: sink de Ν que acelera la propia generación de Ν (aditivo, "ligero").
+const NECROSIS_CATALYST_PER_LEVEL := 0.20    # +20% Ν por nivel (1 + nivel×0.20, lineal)
+const NECROSIS_CATALYST_COST_BASE := 200.0   # costo en Ν del 1er nivel
+const NECROSIS_CATALYST_COST_GROWTH := 2.0   # ×costo por nivel comprado
 
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)

@@ -104,6 +104,7 @@ var _dice_tween: Tween = null
 var _necrosis_btn: Button = null
 var _necrosis_agent_btn: Button = null
 var _necrosis_purge_btn: Button = null
+var _necrosis_catalyst_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -756,6 +757,9 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_necrosis_purge_btn):
 		_necrosis_purge_btn.queue_free()
 		_necrosis_purge_btn = null
+	if is_instance_valid(_necrosis_catalyst_btn):
+		_necrosis_catalyst_btn.queue_free()
+		_necrosis_catalyst_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -765,6 +769,7 @@ func update_ng_plus_buttons() -> void:
 	_update_autofagia_upgrade_buttons()
 	_update_necrosis_button()
 	_update_necrosis_agent_button()
+	_update_necrosis_catalyst_button()
 	_update_necrosis_purge_button()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
@@ -1166,6 +1171,32 @@ func _update_necrosis_purge_button() -> void:
 
 func _on_necrosis_purge_pressed() -> void:
 	EvoManager.purge_necrosis()
+
+## Botón Catalizador Necrótico: sink de Ν que acelera la generación de Ν (solo durante necrosis).
+func _update_necrosis_catalyst_button() -> void:
+	var active: bool = EvoManager.mutation_necrosis and not RunManager.run_closed
+	if not active:
+		if is_instance_valid(_necrosis_catalyst_btn):
+			_necrosis_catalyst_btn.visible = false
+		return
+	if _necrosis_catalyst_btn == null or not is_instance_valid(_necrosis_catalyst_btn):
+		_necrosis_catalyst_btn = Button.new()
+		_necrosis_catalyst_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_necrosis_catalyst_btn.add_theme_color_override("font_color", Color(0.75, 0.9, 0.45))
+		_necrosis_catalyst_btn.custom_minimum_size = Vector2(0, 52)
+		_necrosis_catalyst_btn.pressed.connect(_on_necrosis_catalyst_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_necrosis_catalyst_btn)
+			panel.move_child(_necrosis_catalyst_btn, 0)
+	var ccost: float = EvoManager.necrosis_catalyst_cost()
+	var mult_pct: int = int(EvoManager.necrosis_catalyst_mult() * 100.0)
+	_necrosis_catalyst_btn.text = EmojiToRichText.strip("⚗️ " + tr("BTN_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, mult_pct, ccost])
+	_necrosis_catalyst_btn.disabled = not EvoManager.can_buy_necrosis_catalyst()
+	_necrosis_catalyst_btn.visible = true
+
+func _on_necrosis_catalyst_pressed() -> void:
+	EvoManager.buy_necrosis_catalyst()
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
