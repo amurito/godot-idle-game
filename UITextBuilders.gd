@@ -814,6 +814,11 @@ static func build_mutation_status_text() -> String:
 			t += "[color=#99aa55][%s] %d%%[/color]\n" % [nec_bar, nec_pct]
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_MASA") % [EvoManager.necromasa, nec_mult] + "[/color]\n"
 			t += "[color=%s]☣ " % tox_col + TranslationServer.translate("MSTAT_NECROSIS_TOX") % [tox_bar, tox * 100.0, eff_pct] + "[/color]\n"
+			if EvoManager.necrosis_overdose:
+				t += "[b][color=#ff2222]☠️ SOBREDOSIS — Ν bloqueada (tox > 80%)[/color][/b]\n"
+			var tox_floor: float = EvoManager.necrosis_agent_count * Balance.NECROSIS_TOX_FLOOR_PER_AGENT
+			if tox_floor > 0.0:
+				t += "[color=#888844]  floor: ☣%.0f%% (×%d agentes)[/color]\n" % [tox_floor * 100.0, EvoManager.necrosis_agent_count]
 			t += "[color=#aabb66]" + TranslationServer.translate("MSTAT_NECROSIS_AGENT") % [EvoManager.necrosis_agent_count, nec_cost] + "[/color]\n"
 			if EvoManager.necrosis_catalyst_level > 0:
 				t += "[color=#bccc77]⚗️ " + TranslationServer.translate("MSTAT_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, int(EvoManager.necrosis_catalyst_mult() * 100.0)] + "[/color]\n"

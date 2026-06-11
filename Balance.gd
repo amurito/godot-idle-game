@@ -93,9 +93,12 @@ const NECROSIS_AGENT_OMEGA_FACTOR := 0.72    # cada Agente Necrótico: Ω ×= es
 const NECROSIS_AGENT_COST_BASE    := 100.0   # costo en Ν del 1er agente
 const NECROSIS_AGENT_COST_GROWTH  := 1.75    # ×costo en Ν por agente comprado
 # Toxicidad Necrótica: cada agente envenena el sustrato y frena la generación de Ν.
-const NECROSIS_TOX_PER_AGENT      := 0.20    # +toxicidad por agente desplegado
-const NECROSIS_TOX_DECAY          := 0.015   # toxicidad/s que decae pasivamente (lento → la purga importa)
-const NECROSIS_EFF_FLOOR          := 0.15    # piso de eficiencia de Ν (nunca trabás del todo)
+const NECROSIS_TOX_PER_AGENT      := 0.20    # +toxicidad base por agente desplegado
+const NECROSIS_TOX_SCALE_PER_AGENT := 0.06   # escala adicional por agente: agente N → ×(1 + (N-1)×0.06)
+const NECROSIS_TOX_FLOOR_PER_AGENT := 0.03   # floor permanente por agente: tox nunca decae por debajo de n×0.03
+const NECROSIS_TOX_DECAY          := 0.006   # toxicidad/s que decae pasivamente (muy lento → purga obligatoria)
+const NECROSIS_EFF_FLOOR          := 0.15    # piso de eficiencia de Ν (nunca trabás del todo, excepto en sobredosis)
+const NECROSIS_TOX_OVERDOSE_RECOVER := 0.80  # sobredosis se recupera cuando tox baja de este umbral
 # Depuración: gastás Ν para limpiar toxicidad (decisión: banco Ν vs mantener ritmo).
 const NECROSIS_PURGE_FRACTION     := 0.4     # toxicidad ×= esto al purgar (limpia 60%)
 const NECROSIS_PURGE_COST_BASE    := 150.0   # costo base en Ν · escala con la toxicidad actual

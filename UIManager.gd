@@ -1577,7 +1577,8 @@ func update_legacy_indicators() -> void:
 	var eq_bonus_active := LegacyManager.get_effect_value("omega_min_per_disturbance") > 0.0
 	if omega_min > 0.0 or omega_rec > 0.0 or LegacyManager.get_buff_value("cristalizacion_permanente") \
 			or alostasis_active or eq_bonus_active:
-		var omega_lbl := "Ω≥%.2f" % omega_min if omega_min > 0.0 else "Ω↑"
+		var omega_fmt: String = "%.4f" if omega_min < 0.01 else "%.2f"
+		var omega_lbl := ("Ω≥" + omega_fmt) % omega_min if omega_min > 0.0 else "Ω↑"
 		if alostasis_active:
 			omega_tip += "\n• Resiliencia Alostática: +0.02/shock*"
 		if eq_bonus_active:

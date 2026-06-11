@@ -117,7 +117,8 @@ var necromasa: float = 0.0           # moneda Ν acumulada (atada al flujo real)
 var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
 var necrosis_active_time: float = 0.0  # s con necrosis activa (para logro de velocidad)
 var necrosis_toxicidad: float = 0.0    # [0,1] envenenamiento del sustrato (frena la Ν)
-var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse (overdosis)
+var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse (overdosis, persistente para logro)
+var necrosis_overdose: bool = false    # true mientras el bloqueo de sobredosis está activo (efímero)
 var necrosis_catalyst_level: int = 0   # Catalizador Necrótico: niveles de multiplicador de Ν
 
 # === NG+ METABOLISMO GLITCH ===
@@ -201,6 +202,7 @@ func reset() -> void:
 	necrosis_active_time = 0.0
 	necrosis_toxicidad = 0.0
 	necrosis_tox_maxed = false
+	necrosis_overdose = false
 	necrosis_catalyst_level = 0
 	_glitch_was_active = false
 
@@ -650,6 +652,7 @@ func activate_necrosis() -> void:
 	necrosis_active_time = 0.0
 	necrosis_toxicidad = 0.0
 	necrosis_tox_maxed = false
+	necrosis_overdose = false
 	necrosis_catalyst_level = 0
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
 	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
@@ -677,7 +680,7 @@ func can_buy_necrosis_agent() -> bool:
 		return false
 	return necromasa >= necrosis_agent_cost()
 
-## Compra un Agente Necrótico: baja Ω (×factor), sube el multiplicador Y la toxicidad.
+## Compra un Agente Necrótico: baja Ω (×factor), sube el multiplicador Y la toxicidad (escalada).
 ## Cierra al cruzar el floor.
 func buy_necrosis_agent() -> bool:
 	if not can_buy_necrosis_agent():
@@ -685,19 +688,32 @@ func buy_necrosis_agent() -> bool:
 	necromasa -= necrosis_agent_cost()
 	necrosis_agent_count += 1
 	necrosis_omega *= Balance.NECROSIS_AGENT_OMEGA_FACTOR
-	necrosis_toxicidad = min(1.0, necrosis_toxicidad + Balance.NECROSIS_TOX_PER_AGENT)
+	# Toxicidad escala: agentes tardíos son más tóxicos (agente N → base × (1 + (N-1)×SCALE))
+	var tox_add: float = Balance.NECROSIS_TOX_PER_AGENT * (1.0 + (necrosis_agent_count - 1) * Balance.NECROSIS_TOX_SCALE_PER_AGENT)
+	necrosis_toxicidad = minf(1.0, necrosis_toxicidad + tox_add)
 	if necrosis_toxicidad >= 0.99:
 		necrosis_tox_maxed = true
+		_trigger_necrosis_overdose()
 	AudioManager.play_sfx("upgrade")
 	LogManager.add(tr("LOG_NECROSIS_AGENT") % [necrosis_agent_count, necrosis_omega])
 	if necrosis_omega <= Balance.NECROSIS_OMEGA_FLOOR and not RunManager.run_closed:
-		necrosis_omega = Balance.NECROSIS_OMEGA_FLOOR
 		RunManager.close_run("NECROSIS CONTROLADA", tr("CLOSE_NECROSIS"))
 	return true
 
-## Factor de eficiencia [piso,1] de generación de Ν: el sustrato envenenado produce menos,
-## pero nunca por debajo del piso (evita soft-lock: con eficiencia 0 no podrías ni purgar).
+## SOBREDOSIS TÓXICA: destruye toda la Ν y bloquea la generación hasta que tox < OVERDOSE_RECOVER.
+func _trigger_necrosis_overdose() -> void:
+	if necrosis_overdose:
+		return  # ya en sobredosis
+	necromasa = 0.0
+	necrosis_overdose = true
+	LogManager.add(tr("LOG_NECROSIS_OVERDOSE"))
+
+## Factor de eficiencia [piso,1] de generación de Ν.
+## En sobredosis = 0.0 (castigo severo: sin generación hasta recuperar).
+## Normal: clampf al piso para evitar soft-lock pasivo.
 func necrosis_efficiency() -> float:
+	if necrosis_overdose:
+		return 0.0
 	return clampf(1.0 - necrosis_toxicidad, Balance.NECROSIS_EFF_FLOOR, 1.0)
 
 ## Multiplicador de Ν del Catalizador Necrótico (aditivo: 1 + nivel×0.20).
@@ -750,14 +766,20 @@ func purge_necrosis() -> bool:
 	LogManager.add(tr("LOG_NECROSIS_PURGE") % (necrosis_toxicidad * 100.0))
 	return true
 
-## Tick de necrosis: cuenta el tiempo activo y decae la toxicidad. La Ν se genera por click
-## (main.on_reactor_click). Anti-AFK: sin clicks no hay Ν.
+## Tick de necrosis: cuenta el tiempo activo, decae toxicidad (con floor por agentes) y
+## verifica recuperación de sobredosis. La Ν se genera por click (anti-AFK).
 func process_necrosis(dt: float) -> void:
 	if not mutation_necrosis or RunManager.run_closed:
 		return
 	necrosis_active_time += dt
-	if necrosis_toxicidad > 0.0:
-		necrosis_toxicidad = max(0.0, necrosis_toxicidad - Balance.NECROSIS_TOX_DECAY * dt)
+	# Decay con floor acumulado: tox nunca baja de n_agentes × FLOOR_PER_AGENT
+	var tox_floor: float = necrosis_agent_count * Balance.NECROSIS_TOX_FLOOR_PER_AGENT
+	if necrosis_toxicidad > tox_floor:
+		necrosis_toxicidad = maxf(tox_floor, necrosis_toxicidad - Balance.NECROSIS_TOX_DECAY * dt)
+	# Recuperación de sobredosis cuando tox baja del umbral
+	if necrosis_overdose and necrosis_toxicidad < Balance.NECROSIS_TOX_OVERDOSE_RECOVER:
+		necrosis_overdose = false
+		LogManager.add(tr("LOG_NECROSIS_OVERDOSE_RECOVER"))
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.
