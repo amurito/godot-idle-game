@@ -112,6 +112,12 @@ func setup(ui_root: Control):
 	root = ui_root
 	scene = ui_root.get_parent()  # UIRoot (scene root) — contains HeaderBar as sibling
 
+	# Limpiar referencias stale de botones dinámicos de sesiones anteriores.
+	# Los nodos fueron liberados con la escena anterior; sin esto, is_instance_valid
+	# daría false pero la comparación == null también fallaría, causando que _make_autofagia_btn
+	# crea el botón pero lo añade a un panel que ya no existe en la escena nueva.
+	reset_ng_plus_buttons()
+
 	# Señal del dado d20 de Fagocitosis Doble (conectar una sola vez)
 	if not EvoManager.autofagia_dice_rolled.is_connected(_on_autofagia_dice_rolled):
 		EvoManager.autofagia_dice_rolled.connect(_on_autofagia_dice_rolled)

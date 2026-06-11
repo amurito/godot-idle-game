@@ -348,6 +348,12 @@ func _ready():
 
 	UIManager.update_legacy_indicators.call_deferred()
 
+	# Forzar rebuild de botones dinámicos NG+ tras carga completa (autofagia, necrosis, etc.)
+	# Sin esto, si hay subrutinas activas en el save, los botones no aparecen hasta el primer
+	# UI tick (~250ms) y en casos de stale-reference la reinicialización puede fallar.
+	UIManager.update_ng_plus_buttons()
+	UIManager.update_mutation_center_panel(self)
+
 	if OS.is_debug_build():
 		var dp_script := load("res://DebugPanel.gd")
 		if dp_script:
