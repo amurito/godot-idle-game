@@ -22,7 +22,8 @@ func get_trueque_income_effective(raw_trueque: float, network: float, mu_factor:
 func get_persistence_target(base_p: float, k_eff: float, n_struct: float) -> float:
 	if n_struct <= 1:
 		return base_p
-	return base_p * pow(k_eff, (1.0 - 1.0 / n_struct))
+	var safe_k := maxf(k_eff, 0.0001)
+	return base_p * pow(safe_k, (1.0 - 1.0 / n_struct))
 
 func get_alpha(n: int) -> float:
 	var base = 0.1

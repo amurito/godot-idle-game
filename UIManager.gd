@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # UIManager.gd — Autoload
 # Encargado de la actualización visual y gestión de referencias de UI.
@@ -108,6 +108,8 @@ var _necrosis_catalyst_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
+var _run_buffs_btn: Button = null        # Botón "Buffs activos (N)" del panel derecho
+var _run_buffs_panel: PanelContainer = null  # Panel flotante con la lista de buffs heredados
 
 func setup(ui_root: Control):
 	root = ui_root
@@ -184,6 +186,9 @@ func setup(ui_root: Control):
 		genome_toggle_btn.toggled.connect(func(pressed: bool):
 			_toggle_collapsible_panel(genome_scroll, genome_toggle_btn, pressed, tr("UI_PANEL_GENOME"))
 		)
+		# Abrir por defecto — el tscn lo define como visible=false para lazy-init
+		genome_toggle_btn.set_pressed_no_signal(true)
+		genome_scroll.visible = true
 
 	# Right panel collapsibles (Phase 4)
 	economy_content = _find("EconomyContent")
@@ -365,7 +370,9 @@ func update_route_badge() -> void:
 	route_badge_label.visible = true
 
 func update_money(amount: float):
-	if money_label: money_label.text = tr("UI_MONEY") + str(round(amount))
+	if money_label:
+		var _safe := amount if not (is_nan(amount) or is_inf(amount)) else 0.0
+		money_label.text = tr("UI_MONEY") + str(round(_safe))
 
 func update_timer(t: float):
 	if session_time_label: session_time_label.text = tr("UI_SESSION_TIME") + format_time(t)
@@ -760,6 +767,12 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_necrosis_catalyst_btn):
 		_necrosis_catalyst_btn.queue_free()
 		_necrosis_catalyst_btn = null
+	if is_instance_valid(_run_buffs_btn):
+		_run_buffs_btn.queue_free()
+		_run_buffs_btn = null
+	if is_instance_valid(_run_buffs_panel):
+		_run_buffs_panel.queue_free()
+		_run_buffs_panel = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -771,9 +784,27 @@ func update_ng_plus_buttons() -> void:
 	_update_necrosis_agent_button()
 	_update_necrosis_catalyst_button()
 	_update_necrosis_purge_button()
+	_reorder_necrosis_buttons()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
+	_update_run_buffs_button()
+
+## Fuerza el orden visual Q→W→E (Agent→Catalyst→Purge) en el panel derecho.
+## Necesario porque cada botón se crea con move_child(0) en orden de creación,
+## resultando en E arriba, W medio, Q abajo. El reorder lo corrige cada tick.
+func _reorder_necrosis_buttons() -> void:
+	if not EvoManager.mutation_necrosis:
+		return
+	var panel := _right_panel()
+	if panel == null:
+		return
+	if is_instance_valid(_necrosis_agent_btn):
+		panel.move_child(_necrosis_agent_btn, 0)
+	if is_instance_valid(_necrosis_catalyst_btn):
+		panel.move_child(_necrosis_catalyst_btn, 1)
+	if is_instance_valid(_necrosis_purge_btn):
+		panel.move_child(_necrosis_purge_btn, 2)
 
 func _update_met_oscuro_seal_button() -> void:
 	# Ocultar durante autofagia y necrosis: esas sub-rutas tienen su propio cierre.
@@ -788,7 +819,8 @@ func _update_met_oscuro_seal_button() -> void:
 		if not EvoManager.mutation_met_oscuro:
 			return
 		_met_oscuro_seal_btn = Button.new()
-		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_met_oscuro_seal_btn.clip_text = true
+		_met_oscuro_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		_met_oscuro_seal_btn.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
 		_met_oscuro_seal_btn.custom_minimum_size = Vector2(0, 70)
 		_met_oscuro_seal_btn.pressed.connect(_on_met_oscuro_seal_pressed)
@@ -830,7 +862,8 @@ func _update_esclerocio_button() -> void:
 		return
 	if _esclerocio_btn == null or not is_instance_valid(_esclerocio_btn):
 		_esclerocio_btn = Button.new()
-		_esclerocio_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_esclerocio_btn.clip_text = true
+		_esclerocio_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		_esclerocio_btn.add_theme_color_override("font_color", Color(0.7, 0.6, 0.75))
 		_esclerocio_btn.custom_minimum_size = Vector2(0, 70)
 		_esclerocio_btn.pressed.connect(_on_esclerocio_pressed)
@@ -862,7 +895,8 @@ func _update_autolisis_button() -> void:
 		return
 	if _autolisis_btn == null or not is_instance_valid(_autolisis_btn):
 		_autolisis_btn = Button.new()
-		_autolisis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_autolisis_btn.clip_text = true
+		_autolisis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		_autolisis_btn.add_theme_color_override("font_color", Color(0.9, 0.35, 0.45))
 		_autolisis_btn.custom_minimum_size = Vector2(0, 70)
 		_autolisis_btn.pressed.connect(_on_autolisis_pressed)
@@ -891,9 +925,10 @@ func _fmt_money_short(amount: float) -> String:
 ## Crea un botón de la zona autofagia (estética carmesí) en el RightPanel.
 func _make_autofagia_btn(callback: Callable, font_color: Color) -> Button:
 	var b := Button.new()
-	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 	b.add_theme_color_override("font_color", font_color)
-	b.custom_minimum_size = Vector2(0, 52)
+	b.custom_minimum_size = Vector2(0, 60)
 	b.pressed.connect(callback)
 	var panel := _right_panel()
 	if panel:
@@ -910,10 +945,10 @@ func _update_autofagia_upgrade_buttons() -> void:
 			_autofagia_speed_btn = _make_autofagia_btn(_on_autofagia_speed_pressed, Color(0.95, 0.5, 0.6))
 		var cs: Dictionary = EvoManager.autofagia_upgrade_cost("speed")
 		if cs.maxed:
-			_autofagia_speed_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_AUTOFAGIA_SPEED_MAX"))
+			_autofagia_speed_btn.text = EmojiToRichText.strip("[Q] 🧬 " + tr("BTN_AUTOFAGIA_SPEED_MAX"))
 			_autofagia_speed_btn.disabled = true
 		else:
-			_autofagia_speed_btn.text = EmojiToRichText.strip("🧬 " + tr("BTN_AUTOFAGIA_SPEED") % [cs.level, Balance.AUTOFAGIA_SPEED_MAX_LEVEL, cs.bio, _fmt_money_short(cs.money)])
+			_autofagia_speed_btn.text = EmojiToRichText.strip("[Q] 🧬 " + tr("BTN_AUTOFAGIA_SPEED") % [cs.level, Balance.AUTOFAGIA_SPEED_MAX_LEVEL, cs.bio, _fmt_money_short(cs.money)])
 			_autofagia_speed_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("speed")
 		_autofagia_speed_btn.visible = true
 	elif is_instance_valid(_autofagia_speed_btn):
@@ -924,17 +959,17 @@ func _update_autofagia_upgrade_buttons() -> void:
 			_autofagia_double_btn = _make_autofagia_btn(_on_autofagia_double_pressed, Color(0.95, 0.4, 0.55))
 		var cd: Dictionary = EvoManager.autofagia_upgrade_cost("double")
 		if cd.maxed:
-			_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_MAX"))
+			_autofagia_double_btn.text = EmojiToRichText.strip("[W] 🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_MAX"))
 			_autofagia_double_btn.disabled = true
 		else:
 			var gate_req: int = EvoManager.autofagia_double_gate_req()
 			if EvoManager.autolisis_devour_count < gate_req:
 				# Gateado por devours: aún no se desbloqueó este nivel.
-				_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_GATE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, EvoManager.autolisis_devour_count, gate_req])
+				_autofagia_double_btn.text = EmojiToRichText.strip("[W] 🦠 " + tr("BTN_AUTOFAGIA_DOUBLE_GATE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, EvoManager.autolisis_devour_count, gate_req])
 				_autofagia_double_btn.disabled = true
 			else:
 				var next_pct: int = int(min(Balance.AUTOFAGIA_DOUBLE_MAX_CHANCE, (cd.level + 1) * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL) * 100)
-				_autofagia_double_btn.text = EmojiToRichText.strip("🦠 " + tr("BTN_AUTOFAGIA_DOUBLE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, next_pct, cd.bio, _fmt_money_short(cd.money)])
+				_autofagia_double_btn.text = EmojiToRichText.strip("[W] 🦠 " + tr("BTN_AUTOFAGIA_DOUBLE") % [cd.level, Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL, next_pct, cd.bio, _fmt_money_short(cd.money)])
 				_autofagia_double_btn.disabled = not EvoManager.can_buy_autofagia_upgrade("double")
 		_autofagia_double_btn.visible = true
 	elif is_instance_valid(_autofagia_double_btn):
@@ -944,7 +979,7 @@ func _update_autofagia_upgrade_buttons() -> void:
 	if colapso_ok:
 		if _autofagia_colapso_btn == null or not is_instance_valid(_autofagia_colapso_btn):
 			_autofagia_colapso_btn = _make_autofagia_btn(_on_autofagia_colapso_pressed, Color(1.0, 0.78, 0.82))
-		_autofagia_colapso_btn.text = EmojiToRichText.strip("💥 " + tr("BTN_AUTOFAGIA_COLAPSO"))
+		_autofagia_colapso_btn.text = EmojiToRichText.strip("[E] 💥 " + tr("BTN_AUTOFAGIA_COLAPSO"))
 		_autofagia_colapso_btn.visible = true
 	elif is_instance_valid(_autofagia_colapso_btn):
 		_autofagia_colapso_btn.visible = false
@@ -957,10 +992,10 @@ func _update_autofagia_upgrade_buttons() -> void:
 		var levels_left: int = UpgradeManager.get_owned_levels_count()
 		var to_eat: int = maxi(1, levels_left / 2)
 		if cd_left > 0.0:
-			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST_CD") % [int(cd_left)])
+			_autofagia_burst_btn.text = EmojiToRichText.strip("[R] ⚡ " + tr("BTN_AUTOFAGIA_BURST_CD") % [int(cd_left)])
 			_autofagia_burst_btn.disabled = true
 		else:
-			_autofagia_burst_btn.text = EmojiToRichText.strip("⚡ " + tr("BTN_AUTOFAGIA_BURST") % [to_eat, Balance.AUTOFAGIA_BURST_BIO_COST, _fmt_money_short(Balance.AUTOFAGIA_BURST_MONEY_COST)])
+			_autofagia_burst_btn.text = EmojiToRichText.strip("[R] ⚡ " + tr("BTN_AUTOFAGIA_BURST") % [to_eat, Balance.AUTOFAGIA_BURST_BIO_COST, _fmt_money_short(Balance.AUTOFAGIA_BURST_MONEY_COST)])
 			_autofagia_burst_btn.disabled = not EvoManager.can_autofagia_digest_burst()
 		_autofagia_burst_btn.visible = true
 	elif is_instance_valid(_autofagia_burst_btn):
@@ -1100,7 +1135,8 @@ func _update_necrosis_button() -> void:
 		return
 	if _necrosis_btn == null or not is_instance_valid(_necrosis_btn):
 		_necrosis_btn = Button.new()
-		_necrosis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_necrosis_btn.clip_text = true
+		_necrosis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		_necrosis_btn.add_theme_color_override("font_color", Color(0.55, 0.7, 0.35))
 		_necrosis_btn.custom_minimum_size = Vector2(0, 70)
 		_necrosis_btn.pressed.connect(_on_necrosis_pressed)
@@ -1127,7 +1163,8 @@ func _update_necrosis_agent_button() -> void:
 		return
 	if _necrosis_agent_btn == null or not is_instance_valid(_necrosis_agent_btn):
 		_necrosis_agent_btn = Button.new()
-		_necrosis_agent_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_necrosis_agent_btn.clip_text = true
+		_necrosis_agent_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		_necrosis_agent_btn.add_theme_color_override("font_color", Color(0.6, 0.75, 0.4))
 		_necrosis_agent_btn.custom_minimum_size = Vector2(0, 60)
 		_necrosis_agent_btn.pressed.connect(_on_necrosis_agent_pressed)
@@ -1138,7 +1175,7 @@ func _update_necrosis_agent_button() -> void:
 	var cost: float = EvoManager.necrosis_agent_cost()
 	var idx_pct: int = int(EvoManager.necrosis_index() * 100.0)
 	var tox_pct: int = int(EvoManager.necrosis_toxicidad * 100.0)
-	_necrosis_agent_btn.text = EmojiToRichText.strip("🧫 " + tr("BTN_NECROSIS_AGENT") % [idx_pct, EvoManager.necromasa, cost, tox_pct])
+	_necrosis_agent_btn.text = EmojiToRichText.strip("[Q] 🧫 " + tr("BTN_NECROSIS_AGENT") % [idx_pct, EvoManager.necromasa, cost, tox_pct])
 	_necrosis_agent_btn.disabled = not EvoManager.can_buy_necrosis_agent()
 	_necrosis_agent_btn.visible = true
 
@@ -1156,9 +1193,10 @@ func _update_necrosis_purge_button() -> void:
 		return
 	if _necrosis_purge_btn == null or not is_instance_valid(_necrosis_purge_btn):
 		_necrosis_purge_btn = Button.new()
-		_necrosis_purge_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_necrosis_purge_btn.clip_text = true
+		_necrosis_purge_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		_necrosis_purge_btn.add_theme_color_override("font_color", Color(0.7, 0.85, 0.5))
-		_necrosis_purge_btn.custom_minimum_size = Vector2(0, 52)
+		_necrosis_purge_btn.custom_minimum_size = Vector2(0, 60)
 		_necrosis_purge_btn.pressed.connect(_on_necrosis_purge_pressed)
 		var panel := _right_panel()
 		if panel:
@@ -1167,7 +1205,7 @@ func _update_necrosis_purge_button() -> void:
 	var pcost: float = EvoManager.necrosis_purge_cost()
 	var tox_pct: int = int(EvoManager.necrosis_toxicidad * 100.0)
 	var tox_after: int = int(maxf(EvoManager.necrosis_tox_floor(), EvoManager.necrosis_toxicidad * Balance.NECROSIS_PURGE_FRACTION) * 100.0)
-	_necrosis_purge_btn.text = EmojiToRichText.strip("💧 " + tr("BTN_NECROSIS_PURGE") % [tox_pct, tox_after, pcost])
+	_necrosis_purge_btn.text = EmojiToRichText.strip("[E] 💧 " + tr("BTN_NECROSIS_PURGE") % [tox_pct, tox_after, pcost])
 	_necrosis_purge_btn.disabled = not EvoManager.can_purge_necrosis()
 	_necrosis_purge_btn.visible = true
 
@@ -1183,9 +1221,10 @@ func _update_necrosis_catalyst_button() -> void:
 		return
 	if _necrosis_catalyst_btn == null or not is_instance_valid(_necrosis_catalyst_btn):
 		_necrosis_catalyst_btn = Button.new()
-		_necrosis_catalyst_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_necrosis_catalyst_btn.clip_text = true
+		_necrosis_catalyst_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
 		_necrosis_catalyst_btn.add_theme_color_override("font_color", Color(0.75, 0.9, 0.45))
-		_necrosis_catalyst_btn.custom_minimum_size = Vector2(0, 52)
+		_necrosis_catalyst_btn.custom_minimum_size = Vector2(0, 60)
 		_necrosis_catalyst_btn.pressed.connect(_on_necrosis_catalyst_pressed)
 		var panel := _right_panel()
 		if panel:
@@ -1193,12 +1232,78 @@ func _update_necrosis_catalyst_button() -> void:
 			panel.move_child(_necrosis_catalyst_btn, 0)
 	var ccost: float = EvoManager.necrosis_catalyst_cost()
 	var mult_pct: int = int(EvoManager.necrosis_catalyst_mult() * 100.0)
-	_necrosis_catalyst_btn.text = EmojiToRichText.strip("⚗️ " + tr("BTN_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, mult_pct, ccost])
+	_necrosis_catalyst_btn.text = EmojiToRichText.strip("[W] ⚗️ " + tr("BTN_NECROSIS_CATALYST") % [EvoManager.necrosis_catalyst_level, mult_pct, ccost])
 	_necrosis_catalyst_btn.disabled = not EvoManager.can_buy_necrosis_catalyst()
 	_necrosis_catalyst_btn.visible = true
 
 func _on_necrosis_catalyst_pressed() -> void:
 	EvoManager.buy_necrosis_catalyst()
+
+## Botón "Buffs activos (N)" — reúne los buffs heredados (Legado/NG+/Cósmico) en un panel
+## desplegable en vez de inundar el lap log al inicio de cada run.
+func _update_run_buffs_button() -> void:
+	var n: int = LegacyManager.active_run_buffs.size()
+	if n == 0:
+		if is_instance_valid(_run_buffs_btn):
+			_run_buffs_btn.visible = false
+		return
+	var vbox := root.get_node_or_null("RightPanel/ScrollContainer/VBoxContainer")
+	if vbox == null:
+		return
+	if _run_buffs_btn == null or not is_instance_valid(_run_buffs_btn):
+		_run_buffs_btn = Button.new()
+		_run_buffs_btn.clip_text = true
+		_run_buffs_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+		_run_buffs_btn.add_theme_color_override("font_color", Color(0.78, 0.72, 1.0))
+		_run_buffs_btn.pressed.connect(_toggle_run_buffs_panel)
+		vbox.add_child(_run_buffs_btn)
+		var anchor := vbox.get_node_or_null("SessionTimeLabel")
+		if is_instance_valid(anchor):
+			vbox.move_child(_run_buffs_btn, anchor.get_index())
+	_run_buffs_btn.text = EmojiToRichText.strip(tr("BTN_RUN_BUFFS") % n)
+	_run_buffs_btn.visible = true
+
+func _toggle_run_buffs_panel() -> void:
+	if is_instance_valid(_run_buffs_panel):
+		_run_buffs_panel.queue_free()
+		_run_buffs_panel = null
+		return
+	var panel := PanelContainer.new()
+	panel.name = "RunBuffsPanel"
+	panel.z_index = 50
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.05, 0.11, 0.98)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(0.6, 0.5, 0.9, 0.9)
+	sb.set_corner_radius_all(12)
+	sb.content_margin_left = 18.0
+	sb.content_margin_right = 18.0
+	sb.content_margin_top = 14.0
+	sb.content_margin_bottom = 14.0
+	panel.add_theme_stylebox_override("panel", sb)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	panel.add_child(vb)
+	var body := RichTextLabel.new()
+	body.bbcode_enabled = true
+	body.fit_content = true
+	body.scroll_active = false
+	body.custom_minimum_size = Vector2(AccessibilityManager.fs(30) * 14.0, 0)
+	var txt := "[b]✦ " + tr("RUN_BUFFS_TITLE") + "[/b]\n\n"
+	for b in LegacyManager.active_run_buffs:
+		txt += "• " + str(b) + "\n"
+	body.append_text(EmojiToRichText.rich(txt))
+	vb.add_child(body)
+	var close := Button.new()
+	close.text = tr("TUTO_BTN_CLOSE")
+	close.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+	close.pressed.connect(_toggle_run_buffs_panel)
+	vb.add_child(close)
+	scene.add_child(panel)
+	_run_buffs_panel = panel
+	# Centrado-superior sobre el viewport.
+	var vp: Vector2 = scene.get_viewport_rect().size
+	panel.position = Vector2(vp.x * 0.5 - AccessibilityManager.fs(30) * 7.5, vp.y * 0.16)
 
 func _update_depredador_buytime_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
@@ -1269,8 +1374,9 @@ func _update_simbiosis_seal_button() -> void:
 		return
 	if _simbiosis_seal_btn == null or not is_instance_valid(_simbiosis_seal_btn):
 		_simbiosis_seal_btn = Button.new()
+		_simbiosis_seal_btn.clip_text = true
 		_simbiosis_seal_btn.text = EmojiToRichText.strip("🌱 " + tr("BTN_SEAL_SIMB"))
-		_simbiosis_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(20))
+		_simbiosis_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
 		_simbiosis_seal_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 		_simbiosis_seal_btn.custom_minimum_size = Vector2(0, 70)
 		_simbiosis_seal_btn.pressed.connect(_on_simbiosis_seal_pressed)
@@ -1616,10 +1722,11 @@ func update_lab_metrics() -> void:
 	var ap: Dictionary = EconomyManager.get_active_passive_breakdown()
 
 	if sys_delta_label:
-		sys_delta_label.text = "∂$ estimado / s = +%s" % snapped(contrib.total, 0.01)
+		var _total_safe: float = contrib.total if not (is_nan(contrib.total) or is_inf(contrib.total)) else 0.0
+		sys_delta_label.text = "∂$ estimado / s = +%s" % snapped(_total_safe, 0.01)
 
 	if delta_total_label:
-		var t: float = contrib.total
+		var t: float = contrib.total if not (is_nan(contrib.total) or is_inf(contrib.total)) else 0.0
 		var t_str: String
 		if t >= 1_000_000_000.0:
 			t_str = "+$%.2fB/s" % (t / 1_000_000_000.0)
@@ -1655,13 +1762,13 @@ func update_lab_metrics() -> void:
 		sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
 
 	if sys_breakdown_label:
-		var c_pct := int(contrib.click)
-		var d_pct := int(contrib.d)
-		var e_pct := int(contrib.e)
+		var c_pct := clampi(int(contrib.click), 0, 100)
+		var d_pct := clampi(int(contrib.d), 0, 100)
+		var e_pct := clampi(int(contrib.e), 0, 100)
 		var bar_len := 20
-		var fc := int(c_pct / 100.0 * bar_len)
-		var fd := int(d_pct / 100.0 * bar_len)
-		var fe: int = int(max(bar_len - fc - fd, 0))
+		var fc := clampi(int(c_pct / 100.0 * bar_len), 0, bar_len)
+		var fd := clampi(int(d_pct / 100.0 * bar_len), 0, bar_len - fc)
+		var fe: int = bar_len - fc - fd
 		var bar := "[color=#ff8844]" + "█".repeat(fc) + "[/color]"
 		bar += "[color=#44aaff]" + "█".repeat(fd) + "[/color]"
 		bar += "[color=#00ffcc]" + "█".repeat(fe) + "[/color]"

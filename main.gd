@@ -235,7 +235,12 @@ func _ready():
 	if is_instance_valid(UIManager.big_click_button):
 		UIManager.big_click_button.pressed.connect(AudioManager._unlock_audio)
 	LogManager.show_all_laps = false
+	# lab_mode vive en UIManager (autoload) y NO se resetea en reload_current_scene.
+	# Sin esto queda desincronizado de show_all_laps → el primer toque de L es un no-op visual.
+	UIManager.lab_mode = false
 	LogManager.update_toggle_button()
+	if UIManager.system_achievements_label:
+		UIManager.system_achievements_label.visible = false
 	if UIManager.export_run_button:
 		UIManager.export_run_button.disabled = true
 		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run " + tr("UI_EXPORT_PENDING"))
@@ -531,7 +536,8 @@ func _on_logic_tick():
 	var dt := RunManager.LOGIC_TICK
 
 	# Cache mu (evita 500+ calls por segundo a get_mu_structural_factor)
-	EconomyManager.cached_mu = StructuralModel.get_mu_structural_factor()
+	var _mu := StructuralModel.get_mu_structural_factor()
+	EconomyManager.cached_mu = _mu if not (is_nan(_mu) or is_inf(_mu) or _mu <= 0.0) else 1.0
 	mu_peak_run = max(mu_peak_run, EconomyManager.cached_mu)
 
 	# NG+ Mente Colmena (Juego autom�tico por IA fúngica)
@@ -591,7 +597,8 @@ func _on_logic_tick():
 
 	# 1) Econom�a base
 	StructuralModel.apply_dynamic_persistence(dt)
-	EconomyManager.delta_per_sec = EconomyManager.get_passive_total()
+	var _dps := EconomyManager.get_passive_total()
+	EconomyManager.delta_per_sec = _dps if not (is_nan(_dps) or is_inf(_dps)) else 0.0
 	delta_peak_run = max(delta_peak_run, EconomyManager.get_delta_total())
 	TelemetryManager.sample_metrics(self, false)
 	_telemetry_sample_timer += dt
@@ -1015,6 +1022,9 @@ func _input(event):
 				evo_choice_panel.visible = false
 				get_viewport().set_input_as_handled()
 				return
+			# Ningún panel abierto → ESC abre Ajustes
+			AudioManager.show_settings_panel(self)
+			get_viewport().set_input_as_handled()
 
 	# Lab Mode toggle con tecla L � muestra/oculta f�rmulas, genoma y todos los eventos
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -1024,11 +1034,11 @@ func _input(event):
 			var click_scroll = get_node_or_null("UIRootContainer/LeftPanel/CenterPanel/ClickStatsScroll")
 			if formula: formula.visible = UIManager.lab_mode
 			if click_scroll: click_scroll.visible = UIManager.lab_mode
-			if UIManager.genome_scroll:
-				UIManager.genome_scroll.visible = UIManager.lab_mode
-			if LogManager.show_all_laps != UIManager.lab_mode:
-				LogManager.toggle_view()
-				LogManager.update_toggle_button()
+			# genome_scroll (Genoma Fúngico) permanece siempre visible — no sigue lab_mode
+			# Sincronización determinística: el log sigue a lab_mode SIEMPRE (1 toque = 1 cambio).
+			LogManager.show_all_laps = UIManager.lab_mode
+			LogManager.update_toggle_button()
+			LogManager.update_log_label()
 			if UIManager.lab_mode:
 				TutorialManager.notify_lab_opened()
 
@@ -1064,7 +1074,50 @@ func _input(event):
 			if idx < HOTKEY_UPGRADES.size():
 				UpgradeManager.purchase_upgrade(HOTKEY_UPGRADES[idx])
 
-		# DEBUG � Activar rutas post-trascendencia al vuelo (solo en debug build)
+		# Q/W/E — hotkeys necrosis / autofagia (solo si banco cerrado y run activa)
+		var _bank_open: bool = is_instance_valid(legacy_panel) and legacy_panel.visible
+		if not _bank_open and not RunManager.run_closed:
+			if EvoManager.mutation_necrosis:
+				match kc:
+					KEY_Q:
+						if EvoManager.can_buy_necrosis_agent():
+							EvoManager.buy_necrosis_agent()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_W:
+						if EvoManager.can_buy_necrosis_catalyst():
+							EvoManager.buy_necrosis_catalyst()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_E:
+						if EvoManager.can_purge_necrosis():
+							EvoManager.purge_necrosis()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_autolisis:
+				match kc:
+					KEY_Q:
+						if EvoManager.can_buy_autofagia_upgrade("speed"):
+							EvoManager.buy_autofagia_upgrade("speed")
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_W:
+						if EvoManager.can_buy_autofagia_upgrade("double"):
+							EvoManager.buy_autofagia_upgrade("double")
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_E:
+						var _colapso_ok: bool = EvoManager.autolisis_devour_count >= Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS
+						if _colapso_ok:
+							EvoManager.autofagia_colapsar()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+						elif EvoManager.can_autofagia_digest_burst():
+							EvoManager.autofagia_digest_burst()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+
+		# DEBUG — Activar rutas post-trascendencia al vuelo (solo en debug build)
 		if OS.is_debug_build():
 			match kc:
 				KEY_F3:

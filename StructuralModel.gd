@@ -93,8 +93,12 @@ func f_n_alpha(n: float) -> float:
 
 # ==================== PERSISTENCIA DINÁMICA ====================
 func apply_dynamic_persistence(delta: float) -> void:
+	if is_nan(persistence_dynamic) or is_inf(persistence_dynamic):
+		persistence_dynamic = persistence_base
 	var n_struct := float(get_structural_upgrades())
 	var target := get_persistence_target()
+	if is_nan(target) or is_inf(target):
+		target = persistence_base
 	var a := f_n_alpha(n_struct)
 
 	# DERIVA CONTROLADA (Legado): Convergencia más rápida hacia el setpoint de persistencia.
@@ -144,7 +148,9 @@ func get_structural_epsilon() -> float:
 	return m.eps_model
 
 func get_k_eff() -> float:
-	var mu :float = EconomyManager.cached_mu
+	var mu: float = EconomyManager.cached_mu
+	if is_nan(mu) or is_inf(mu) or mu <= 0.0:
+		mu = 1.0
 	var n_struct := get_effective_structural_n()
 	var alpha := EcoModel.get_alpha(int(n_struct))
 	var k_base := EcoModel.get_k_structural(int(n_struct))
@@ -225,11 +231,14 @@ func enable_persistence_inertia(factor: float):
 
 # ==================== CÁLCULO DE ÉPSILON / OMEGA ====================
 func update_runtime() -> void:
-	if baseline_delta_structural <= 0.0 or EconomyManager.delta_per_sec <= 0.0:
+	var _dps := EconomyManager.delta_per_sec
+	if baseline_delta_structural <= 0.0 or _dps <= 0.0 or is_nan(_dps) or is_inf(_dps):
 		epsilon_runtime = 0.0
 		epsilon_active = 0.0
 		epsilon_passive = 0.0
 		epsilon_complex = 0.0
+		if is_nan(omega) or is_inf(omega):
+			omega = 1.0
 		return
 
 	var n_struct := get_effective_structural_n()
@@ -273,6 +282,8 @@ func update_runtime() -> void:
 	if RunManager.is_memoria_oscura_active() and eps_target > epsilon_runtime:
 		eps_target = epsilon_runtime + (eps_target - epsilon_runtime) * Balance.MEMORIA_OSCURA_EPS_RISE_DAMP
 	epsilon_runtime = lerp(epsilon_runtime, eps_target, 0.045)
+	if is_nan(epsilon_runtime) or is_inf(epsilon_runtime):
+		epsilon_runtime = 0.0
 	epsilon_runtime = clamp(epsilon_runtime, 0.0, 2.0)
 
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
@@ -280,6 +291,8 @@ func update_runtime() -> void:
 	epsilon_peak = max(epsilon_peak, epsilon_runtime)
 
 	omega = EcoModel.get_omega(epsilon_runtime, k_eff, n_struct)
+	if is_nan(omega) or is_inf(omega):
+		omega = 1.0
 	if omega > omega_min:
 		omega_min = move_toward(omega_min, omega, 0.002)
 	if EvoManager.mutation_homeostasis:

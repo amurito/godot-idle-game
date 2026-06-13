@@ -479,8 +479,9 @@ func activate_autolisis() -> void:
 	mutation_autolisis = true
 	autolisis_devour_timer = 0.0
 	mutation_activated.emit("autolisis", tr("MUT_AUTOLISIS"))
-	UIManager.show_toast(tr("TOAST_AUTOLISIS_START"))
 	LogManager.add(tr("LOG_AUTOLISIS_START"))
+	# Toast con los atajos de teclado de los botones que acaban de aparecer (Q/W/E/R).
+	UIManager.show_toast(tr("TOAST_AUTOFAGIA_KEYS"))
 	# Guardar inmediatamente: el autosave puede haberse ejecutado antes de esta activación,
 	# lo que provocaría que reload vea mutation_met_oscuro=true + money>$1M sin autolisis
 	# → process_met_oscuro cierra la run como METABOLISMO OSCURO en el primer tick.
@@ -556,7 +557,8 @@ func autofagia_colapsar() -> void:
 		return
 	if autolisis_devour_count < Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS:
 		return
-	RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOFAGIA_COLAPSO"))
+	# Cierre MANUAL: sin NG+ bonus (ese se reserva al cierre natural por agotamiento de material).
+	RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOFAGIA_COLAPSO"), true)
 
 # ── Mejoras de autofagia: costo (bio + dinero) y compra ──────────────────────
 ## kind: "speed" | "double". Retorna {bio, money, level, maxed}.
@@ -655,8 +657,9 @@ func activate_necrosis() -> void:
 	necrosis_overdose = false
 	necrosis_catalyst_level = 0
 	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
-	UIManager.show_toast(tr("TOAST_NECROSIS_START"))
 	LogManager.add(tr("LOG_NECROSIS_START"))
+	# Toast con los atajos de teclado de los botones que acaban de aparecer (Q/W/E).
+	UIManager.show_toast(tr("TOAST_NECROSIS_KEYS"))
 	_save_after_mutation()  # mismo motivo que autolisis
 
 ## Multiplicador necrótico: rampa suave que premia cada paso, capeada cerca del floor.

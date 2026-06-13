@@ -46,7 +46,7 @@ const AUTOLISIS_MONEY_BURST_CAP  := 1_000_000.0   # techo de $ que un SOLO devou
 const AUTOLISIS_CLICK_MULT      := 5.0    # click ×5 mientras autólisis activa (reemplaza ×3 de MO)
 const AUTOLISIS_PASSIVE_MULT    := 2.0    # pasivo ×2 (restaura el pasivo anulado por MO)
 # Cierre voluntario: botón "colapsar núcleo" disponible tras N devours.
-const AUTOFAGIA_COLAPSO_MIN_DEVOURS := 3  # devours mínimos para habilitar el colapso voluntario
+const AUTOFAGIA_COLAPSO_MIN_DEVOURS := 40  # devours mínimos para habilitar el colapso voluntario (cierre manual NO da PL bonus)
 # ── Mejoras de autofagia (multinivel, costo en biomasa + dinero, capeadas) ──
 # Enzimas Líticas: aceleran el intervalo entre devours (piso 5s).
 const AUTOFAGIA_SPEED_MAX_LEVEL    := 5      # 30s → 5s (-5s por nivel)

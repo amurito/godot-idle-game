@@ -15,14 +15,17 @@ var SAVE_PATH: String:
 # Usado por _apply_cosmic_buffs para no duplicar bonuses al recargar.
 var _file_existed_on_load: bool = false
 
+static func _sf(v: float, fallback: float = 0.0) -> float:
+	return v if not (is_nan(v) or is_inf(v)) else fallback
+
 func build_save_data(main: Node) -> Dictionary:
 	var all_laps := LogManager.get_lap_array()
 	var laps_to_save := all_laps.slice(max(0, all_laps.size() - Balance.MAX_LAPS))
 	return {
 		"save_version": Version.get_version_string(),
 		"economy": {
-			"money": EconomyManager.money,
-			"persistence_dynamic": StructuralModel.persistence_dynamic,
+			"money": _sf(EconomyManager.money),
+			"persistence_dynamic": _sf(StructuralModel.persistence_dynamic, 1.4),
 			"persistence_base": StructuralModel.persistence_base,
 			"persistence_upgrade_unlocked": StructuralModel.persistence_upgrade_unlocked,
 			"memory_trigger_count": main.memory_trigger_count,
@@ -37,13 +40,13 @@ func build_save_data(main: Node) -> Dictionary:
 		},
 		"upgrades": UpgradeManager.serialize(),
 		"structural": {
-			"epsilon_runtime": StructuralModel.epsilon_runtime,
-			"epsilon_peak": StructuralModel.epsilon_peak,
-			"total_money_generated": EconomyManager.total_money_generated,
-			"run_time": RunManager.run_time,
-			"baseline_delta_structural": StructuralModel.baseline_delta_structural,
-			"omega": StructuralModel.omega,
-			"omega_min": StructuralModel.omega_min,
+			"epsilon_runtime": _sf(StructuralModel.epsilon_runtime),
+			"epsilon_peak": _sf(StructuralModel.epsilon_peak),
+			"total_money_generated": _sf(EconomyManager.total_money_generated),
+			"run_time": _sf(RunManager.run_time),
+			"baseline_delta_structural": _sf(StructuralModel.baseline_delta_structural),
+			"omega": _sf(StructuralModel.omega, 1.0),
+			"omega_min": _sf(StructuralModel.omega_min),
 			"institution_accounting_unlocked": StructuralModel.institution_accounting_unlocked,
 			"institutions_unlocked": main.institutions_unlocked
 		},
@@ -101,9 +104,9 @@ func build_save_data(main: Node) -> Dictionary:
 			"panspermia_misfires": EvoManager.panspermia_misfires,
 			"nucleo_sync": EvoManager.nucleo_sync,
 			"nucleo_temp": EvoManager.nucleo_temp,
-			"biomasa": BiosphereEngine.biomasa,
-			"nutrientes": BiosphereEngine.nutrientes,
-			"hifas": BiosphereEngine.hifas,
+			"biomasa": _sf(BiosphereEngine.biomasa),
+			"nutrientes": _sf(BiosphereEngine.nutrientes),
+			"hifas": _sf(BiosphereEngine.hifas),
 			"micelio": BiosphereEngine.micelio
 		},
 		"homeostasis": {
@@ -163,13 +166,13 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 
 	if data.has("structural"):
 		var s = data.structural
-		StructuralModel.epsilon_runtime = s.get("epsilon_runtime", StructuralModel.epsilon_runtime)
-		StructuralModel.epsilon_peak = s.get("epsilon_peak", StructuralModel.epsilon_peak)
-		EconomyManager.total_money_generated = s.get("total_money_generated", EconomyManager.total_money_generated)
-		RunManager.run_time = s.get("run_time", RunManager.run_time)
-		StructuralModel.baseline_delta_structural = s.get("baseline_delta_structural", StructuralModel.baseline_delta_structural)
-		StructuralModel.omega = s.get("omega", StructuralModel.omega)
-		StructuralModel.omega_min = s.get("omega_min", StructuralModel.omega_min)
+		StructuralModel.epsilon_runtime = _sf(s.get("epsilon_runtime", StructuralModel.epsilon_runtime))
+		StructuralModel.epsilon_peak = _sf(s.get("epsilon_peak", StructuralModel.epsilon_peak))
+		EconomyManager.total_money_generated = _sf(s.get("total_money_generated", EconomyManager.total_money_generated))
+		RunManager.run_time = _sf(s.get("run_time", RunManager.run_time))
+		StructuralModel.baseline_delta_structural = _sf(s.get("baseline_delta_structural", StructuralModel.baseline_delta_structural))
+		StructuralModel.omega = _sf(s.get("omega", StructuralModel.omega), 1.0)
+		StructuralModel.omega_min = _sf(s.get("omega_min", StructuralModel.omega_min))
 		StructuralModel.institution_accounting_unlocked = s.get("institution_accounting_unlocked", StructuralModel.institution_accounting_unlocked)
 		main.institutions_unlocked = s.get("institutions_unlocked", main.institutions_unlocked)
 
@@ -229,10 +232,10 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.nucleo_sync = ev.get("nucleo_sync", EvoManager.nucleo_sync)
 		EvoManager.nucleo_temp = ev.get("nucleo_temp", EvoManager.nucleo_temp)
 
-		BiosphereEngine.biomasa = ev.get("biomasa", BiosphereEngine.biomasa)
-		BiosphereEngine.nutrientes = ev.get("nutrientes", BiosphereEngine.nutrientes)
-		BiosphereEngine.hifas = ev.get("hifas", BiosphereEngine.hifas)
-		BiosphereEngine.micelio = ev.get("micelio", BiosphereEngine.micelio)
+		BiosphereEngine.biomasa = _sf(ev.get("biomasa", BiosphereEngine.biomasa))
+		BiosphereEngine.nutrientes = _sf(ev.get("nutrientes", BiosphereEngine.nutrientes))
+		BiosphereEngine.hifas = _sf(ev.get("hifas", BiosphereEngine.hifas))
+		BiosphereEngine.micelio = _sf(ev.get("micelio", BiosphereEngine.micelio))
 
 	if data.has("homeostasis"):
 		var h = data.homeostasis

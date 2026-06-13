@@ -100,7 +100,7 @@ func is_memoria_oscura_active() -> bool:
 	return LegacyManager.dark_legacy_charges > 0 or _has_permanent_dark_legacy()
 
 # ==================== CIERRE DE RUN ====================
-func close_run(route: String, reason: String):
+func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 	if run_closed: return
 	run_closed = true
 	final_route = route
@@ -135,7 +135,9 @@ func close_run(route: String, reason: String):
 			LogManager.add(tr("LOG_PL_COLAPSO") % [extra_pl, StructuralModel.epsilon_peak, eps_bonus])
 
 	# NG+ Bonus variable (t >= 1): PL adicional según rendimiento de la run
-	if LegacyManager.trascendencia_count >= 1:
+	# skip_ng_bonus: el cierre MANUAL de AUTOFAGIA (colapso voluntario) no otorga este bonus —
+	# se reserva para el cierre natural (agotamiento de material).
+	if LegacyManager.trascendencia_count >= 1 and not skip_ng_bonus:
 		var ng_bonus := 0
 		var ng_formula := ""
 		var cap: int = int(Balance.NG_CAPS.get(route, 0))

@@ -78,15 +78,18 @@ func _grow_micelio(delta: float, is_red_micelial: bool, is_colonization: bool = 
 		micelio = max(micelio - 1.5 * delta, 0.0)
 
 func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
-	# Cap suave con log para evitar explosión en NG+ con legados acumulados
-	# pow(x,0.6) sin cap llegaba a >60 con legados acumulados (Mente Colmena x3, etc.)
-	var h := pow(passive_income, 0.6)
+	var safe_income := passive_income if not (is_nan(passive_income) or is_inf(passive_income) or passive_income < 0.0) else 0.0
+	var h := pow(safe_income, 0.6)
 	h = h / (1.0 + h / 40.0)  # Cap suave: asíntota en ~40 hifas, nunca llega a 60
 	if is_homeostasis:
 		h *= 0.85
-	hifas = h
+	hifas = h if not (is_nan(h) or is_inf(h)) else 0.0
 
 func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false) -> void:
+	if is_nan(hifas) or is_inf(hifas):
+		hifas = 0.0
+	if is_nan(biomasa) or is_inf(biomasa):
+		biomasa = 0.0
 	if hifas <= 0 or nutrientes <= 0:
 		return
 
@@ -171,22 +174,20 @@ func _update_nutrients(delta: float, epsilon_runtime: float) -> void:
 # =====================================================
 
 func get_biomass_beta() -> float:
-	var beta: float = 1.0 + log(1.0 + biomasa) * efficiency
-	# Micelio Resiliente: β nunca baja de 1.0
+	var safe_bio := maxf(biomasa if not (is_nan(biomasa) or is_inf(biomasa)) else 0.0, 0.0)
+	var beta: float = 1.0 + log(1.0 + safe_bio) * efficiency
 	if LegacyManager.get_buff_value("micelio_resiliente"):
 		beta = max(beta, LegacyManager.get_effect_value("beta_floor"))
 	return beta
 
 func get_mu_fungi_multiplier(is_hyperassimilation: bool, is_homeostasis: bool) -> float:
-	var p = plasticity
+	var safe_bio := maxf(biomasa if not (is_nan(biomasa) or is_inf(biomasa)) else 0.0, 0.0)
+	var p := plasticity
 	if is_homeostasis:
 		p *= 0.5
-		
-	var mu_fungi = 1.0 + log(1.0 + biomasa) * p
-	
+	var mu_fungi := 1.0 + log(1.0 + safe_bio) * p
 	if is_hyperassimilation:
-		mu_fungi *= 0.85 
-
+		mu_fungi *= 0.85
 	return mu_fungi
 
 # Cuando ocurre una esporulación, el ecosistema colapsa pero deja esporas

@@ -110,6 +110,14 @@ func _build_mutaciones(parent: VBoxContainer) -> void:
 		btn.custom_minimum_size = Vector2(130, 26)
 		btn.add_theme_font_size_override("font_size", 10)
 		btn.pressed.connect(func():
+			# depredador y met_oscuro requieren prerequisitos — forzarlos en debug
+			if id == "depredador":
+				EvoManager.mutation_homeostasis = false
+				EvoManager.mutation_red_micelial = false
+				EvoManager.mutation_symbiosis = false
+				EvoManager.mutation_parasitism = false
+			elif id == "met_oscuro":
+				EvoManager.mutation_depredador = true
 			EvoManager.activate_mutation(id)
 			UIManager.show_toast("DEBUG: Mutación %s activada" % id)
 			_main.update_ui()
@@ -147,21 +155,43 @@ func _build_eventos(parent: VBoxContainer) -> void:
 		LegacyManager.save_legacy()
 		print("🦠 [DEBUG] esclerocio_panspermia_done = true — Semilla Cósmica Oscura desbloqueada"))
 
-	# ── DEBUG NECROSIS CONTROLADA (temporal) ──
+	# ── DEBUG METABOLISMO OSCURO / NECROSIS / AUTOFAGIA ──
 	var hbox_nec := HBoxContainer.new()
 	hbox_nec.add_theme_constant_override("separation", 6)
 	parent.add_child(hbox_nec)
+	# Activa Met.Oscuro forzando el prerequisito Depredador.
+	_add_event_btn(hbox_nec, "Activar MO", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.activate_met_oscuro()
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("⚗️ [DEBUG] Met.Oscuro activado"))
 	# Fuerza MO + Necrosis activa para testear el loop de doble economía.
 	_add_event_btn(hbox_nec, "Activar Necrosis", func():
+		EvoManager.mutation_depredador = true
 		EvoManager.mutation_met_oscuro = true
 		EvoManager.activate_necrosis()
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
 		print("🦠 [DEBUG] Necrosis activada — Ω = %.4f" % EvoManager.necrosis_omega))
+	# Fuerza MO + Autofagia para testear el loop de devours.
+	_add_event_btn(hbox_nec, "Activar Autofagia", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.mutation_met_oscuro = true
+		EvoManager.activate_autolisis()
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("🧬 [DEBUG] Autofagia activada — devours = %d" % EvoManager.autolisis_devour_count))
+
+	var hbox_nec2 := HBoxContainer.new()
+	hbox_nec2.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_nec2)
 	# Regala Necromasa para comprar Agentes sin grindear.
-	_add_event_btn(hbox_nec, "+5000 Ν", func():
+	_add_event_btn(hbox_nec2, "+5000 Ν", func():
 		EvoManager.necromasa += 5000.0
 		print("🧫 [DEBUG] Necromasa = %.0f" % EvoManager.necromasa))
 	# Marca HOMEORHESIS como cerrada para testear el cross.
-	_add_event_btn(hbox_nec, "Marcar Homeorhesis", func():
+	_add_event_btn(hbox_nec2, "Marcar Homeorhesis", func():
 		LegacyManager.endings_achieved["HOMEORHESIS"] = true
 		LegacyManager.save_legacy()
 		print("♾️ [DEBUG] HOMEORHESIS marcada — cross Plasticidad Terminal listo"))

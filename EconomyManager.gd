@@ -300,7 +300,8 @@ func get_contribution_breakdown() -> Dictionary:
 	var e := get_trueque_income_effective()
 
 	var total := push + d + e
-	if total == 0: total = 0.00001
+	if total == 0.0 or is_nan(total) or is_inf(total):
+		total = 0.00001
 
 	return {
 		"click": push / total * 100.0,
@@ -314,7 +315,8 @@ func get_active_passive_breakdown() -> Dictionary:
 	var passive := get_auto_income_effective() + get_trueque_income_effective()
 
 	var total := push + passive
-	if total == 0: total = 0.00001
+	if total == 0.0 or is_nan(total) or is_inf(total):
+		total = 0.00001
 
 	return {
 		"activo": push / total * 100.0,
@@ -326,6 +328,10 @@ func get_active_passive_breakdown() -> Dictionary:
 
 # ==================== ACTUALIZACIÓN ECONÓMICA ====================
 func update_economy(delta: float):
-	var delta_money = delta_per_sec * delta
+	if is_nan(delta_per_sec) or is_inf(delta_per_sec):
+		delta_per_sec = 0.0
+	var delta_money := delta_per_sec * delta
 	money += delta_money
+	if is_nan(money) or is_inf(money):
+		money = 0.0
 	total_money_generated += delta_money

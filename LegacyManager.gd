@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # LegacyManager.gd — Autoload Global v1.0.0
 # Gestiona los Puntos de Legado (PL) y las mejoras persistentes entre partidas.
@@ -831,25 +831,34 @@ func has_cosmic_buff(cosmic_id: String) -> bool:
 #  APLICACIÓN DE BUFFS AL INICIO DE RUN
 # =====================================================
 
+# Buffs heredados (Legado/NG+/Cósmico) activos esta run. Se muestran en el botón
+# "Buffs activos" del panel derecho en vez de inundar el lap log.
+var active_run_buffs: Array = []
+
+## Registra un buff activo de la run (reemplaza el viejo LogManager.add para no cargar el log).
+func _register_run_buff(text: String) -> void:
+	active_run_buffs.append(text)
+
 func apply_legacy_buffs() -> void:
+	active_run_buffs.clear()  # nueva run → lista limpia (apply_legacy corre antes que apply_cosmic)
 	# LEGADO METABÓLICO: dinero inicial (150 × level, escala con cost_growth)
 	var run_start_money: float = get_effect_value("run_start_money")
 	if run_start_money > 0.0 and not SaveManager._file_existed_on_load:
 		EconomyManager.money += run_start_money
-		LogManager.add("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
+		_register_run_buff("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
 
 	# CATABOLISMO HEREDADO: biomasa inicial (10 × level)
 	var run_start_bio: float = get_effect_value("run_start_bio")
 	if run_start_bio > 0.0 and not SaveManager._file_existed_on_load:
 		BiosphereEngine.biomasa += run_start_bio
-		LogManager.add("✦ [NG+] Catabolismo Heredado: +%.0f bio al inicio" % run_start_bio)
+		_register_run_buff("✦ [NG+] Catabolismo Heredado: +%.0f bio al inicio" % run_start_bio)
 
 	# PLASTICIDAD ADAPTATIVA: omega_min floor 0.30
 	if get_buff_value("plasticidad_adaptativa"):
 		var floor_val: float = get_effect_value("omega_min_floor")
 		if StructuralModel.omega_min < floor_val:
 			StructuralModel.omega_min = floor_val
-			LogManager.add("✦ [Legado] Plasticidad Adaptativa: Ω_min → %.2f" % floor_val)
+			_register_run_buff("✦ [Legado] Plasticidad Adaptativa: Ω_min → %.2f" % floor_val)
 
 	# UMBRAL COGNITIVO / RESONANCIA COGNITIVA: nivel cognitivo inicial +1
 	var cog_bonus: float = get_effect_value("start_nivel_cognitivo_bonus")
@@ -857,24 +866,24 @@ func apply_legacy_buffs() -> void:
 		var bonus_int: int = int(cog_bonus)
 		if UpgradeManager.states.has("cognitive"):
 			UpgradeManager.states["cognitive"].level += bonus_int
-			LogManager.add("✦ [Legado] Bonus Cognitivo: nivel_cognitivo +%d" % bonus_int)
+			_register_run_buff("✦ [Legado] Bonus Cognitivo: nivel_cognitivo +%d" % bonus_int)
 
 	# NG+ MENTE COLMENA: el auto-play ya NO arranca solo. La IA es una RÁFAGA activable
 	# con cooldown (RunManager.activate_mc_burst). El pasivo ×3 del legado sigue permanente.
 	if get_buff_value("mente_colmena"):
-		LogManager.add("🧠 [NG+] Mente Colmena — IA distribuida disponible (ráfaga activable) + pasivo ×3")
+		_register_run_buff("🧠 [NG+] Mente Colmena — IA distribuida disponible (ráfaga activable) + pasivo ×3")
 
 	# LEGADO ALOSTASIS: Ω_min garantizado ≥ 0.45
 	if get_buff_value("legado_alostasis"):
 		if StructuralModel.omega_min < 0.45:
 			StructuralModel.omega_min = 0.45
-		LogManager.add("✦ [NG+] Resiliencia Alostática — Ω_min garantizado ≥ 0.45")
+		_register_run_buff("✦ [NG+] Resiliencia Alostática — Ω_min garantizado ≥ 0.45")
 
 	# LEGADO HOMEORRESIS: Ω_min garantizado ≥ 0.55
 	if get_buff_value("legado_homeorresis"):
 		if StructuralModel.omega_min < 0.55:
 			StructuralModel.omega_min = 0.55
-		LogManager.add("✦ [NG+] Trascendencia Cristalina — Ω_min garantizado ≥ 0.55")
+		_register_run_buff("✦ [NG+] Trascendencia Cristalina — Ω_min garantizado ≥ 0.55")
 
 	# SANGRE NEGRA: biomasa inicial ×1.30 si viene de ruta Parasitismo
 	if get_buff_value("sangre_negra"):
@@ -882,24 +891,24 @@ func apply_legacy_buffs() -> void:
 		if parasitism_done and not SaveManager._file_existed_on_load:
 			var mult: float = get_effect_value("parasitism_biomasa_start_mult")
 			BiosphereEngine.biomasa *= mult
-			LogManager.add("✦ [Legado] Sangre Negra: Biomasa inicial ×%.2f" % mult)
+			_register_run_buff("✦ [Legado] Sangre Negra: Biomasa inicial ×%.2f" % mult)
 
 	# NG+ NOTIFICACIONES al inicio de run
 	if get_buff_value("aura_dorada"):
-		LogManager.add("✦ [NG+] Aura Dorada activa — click ×1.5, pasivo ×1.5")
+		_register_run_buff("✦ [NG+] Aura Dorada activa — click ×1.5, pasivo ×1.5")
 	if get_buff_value("semilla_cosmica"):
-		LogManager.add("✦ [NG+] Semilla Cósmica activa — click ×2.0, pasivo ×2.0")
+		_register_run_buff("✦ [NG+] Semilla Cósmica activa — click ×2.0, pasivo ×2.0")
 	if get_buff_value("mente_colmena"):
-		LogManager.add("✦ [NG+] Mente Colmena activa — pasivo ×3.0 (la singularidad se distribuyó)")
+		_register_run_buff("✦ [NG+] Mente Colmena activa — pasivo ×3.0 (la singularidad se distribuyó)")
 	if get_buff_value("metabolismo_glitch"):
-		LogManager.add("✦ [NG+] Metabolismo Glitch presente — se activa con ε > 0.40 (click ×1.5, pasivo ×1.8)")
+		_register_run_buff("✦ [NG+] Metabolismo Glitch presente — se activa con ε > 0.40 (click ×1.5, pasivo ×1.8)")
 	if get_buff_value("catabolismo_heredado"):
 		var bio_lv: int = get_buff_level("catabolismo_heredado")
-		LogManager.add("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f bio al inicio" % [bio_lv, get_effect_value("run_start_bio")])
+		_register_run_buff("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f bio al inicio" % [bio_lv, get_effect_value("run_start_bio")])
 	if get_buff_value("apoptosis_heredada"):
-		LogManager.add("✦ [NG+] Apoptosis Heredada — income escala con Ω bajo (×1.5 máx)")
+		_register_run_buff("✦ [NG+] Apoptosis Heredada — income escala con Ω bajo (×1.5 máx)")
 	if get_buff_value("plasticidad_terminal"):
-		LogManager.add("✦ [NG+] Plasticidad Terminal — ×1.5 income en ambos extremos de Ω")
+		_register_run_buff("✦ [NG+] Plasticidad Terminal — ×1.5 income en ambos extremos de Ω")
 
 func apply_cosmic_buffs() -> void:
 	# Solo aplica si hay trascendencias previas (no afecta runs sin prestige)
@@ -910,24 +919,24 @@ func apply_cosmic_buffs() -> void:
 	if has_cosmic_buff("impulso_inicial"):
 		if not SaveManager._file_existed_on_load:
 			EconomyManager.money += 500.0
-			LogManager.add("✦ [Cósmico] Impulso Inicial: +$500")
+			_register_run_buff("✦ [Cósmico] Impulso Inicial: +$500")
 
 	# OMEGA PRIMORDIAL (T1): Ω_min +0.05
 	if has_cosmic_buff("omega_primordial"):
 		StructuralModel.omega_min = max(StructuralModel.omega_min, StructuralModel.omega_min + 0.05)
-		LogManager.add("✦ [Cósmico] Omega Primordial: Ω_min +0.05")
+		_register_run_buff("✦ [Cósmico] Omega Primordial: Ω_min +0.05")
 
 	# RESONANCIA BIÓTICA (T1): Biomasa inicial 1.5
 	if has_cosmic_buff("resonancia_biotica"):
 		if BiosphereEngine.biomasa < 1.5:
 			BiosphereEngine.biomasa = 1.5
-			LogManager.add("✦ [Cósmico] Resonancia Biótica: Biomasa → 1.5")
+			_register_run_buff("✦ [Cósmico] Resonancia Biótica: Biomasa → 1.5")
 
 	# ECO DE LEGADO (T1): +5 PL al inicio de run
 	if has_cosmic_buff("eco_de_legado"):
 		if not SaveManager._file_existed_on_load:
 			add_pl(5)
-			LogManager.add("✦ [Cósmico] Eco de Legado: +5 PL")
+			_register_run_buff("✦ [Cósmico] Eco de Legado: +5 PL")
 
 	# MEMORIA PERSISTENTE (T2): Accounting y Trueque nivel 1 gratis
 	if has_cosmic_buff("memoria_persistente"):
@@ -937,7 +946,7 @@ func apply_cosmic_buffs() -> void:
 			if def_acc:
 				UpgradeManager.states["accounting"].current_value = def_acc.base_value + def_acc.gain
 				UpgradeManager.states["accounting"].unlocked = true
-			LogManager.add("✦ [Cósmico] Memoria Persistente: Contabilidad nivel 1 gratis")
+			_register_run_buff("✦ [Cósmico] Memoria Persistente: Contabilidad nivel 1 gratis")
 		# Desbloquear dependientes de accounting
 		for other_id in UpgradeManager.states.keys():
 			var other_def = UpgradeManager.get_def(other_id)
@@ -946,8 +955,8 @@ func apply_cosmic_buffs() -> void:
 
 	# MEMORIA DE RECURSO CÓSMICA (T2): primeras 2 compras de cada upgrade gratis (pasivo via cost())
 	if has_cosmic_buff("memoria_recurso_cosmica"):
-		LogManager.add("✦ [Cósmico] Memoria de Recurso Cósmica — primeras 2 compras de cada upgrade gratuitas esta run")
+		_register_run_buff("✦ [Cósmico] Memoria de Recurso Cósmica — primeras 2 compras de cada upgrade gratuitas esta run")
 
 	# CICATRIZ METABÓLICA (T2): HOMEORRESIS disponible desde los 5min en vez de 10min
 	if has_cosmic_buff("cicatriz_metabolica"):
-		LogManager.add("✦ [Cósmico] Cicatriz Metabólica — tiempo mínimo de HOMEORRESIS: 5min (antes 10min)")
+		_register_run_buff("✦ [Cósmico] Cicatriz Metabólica — tiempo mínimo de HOMEORRESIS: 5min (antes 10min)")
