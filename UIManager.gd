@@ -2079,6 +2079,8 @@ func _ensure_fungal_bar_style(bar) -> void:
 func get_reactor_color() -> Color:
 	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
 		return Color(0.12, 0.0, 0.02)
+	if RunManager.run_closed and RunManager.final_route == "REMISIÓN METABÓLICA":
+		return Color(0.08, 0.72, 0.48)
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
