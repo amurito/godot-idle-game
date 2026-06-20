@@ -49,7 +49,7 @@ func process_tick(delta: float, passive_income: float, epsilon_runtime: float, i
 	
 	# Aseguramos que el epsilon efectivo se calcule siempre, incluso si no hubo crecimiento
 	_compute_epsilon_breakdown(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis)
-	
+	biomasa = maxf(biomasa, 0.0)
 	return epsilon_effective
 
 # =====================================================

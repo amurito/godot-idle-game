@@ -15,8 +15,9 @@ var SAVE_PATH: String:
 # Usado por _apply_cosmic_buffs para no duplicar bonuses al recargar.
 var _file_existed_on_load: bool = false
 
-static func _sf(v: float, fallback: float = 0.0) -> float:
-	return v if not (is_nan(v) or is_inf(v)) else fallback
+static func _sf(v: float, fallback: float = 0.0, min_val: float = -INF) -> float:
+	var safe := v if not (is_nan(v) or is_inf(v)) else fallback
+	return max(safe, min_val)
 
 func build_save_data(main: Node) -> Dictionary:
 	var all_laps := LogManager.get_lap_array()
@@ -256,10 +257,10 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.nucleo_sync = ev.get("nucleo_sync", EvoManager.nucleo_sync)
 		EvoManager.nucleo_temp = ev.get("nucleo_temp", EvoManager.nucleo_temp)
 
-		BiosphereEngine.biomasa = _sf(ev.get("biomasa", BiosphereEngine.biomasa))
-		BiosphereEngine.nutrientes = _sf(ev.get("nutrientes", BiosphereEngine.nutrientes))
-		BiosphereEngine.hifas = _sf(ev.get("hifas", BiosphereEngine.hifas))
-		BiosphereEngine.micelio = _sf(ev.get("micelio", BiosphereEngine.micelio))
+		BiosphereEngine.biomasa = _sf(ev.get("biomasa", BiosphereEngine.biomasa), 0.0, 0.0)
+		BiosphereEngine.nutrientes = _sf(ev.get("nutrientes", BiosphereEngine.nutrientes), 0.0, 0.0)
+		BiosphereEngine.hifas = _sf(ev.get("hifas", BiosphereEngine.hifas), 0.0, 0.0)
+		BiosphereEngine.micelio = _sf(ev.get("micelio", BiosphereEngine.micelio), 0.0, 0.0)
 
 	if data.has("homeostasis"):
 		var h = data.homeostasis
