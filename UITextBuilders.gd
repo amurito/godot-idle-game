@@ -311,7 +311,9 @@ static func build_evo_checklist(_main: Node) -> String:
 		return _build_run_end_lore(RunManager.final_route)
 
 	# Sub-rutas de MO muestran su propio panel; el checklist genérico no aplica aquí.
-	if EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
+	if EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis \
+			or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero \
+			or EvoManager.mutation_remision:
 		return ""
 
 	var t := "[color=cyan][b]" + TranslationServer.translate("EVO_NEXT_TRANS") + "[/b][/color]\n"
@@ -1105,7 +1107,10 @@ static func build_bifurcation_data() -> Dictionary:
 static func build_epsilon_sticky_text(_main: Control) -> String:
 	var t := ""
 	t += "%s ε runtime = %s\n" % [epsilon_flag(StructuralModel.epsilon_runtime, 0.30), snapped(StructuralModel.epsilon_runtime, 0.01)]
-	t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
+	if EvoManager.mutation_remision:
+		t += "Ω = %s (remisión)\n" % snapped(EvoManager.remision_omega, 0.01)
+	else:
+		t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
 	t += "Presión = %s" % snapped(StructuralModel.get_structural_pressure(), 1)
 
 	var hiper_genome: String = EvoManager.genome.get("hiperasimilacion", "")
