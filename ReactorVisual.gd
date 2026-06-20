@@ -28,6 +28,7 @@ var pulse := 0.0
 var target_tint := Color(0.15, 0.65, 1.0) # Azul base (EvoManager lo sobreescribe)
 var value_label: Label
 var zoom_scale: float = 1.0
+var _remision_peril: float = 0.0
 
 # =========================
 # API PÚBLICA
@@ -128,18 +129,28 @@ func _process(delta: float) -> void:
 	ring.scale = ring.scale.lerp(Vector2.ONE * ring_target_scale, 0.05)
 	pulse = max(pulse - delta * PULSE_DECAY, 0.0)
 
-	# Color: target_tint viene siempre de EvoManager vía main.gd → set_tint()
-	core.modulate = core.modulate.lerp(target_tint, 0.2)
+	# Peril: oscurecer cuando Ω sale de banda en Remisión
+	var display_tint := target_tint
+	if EvoManager.mutation_remision:
+		if EvoManager.remision_in_band():
+			_remision_peril = 0.0
+		else:
+			_remision_peril = lerpf(_remision_peril, 1.0, delta * 2.0)
+		display_tint = display_tint.lerp(Color(0.20, 0.05, 0.30), _remision_peril)
+	else:
+		_remision_peril = 0.0
+
+	core.modulate = core.modulate.lerp(display_tint, 0.2)
 
 	# Inner core más blanco/brillante — centro caliente
-	var inner_tint := target_tint.lerp(Color.WHITE, 0.55)
+	var inner_tint := display_tint.lerp(Color.WHITE, 0.55)
 	core_inner.modulate = core_inner.modulate.lerp(inner_tint, 0.2)
 
 	# Ring semi-transparente + partículas coloreadas
-	var ring_color := target_tint
+	var ring_color := display_tint
 	ring_color.a = 0.5
 	ring.modulate = ring.modulate.lerp(ring_color, 0.2)
-	particles.modulate = particles.modulate.lerp(target_tint, 0.15)
+	particles.modulate = particles.modulate.lerp(display_tint, 0.15)
 
 	# --- Animación de Tentáculos (Hifas / Cables) ---
 	_update_tendrils(delta)
