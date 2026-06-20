@@ -158,8 +158,10 @@ func _process(delta: float) -> void:
 	var seta_bonus: float = 1.25 if EvoManager.seta_formada else 1.0
 	target_tint = UIManager.get_reactor_color()
 	if EvoManager.mutation_remision:
-		var peril_target := 0.0 if EvoManager.remision_in_band() else 1.0
-		_remision_peril = lerpf(_remision_peril, peril_target, delta * 2.0)
+		if EvoManager.remision_in_band():
+			_remision_peril = 0.0
+		else:
+			_remision_peril = lerpf(_remision_peril, 1.0, delta * 2.0)
 		target_tint = target_tint.lerp(Color(0.20, 0.05, 0.30), _remision_peril)
 	else:
 		_remision_peril = 0.0
