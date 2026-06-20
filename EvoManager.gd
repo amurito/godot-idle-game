@@ -491,7 +491,7 @@ func process_met_oscuro(dt: float) -> bool:
 	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
 		_met_oscuro_status_timer = 0.0
 		# Suprimir tick genérico cuando autofagia/necrosis están activas — tienen su propio log
-		if not mutation_autolisis and not mutation_necrosis:
+		if not mutation_autolisis and not mutation_necrosis and not mutation_remision:
 			LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
 	# Autólisis/Necrosis/Omega-Cero/Remisión toman el control del cierre — saltar los auto-cierres de MO
 	if not mutation_autolisis and not mutation_necrosis and not mutation_omega_cero and not mutation_remision:
