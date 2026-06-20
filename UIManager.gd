@@ -105,6 +105,15 @@ var _necrosis_btn: Button = null
 var _necrosis_agent_btn: Button = null
 var _necrosis_purge_btn: Button = null
 var _necrosis_catalyst_btn: Button = null
+var _omega_cero_btn: Button = null
+var _omega_cero_seal_btn: Button = null
+var _remision_btn: Button = null
+var _remision_up_btn: Button = null
+var _remision_down_btn: Button = null
+var _remision_seal_btn: Button = null
+var _remision_wave: Control = null
+var _control_omega_up_btn: Button = null
+var _control_omega_down_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
 var _simbiosis_seal_btn: Button = null
@@ -767,6 +776,33 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_necrosis_catalyst_btn):
 		_necrosis_catalyst_btn.queue_free()
 		_necrosis_catalyst_btn = null
+	if is_instance_valid(_omega_cero_btn):
+		_omega_cero_btn.queue_free()
+		_omega_cero_btn = null
+	if is_instance_valid(_omega_cero_seal_btn):
+		_omega_cero_seal_btn.queue_free()
+		_omega_cero_seal_btn = null
+	if is_instance_valid(_remision_btn):
+		_remision_btn.queue_free()
+		_remision_btn = null
+	if is_instance_valid(_remision_up_btn):
+		_remision_up_btn.queue_free()
+		_remision_up_btn = null
+	if is_instance_valid(_remision_down_btn):
+		_remision_down_btn.queue_free()
+		_remision_down_btn = null
+	if is_instance_valid(_remision_seal_btn):
+		_remision_seal_btn.queue_free()
+		_remision_seal_btn = null
+	if is_instance_valid(_remision_wave):
+		_remision_wave.queue_free()
+		_remision_wave = null
+	if is_instance_valid(_control_omega_up_btn):
+		_control_omega_up_btn.queue_free()
+		_control_omega_up_btn = null
+	if is_instance_valid(_control_omega_down_btn):
+		_control_omega_down_btn.queue_free()
+		_control_omega_down_btn = null
 	if is_instance_valid(_run_buffs_btn):
 		_run_buffs_btn.queue_free()
 		_run_buffs_btn = null
@@ -785,6 +821,12 @@ func update_ng_plus_buttons() -> void:
 	_update_necrosis_catalyst_button()
 	_update_necrosis_purge_button()
 	_reorder_necrosis_buttons()
+	_update_omega_cero_button()
+	_update_omega_cero_seal_button()
+	_update_remision_button()
+	_update_remision_control_buttons()
+	_update_remision_seal_button()
+	_update_control_omega_buttons()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_simbiosis_seal_button()
@@ -807,8 +849,8 @@ func _reorder_necrosis_buttons() -> void:
 		panel.move_child(_necrosis_purge_btn, 2)
 
 func _update_met_oscuro_seal_button() -> void:
-	# Ocultar durante autofagia y necrosis: esas sub-rutas tienen su propio cierre.
-	if RunManager.run_closed or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
+	# Ocultar durante autofagia, necrosis y omega-cero: esas sub-rutas tienen su propio cierre.
+	if RunManager.run_closed or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision:
 		if is_instance_valid(_met_oscuro_seal_btn):
 			_met_oscuro_seal_btn.visible = false
 		return
@@ -849,7 +891,7 @@ func _on_met_oscuro_seal_pressed() -> void:
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
 
 func _update_esclerocio_button() -> void:
-	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision:
 		if is_instance_valid(_esclerocio_btn):
 			_esclerocio_btn.visible = false
 		return
@@ -882,8 +924,8 @@ func _on_esclerocio_pressed() -> void:
 	RunManager.close_run("ESCLEROCIO OSCURO", tr("CLOSE_ESCLEROCIO"))
 
 func _update_autolisis_button() -> void:
-	# Ocultar si MO no activo, ya autólisis activa, necrosis activa (exclusión mutua), o run cerrada
-	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis:
+	# Ocultar si MO no activo, ya autólisis/necrosis/omega-cero activa (exclusión mutua), o run cerrada
+	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision:
 		if is_instance_valid(_autolisis_btn):
 			_autolisis_btn.visible = false
 		return
@@ -1122,7 +1164,7 @@ func _hide_dice_overlay() -> void:
 ## Botón gate [NECROSIS] (verde cadavérico). Aparece en MO con bio + flujo activo.
 func _update_necrosis_button() -> void:
 	var hidden: bool = RunManager.run_closed or not EvoManager.mutation_met_oscuro \
-		or EvoManager.mutation_necrosis or EvoManager.mutation_autolisis
+		or EvoManager.mutation_necrosis or EvoManager.mutation_autolisis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision
 	if hidden:
 		if is_instance_valid(_necrosis_btn):
 			_necrosis_btn.visible = false
@@ -1238,6 +1280,195 @@ func _update_necrosis_catalyst_button() -> void:
 
 func _on_necrosis_catalyst_pressed() -> void:
 	EvoManager.buy_necrosis_catalyst()
+
+# ── PROTOCOLO OMEGA-CERO ──────────────────────────────────────────────────────
+## Botón gate [PROTOCOLO OMEGA-CERO] (gris violáceo). Aparece en MO si el permiso del
+## Banco Genético está comprado y el gate en-run se cumple (bio + devours previos).
+func _update_omega_cero_button() -> void:
+	if not EvoManager.omega_cero_gate_ready():
+		if is_instance_valid(_omega_cero_btn):
+			_omega_cero_btn.visible = false
+		return
+	if _omega_cero_btn == null or not is_instance_valid(_omega_cero_btn):
+		_omega_cero_btn = Button.new()
+		_omega_cero_btn.clip_text = true
+		_omega_cero_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_omega_cero_btn.add_theme_color_override("font_color", Color(0.72, 0.6, 0.88))
+		_omega_cero_btn.custom_minimum_size = Vector2(0, 70)
+		_omega_cero_btn.pressed.connect(_on_omega_cero_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_omega_cero_btn)
+			panel.move_child(_omega_cero_btn, 0)
+	_omega_cero_btn.text = EmojiToRichText.strip("🕳️ " + tr("BTN_OMEGA_CERO"))
+	_omega_cero_btn.visible = true
+
+func _on_omega_cero_pressed() -> void:
+	if RunManager.run_closed or EvoManager.mutation_omega_cero:
+		return
+	if is_instance_valid(_omega_cero_btn):
+		_omega_cero_btn.visible = false
+	EvoManager.activate_omega_cero()
+
+## Botón SELLAR PROTOCOLO — disponible cuando se alcanzó el target de Φ (eco escleroidal).
+func _update_omega_cero_seal_button() -> void:
+	var active: bool = EvoManager.mutation_omega_cero and not RunManager.run_closed
+	if not active:
+		if is_instance_valid(_omega_cero_seal_btn):
+			_omega_cero_seal_btn.visible = false
+		return
+	if _omega_cero_seal_btn == null or not is_instance_valid(_omega_cero_seal_btn):
+		_omega_cero_seal_btn = Button.new()
+		_omega_cero_seal_btn.clip_text = true
+		_omega_cero_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+		_omega_cero_seal_btn.add_theme_color_override("font_color", Color(0.72, 0.6, 0.88))
+		_omega_cero_seal_btn.custom_minimum_size = Vector2(0, 60)
+		_omega_cero_seal_btn.pressed.connect(_on_omega_cero_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_omega_cero_seal_btn)
+			panel.move_child(_omega_cero_seal_btn, 0)
+	var pct: int = int(EvoManager.omega_cero_progress() * 100.0)
+	_omega_cero_seal_btn.text = EmojiToRichText.strip("[R] 🕳️ " + tr("BTN_OMEGA_CERO_SEAL") % [EvoManager.omega_cero_phi, Balance.OMEGA_CERO_PHI_TARGET, pct])
+	_omega_cero_seal_btn.disabled = not EvoManager.omega_cero_can_seal()
+	_omega_cero_seal_btn.visible = true
+
+func _on_omega_cero_seal_pressed() -> void:
+	EvoManager.omega_cero_seal()
+
+# ── REMISIÓN METABÓLICA: botón de activación (gate) ───────────────────────────
+func _update_remision_button() -> void:
+	if not EvoManager.remision_gate_ready():
+		if is_instance_valid(_remision_btn):
+			_remision_btn.visible = false
+		return
+	if _remision_btn == null or not is_instance_valid(_remision_btn):
+		_remision_btn = Button.new()
+		_remision_btn.clip_text = true
+		_remision_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_remision_btn.add_theme_color_override("font_color", Color(0.27, 0.87, 0.53))
+		_remision_btn.custom_minimum_size = Vector2(0, 70)
+		_remision_btn.pressed.connect(_on_remision_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_remision_btn)
+			panel.move_child(_remision_btn, 0)
+	_remision_btn.text = EmojiToRichText.strip("🌱 " + tr("BTN_REMISION"))
+	_remision_btn.visible = true
+
+func _on_remision_pressed() -> void:
+	if RunManager.run_closed or EvoManager.mutation_remision:
+		return
+	if is_instance_valid(_remision_btn):
+		_remision_btn.visible = false
+	EvoManager.activate_remision()
+
+# ── REMISIÓN METABÓLICA: botones ± de control de Ω (acción inmediata) ──────────
+func _update_remision_control_buttons() -> void:
+	var active: bool = EvoManager.mutation_remision and not RunManager.run_closed
+	if not active:
+		if is_instance_valid(_remision_up_btn):
+			_remision_up_btn.visible = false
+		if is_instance_valid(_remision_down_btn):
+			_remision_down_btn.visible = false
+		if is_instance_valid(_remision_wave):
+			_remision_wave.visible = false
+		return
+	if _remision_up_btn == null or not is_instance_valid(_remision_up_btn):
+		_remision_up_btn = _make_remision_ctl_btn(_on_remision_up_pressed)
+	if _remision_down_btn == null or not is_instance_valid(_remision_down_btn):
+		_remision_down_btn = _make_remision_ctl_btn(_on_remision_down_pressed)
+	var in_band: bool = EvoManager.remision_in_band()
+	var band_hint: String = "✓" if in_band else "…"
+	_remision_up_btn.text = EmojiToRichText.strip(tr("BTN_REMISION_UP") + "  " + band_hint)
+	_remision_down_btn.text = EmojiToRichText.strip(tr("BTN_REMISION_DOWN") + "  " + band_hint)
+	_remision_up_btn.visible = true
+	_remision_down_btn.visible = true
+	var panel := _right_panel()
+	if panel:
+		panel.move_child(_remision_up_btn, 0)
+		panel.move_child(_remision_down_btn, 1)
+	# Onda senoidal visual (se crea una sola vez, se reusa)
+	if _remision_wave == null or not is_instance_valid(_remision_wave):
+		_remision_wave = load("res://RemisionWaveControl.gd").new()
+		if panel:
+			panel.add_child(_remision_wave)
+	_remision_wave.visible = true
+	if panel and _remision_wave.get_parent() == panel:
+		panel.move_child(_remision_wave, 2)
+
+func _make_remision_ctl_btn(cb: Callable) -> Button:
+	var b := Button.new()
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+	b.add_theme_color_override("font_color", Color(0.27, 0.87, 0.53))
+	b.custom_minimum_size = Vector2(0, 56)
+	b.pressed.connect(cb)
+	var panel := _right_panel()
+	if panel:
+		panel.add_child(b)
+		panel.move_child(b, 0)
+	return b
+
+func _on_remision_up_pressed() -> void:
+	EvoManager.remision_nudge(1)
+
+func _on_remision_down_pressed() -> void:
+	EvoManager.remision_nudge(-1)
+
+# ── REMISIÓN METABÓLICA: botón de sello (Θ) ───────────────────────────────────
+func _update_remision_seal_button() -> void:
+	var active: bool = EvoManager.mutation_remision and not RunManager.run_closed
+	if not active:
+		if is_instance_valid(_remision_seal_btn):
+			_remision_seal_btn.visible = false
+		return
+	if _remision_seal_btn == null or not is_instance_valid(_remision_seal_btn):
+		_remision_seal_btn = Button.new()
+		_remision_seal_btn.clip_text = true
+		_remision_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(14))
+		_remision_seal_btn.add_theme_color_override("font_color", Color(0.27, 0.87, 0.53))
+		_remision_seal_btn.custom_minimum_size = Vector2(0, 60)
+		_remision_seal_btn.pressed.connect(_on_remision_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_remision_seal_btn)
+			panel.move_child(_remision_seal_btn, 0)
+	var pct: int = int(EvoManager.remision_progress() * 100.0)
+	_remision_seal_btn.text = EmojiToRichText.strip("🌸 " + tr("BTN_REMISION_SEAL") % pct)
+	_remision_seal_btn.disabled = not EvoManager.remision_can_seal()
+	_remision_seal_btn.visible = true
+
+func _on_remision_seal_pressed() -> void:
+	EvoManager.remision_seal()
+
+# ── CONTROL DE Ω (buff NG+): botones ± en runs normales ───────────────────────
+func _update_control_omega_buttons() -> void:
+	if not EvoManager.control_omega_available():
+		if is_instance_valid(_control_omega_up_btn):
+			_control_omega_up_btn.visible = false
+		if is_instance_valid(_control_omega_down_btn):
+			_control_omega_down_btn.visible = false
+		return
+	if _control_omega_up_btn == null or not is_instance_valid(_control_omega_up_btn):
+		_control_omega_up_btn = _make_remision_ctl_btn(_on_control_omega_up_pressed)
+	if _control_omega_down_btn == null or not is_instance_valid(_control_omega_down_btn):
+		_control_omega_down_btn = _make_remision_ctl_btn(_on_control_omega_down_pressed)
+	var off: float = StructuralModel.control_omega_offset
+	_control_omega_up_btn.text = EmojiToRichText.strip(tr("BTN_CONTROL_OMEGA_UP") % off)
+	_control_omega_down_btn.text = EmojiToRichText.strip(tr("BTN_CONTROL_OMEGA_DOWN") % off)
+	_control_omega_up_btn.visible = true
+	_control_omega_down_btn.visible = true
+	var panel := _right_panel()
+	if panel:
+		panel.move_child(_control_omega_up_btn, 0)
+		panel.move_child(_control_omega_down_btn, 1)
+
+func _on_control_omega_up_pressed() -> void:
+	EvoManager.control_omega_nudge(1)
+
+func _on_control_omega_down_pressed() -> void:
+	EvoManager.control_omega_nudge(-1)
 
 ## Botón "Buffs activos (N)" — reúne los buffs heredados (Legado/NG+/Cósmico) en un panel
 ## desplegable en vez de inundar el lap log al inicio de cada run.
@@ -1711,6 +1942,14 @@ func update_legacy_indicators() -> void:
 		var nec_tip := tr("CHIP_NECROSIS_TIP") % [EvoManager.necromasa, EvoManager.necrosis_mult(), EvoManager.necrosis_index() * 100.0, EvoManager.necrosis_toxicidad * 100.0]
 		var tox_col := Color(0.4, 0.5, 0.25).lerp(Color(0.7, 0.2, 0.2), EvoManager.necrosis_toxicidad)
 		_add_chip.call("Ν %.0f ×%.1f ☣%d%%" % [EvoManager.necromasa, EvoManager.necrosis_mult(), int(EvoManager.necrosis_toxicidad * 100.0)], nec_tip, tox_col)
+	if EvoManager.mutation_omega_cero:
+		var oc_tip := tr("CHIP_OMEGA_CERO_TIP") % [EvoManager.omega_cero_phi, Balance.OMEGA_CERO_PHI_TARGET, EvoManager.omega_cero_phi_mult(), EvoManager.omega_cero_omega]
+		_add_chip.call("Φ %.0f/%.0f" % [EvoManager.omega_cero_phi, Balance.OMEGA_CERO_PHI_TARGET], oc_tip, Color(0.72, 0.6, 0.88))
+	if EvoManager.mutation_remision:
+		var _rem_in: bool = EvoManager.remision_in_band()
+		var rem_tip := tr("CHIP_REMISION_TIP") % [EvoManager.remision_omega, EvoManager.remision_band_center(), int(EvoManager.remision_progress() * 100.0), BiosphereEngine.biomasa]
+		var rem_col := Color(0.27, 0.87, 0.53) if _rem_in else Color(0.85, 0.55, 0.3)
+		_add_chip.call("Θ %d%% · bio %.0f" % [int(EvoManager.remision_progress() * 100.0), BiosphereEngine.biomasa], rem_tip, rem_col)
 	if RunManager.is_memoria_oscura_active():
 		var mo_tip := tr("CHIP_MEMORIA_OSCURA_TIP")
 		if RunManager._has_permanent_dark_legacy():
@@ -1840,6 +2079,10 @@ func _ensure_fungal_bar_style(bar) -> void:
 func get_reactor_color() -> Color:
 	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
 		return Color(0.12, 0.0, 0.02)
+	if EvoManager.mutation_omega_cero:
+		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
+	if EvoManager.mutation_remision:
+		return Color(0.08, 0.72, 0.48)  # verde-agua vivo (floración)
 	if EvoManager.mutation_autolisis:
 		return Color(0.65, 0.04, 0.18)
 	if EvoManager.mutation_necrosis:

@@ -432,12 +432,25 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "funcion_pura",
 	},
+	"singularidad_perfecta": {
+		"name": "Singularidad Perfecta",
+		"desc": "Sellar PROTOCOLO OMEGA-CERO con 500+ Φ y Ω ≤ 0.01 (dejar correr la síntesis hasta el borde).",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "singularidad_perfecta",
+	},
 	"ruta_ascesis": {
 		"name": "Ascesis Profunda",
 		"desc": "Cerrar VACÍO HAMBRIENTO por renuncia absoluta (ASCESIS PROFUNDA).",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "event", "event_name": "run_closed",
 		"conditions": [{"key": "route", "op": "==", "value": "ASCESIS_PROFUNDA"}],
+	},
+	"remision_completa": {
+		"name": "Remisión Completa",
+		"desc": "Sellar REMISIÓN METABÓLICA: tras agotar todo colapso, el organismo aprendió a sanar.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "REMISIÓN METABÓLICA"}],
 	},
 	"ruta_reencarnacion": {
 		"name": "Reencarnación Consumada",

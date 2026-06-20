@@ -108,6 +108,62 @@ const NECROSIS_CATALYST_PER_LEVEL := 0.20    # +20% Ν por nivel (1 + nivel×0.2
 const NECROSIS_CATALYST_COST_BASE := 200.0   # costo en Ν del 1er nivel
 const NECROSIS_CATALYST_COST_GROWTH := 2.0   # ×costo por nivel comprado
 
+# ── PROTOCOLO OMEGA-CERO (final del árbol oscuro — síntesis de las 3 sub-rutas) ─
+# Desbloqueo en Banco Genético (12 PL) tras cerrar AUTOFAGIA + NECROSIS + ESCLEROCIO.
+# Loop activo que sintetiza los tres ecos: devour (autofagia) + Ω-combustible (necrosis)
+# + sello intencional por Φ (esclerocio). El hongo ejecuta los tres a la vez.
+const OMEGA_CERO_BIO_REQ          := 50.0    # biomasa mínima para activar dentro de MO
+const OMEGA_CERO_DEVOUR_REQ       := 5       # devours previos en MO requeridos (ya demostró depredar)
+const OMEGA_CERO_PHI_TARGET       := 300.0   # Φ necesaria para habilitar el sello
+const OMEGA_CERO_PHI_BASE         := 4.0     # Φ base por devour (antes del multiplicador por rigidez)
+const OMEGA_CERO_K                := 0.10    # numerador del phi_mult (0.10/Ω) — a Ω=0.10 mult=1.0
+const OMEGA_CERO_PHI_CAP          := 10.0    # tope del multiplicador de Φ por devour
+const OMEGA_CERO_OMEGA_START      := 0.10    # Ω inicial (heredado del clamp de MO)
+const OMEGA_CERO_OMEGA_FACTOR     := 0.82    # cada devour: Ω ×= esto (~12 devours a Ω≤0.01)
+const OMEGA_CERO_OMEGA_FLOOR      := 0.001   # Ω de cierre de emergencia (igual que necrosis)
+const OMEGA_CERO_DEVOUR_INTERVAL  := 6.0     # s entre devours automáticos
+const OMEGA_CERO_MONEY_BURST_MULT := 0.0     # devour no devuelve plata (evita loop compra→devour→recompra)
+const OMEGA_CERO_KERNEL_CAP       := 3.0     # tope del Núcleo Φ (phi_al_cierre / target) → intensidad del buff
+# Buff NG+ "Memoria Sináptica": término pasivo aditivo exp(k·(1−Ω))−1, acotado.
+const OMEGA_CERO_BUFF_K_BASE      := 3.5     # k base (escalado por el kernel logrado, cap KERNEL_CAP)
+const OMEGA_CERO_BUFF_CAP         := 50000.0 # tope del pasivo aditivo de Memoria Sináptica ($/s)
+# Logro "Singularidad Perfecta": sellar con Φ y Ω extremos (dejar correr el loop, no sellar al mínimo).
+const OMEGA_CERO_ACH_PHI          := 500.0   # Φ ≥ esto (doble del target)
+const OMEGA_CERO_ACH_OMEGA        := 0.01    # Ω ≤ esto al cerrar
+# Inanición: si el loop no puede devorar N ticks consecutivos, Φ empieza a decaer.
+const OMEGA_CERO_STARVE_GRACE     := 1       # ticks de gracia sin material antes de penalizar
+const OMEGA_CERO_PHI_DECAY_TICK   := 20.0   # Φ perdido por tick de inanición (post-gracia)
+const OMEGA_CERO_BATCH_SIZE       := 10      # upgrades devorados por tick (batch)
+const OMEGA_CERO_PHI_CLICK_AMP    := 0.5    # Φ acumulada amplifica click power durante la run (aditivo)
+
+# ── REMISIÓN METABÓLICA (última post-MO — sanación / floración) ──────────────
+# Desbloqueo en Banco Genético tras cerrar las 4 sub-rutas oscuras (incl. OMEGA-CERO).
+# Loop activo: Ω deriva sola hacia el colapso; el jugador la empuja con botones ±
+# para mantenerla dentro de una banda móvil. Dentro de banda la biomasa florece y
+# el contador Θ sube; fuera, la biomasa se marchita. Θ≥target → sello. Si la biomasa
+# cae bajo el piso, la run NO cierra: INVOLUCIONA de vuelta a Met. Oscuro (REMISIÓN
+# queda bloqueada esa run; el jugador debe elegir otra sub-ruta).
+const REMISION_BIO_GATE        := 150.0   # biomasa requerida en MO para abrir el gate
+const REMISION_OMEGA_START     := 0.30    # Ω inicial (centro de banda)
+const REMISION_OMEGA_DRIFT     := 0.015   # Ω cae sola por segundo (la "enfermedad" tira al colapso)
+const REMISION_NUDGE           := 0.03    # empuje de Ω por click de botón ±
+const REMISION_BAND_CENTER     := 0.30    # centro base de la banda objetivo
+const REMISION_BAND_AMP        := 0.12    # amplitud del desplazamiento senoidal del centro
+const REMISION_BAND_FREQ       := 0.15    # rad/s del desplazamiento del centro
+const REMISION_BAND_HALF       := 0.04    # medio ancho de la banda (dentro si |Ω−c(t)|≤esto)
+const REMISION_THETA_TARGET    := 60.0    # s continuos dentro de banda para armar el sello
+const REMISION_BLOOM_RATE      := 0.03    # +3%/s biomasa dentro de banda (compuesto)
+const REMISION_WITHER_RATE     := 0.05    # −5%/s biomasa fuera de banda
+const REMISION_THETA_DECAY     := 1.0     # Θ/s perdido fuera de banda (acumulás 1/s dentro — neto 0 al 50/50)
+const REMISION_BIO_FLOOR       := 30.0    # biomasa < esto → involución a Met. Oscuro
+const REMISION_OMEGA_MIN       := 0.01    # clamp inferior de la Ω controlada
+const REMISION_OMEGA_MAX       := 0.60    # clamp superior de la Ω controlada
+const REMISION_PL_DIVISOR      := 50.0    # bonus PL al cerrar = biomasa_final / esto (cap NG genérico)
+# Buff NG+ "Control de Ω": en runs normales habilita empujar Ω con cooldown (influencia gradual).
+const CONTROL_OMEGA_NUDGE      := 0.02    # empuje de Ω por pulso en runs normales
+const CONTROL_OMEGA_COOLDOWN   := 1.0     # cooldown del pulso (s)
+const CONTROL_OMEGA_MAX        := 0.15    # magnitud máxima del offset acumulado (influencia acotada)
+
 # ── Depredador: compra de tiempo del timer de inestabilidad ──────
 # (el máximo del timer vive en EvoManager.DEPREDADOR_INESTABILIDAD_MAX)
 const DEP_TIME_EXTENSION           := 10.0  # s que resta al timer cada compra
@@ -220,6 +276,8 @@ const PL_REWARDS: Dictionary = {
 	"ESCLEROCIO OSCURO":         6,
 	"AUTOFAGIA NECRÓTICA":        6,
 	"NECROSIS CONTROLADA":       5,
+	"PROTOCOLO OMEGA-CERO":      8,
+	"REMISIÓN METABÓLICA":       8,
 	"MENTE COLMENA DISTRIBUIDA": 8,
 	"DEPREDADOR DE REALIDADES":  12,
 	"COLAPSO DEPREDATORIO":      8,
@@ -249,6 +307,8 @@ const NG_CAPS: Dictionary = {
 	"ESCLEROCIO OSCURO":         8,
 	"AUTOFAGIA NECRÓTICA":        8,
 	"NECROSIS CONTROLADA":       8,
+	"PROTOCOLO OMEGA-CERO":      12,
+	"REMISIÓN METABÓLICA":       12,
 	"POLIMORFÍA TOTAL":          8,
 	"POLIMORFIA TOTAL":          8,
 	"DOMADOR DEL CAOS":          8,

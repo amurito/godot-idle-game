@@ -69,6 +69,10 @@ static func build_formula_text(_main: Node) -> String:
 
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		formula_main += " + [color=#ffcc00]re[/color]"
+	if LegacyManager.get_buff_value("memoria_sinaptica"):
+		formula_main += " + [color=#9966cc]ms[/color]"
+	if EvoManager.mutation_omega_cero:
+		formula_main += " + [color=#9966cc]φc[/color]"
 
 	if EconomyManager.cached_mu > 1.01 and UpgradeManager.level("cognitive") > 0:
 		formula_main = "[ " + formula_main + " ] · [color=#ff4dff]μ[/color]"
@@ -93,7 +97,7 @@ static func build_formula_text(_main: Node) -> String:
 	var plain_str: String = formula_main
 	for tag in ["[color=#ffcc00]","[color=#ff4dff]","[color=#44ee88]","[color=#bb44ff]",
 				"[color=#ffdd44]","[color=#8899ff]","[color=#ff44ff]","[color=#44ffaa]",
-				"[color=#ffaa44]","[color=#9933cc]","[color=#ffdd88]","[color=cyan]","[/color]"]:
+				"[color=#ffaa44]","[color=#9933cc]","[color=#9966cc]","[color=#ffdd88]","[color=cyan]","[/color]"]:
 		plain_str = plain_str.replace(tag, "")
 	var fLen := plain_str.length()
 	var fSize := 18
@@ -154,7 +158,13 @@ static func update_click_stats_panel(_main: Node) -> String:
 	var t := "[b]" + TranslationServer.translate("LAB_APORTE_ACTUAL") + "[/b]\n"
 	t += "[color=#cccccc]" + TranslationServer.translate("LAB_CLICK_PUSH_LINE") % push + "\n"
 	if StructuralModel.unlocked_d: t += TranslationServer.translate("LAB_TRABAJO_LINE") % EconomyManager.get_auto_income_effective() + "\n"
-	if StructuralModel.unlocked_e: t += TranslationServer.translate("LAB_TRUEQUE_LINE") % EconomyManager.get_trueque_income_effective() + "[/color]\n\n"
+	if StructuralModel.unlocked_e: t += TranslationServer.translate("LAB_TRUEQUE_LINE") % EconomyManager.get_trueque_income_effective() + "\n"
+	if LegacyManager.get_buff_value("memoria_sinaptica"):
+		var _kernel_a: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
+		var _k_eff_a: float = Balance.OMEGA_CERO_BUFF_K_BASE * _kernel_a
+		var _p_ms_a: float = min(exp(_k_eff_a * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
+		t += TranslationServer.translate("LAB_MS_APORTE_LINE") % _p_ms_a + "\n"
+	t += "[/color]\n\n"
 
 	t += "[b]" + TranslationServer.translate("LAB_DELTA_TOTAL") % ap.total + "[/b]\n"
 	if ap.total > 0:
@@ -192,6 +202,14 @@ static func update_click_stats_panel(_main: Node) -> String:
 
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		t += "re = +%.1f/s   " % (EconomyManager.get_click_power() * 0.10) + TranslationServer.translate("LAB_REDIRECCION") + "\n"
+	if LegacyManager.get_buff_value("memoria_sinaptica"):
+		var _kernel_b: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
+		var _k_eff_b: float = Balance.OMEGA_CERO_BUFF_K_BASE * _kernel_b
+		var _p_ms_b: float = min(exp(_k_eff_b * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
+		t += TranslationServer.translate("LAB_MS_LINE") % [_p_ms_b, _k_eff_b, StructuralModel.omega] + "\n"
+	if EvoManager.mutation_omega_cero:
+		var _phi_click: float = EvoManager.omega_cero_phi * Balance.OMEGA_CERO_PHI_CLICK_AMP
+		t += TranslationServer.translate("LAB_OC_PHI_CLICK") % _phi_click + "\n"
 
 	t += "\n\n--- " + TranslationServer.translate("LAB_MODELO_STRUCT") + " ---\n"
 	var n_struct := int(StructuralModel.get_effective_structural_n())
@@ -591,6 +609,18 @@ static func _build_run_end_lore(route: String) -> String:
 			"buffs": [TranslationServer.translate("LORE_NECROSIS_B1"), TranslationServer.translate("LORE_NECROSIS_B2"), TranslationServer.translate("LORE_NECROSIS_B3")],
 			"nerfs": [TranslationServer.translate("LORE_NECROSIS_N1"), TranslationServer.translate("LORE_NECROSIS_N2")]
 		},
+		"PROTOCOLO OMEGA-CERO": {
+			"emoji": "🕳️", "color": "#8a6fa8",
+			"lore": TranslationServer.translate("LORE_OMEGA_CERO_LORE"),
+			"buffs": [TranslationServer.translate("LORE_OMEGA_CERO_B1"), TranslationServer.translate("LORE_OMEGA_CERO_B2"), TranslationServer.translate("LORE_OMEGA_CERO_B3")],
+			"nerfs": [TranslationServer.translate("LORE_OMEGA_CERO_N1"), TranslationServer.translate("LORE_OMEGA_CERO_N2")]
+		},
+		"REMISIÓN METABÓLICA": {
+			"emoji": "🌿", "color": "#44dd88",
+			"lore": TranslationServer.translate("LORE_REMISION_LORE"),
+			"buffs": [TranslationServer.translate("LORE_REMISION_B1")],
+			"nerfs": [TranslationServer.translate("LORE_REMISION_N1")]
+		},
 	}
 
 	var data = lore_data.get(route, null)
@@ -605,6 +635,14 @@ static func _build_run_end_lore(route: String) -> String:
 	if route == "NECROSIS CONTROLADA" and LegacyManager.homeorhesis_necrosis_done:
 		data.buffs = data.buffs.duplicate()
 		data.buffs.append(TranslationServer.translate("LORE_NECROSIS_CROSS_B"))
+
+	if route == "PROTOCOLO OMEGA-CERO" and LegacyManager.omega_remision_done:
+		data.buffs = data.buffs.duplicate()
+		data.buffs.append(TranslationServer.translate("LORE_OMEGA_CERO_CROSS_B"))
+
+	if route == "REMISIÓN METABÓLICA" and LegacyManager.omega_remision_done:
+		data.buffs = data.buffs.duplicate()
+		data.buffs.append(TranslationServer.translate("LORE_REMISION_CROSS_B"))
 
 	var t := ""
 	t += "[color=%s][b]%s %s[/b][/color]\n\n" % [data.color, data.emoji, route]
@@ -693,7 +731,20 @@ static func build_genome_text() -> String:
 		var mo_bar: String = "[" + "X".repeat(mo_filled) + ".".repeat(10 - mo_filled) + "]"
 		t += "[color=#9955dd]  ⏳ " + mo_bar + " %.1fs/%.0fs[/color]\n" % [EvoManager.met_oscuro_timer, mo_thresh]
 
-	if EvoManager.mutation_met_oscuro:
+	if EvoManager.mutation_remision:
+		t += "[b][color=#44dd88]🌱 " + TranslationServer.translate("GENOME_REMISION_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + TranslationServer.translate("GENOME_REMISION_BUFF") + "[/color]\n"
+		t += "[color=#ff4444]" + TranslationServer.translate("GENOME_REMISION_NERF") + "[/color]\n"
+		var _in_band: bool = EvoManager.remision_in_band()
+		var _band_c: float = EvoManager.remision_band_center()
+		var _band_col: String = AccessibilityManager.cok_hex() if _in_band else AccessibilityManager.cno_hex()
+		t += "[color=%s]Ω = %.3f  ·  banda [%.2f–%.2f][/color]\n" % [_band_col, EvoManager.remision_omega, _band_c - Balance.REMISION_BAND_HALF, _band_c + Balance.REMISION_BAND_HALF]
+		t += "[color=#44dd88]Θ = %d%%  ·  biomasa %.0f[/color]\n" % [int(EvoManager.remision_progress() * 100.0), BiosphereEngine.biomasa]
+	elif EvoManager.mutation_omega_cero:
+		t += "[b][color=#9900ff]⬛ " + TranslationServer.translate("GENOME_OC_TITLE") + "[/color][/b]\n"
+		t += "[color=#00ff00]" + TranslationServer.translate("GENOME_OC_BUFF") + "[/color]\n"
+		t += "[color=#9966cc]Φ = %.0f / %.0f[/color]\n" % [EvoManager.omega_cero_phi, Balance.OMEGA_CERO_PHI_TARGET]
+	elif EvoManager.mutation_met_oscuro:
 		if EvoManager.mutation_autolisis:
 			t += "[b][color=#bb1133]🔥 " + TranslationServer.translate("GENOME_AUTOLISIS_TITLE") + "[/color][/b]\n"
 			t += "[color=#00ff00]" + TranslationServer.translate("GENOME_AUTOLISIS_BUFF") + "[/color]\n"
@@ -715,7 +766,11 @@ static func build_genome_text() -> String:
 		t += "\n[color=gray]• " + TranslationServer.translate("GENOME_HIPERAS_LATENTE") + "[/color]"
 
 	var _route_prefix: String = TranslationServer.translate("MUT_ROUTE_PREFIX") + ": "
-	if EvoManager.mutation_met_oscuro:
+	if EvoManager.mutation_remision:
+		t += "\n🌱 " + _route_prefix + TranslationServer.translate("MUT_REMISION")
+	elif EvoManager.mutation_omega_cero:
+		t += "\n⬛ " + _route_prefix + TranslationServer.translate("MUT_OMEGA_CERO")
+	elif EvoManager.mutation_met_oscuro:
 		t += "\n🌑 " + _route_prefix + TranslationServer.translate("MUT_MET_OSCURO")
 	elif EvoManager.mutation_depredador:
 		t += "\n☠️ " + _route_prefix + TranslationServer.translate("MUT_DEPREDADOR")
@@ -765,7 +820,7 @@ static func build_mutation_status_text() -> String:
 		t += buff + " " + TranslationServer.translate("MSTAT_RED_B1") + "[/color]\n"
 		t += nerf + " " + TranslationServer.translate("MSTAT_RED_N1") + "[/color]\n"
 
-	if EvoManager.mutation_met_oscuro:
+	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_remision:
 		t += "[b][color=#8844aa]🌑 " + TranslationServer.translate("MSTAT_MO_TITLE") + "[/color][/b]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_MO_B1") + "[/color]\n"
 		if EvoManager.mutation_autolisis:
@@ -827,6 +882,26 @@ static func build_mutation_status_text() -> String:
 			var passive_prev: float = EvoManager.necrosis_passive_rate()
 			t += "[color=#99bb55]  Ν/click ≈ %.1f  ·  Ν/s ≈ %.2f[/color]\n" % [click_prev, passive_prev]
 			t += "[color=#88aa44]  " + TranslationServer.translate("MSTAT_NECROSIS_HINT") + "[/color]\n"
+		elif EvoManager.mutation_omega_cero:
+			var oc_prog: float = EvoManager.omega_cero_progress()
+			var oc_pct: int = int(oc_prog * 100.0)
+			var oc_filled: int = int(oc_prog * 20.0)
+			var oc_bar: String = "█".repeat(oc_filled) + "░".repeat(20 - oc_filled)
+			var oc_mult: float = EvoManager.omega_cero_phi_mult()
+			var oc_next: float = max(0.0, Balance.OMEGA_CERO_DEVOUR_INTERVAL - EvoManager.omega_cero_devour_timer)
+			t += "\n[b][color=#8a6fa8]🕳️ " + TranslationServer.translate("MSTAT_OMEGA_CERO_TITLE") + "[/color][/b]\n"
+			t += "[color=#9a7ab8][%s] %d%%[/color] [color=white]Φ %.0f/%.0f[/color]\n" % [oc_bar, oc_pct, EvoManager.omega_cero_phi, Balance.OMEGA_CERO_PHI_TARGET]
+			t += "[color=#b399c0]" + TranslationServer.translate("MSTAT_OMEGA_CERO_STATUS") % [EvoManager.omega_cero_devour_count, oc_mult, EvoManager.omega_cero_omega] + "[/color]\n"
+			t += "[color=#9a7ab8]" + TranslationServer.translate("MSTAT_OMEGA_CERO_NEXT") % [oc_next, Balance.OMEGA_CERO_DEVOUR_INTERVAL] + "[/color]\n"
+			var starve: int = EvoManager._omega_cero_starve_ticks
+			if starve > Balance.OMEGA_CERO_STARVE_GRACE:
+				t += "[color=#ff4444]  " + TranslationServer.translate("MSTAT_OMEGA_CERO_STARVING") % (starve - Balance.OMEGA_CERO_STARVE_GRACE) + "[/color]\n"
+			else:
+				t += "[color=#88ff88]  " + TranslationServer.translate("MSTAT_OMEGA_CERO_FEED") + "[/color]\n"
+			if EvoManager.omega_cero_can_seal():
+				t += "[color=#ffdd66]  " + TranslationServer.translate("MSTAT_OMEGA_CERO_SEAL_READY") + "[/color]\n"
+			else:
+				t += "[color=#888888]  " + TranslationServer.translate("MSTAT_OMEGA_CERO_SEAL_WAIT") % Balance.OMEGA_CERO_PHI_TARGET + "[/color]\n"
 		else:
 			var bio_now: float = BiosphereEngine.biomasa
 			var bio_pct: int = int(clamp(bio_now / 100.0 * 100.0, 0.0, 100.0))
@@ -836,7 +911,7 @@ static func build_mutation_status_text() -> String:
 			t += "\n[color=#aa66cc]" + TranslationServer.translate("MSTAT_MO_SAT") % pl_label + "[/color]\n"
 			t += "[color=#8844aa][%s][/color] [color=white]%.0f / 100[/color]\n" % [bio_bar, bio_now]
 			t += "[color=#666688]  " + TranslationServer.translate("MSTAT_MO_SEAL_HINT") + "[/color]\n"
-	elif EvoManager.mutation_depredador:
+	elif EvoManager.mutation_depredador and not EvoManager.mutation_remision:
 		t += "[b][color=#ff0055]☠️ " + TranslationServer.translate("MSTAT_DEP_TITLE") + "[/color][/b]\n"
 		t += buff + " " + TranslationServer.translate("MSTAT_DEP_B1") + "[/color]\n"
 		var dev: int = EvoManager.met_oscuro_devoured_count

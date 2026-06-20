@@ -588,6 +588,10 @@ func _on_logic_tick():
 			EvoManager.process_autolisis(dt)
 		if EvoManager.mutation_necrosis:
 			EvoManager.process_necrosis(dt)
+		if EvoManager.mutation_omega_cero:
+			EvoManager.process_omega_cero(dt)
+		if EvoManager.mutation_remision:
+			EvoManager.process_remision(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)
@@ -622,7 +626,8 @@ func _on_logic_tick():
 		EvoManager.mutation_symbiosis,
 		EvoManager.mutation_red_micelial,
 		EvoManager.mutation_parasitism,
-		EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION
+		EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION,
+		EvoManager.mutation_remision
 	)
 
 	# 4) Actualizar valor del reactor
@@ -686,6 +691,11 @@ func _on_logic_tick():
 	if EvoManager.mutation_necrosis:
 		StructuralModel.omega = EvoManager.necrosis_omega
 		StructuralModel.omega_min = min(StructuralModel.omega_min, EvoManager.necrosis_omega)
+
+	# PROTOCOLO OMEGA-CERO: Ω rigidiza con cada devour (mismo motivo que necrosis: tras el clamp de MO).
+	if EvoManager.mutation_omega_cero:
+		StructuralModel.omega = EvoManager.omega_cero_omega
+		StructuralModel.omega_min = min(StructuralModel.omega_min, EvoManager.omega_cero_omega)
 
 	# FLOORS DE LEGADO � re-aplicados aqu� porque el c�lculo de omega con e_effective
 	# (paso 8) sobreescribe los floors aplicados en StructuralModel.update_runtime()
@@ -771,9 +781,11 @@ func _on_ui_tick():
 	)
 
 	# Update structural metrics panel (Phase 4)
+	# Durante REMISIÓN el omega visible es el controlado por la ruta, no el clampeado de MO.
+	var _display_omega: float = EvoManager.remision_omega if EvoManager.mutation_remision else StructuralModel.omega
 	UIManager.update_structural_metrics(
 		StructuralModel.epsilon_runtime,
-		StructuralModel.omega,
+		_display_omega,
 		StructuralModel.persistence_dynamic,
 		UpgradeManager.level("accounting")
 	)
@@ -1116,6 +1128,36 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_omega_cero:
+				if kc == KEY_R and EvoManager.omega_cero_can_seal():
+					EvoManager.omega_cero_seal()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_remision:
+				match kc:
+					KEY_W:
+						EvoManager.remision_nudge(1)
+						UIManager.update_ng_plus_buttons()
+						get_viewport().set_input_as_handled()
+					KEY_S:
+						EvoManager.remision_nudge(-1)
+						UIManager.update_ng_plus_buttons()
+						get_viewport().set_input_as_handled()
+					KEY_R:
+						if EvoManager.remision_can_seal():
+							EvoManager.remision_seal()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+			elif EvoManager.control_omega_available():
+				match kc:
+					KEY_W:
+						EvoManager.control_omega_nudge(1)
+						UIManager.update_ng_plus_buttons()
+						get_viewport().set_input_as_handled()
+					KEY_S:
+						EvoManager.control_omega_nudge(-1)
+						UIManager.update_ng_plus_buttons()
+						get_viewport().set_input_as_handled()
 
 		# DEBUG — Activar rutas post-trascendencia al vuelo (solo en debug build)
 		if OS.is_debug_build():

@@ -242,6 +242,24 @@
   }
   .col-colapso-ctrl .node-label { color: #ff9966; font-size: 0.54rem; }
 
+  /* ÁRBOL OSCURO — sub-rutas de Met. Oscuro (familia COLAPSO) */
+  .col-oscuro .circle {
+    background: radial-gradient(circle, #1a0820, #100410);
+    border-color: #8844aa;
+    box-shadow: 0 0 14px rgba(140,60,180,0.45);
+  }
+  .col-oscuro .node-label { color: #bb77dd; }
+  .col-oscuro .node-tag { color: #6a4488; }
+
+  /* REDENCIÓN — REMISIÓN (sanación, verde-teal del reactor) */
+  .col-redencion .circle {
+    background: radial-gradient(circle, #06231a, #03130d);
+    border-color: #18b87a;
+    box-shadow: 0 0 16px rgba(24,184,122,0.5), inset 0 0 10px rgba(24,184,122,0.15);
+  }
+  .col-redencion .node-label { color: #4fd9a0; }
+  .col-redencion .node-tag { color: #2a7a58; }
+
   /* ── TOOLTIP ── */
   .node:hover .tooltip { display: block; }
   .tooltip {
@@ -347,13 +365,14 @@
 <body>
 
 <h1>ÁRBOL DE EVOLUCIONES</h1>
-<div class="subtitle">HYPHAE: GENESIS · SISTEMA COMPLETO · v1.0.0.10</div>
+<div class="subtitle">HYPHAE: GENESIS · SISTEMA COMPLETO · v1.0.2.0</div>
 
 <div class="legend" style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px 20px;max-width:880px;margin:0 auto 38px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;letter-spacing:1px;color:#8899bb;">
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#9966cc;box-shadow:0 0 8px #9966cc;vertical-align:middle;margin-right:7px;"></i>NÚCLEO</span>
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#66aadd;box-shadow:0 0 8px #66aadd;vertical-align:middle;margin-right:7px;"></i>ORDEN</span>
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#55cc88;box-shadow:0 0 8px #55cc88;vertical-align:middle;margin-right:7px;"></i>BIOLOGÍA</span>
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#ee7744;box-shadow:0 0 8px #ee7744;vertical-align:middle;margin-right:7px;"></i>COLAPSO</span>
+  <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#18b87a;box-shadow:0 0 8px #18b87a;vertical-align:middle;margin-right:7px;"></i>REDENCIÓN</span>
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#aa88ff;box-shadow:0 0 8px #aa88ff;vertical-align:middle;margin-right:7px;"></i>POST-TRASCENDENCIA</span>
   <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#dd77cc;box-shadow:0 0 8px #dd77cc;vertical-align:middle;margin-right:7px;"></i>SECRETO / FINAL</span>
 </div>
@@ -597,9 +616,8 @@ Transición Fase A→B:
         <div class="t-title">METABOLISMO OSCURO</div>
         <span class="t-ng">PREREQUISITO: DEPREDADOR activo</span>
 <span class="t-cond">
-+ Devours acumulados ≥ 3
-+ Dinero &lt; $1.000
-+ Biomasa ≥ 25
++ Devours acumulados ≥ 10
++ Biomasa ≥ 50
 + Mantener 15s (9s c/ Árbol Acelerado)</span>
 
 <span class="t-effect">EFECTOS:
@@ -609,7 +627,8 @@ Transición Fase A→B:
 · Ω bloqueado en 0.10 (fragilidad total)</span>
 
 <span class="t-pl">PL al cerrar: 4</span>
-<span class="t-ng">Cierre: Bio≥100 O Dinero≥$1M</span>
+<span class="t-ng">Cierre: Bio≥100 O Dinero≥$1M
+PORTAL → ÁRBOL OSCURO (5 sub-rutas, ver panel inferior)</span>
       </div>
     </div>
 
@@ -957,6 +976,122 @@ CONDICIONES:
   </div><!-- /tree -->
 </div><!-- /tree-wrap -->
 
+<!-- ══════════════ ÁRBOL OSCURO — sub-rutas de Metabolismo Oscuro ══════════════ -->
+<div class="tras-gate" style="border-color:#6a2a8a; max-width:1000px; margin-top:40px;">
+  <h3 style="color:#bb77dd;">🌑 ÁRBOL OSCURO — SUB-RUTAS DE METABOLISMO OSCURO</h3>
+  <p style="text-align:center; font-size:0.66rem; color:#778; font-family:'IBM Plex Mono',monospace; margin:-4px auto 22px; max-width:760px; line-height:1.6;">
+    Se activan DENTRO de Metabolismo Oscuro (no son rutas post-trascendencia). Las cuatro primeras son familia COLAPSO; REMISIÓN inaugura la familia REDENCIÓN. OMEGA-CERO requiere cerrar las 3 anteriores; REMISIÓN, las 4.
+  </p>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:18px 10px;">
+
+    <div class="node col-oscuro" id="n-esclerocio" style="width:120px;">
+      <div class="circle">🌰</div>
+      <div class="node-label">ESCLEROCIO OSCURO</div>
+      <div class="node-tag">[COLAPSO]</div>
+      <div class="tooltip">
+        <div class="t-title">ESCLEROCIO OSCURO</div>
+        <span class="t-cond">GATE (dentro de MO):
+· Devorados ≥ 30
+· Biomasa ≥ 50
+· ε_runtime &lt; 0.25</span>
+
+<span class="t-effect">Cápsula de dormancia. Otorga
+SEMILLA DURMIENTE (Memoria Oscura):
++15% bio, ε resiste, −10% threshold MO
+en TODAS las runs mientras haya carga.</span>
+
+<span class="t-pl">PL al cerrar: 6 (NG+ hasta 8)</span>
+<span class="t-ng">CRUCE → Panspermia Negra:
+desbloquea SEMILLA CÓSMICA OSCURA (×3 pasivo)</span>
+      </div>
+    </div>
+
+    <div class="node col-oscuro" id="n-autofagia" style="width:120px;">
+      <div class="circle">🩸</div>
+      <div class="node-label">AUTOFAGIA NECRÓTICA</div>
+      <div class="node-tag">[COLAPSO]</div>
+      <div class="tooltip">
+        <div class="t-title">AUTOFAGIA NECRÓTICA</div>
+        <span class="t-cond">GATE: Biomasa ≥ 50 + ≥ 5 niveles de upgrades</span>
+
+<span class="t-effect">Loop activo: cada 30s→5s devora el
+upgrade más caro → burst de $ y bio.
+Click ×5, Pasivo ×2. Recomprás para
+realimentar. Enzimas (velocidad) +
+Fagocitosis (2º/3º devour).</span>
+
+<span class="t-pl">PL al cerrar: 6 (NG+ hasta 8)</span>
+<span class="t-ng">Cierre: COLAPSAR (≥40 devours) o agotamiento.
+Buffs: Catabolismo Heredado, Ciclo Catabólico</span>
+      </div>
+    </div>
+
+    <div class="node col-oscuro" id="n-necrosis" style="width:120px;">
+      <div class="circle">💀</div>
+      <div class="node-label">NECROSIS CONTROLADA</div>
+      <div class="node-tag">[COLAPSO]</div>
+      <div class="tooltip">
+        <div class="t-title">NECROSIS CONTROLADA</div>
+        <span class="t-cond">GATE: Biomasa ≥ 50 + flujo total ≥ $200/s</span>
+
+<span class="t-effect">Doble economía: el flujo genera
+NECROMASA (Ν) por click. Con Ν comprás
+Agentes (Ω ×0.72 c/u). Renta ×(0.10/Ω),
+cap ×25. Gestionás TOXICIDAD o purga.</span>
+
+<span class="t-pl">PL al cerrar: 5 (NG+ hasta 8)</span>
+<span class="t-ng">Cierre: Ω ≤ 0.001. 100% anti-AFK.
+Buffs: Apoptosis Heredada, Plasticidad Terminal</span>
+      </div>
+    </div>
+
+    <div class="node col-oscuro" id="n-omega-cero" style="width:120px;">
+      <div class="circle">⬛</div>
+      <div class="node-label">PROTOCOLO OMEGA-CERO</div>
+      <div class="node-tag">[COLAPSO · permiso 12 PL]</div>
+      <div class="tooltip">
+        <div class="t-title">PROTOCOLO OMEGA-CERO</div>
+        <span class="t-ng">PERMISO (Banco, 12 PL): cerrar
+AUTOFAGIA + NECROSIS + ESCLEROCIO</span>
+<span class="t-cond">GATE: Biomasa ≥ 50 + 5 devours previos</span>
+
+<span class="t-effect">Síntesis de las 3 anteriores. Genera Φ
+rigidizando Ω. Sello a Φ ≥ 300. El Núcleo Φ
+logrado determina la potencia del buff.</span>
+
+<span class="t-pl">PL al cerrar: 8 (NG+ hasta 12)</span>
+<span class="t-ng">Buffs: Memoria Sináptica, Síntesis Vital
+Logro Mythic: Φ≥500 ∧ Ω≤0.01</span>
+      </div>
+    </div>
+
+    <div class="node col-redencion" id="n-remision" style="width:120px;">
+      <div class="circle">🌿</div>
+      <div class="node-label">REMISIÓN METABÓLICA</div>
+      <div class="node-tag">[REDENCIÓN · permiso 15 PL]</div>
+      <div class="tooltip">
+        <div class="t-title">REMISIÓN METABÓLICA</div>
+        <span class="t-ng">PERMISO (Banco, 15 PL): cerrar las
+4 sub-rutas oscuras</span>
+<span class="t-cond">GATE: Biomasa ≥ 150 en MO</span>
+
+<span class="t-effect">El final luminoso. Ω deriva al colapso;
+la empujás (W/S) para mantenerla en una
+BANDA móvil → la biomasa florece +3%/s.
+Sello a Θ ≥ 60s dentro de banda.</span>
+
+<span class="t-effect">INVOLUCIÓN: si bio &lt; 30, volvés a
+Met. Oscuro — ir atrás para tomar impulso.</span>
+
+<span class="t-pl">PL al cerrar: 8 (NG+ hasta 12)</span>
+<span class="t-ng">Buff: Control de Ω (empuje manual +producción).
+Logro Mythic: Remisión Completa</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- TRASCENDENCIA GATE INFO -->
 <div class="tras-gate">
   <h3>PUERTA DE TRASCENDENCIA</h3>
@@ -976,7 +1111,7 @@ CONDICIONES:
     <div class="fam fam-col">
       <div class="fam-title">🔥 COLAPSO</div>
       <div class="fam-routes">
-        HIPERASIMILACIÓN<br>DEPREDADOR DE REALIDADES<br>METABOLISMO OSCURO
+        HIPERASIMILACIÓN<br>DEPREDADOR DE REALIDADES<br>METABOLISMO OSCURO<br><span style="color:#bb77dd;">↳ ESCLEROCIO OSCURO<br>↳ AUTOFAGIA NECRÓTICA<br>↳ NECROSIS CONTROLADA<br>↳ PROTOCOLO OMEGA-CERO<br></span><span style="color:#4fd9a0;">↳ REMISIÓN METABÓLICA (redención)</span>
       </div>
     </div>
   </div>

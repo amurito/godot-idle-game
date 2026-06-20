@@ -1,5 +1,154 @@
 # CHANGELOG — HYPHAE: genesis
 
+## [v1.0.2.0] — "génesis" — 2026-06-18
+
+Cierre del **árbol oscuro**: con REMISIÓN METABÓLICA, las cuatro sub-rutas de Metabolismo Oscuro están completas. Esta versión consolida todo el contenido de las v1.0.1.x (que nunca llegó a itch) más la ruta culminante.
+
+### Nuevo contenido
+
+#### REMISIÓN METABÓLICA — el final luminoso del árbol oscuro
+Cuarta y última salida de Met. Oscuro, y la culminación de todo el árbol. Se desbloquea en el Banco Genético (permiso **`remision_metabolica`, 15 PL**) tras haber **cerrado las cuatro rutas oscuras** (AUTOFAGIA NECRÓTICA, NECROSIS CONTROLADA, ESCLEROCIO OSCURO, PROTOCOLO OMEGA-CERO). Gate en-run: `biomasa≥150` en MO.
+
+Tras probar todas las formas de colapsar, queda una sola por aprender: **sanar**. El loop invierte la lógica de las rutas previas — en vez de empujar Ω al abismo, el jugador la mantiene viva.
+
+- **Loop de banda activa**: Ω **deriva sola hacia el colapso** (`−0.015/s`). El jugador la empuja con `±` (teclas **W/S**) para mantenerla **dentro de una banda que oscila** (centro senoidal, medio ancho 0.04). **Dentro** → la biomasa florece `+3%/s` (compuesto) y Θ sube; **fuera** → se marchita `−5%/s` y Θ decae.
+- **Sello a Θ ≥ 60s** continuos dentro de banda (tecla **R**).
+- **INVOLUCIÓN** (mecánica nueva): si la `biomasa < 30`, la run **vuelve a Metabolismo Oscuro sin derrota** — REMISIÓN queda bloqueada esa run y el jugador elige otra sub-ruta. *"Ir para atrás para tomar impulso."* Patrón reutilizable para futuras transmutaciones.
+- **Guía visual** (`RemisionWaveControl`): grafica la banda objetivo + tu línea de Ω, con colores reactivos (verde dentro / rojo fuera) y marcador "AHORA".
+
+Buffs NG+:
+- **Control de Ω** (gratis al cerrar la 1ª vez): empuje manual de Ω `±0.02` disponible en **todas las runs normales** (W/S + botones, cooldown 1s, offset acotado `±0.15`). El offset positivo además **amplifica la producción pasiva hasta +30%**.
+- **Síntesis Vital** (cross OMEGA-CERO ↔ REMISIÓN, cualquier orden, 8 PL): ahora **el lado simétrico también lo cierra** (cerrar REMISIÓN habiendo cerrado OMEGA-CERO lo otorga). Click + pasivo `×2.0` cuando `Ω<0.20` Y `biomasa≥80`.
+
+Logro Mythic **"Remisión Completa"**. Símbolo de ruta: **Θ**.
+
+---
+
+### Balance
+
+- **REMISIÓN — wither rate** `0.02 → 0.05`: la involución llega en ~16s (antes ~41s), menos castigo de espera muerta al perder la banda.
+- **REMISIÓN — Θ con decaimiento** en vez de reset duro: salir de banda un frame ya no borra todo el progreso de sello (`maxf(Θ − 1.0·dt, 0)`).
+- **OMEGA-CERO — Φ por click** (`φc`) `5 → 0.5`: el término aditivo estaba 10× sobredimensionado.
+- **OMEGA-CERO — burst de $ por devour** `×2 → ×0`: el loop se sostiene con Φ, no con dinero (evita que el cierre por $ corte la run).
+- **OMEGA-CERO — bonus NG** `Φ/10 → Φ/50`: alinea el legado con el resto de las rutas.
+
+---
+
+### Correcciones
+
+- **REMISIÓN — reactor con color propio** (verde sano): antes heredaba el color de Depredador / MO.
+- **REMISIÓN — Ω en el panel estructural**: mostraba el `0.10` clampeado de MO en vez de la Ω controlada por la ruta.
+- **REMISIÓN — efectos de MO y Depredador ocultos**: el bloque "Efectos mutacionales activos" mostraba los de Met. Oscuro / Depredador durante la ruta.
+- **REMISIÓN — buff Control de Ω sin efecto**: el binding W/S solo existía en la run de REMISIÓN, no en runs normales con el buff; y el empuje no tenía impacto visible hasta propagarse por ε. Ahora W/S funciona en runs normales y el offset toca la producción al instante.
+- **REMISIÓN — toast de desbloqueo consolidado**: dos toasts se pisaban entre sí; ahora un solo mensaje lista todo lo desbloqueado al cerrar (Control de Ω + Síntesis Vital).
+- **REMISIÓN — lore de cierre**: faltaba el texto de cierre de la ruta en el genoma.
+- **OMEGA-CERO — genoma**: durante la ruta el panel mostraba el estado de Met. Oscuro en vez del de OMEGA-CERO.
+- **Banco Genético — locale**: la etiqueta del permiso de REMISIÓN no pasaba por `tr()`.
+
+---
+
+## [v1.0.1.5] — 2026-06-12
+
+### Nuevo contenido
+
+#### AUTOFAGIA NECRÓTICA — sub-ruta de Metabolismo Oscuro
+Nueva salida de Met. Oscuro (botón naranja `[IRREVERSIBLE]`). Gate: `biomasa≥50` + `upgrades comprados≥5`.
+
+Loop activo anti-AFK: cada N segundos el sistema devora el upgrade **más caro**. Cada devour otorga un burst de `$` y biomasa escalado al costo del upgrade. Las compras **permanecen abiertas** durante la autólisis — la dinámica es: juntar $ → recomprar upgrades caros → devour con burst mayor → repetir.
+
+Mejoras comprables durante la ruta (costo en biomasa + dinero):
+- **Enzimas Líticas** (máx 5): reduce el intervalo entre devours (hasta 5s mínimo).
+- **Fagocitosis Doble** (máx 5): chance de 2° devour en el mismo tick. A 5/5 = 100% → se agrega un 3° roll (cap 3 devours/tick).
+
+Cierres: voluntario (`COLAPSAR NÚCLEO`, mín. 3 devours) o por agotamiento de upgrades.
+
+Buffs NG+:
+- **Catabolismo Heredado** (gratis al cerrar la 1ª vez): `+10 bio/nivel` al inicio de cada run (máx 3 niveles, 4 PL c/u a partir del 2°). Acelera el acceso a mutaciones tempranas.
+- **Ciclo Catabólico** (cross: cerrar AUTOFAGIA → DEPREDADOR en ese orden, 8 PL): `×1.5 bio` en **todos** los devours de ambas rutas.
+
+Logro Mythic **"Autofagia Perfecta"**: cerrar con ≥15 devours + Enzimas Líticas 5/5 + Fagocitosis 5/5.
+
+---
+
+#### PROTOCOLO OMEGA-CERO — final del árbol oscuro
+Tercera salida nueva de Met. Oscuro (botón gris violáceo `[IRREVERSIBLE]`). Es la culminación del árbol: **se desbloquea en el Banco Genético (12 PL) tras haber cerrado AUTOFAGIA NECRÓTICA, NECROSIS CONTROLADA y ESCLEROCIO OSCURO** (en distintas runs). Gate en-run: `biomasa≥50` + 5 devours previos en MO.
+
+Loop activo que **sintetiza las tres rutas oscuras anteriores**:
+- *Eco autolítico*: cada 6s devora el upgrade más caro → genera **Φ (Phi)**, el recurso central. Las compras siguen abiertas (recomprar para realimentar).
+- *Eco necrótico*: cada devour rigidiza Ω (`×0.82`). El Φ por devour escala con la rigidez (`0.10/Ω`, cap ×10): cuanto más bajo Ω, más Φ.
+- *Eco escleroidal*: el cierre es intencional — botón **SELLAR PROTOCOLO** (`[R]`) disponible al alcanzar 100 Φ. Sellar antes vs. dejar correr el loop para más potencia es la decisión central.
+
+El **Núcleo Φ** logrado al sellar determina la intensidad del buff NG+ (no es fijo: se juega mejor, se obtiene más).
+
+Buffs NG+:
+- **Memoria Sináptica** (gratis al sellar la 1ª vez): término pasivo aditivo `exp(k·(1−Ω))−1` acotado. Inerte en runs normales (Ω alto → ≈0), explosivo en el árbol oscuro (Ω→0). La intensidad `k` escala con el mejor Núcleo Φ logrado.
+- **Síntesis Vital** (cross: cerrar OMEGA-CERO ↔ REMISIÓN METABÓLICA en cualquier orden, 8 PL): click + pasivo `×2.0` cuando `Ω<0.20` Y `biomasa≥80` simultáneas. *(Placeholder activo; REMISIÓN se implementará más adelante.)*
+
+Logro Mythic **"Singularidad Perfecta"**: sellar con 200+ Φ y Ω ≤ 0.01 (dejar correr la síntesis hasta el borde).
+
+---
+
+#### NECROSIS CONTROLADA — sub-ruta de Metabolismo Oscuro
+Segunda salida nueva de Met. Oscuro (botón verde cadavérico `[IRREVERSIBLE]`). Gate: `biomasa≥50` + `flujo total≥200`.
+
+Doble economía: el flujo real genera **Necromasa (Ν)** por click y por pasivo. Con Ν se compran **Agentes Necróticos**, cada uno multiplica `Ω × 0.7`. El multiplicador de renta escala como `necrosis_mult = 0.10 / Ω` (capeado en ×25 cerca de Ω=0.004). La ruta termina cuando Ω llega a 0.001.
+
+Sin clicks → sin Ν → sin progreso. 100% anti-AFK.
+
+Capa de gestión — **Toxicidad**: acumulada por compra de Agentes. Superar el umbral activa una **purga de Agentes** (pierde varios de un golpe). Hay que gestionarla comprando el **Catalizador Necrótico** (reduce toxicidad).
+
+Buffs NG+:
+- **Apoptosis Heredada** (gratis al cerrar la 1ª vez): click+pasivo `×1.5` cuando `Ω<0.30`. Bonus de entrada al late game de la ruta.
+- **Plasticidad Terminal** (cross: HOMEORHESIS → NECROSIS en distintas runs, 8 PL): `×1.5` income cuando `Ω>0.55` O `Ω<0.10`. Premia ambos extremos.
+
+Logro Mythic **"Función Pura"**: cerrar NECROSIS sin que la toxicidad supere el umbral en ningún momento.
+
+---
+
+#### UX y calidad de vida
+- **Tooltips en upgrades**: hacer hover sobre cualquier upgrade muestra descripción del efecto, nivel actual, y ganancia específica en la fórmula.
+- **ESC chip visual** en el Banco Genético y shortcut `Esc` para cerrarlo.
+- **Subtítulos permanentes** en el header (etiquetas fijas debajo de los valores clave).
+- **Unidades de upgrade** visibles junto al nombre del botón.
+- **Toast persistente de primera mutación** elegida.
+- **Aviso de cap NG+**: toast + color dorado cuando se alcanza el máximo de bonus de una ruta.
+- **Ω formato adaptativo**: muestra 3 decimales en el rango ultra-bajo de Necrosis.
+- **Autofagia devour**: el toast y el log muestran cuánta bio y $ dio el devour.
+
+---
+
+### Balance
+
+- **Autofagia — bio pasiva**: `0.1/s → 1.0/s` durante la ruta.
+- **Autofagia — burst por devour**: escala con el costo del upgrade devorado (`max(8, costo/50.000)`). Antes era fijo.
+- **Autofagia — cap de $ automático**: el cierre automático por `money≥$1M` se suspende mientras la autólisis está activa, para no cortar el loop antes de agotar upgrades.
+- **MO reemplaza Hiperasimilación**: el `×10 click / ×0.25 pasivo` de Hiper ya no se acumula con Met. Oscuro. Esto nerfea el click en MO puro `×30→×3`, pero la saturación de bio (cierre principal) no depende del click.
+
+---
+
+### Correcciones
+
+- Mente Colmena: el auto-buy se disparaba fuera de la ráfaga activa al recargar el save.
+- Banco Genético: el botón de cerrar no funcionaba.
+- ESC (panic button): z-index bajo causaba que el LegacyPanel lo tapara; color heredado del tema lo hacía invisible.
+- Exclusión mutua: activar Autofagia y Necrosis a la vez era posible; ahora se bloquean mutuamente.
+- Al recargar un save con Autofagia o Necrosis activa, la UI no reconstruía el estado correcto.
+- Al recargar un save, una migración interna cerraba incorrectamente runs de la cadena Depredador.
+- El dice overlay de Fagocitosis quedaba visible al interrumpir el tween entre devours.
+- Ω real en el HUD de Necrosis (antes mostraba el Ω del sistema, no el de la ruta).
+- El color del reactor en la fase "Necrosis muerta" (Ω en floor) no se aplicaba.
+- El pasivo de la renta general era 0 durante Necrosis por heredar el bloqueo de MO; ahora se restaura correctamente.
+- Varios tooltips de upgrades mostraban valores incorrectos (specialization, accounting).
+- Correcciones de tipado en GDScript que producían warnings tratados como errores en export.
+
+---
+
+### Estabilidad
+
+- **NaN guards en saves**: todos los floats críticos (`omega`, `biomasa`, `epsilon_runtime`, `money`, etc.) pasan por un sanitizador antes de guardar y al cargar. Previene la corrupción progresiva si un NaN se cuela en el sistema.
+
+---
+
 ## [v1.0.1.0] — "génesis" — 2026-06-05
 
 ### Rework de la RAMA VERDE (Red Micelial) — anti-AFK

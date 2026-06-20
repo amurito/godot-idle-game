@@ -381,6 +381,60 @@ const LEGACY_DEFS: Dictionary = {
 		# Cross HOMEORHESIS → NECROSIS CONTROLADA (homeorhesis completada alguna vez, luego necrosis).
 		# Efecto: ×1.5 income (click y pasivo) cuando Ω>0.55 O Ω<0.10 — premia ambos extremos.
 	},
+	"protocolo_omega_cero": {
+		"name": "Protocolo Omega-Cero",
+		"flavor": "Tres muertes aprendidas. Una síntesis. El hongo ya no sobrevive a través de una: las ejecuta todas a la vez.",
+		"cat": "ng_plus", "cost": 12, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO"]},
+		"unlock": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO"]},
+		"effect": {"type": "protocolo_omega_cero_active", "value": 1.0},
+		# PERMISO: comprarlo habilita la ruta PROTOCOLO OMEGA-CERO dentro de Met. Oscuro.
+		# Gate en EvoManager.omega_cero_gate_ready() chequea get_buff_value("protocolo_omega_cero").
+		# Es el item más caro del banco (final del árbol oscuro).
+	},
+	"memoria_sinaptica": {
+		"name": "Memoria Sináptica",
+		"flavor": "Lo que se sintetizó en el borde de Ω=0 dejó una huella que la economía recuerda para siempre.",
+		"cat": "ng_plus", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "PROTOCOLO OMEGA-CERO"},
+		"unlock": {"type": "route_closed", "route": "PROTOCOLO OMEGA-CERO"},
+		"effect": {"type": "memoria_sinaptica_active", "value": 1.0},
+		# Otorgado gratis al sellar PROTOCOLO OMEGA-CERO por 1ª vez.
+		# Efecto: término pasivo aditivo exp(k·(1−Ω))−1 acotado (EconomyManager.get_passive_total).
+		# La intensidad (k) escala con omega_cero_kernel_max (el mejor Núcleo Φ logrado).
+	},
+	"sintesis_vital": {
+		"name": "Síntesis Vital",
+		"flavor": "El que tocó el piso absoluto y el que se recuperó al máximo descubrieron que el colapso y el crecimiento son el mismo borde.",
+		"cat": "ng_plus", "cost": 8, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "legacy_flag", "flag": "omega_remision_done", "description_key": "UNLOCK_REQ_OMEGA_REMISION"},
+		"unlock": {"type": "legacy_flag", "flag": "omega_remision_done", "description_key": "UNLOCK_REQ_OMEGA_REMISION"},
+		"effect": {"type": "sintesis_vital_active", "value": 1.0},
+		# Cross PROTOCOLO OMEGA-CERO ↔ REMISIÓN METABÓLICA (cualquier orden).
+		# Efecto: click y pasivo ×2.0 cuando Ω<0.20 Y biomasa≥80 (fragilidad + abundancia simultáneas).
+	},
+	"remision_metabolica": {
+		"name": "Remisión Metabólica",
+		"flavor": "Probadas todas las formas de morir, queda una sola por aprender: sanar. El organismo recuerda cómo florecer en el borde del colapso.",
+		"cat": "ng_plus", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO", "PROTOCOLO OMEGA-CERO"]},
+		"unlock": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO", "PROTOCOLO OMEGA-CERO"]},
+		"effect": {"type": "remision_metabolica_active", "value": 1.0},
+		# PERMISO: comprarlo habilita la ruta REMISIÓN METABÓLICA dentro de Met. Oscuro.
+		# Gate en EvoManager.remision_gate_ready() chequea get_buff_value("remision_metabolica").
+		# Es el item final del árbol oscuro (requiere las 4 sub-rutas, incl. OMEGA-CERO).
+	},
+	"control_omega": {
+		"name": "Control de Ω",
+		"flavor": "El que aprendió a estabilizar el colapso ya no sufre la deriva: ahora la dirige.",
+		"cat": "ng_plus", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "REMISIÓN METABÓLICA"},
+		"unlock": {"type": "route_closed", "route": "REMISIÓN METABÓLICA"},
+		"effect": {"type": "control_omega_active", "value": 1.0},
+		# Otorgado gratis al cerrar REMISIÓN METABÓLICA por 1ª vez.
+		# Efecto: en runs normales habilita empujar Ω con cooldown (UIManager / main).
+		# Offset positivo acumulado también amplifica producción pasiva hasta +30% (EconomyManager).
+	},
 
 	# ────────────────────────────────────────────────
 	# SECRETOS (3)

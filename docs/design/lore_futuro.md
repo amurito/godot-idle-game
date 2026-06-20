@@ -53,41 +53,140 @@ La fragilidad extrema de Ω se convierte en la herramienta.
 
 ---
 
-### PROTOCOLO OMEGA-CERO
-*"La estructura matemática del sistema se rompe. Eso es el poder."*
+### PROTOCOLO OMEGA-CERO — ✅ IMPLEMENTADO (v1.0.1.5, 2026-06-13)
 
-Si Ω = 0.10 es fragilidad extrema, existe el límite absoluto: Ω = 0.
-El hongo descubre que en ese borde, las reglas del sistema dejan de aplicar.
+> Diseño original descartado (Singularidad Inversa 45s + passive→click). Rediseñado como
+> loop activo que sintetiza las tres rutas oscuras previas. La mecánica anterior no tenía
+> gameplay claro y el gate ("Ω llega naturalmente a 0.01" dentro de Necrosis) era
+> contradicción — en Necrosis, Ω solo baja al comprar Agentes, no hay decay pasivo.
+> Implementado y validado con parse-check headless. Constantes en `Balance.gd` (bloque OMEGA_CERO_*).
 
-**Condición:** Necrosis Controlada activa + Ω llega naturalmente a 0.01
-**Mecánica:**
-- Cuando Ω toca 0.00 → "Singularidad Inversa" de 45 segundos
-- Todo el passive acumulado se convierte en click instantáneo
-- El jugador tiene 45s para gastar / acumular antes del colapso inevitable
-- Al terminar: run closes, no se puede evitar
-**PL:** base +8 (el mayor del árbol oscuro)
-**Nota de diseño:** Alta skill ceiling — el timing lo es todo
-**Flavor:** *"Omega era el límite. Ya no hay límite."*
+*"De la autofagia aprendió que destruir lo propio genera más energía que conservarlo. De la necrosis aprendió que la rigidez extrema no es una falla sino una herramienta. Del esclerocio aprendió que el colapso puede ser intencional, preciso, y dejar algo atrás. El Protocolo Omega-Cero es la síntesis: el hongo ejecuta los tres simultáneamente. Ya no sobrevive a través de uno. Los sintetiza en un único acto final."*
+
+**Color reactor:** `Color(0.28, 0.18, 0.38)` — gris oscuro-violáceo (no colisiona con MO `(0.53,0.27,0.67)` ni VACÍO `(0.75,0.2,1.0)`)
+
+**Desbloqueo — Banco Genético:**
+- Costo: **12 PL** (el más caro del banco; refleja que es el endgame del árbol oscuro)
+- Condición de disponibilidad para comprar: `endings_achieved` contiene los tres:
+  `"AUTOFAGIA NECRÓTICA"`, `"NECROSIS CONTROLADA"`, `"ESCLEROCIO OSCURO"`
+  (en distintas runs, no necesariamente en la misma)
+- Una vez comprado: aparece como botón `[IRREVERSIBLE]` dentro de MO, como Autofagia y Necrosis
+
+**Gate en-run (botón en RightPanel):**
+- `mutation_met_oscuro == true`
+- `biomasa >= OMEGA_CERO_BIO_REQ` (sugerido: 50, igual que Autofagia/Necrosis)
+- `met_oscuro_devoured_count >= OMEGA_CERO_DEVOUR_REQ` (sugerido: 5 — ya demostró que puede devourar)
+- `not run_closed`
+
+**Recurso central: Φ (Phi)**
+- Chip en header: `"Φ %.0f / %.0f" % [phi, PHI_TARGET]` — color `#8a6fa8`
+- `PHI_TARGET = 100` (constante en Balance.gd)
+- Φ se acumula exclusivamente via el loop de devour
+
+**Mecánica — tres ecos simultáneos:**
+
+*Eco autolítico (de Autofagia):*
+- Loop de devour: cada `omega_cero_devour_interval()` segundos devora el upgrade más caro
+- Cada devour genera Φ base: `phi_per_devour = OMEGA_CERO_PHI_BASE * omega_cero_phi_mult()`
+- Compras siguen abiertas (recomprar para realimentar — mismo patrón que Autofagia)
+- Las mejoras de velocidad de Autofagia (Enzimas Líticas) NO aplican aquí — intervalo propio
+
+*Eco necrótico (de Necrosis):*
+- Cada devour reduce Ω: `necrosis_omega *= OMEGA_CERO_OMEGA_FACTOR` (ej: ×0.82)
+- El multiplicador de Φ por devour escala con la rigidez actual:
+  `omega_cero_phi_mult() = min(OMEGA_CERO_K / StructuralModel.omega, OMEGA_CERO_PHI_CAP)`
+  donde `OMEGA_CERO_K = 0.10` → a Ω=0.10: mult=1.0; a Ω=0.01: mult=10.0 (capeado)
+- Sin clicks → sin $ → sin recompras → sin devours → sin Φ → sin baja de Ω
+
+*Eco escleroidal (de Esclerocio):*
+- El cierre es intencional: botón **SELLAR PROTOCOLO** se habilita cuando `phi >= PHI_TARGET`
+- No hay cierre automático por tiempo (el hongo decide cuándo está listo)
+- Cierre de emergencia si Ω llega a floor absoluto `NECROSIS_OMEGA_FLOOR = 0.001` (mismo del sistema)
+- El "Núcleo Φ" al cierre se preserva como escalar que determina la intensidad del buff NG+:
+  `omega_cero_kernel = phi / PHI_TARGET` (ej: si cerró con 200 Φ → kernel = 2.0, capeado en 3.0)
+
+**Cierre y PL:**
+- `PL_REWARDS["PROTOCOLO OMEGA-CERO"] = 8`
+- NG+ bonus: `floor(omega_cero_devour_count / 4)` cap 12 en `NG_CAPS`
+- Final route string visible: `"PROTOCOLO OMEGA-CERO"`
+
+**Buff NG+ — "Memoria Sináptica" (`memoria_sinaptica`):**
+Agrega un término pasivo en `get_passive_total()` que crece exponencialmente con la caída de Ω, acotado por CAP:
+
+```
+k_efectivo = OMEGA_CERO_BUFF_K_BASE * clamp(omega_cero_kernel, 1.0, 3.0)
+             donde OMEGA_CERO_BUFF_K_BASE ≈ 3.5
+
+P_Ω = min(exp(k_efectivo * (1.0 - Ω)) - 1.0, OMEGA_CERO_BUFF_CAP)
+```
+
+Comportamiento:
+- A Ω=1.0 (run normal): P_Ω ≈ 0 — buff inerte
+- A Ω=0.10 (MO estándar): P_Ω ≈ 30 $/s adicionales (con kernel=1, k=3.5)
+- A Ω=0.01 (Omega-Cero profundo): P_Ω → CAP
+- `OMEGA_CERO_BUFF_CAP`: suficiente para ser relevante en árbol oscuro pero no romper runs normales
+  (sugerido: ~50.000 $/s o `20 × pasivo_base_de_la_run` — a calibrar en balance)
+
+Intensidad variable: kernel más alto (más Φ acumulado antes de sellar) → k más alto → curva más empinada → más pasivo en el régimen de Ω baja. Incentiva no sellar en el mínimo de 100Φ.
+
+Reveal/unlock: `route_closed: "PROTOCOLO OMEGA-CERO"` (gratis al cerrar la 1ª vez, igual que Apoptosis y Catabolismo).
+
+**Cross-link con REMISIÓN METABÓLICA — "Síntesis Vital" (`sintesis_vital`):**
+- Flag: `omega_remision_done: bool` en LegacyManager (persiste al trascender)
+- Condición: haber cerrado REMISIÓN METABÓLICA teniendo OMEGA-CERO en `endings_achieved` (o viceversa)
+- Efecto: cuando simultáneamente `Ω < 0.20` Y `biomasa >= 80`, click + pasivo ×2.0
+- Lore: *"El hongo que tocó el piso absoluto y el hongo que se recuperó al máximo aprendieron que colapso y crecimiento son el mismo proceso."*
+- Costo en Banco Genético: 8 PL, unlock condición `legacy_flag: omega_remision_done`
+- ⚠️ El placeholder en LEGACY_DEFS se agrega al implementar OMEGA-CERO aunque REMISIÓN no esté implementada
+
+**Estado/Save (bloque `evolution` en SaveManager):**
+```
+mutation_omega_cero: bool
+omega_cero_phi: float
+omega_cero_devour_count: int
+omega_cero_devour_timer: float
+omega_cero_kernel: float        # se fija al cerrar, persiste para el buff
+```
+
+**Debug (DebugPanel):**
+- "Activar Omega-Cero"
+- "+50 Φ"
+- "Marcar Autofagia+Necrosis+Esclerocio" (para testear el desbloqueo en Banco)
+
+**Logro Mythic "Singularidad Perfecta"** (`singularidad_perfecta`, secret, AchievementDefs):
+- Sellar PROTOCOLO OMEGA-CERO con `omega_cero_phi >= OMEGA_CERO_ACH_PHI(200)` Y `omega_cero_omega <= OMEGA_CERO_ACH_OMEGA(0.01)`.
+- Premia dejar correr la síntesis hasta el borde en vez de sellar al mínimo (100Φ). Evaluador custom `_eval_singularidad_perfecta` + dispatch en `on_run_closed`.
+
+---
+
+**Archivos tocados en la implementación:** `Balance.gd` (constantes + PL_REWARDS + NG_CAPS), `EvoManager.gd` (estado + reset + gate/activate/loop/seal/finalize), `SaveManager.gd` (6 campos con _sf), `StructuralModel.gd` + `main.gd` (override Ω + dispatch loop + hotkey [R]), `EconomyManager.gd` (click ×5 + pasivo + memoria_sinaptica aditivo + sintesis_vital), `UpgradeManager.gd` (can_buy excepción), `UIManager.gd` (2 botones + chip Φ + reactor color + exclusión mutua), `UITextBuilders.gd` (lore + status genoma), `LegacyManager.gd` (flags omega_remision_done + omega_cero_kernel_max + record_omega_cero_kernel), `LegacyDefs.gd` (3 buffs: protocolo_omega_cero/memoria_sinaptica/sintesis_vital), `RunManager.gd` (close_run grant + cross), `AchievementManager.gd` + `AchievementDefs.gd` (logro), `LocaleManager.gd` (ES+EN), `DebugPanel.gd` (3 botones).
 
 ---
 
 ## Rama B — Salir de la oscuridad
 
-### REMISIÓN METABÓLICA
+### REMISIÓN METABÓLICA — 🔮 pendiente de diseño detallado
+
 *"La ciencia tampoco predijo esto."*
 
 El hongo que sobrevivió lo imposible empieza a repararse.
 Los pathways oscuros se integran al metabolismo normal, creando algo que no era ni hongo ni oscuridad.
 La única ruta con "happy ending" del árbol.
 
-**Condición:** Bio ≥ 200 dentro de Dark Met (extremadamente difícil con los penalties)
-**Mecánica:**
+**Condición (borrador):** Bio ≥ 200 dentro de Dark Met (extremadamente difícil con los penalties)
+**Mecánica (borrador):**
 - Desbloquea compras nuevamente pero a ×10 de costo (cicatrización estructural)
 - Ω sube gradualmente +0.01/30s hasta 0.30
 - ε_runtime deja de decaer
 **PL:** base +5, +3 si se completan 3 compras post-remisión
 **Nota de diseño:** Es la "ruta difícil con recompensa justa" — requiere dominar el Dark Met
 **Flavor:** *"Algunos organismos no superan la oscuridad. Este la absorbió."*
+
+**⚠️ Cross-link con PROTOCOLO OMEGA-CERO — "Síntesis Vital" (`sintesis_vital`):**
+Al implementar REMISIÓN, verificar que `omega_remision_done` se setea al cerrar REMISIÓN si
+`"PROTOCOLO OMEGA-CERO"` ya está en `endings_achieved` (o viceversa).
+El placeholder en `LegacyManager.LEGACY_DEFS` ya existe desde la implementación de OMEGA-CERO.
+Ver spec completa en la sección PROTOCOLO OMEGA-CERO arriba.
 
 ---
 

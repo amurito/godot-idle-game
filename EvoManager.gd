@@ -121,6 +121,24 @@ var necrosis_tox_maxed: bool = false   # true si la toxicidad llegó a saturarse
 var necrosis_overdose: bool = false    # true mientras el bloqueo de sobredosis está activo (efímero)
 var necrosis_catalyst_level: int = 0   # Catalizador Necrótico: niveles de multiplicador de Ν
 
+# === PROTOCOLO OMEGA-CERO (final del árbol oscuro — síntesis de las 3 sub-rutas) ===
+var mutation_omega_cero := false
+var omega_cero_phi: float = 0.0          # Φ acumulada (recurso de cierre, amplificada por Ω bajo)
+var omega_cero_devour_count: int = 0     # devours realizados en la síntesis
+var omega_cero_devour_timer: float = 0.0 # acumulador del loop de devour
+var omega_cero_omega: float = 0.10       # Ω controlado por la ruta (override del clamp de MO)
+var omega_cero_kernel: float = 0.0       # Núcleo Φ fijado al cerrar (phi/target) → intensidad del buff NG+
+var _omega_cero_starve_ticks: int = 0    # ticks consecutivos sin material (inanición de síntesis)
+
+# === REMISIÓN METABÓLICA (última post-MO — sanación / floración) ===
+var mutation_remision := false           # ruta activa
+var remision_omega: float = 0.30         # Ω controlado por la ruta (override del clamp de MO)
+var remision_theta: float = 0.0          # s continuos dentro de banda (recurso de cierre "Salud")
+var remision_band_timer: float = 0.0     # reloj del desplazamiento senoidal del centro de banda
+var remision_sealable: bool = false      # true una vez Θ alcanzó el target (no se revierte salvo involución)
+var remision_locked_run: bool = false    # bloquea re-entrar a REMISIÓN esta run tras involucionar
+var control_omega_last_ms: int = 0       # timestamp del último pulso de Control de Ω (cooldown)
+
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
@@ -204,6 +222,19 @@ func reset() -> void:
 	necrosis_tox_maxed = false
 	necrosis_overdose = false
 	necrosis_catalyst_level = 0
+	mutation_omega_cero = false
+	omega_cero_phi = 0.0
+	omega_cero_devour_count = 0
+	omega_cero_devour_timer = 0.0
+	omega_cero_omega = Balance.OMEGA_CERO_OMEGA_START
+	omega_cero_kernel = 0.0
+	_omega_cero_starve_ticks = 0
+	mutation_remision = false
+	remision_omega = Balance.REMISION_OMEGA_START
+	remision_theta = 0.0
+	remision_band_timer = 0.0
+	remision_sealable = false
+	remision_locked_run = false
 	_glitch_was_active = false
 
 func update_genome():
@@ -462,8 +493,8 @@ func process_met_oscuro(dt: float) -> bool:
 		# Suprimir tick genérico cuando autofagia/necrosis están activas — tienen su propio log
 		if not mutation_autolisis and not mutation_necrosis:
 			LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	# Autólisis/Necrosis toman el control del cierre — saltar los auto-cierres de MO
-	if not mutation_autolisis and not mutation_necrosis:
+	# Autólisis/Necrosis/Omega-Cero/Remisión toman el control del cierre — saltar los auto-cierres de MO
+	if not mutation_autolisis and not mutation_necrosis and not mutation_omega_cero and not mutation_remision:
 		if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
 			LegacyManager.add_pl(2)
 			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
@@ -474,7 +505,7 @@ func process_met_oscuro(dt: float) -> bool:
 	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
 
 func activate_autolisis() -> void:
-	if mutation_autolisis or mutation_necrosis:
+	if mutation_autolisis or mutation_necrosis or mutation_omega_cero or mutation_remision:
 		return
 	mutation_autolisis = true
 	autolisis_devour_timer = 0.0
@@ -645,7 +676,7 @@ func autofagia_digest_burst() -> int:
 ## abre la doble economía: el flujo real genera Necromasa (Ν), Ν compra Agentes
 ## que empujan Ω hacia el floor. Irreversible.
 func activate_necrosis() -> void:
-	if mutation_necrosis or mutation_autolisis:
+	if mutation_necrosis or mutation_autolisis or mutation_omega_cero or mutation_remision:
 		return
 	mutation_necrosis = true
 	necrosis_omega = Balance.NECROSIS_OMEGA_START
@@ -804,6 +835,222 @@ func process_necrosis(dt: float) -> void:
 		LogManager.add(tr("LOG_NECROSIS_OVERDOSE_RECOVER"))
 	# Ν pasiva: % del flujo pasivo de economía (gateada por eficiencia y catalizador)
 	necromasa += necrosis_passive_rate() * dt
+
+# ── PROTOCOLO OMEGA-CERO ──────────────────────────────────────────────────────
+## ¿El jugador desbloqueó el protocolo en el Banco Genético y cumple el gate en-run?
+## Síntesis de las 3 sub-rutas: requiere el permiso comprado + bio + devours previos.
+func omega_cero_gate_ready() -> bool:
+	if RunManager.run_closed or not mutation_met_oscuro:
+		return false
+	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
+		return false
+	if not LegacyManager.get_buff_value("protocolo_omega_cero"):
+		return false
+	return BiosphereEngine.biomasa >= Balance.OMEGA_CERO_BIO_REQ \
+		and met_oscuro_devoured_count >= Balance.OMEGA_CERO_DEVOUR_REQ
+
+## Activa el protocolo. Toma control de Ω (override del clamp de MO) y abre el loop de síntesis.
+func activate_omega_cero() -> void:
+	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
+		return
+	mutation_omega_cero = true
+	omega_cero_phi = 0.0
+	omega_cero_devour_count = 0
+	omega_cero_devour_timer = 0.0
+	omega_cero_omega = Balance.OMEGA_CERO_OMEGA_START
+	_omega_cero_starve_ticks = 0
+	mutation_activated.emit("omega_cero", tr("MUT_OMEGA_CERO"))
+	LogManager.add(tr("LOG_OMEGA_CERO_START"))
+	UIManager.show_toast(tr("TOAST_OMEGA_CERO_KEYS"))
+	_save_after_mutation()  # mismo motivo que autolisis/necrosis
+
+## Multiplicador de Φ por devour: escala con la rigidez (Ω bajo amplifica), capeado.
+func omega_cero_phi_mult() -> float:
+	if not mutation_omega_cero:
+		return 1.0
+	var safe_omega: float = max(omega_cero_omega, Balance.OMEGA_CERO_OMEGA_FLOOR)
+	return clampf(Balance.OMEGA_CERO_K / safe_omega, 1.0, Balance.OMEGA_CERO_PHI_CAP)
+
+## Progreso [0,1] hacia el sello (Φ acumulada / target). Para la barra del HUD.
+func omega_cero_progress() -> float:
+	return clampf(omega_cero_phi / Balance.OMEGA_CERO_PHI_TARGET, 0.0, 1.0)
+
+## El sello está disponible cuando se alcanzó el target de Φ.
+func omega_cero_can_seal() -> bool:
+	return mutation_omega_cero and not RunManager.run_closed \
+		and omega_cero_phi >= Balance.OMEGA_CERO_PHI_TARGET
+
+## Devora el upgrade más caro: genera Φ (amplificada por Ω), baja Ω y libera $ para realimentar.
+## Retorna true si quedaba material.
+## Consume un upgrade del batch (sin modificar Φ/Ω — eso se aplica una vez por evento de síntesis).
+## Retorna el costo del upgrade consumido, o -1.0 si no hay material.
+func _omega_cero_consume_upgrade() -> float:
+	var result: Dictionary = UpgradeManager.devour_most_expensive_upgrade()
+	if not result.devoured:
+		return -1.0
+	EconomyManager.money += result.cost * Balance.OMEGA_CERO_MONEY_BURST_MULT
+	return result.cost
+
+## Tick del protocolo. Batch de hasta BATCH_SIZE consumos por tick, pero Φ y Ω se aplican
+## UNA SOLA VEZ por evento de síntesis (no ×batch). Φ amplifica el click durante la run.
+## Cierra por floor de Ω, o colapsa por inanición si Φ llega a cero.
+func process_omega_cero(dt: float) -> void:
+	if not mutation_omega_cero or RunManager.run_closed:
+		return
+	omega_cero_devour_timer += dt
+	if omega_cero_devour_timer < Balance.OMEGA_CERO_DEVOUR_INTERVAL:
+		return
+	omega_cero_devour_timer = 0.0
+
+	var batch_count: int = 0
+	for _i in range(Balance.OMEGA_CERO_BATCH_SIZE):
+		if _omega_cero_consume_upgrade() < 0.0:
+			break
+		batch_count += 1
+
+	if batch_count == 0:
+		_omega_cero_starve_ticks += 1
+		if _omega_cero_starve_ticks > Balance.OMEGA_CERO_STARVE_GRACE:
+			omega_cero_phi = maxf(omega_cero_phi - Balance.OMEGA_CERO_PHI_DECAY_TICK, 0.0)
+			UIManager.show_toast(tr("TOAST_OMEGA_CERO_INANICION") % [omega_cero_phi, _omega_cero_starve_ticks - Balance.OMEGA_CERO_STARVE_GRACE])
+			if omega_cero_phi <= 0.0 and not RunManager.run_closed:
+				_omega_cero_finalize()
+				RunManager.close_run("COLAPSO SINTÉTICO", tr("CLOSE_OMEGA_CERO_COLAPSO"))
+		return
+
+	# Evento de síntesis: Ω cae y Φ sube UNA vez, independiente del tamaño del batch.
+	_omega_cero_starve_ticks = 0
+	omega_cero_devour_count += 1
+	omega_cero_omega = maxf(omega_cero_omega * Balance.OMEGA_CERO_OMEGA_FACTOR, Balance.OMEGA_CERO_OMEGA_FLOOR)
+	var phi_gain: float = Balance.OMEGA_CERO_PHI_BASE * omega_cero_phi_mult()
+	omega_cero_phi += phi_gain
+	UIManager.show_toast(tr("TOAST_OMEGA_CERO_DEVOUR") % [batch_count, omega_cero_devour_count, phi_gain, omega_cero_omega])
+	LogManager.add(tr("LOG_OMEGA_CERO_DEVOUR") % [batch_count, omega_cero_devour_count, phi_gain, omega_cero_omega])
+	if omega_cero_omega <= Balance.OMEGA_CERO_OMEGA_FLOOR and not RunManager.run_closed:
+		_omega_cero_finalize()
+		RunManager.close_run("PROTOCOLO OMEGA-CERO", tr("CLOSE_OMEGA_CERO_FLOOR"))
+
+## Sello intencional (eco escleroidal): el hongo decide que la síntesis está completa.
+func omega_cero_seal() -> void:
+	if not omega_cero_can_seal():
+		return
+	_omega_cero_finalize()
+	RunManager.close_run("PROTOCOLO OMEGA-CERO", tr("CLOSE_OMEGA_CERO_SEAL"))
+
+## Fija el Núcleo Φ (intensidad del buff NG+) antes de cerrar. Capeado.
+func _omega_cero_finalize() -> void:
+	omega_cero_kernel = clampf(omega_cero_phi / Balance.OMEGA_CERO_PHI_TARGET, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
+
+# ── REMISIÓN METABÓLICA (última post-MO — sanación / floración) ───────────────
+## ¿El jugador desbloqueó el permiso y cumple el gate en-run? Última ruta del árbol oscuro.
+## Requiere las 4 sub-rutas cerradas (vía el permiso del Banco) + biomasa muy alta en MO.
+func remision_gate_ready() -> bool:
+	if RunManager.run_closed or not mutation_met_oscuro:
+		return false
+	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
+		return false
+	if remision_locked_run:
+		return false
+	if not LegacyManager.get_buff_value("remision_metabolica"):
+		return false
+	return BiosphereEngine.biomasa >= Balance.REMISION_BIO_GATE
+
+## Activa la ruta. Toma control de Ω (override del clamp de MO) y abre el loop de sanación.
+func activate_remision() -> void:
+	if mutation_remision or mutation_omega_cero or mutation_autolisis or mutation_necrosis:
+		return
+	mutation_remision = true
+	remision_omega = Balance.REMISION_OMEGA_START
+	remision_theta = 0.0
+	remision_band_timer = 0.0
+	remision_sealable = false
+	mutation_activated.emit("remision", tr("MUT_REMISION"))
+	LogManager.add(tr("LOG_REMISION_START"))
+	UIManager.show_toast(tr("TOAST_REMISION_KEYS"))
+	_save_after_mutation()  # mismo motivo que las otras sub-rutas
+
+## Centro actual de la banda objetivo (se desplaza senoidal lento).
+func remision_band_center() -> float:
+	return Balance.REMISION_BAND_CENTER + Balance.REMISION_BAND_AMP * sin(remision_band_timer * Balance.REMISION_BAND_FREQ)
+
+## ¿Ω dentro de la banda objetivo en este instante?
+func remision_in_band() -> bool:
+	return absf(remision_omega - remision_band_center()) <= Balance.REMISION_BAND_HALF
+
+## Empuje manual de Ω (dir = +1 sube, −1 baja). Clampeado al rango de la ruta.
+func remision_nudge(dir: int) -> void:
+	if not mutation_remision or RunManager.run_closed:
+		return
+	remision_omega = clampf(remision_omega + dir * Balance.REMISION_NUDGE, Balance.REMISION_OMEGA_MIN, Balance.REMISION_OMEGA_MAX)
+
+## Progreso [0,1] del contador Θ hacia el sello.
+func remision_progress() -> float:
+	return clampf(remision_theta / Balance.REMISION_THETA_TARGET, 0.0, 1.0)
+
+## El sello queda armado al alcanzar el target de Θ; no se revierte salvo involución.
+func remision_can_seal() -> bool:
+	return mutation_remision and not RunManager.run_closed and remision_sealable
+
+## Tick de la ruta. Ω deriva al colapso; dentro de banda la biomasa florece (compuesto) y
+## Θ sube; fuera, la biomasa se marchita y Θ se reinicia (hasta armar el sello). Si la
+## biomasa cae bajo el piso, NO cierra: INVOLUCIONA a Met. Oscuro (REMISIÓN bloqueada esa run).
+func process_remision(dt: float) -> void:
+	if not mutation_remision or RunManager.run_closed:
+		return
+	remision_band_timer += dt
+	remision_omega = clampf(remision_omega - Balance.REMISION_OMEGA_DRIFT * dt, Balance.REMISION_OMEGA_MIN, Balance.REMISION_OMEGA_MAX)
+	if remision_in_band():
+		BiosphereEngine.biomasa += BiosphereEngine.biomasa * Balance.REMISION_BLOOM_RATE * dt
+		remision_theta += dt
+		if remision_theta >= Balance.REMISION_THETA_TARGET and not remision_sealable:
+			remision_sealable = true
+			UIManager.show_toast(tr("TOAST_REMISION_SELLO"))
+			LogManager.add(tr("LOG_REMISION_SELLO"))
+	else:
+		BiosphereEngine.biomasa = maxf(BiosphereEngine.biomasa - BiosphereEngine.biomasa * Balance.REMISION_WITHER_RATE * dt, 0.0)
+		if not remision_sealable:
+			remision_theta = maxf(remision_theta - Balance.REMISION_THETA_DECAY * dt, 0.0)
+	if BiosphereEngine.biomasa < Balance.REMISION_BIO_FLOOR and not RunManager.run_closed:
+		_remision_involucionar()
+
+## Sello intencional: el organismo declara la remisión completa. Cierra exitosamente.
+func remision_seal() -> void:
+	if not remision_can_seal():
+		return
+	mutation_remision = false
+	RunManager.close_run("REMISIÓN METABÓLICA", tr("CLOSE_REMISION_SELLO") % BiosphereEngine.biomasa)
+
+## Involución: la enfermedad regresa. NO cierra la run — degrada a Met. Oscuro y bloquea
+## REMISIÓN esta run. Met. Oscuro reanuda solo (su guard excluía remisión); el jugador
+## debe elegir otra sub-ruta (autólisis / necrosis / omega-cero / esclerocio).
+func _remision_involucionar() -> void:
+	mutation_remision = false
+	remision_locked_run = true
+	remision_sealable = false
+	remision_theta = 0.0
+	UIManager.show_toast(tr("TOAST_REMISION_INVOLUCION"))
+	LogManager.add(tr("LOG_REMISION_INVOLUCION"))
+	_save_after_mutation()
+
+# ── CONTROL DE Ω (buff NG+ de REMISIÓN) ───────────────────────────────────────
+## ¿Disponible el empuje manual de Ω? Solo con el buff y fuera de las sub-rutas
+## oscuras (que ya controlan Ω por completo).
+func control_omega_available() -> bool:
+	if RunManager.run_closed or mutation_met_oscuro:
+		return false
+	return LegacyManager.get_buff_value("control_omega")
+
+## Empuje manual de Ω en runs normales (dir = +1/−1). Acotado en magnitud y con cooldown.
+func control_omega_nudge(dir: int) -> void:
+	if not control_omega_available():
+		return
+	var now: int = Time.get_ticks_msec()
+	if now - control_omega_last_ms < int(Balance.CONTROL_OMEGA_COOLDOWN * 1000.0):
+		return
+	control_omega_last_ms = now
+	StructuralModel.control_omega_offset = clampf(
+		StructuralModel.control_omega_offset + dir * Balance.CONTROL_OMEGA_NUDGE,
+		-Balance.CONTROL_OMEGA_MAX, Balance.CONTROL_OMEGA_MAX)
 
 func process_depredador(dt: float) -> void:
 	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.

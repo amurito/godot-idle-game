@@ -69,9 +69,11 @@ func get_click_power() -> float:
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		power *= 1.5
 
-	# MET.OSCURO: energía alternativa ×3; ×5 durante Autofagia Necrótica
+	# MET.OSCURO: energía alternativa ×3; ×5 durante Autofagia Necrótica o Protocolo Omega-Cero
+	# (ambas reabren las compras → el click junta $ para recomprar y realimentar el loop de devour)
 	if EvoManager.mutation_met_oscuro:
-		power *= Balance.AUTOLISIS_CLICK_MULT if EvoManager.mutation_autolisis else 3.0
+		var loop_route: bool = EvoManager.mutation_autolisis or EvoManager.mutation_omega_cero
+		power *= Balance.AUTOLISIS_CLICK_MULT if loop_route else 3.0
 
 	# NECROSIS CONTROLADA: multiplicador necrótico (cuanto más bajo Ω, más produce)
 	if EvoManager.mutation_necrosis:
@@ -84,6 +86,10 @@ func get_click_power() -> float:
 	# PLASTICIDAD TERMINAL (cross HOMEORHESIS→NECROSIS): premia ambos extremos de Ω
 	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
 		power *= 1.5
+
+	# SÍNTESIS VITAL (cross OMEGA-CERO↔REMISIÓN): fragilidad + abundancia simultáneas
+	if LegacyManager.get_buff_value("sintesis_vital") and StructuralModel.omega < 0.20 and BiosphereEngine.biomasa >= 80.0:
+		power *= 2.0
 
 	if LegacyManager.get_buff_value("aura_dorada"):
 		power *= 2.5 # Aura Dorada — click ×2.5 (especializado, no afecta pasivo)
@@ -134,6 +140,10 @@ func get_click_power() -> float:
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción a cambio de buffs cósmicos
 	if RouteManager.is_active("vacio"):
 		power *= RouteManager.production_mult()
+
+	# PROTOCOLO OMEGA-CERO: Φ acumulada amplifica el click durante la run (aditivo, escala con síntesis).
+	if EvoManager.mutation_omega_cero:
+		power += EvoManager.omega_cero_phi * Balance.OMEGA_CERO_PHI_CLICK_AMP
 
 	return power
 
@@ -208,6 +218,8 @@ func get_passive_total() -> float:
 			total *= Balance.AUTOLISIS_PASSIVE_MULT
 		elif EvoManager.mutation_necrosis:
 			pass  # pasivo normal durante necrosis (×1.0 — el desmantelamiento lo libera)
+		elif EvoManager.mutation_omega_cero:
+			pass  # pasivo normal durante la síntesis (×1.0 — sostiene las recompras del loop)
 		else:
 			total = 0.0
 
@@ -245,6 +257,14 @@ func get_passive_total() -> float:
 	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
 		total *= 1.5
 
+	# SÍNTESIS VITAL (cross OMEGA-CERO↔REMISIÓN): fragilidad + abundancia simultáneas
+	if LegacyManager.get_buff_value("sintesis_vital") and StructuralModel.omega < 0.20 and BiosphereEngine.biomasa >= 80.0:
+		total *= 2.0
+
+	# CONTROL DE Ω: offset positivo → eficiencia de producción (max +30% a offset máx)
+	if LegacyManager.get_buff_value("control_omega") and StructuralModel.control_omega_offset > 0.0:
+		total *= (1.0 + StructuralModel.control_omega_offset * 2.0)
+
 	# Mult por Rama Evolutiva (Nodos Finales DLC)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		total *= 2.5
@@ -277,6 +297,16 @@ func get_passive_total() -> float:
 	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción
 	if RouteManager.is_active("vacio"):
 		total *= RouteManager.production_mult()
+
+	# MEMORIA SINÁPTICA (NG+ de PROTOCOLO OMEGA-CERO): término pasivo aditivo exp(k·(1−Ω))−1,
+	# acotado. Inerte en runs normales (Ω alto → ≈0), explosivo en el árbol oscuro (Ω→0).
+	# Aditivo y al final: NO se multiplica por mults de ruta (evita el exploit de VACÍO ×100).
+	# La intensidad (k) escala con el Núcleo Φ logrado al sellar el protocolo (kernel persistido).
+	if LegacyManager.get_buff_value("memoria_sinaptica"):
+		var kernel: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
+		var k_eff: float = Balance.OMEGA_CERO_BUFF_K_BASE * kernel
+		var p_omega: float = min(exp(k_eff * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
+		total += p_omega
 
 	return total
 
@@ -312,7 +342,7 @@ func get_contribution_breakdown() -> Dictionary:
 
 func get_active_passive_breakdown() -> Dictionary:
 	var push := get_click_power() * CLICK_RATE
-	var passive := get_auto_income_effective() + get_trueque_income_effective()
+	var passive := get_passive_total()  # incluye re, ms y todos los términos aditivos
 
 	var total := push + passive
 	if total == 0.0 or is_nan(total) or is_inf(total):

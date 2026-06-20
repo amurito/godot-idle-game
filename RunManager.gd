@@ -177,6 +177,14 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 				var raw := EvoManager.met_oscuro_devoured_count * 2
 				ng_bonus = min(raw, cap)
 				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
+			"PROTOCOLO OMEGA-CERO":
+				var raw := int(EvoManager.omega_cero_phi / 50.0)
+				ng_bonus = min(raw, cap)
+				ng_formula = "phi %.0f / 50 = %d (cap %d)" % [EvoManager.omega_cero_phi, ng_bonus, cap]
+			"REMISIÓN METABÓLICA":
+				var raw := int(BiosphereEngine.biomasa / Balance.REMISION_PL_DIVISOR)
+				ng_bonus = min(raw, cap)
+				ng_formula = "biomasa %.0f / %.0f = %d (cap %d)" % [BiosphereEngine.biomasa, Balance.REMISION_PL_DIVISOR, ng_bonus, cap]
 			"ESCLEROCIO OSCURO":
 				var raw := int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
 				ng_bonus = min(raw, cap)
@@ -272,6 +280,40 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			LegacyManager.homeorhesis_necrosis_done = true
 			LogManager.add(tr("LOG_PLASTICIDAD_TERMINAL_UNLOCK"))
 			UIManager.show_toast(tr("TOAST_PLASTICIDAD_TERMINAL_UNLOCK"))
+
+	# PROTOCOLO OMEGA-CERO: registrar el Núcleo Φ (intensidad de Memoria Sináptica) +
+	# otorgar el buff gratis la 1ª vez + resolver el cruce con REMISIÓN METABÓLICA.
+	if route == "PROTOCOLO OMEGA-CERO":
+		LegacyManager.record_omega_cero_kernel(EvoManager.omega_cero_kernel)
+		if not LegacyManager.get_buff_value("memoria_sinaptica"):
+			LegacyManager.grant_buff("memoria_sinaptica")
+			UIManager.show_toast(tr("TOAST_MEMORIA_SINAPTICA_UNLOCKED"))
+			LogManager.add(tr("LOG_MEMORIA_SINAPTICA_UNLOCKED"))
+		# Cross OMEGA-CERO ↔ REMISIÓN METABÓLICA (cualquier orden): colapso = crecimiento.
+		if LegacyManager.endings_achieved.get("REMISIÓN METABÓLICA", false) \
+				and not LegacyManager.omega_remision_done:
+			LegacyManager.omega_remision_done = true
+			LogManager.add(tr("LOG_SINTESIS_VITAL_UNLOCK"))
+			UIManager.show_toast(tr("TOAST_SINTESIS_VITAL_UNLOCK"))
+
+	# REMISIÓN METABÓLICA: otorgar el buff "Control de Ω" gratis la 1ª vez +
+	# resolver el cruce con PROTOCOLO OMEGA-CERO (lado simétrico).
+	if route == "REMISIÓN METABÓLICA":
+		var _ctrl_nuevo: bool = not LegacyManager.get_buff_value("control_omega")
+		if _ctrl_nuevo:
+			LegacyManager.grant_buff("control_omega")
+			LogManager.add(tr("LOG_CONTROL_OMEGA_UNLOCKED"))
+		# Cross OMEGA-CERO ↔ REMISIÓN METABÓLICA (cualquier orden): colapso = crecimiento.
+		var _cross_nuevo: bool = false
+		if LegacyManager.endings_achieved.get("PROTOCOLO OMEGA-CERO", false) \
+				and not LegacyManager.omega_remision_done:
+			LegacyManager.omega_remision_done = true
+			LogManager.add(tr("LOG_SINTESIS_VITAL_UNLOCK"))
+			_cross_nuevo = true
+		# Toast consolidado: un solo mensaje con todo lo desbloqueado esta run
+		if _ctrl_nuevo or _cross_nuevo:
+			var _toast_key: String = "TOAST_REMISION_BANCO_CROSS" if _cross_nuevo else "TOAST_REMISION_BANCO_SOLO"
+			UIManager.show_toast(tr(_toast_key))
 
 	# Resetear estado de run ANTES de guardar para no heredar shocks/perturbaciones
 	disturbances_survived = 0
@@ -730,6 +772,8 @@ func get_predicted_route() -> String:
 	if RouteManager.is_active("vacio"):            return "ASCESIS_PROFUNDA"
 	if RouteManager.is_active("carnaval"):         return "POLIMORFÍA TOTAL"
 	if EvoManager.mutation_depredador:             return "DEPREDADOR DE REALIDADES"
+	if EvoManager.mutation_remision:               return "REMISIÓN METABÓLICA"
+	if EvoManager.mutation_omega_cero:             return "PROTOCOLO OMEGA-CERO"
 	if EvoManager.mutation_met_oscuro:             return "METABOLISMO OSCURO"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
@@ -765,6 +809,10 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = int(floor(omega_min_peak * 10.0))
 		"MUTACION_FINAL", "METABOLISMO OSCURO":
 			raw = EvoManager.met_oscuro_devoured_count * 2
+		"PROTOCOLO OMEGA-CERO":
+			raw = int(EvoManager.omega_cero_phi / 50.0)
+		"REMISIÓN METABÓLICA":
+			raw = int(BiosphereEngine.biomasa / Balance.REMISION_PL_DIVISOR)
 		"ESCLEROCIO OSCURO":
 			raw = int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
 		"AUTOFAGIA NECRÓTICA":

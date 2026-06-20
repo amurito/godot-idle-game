@@ -183,6 +183,15 @@ y `click_mult = UpgradeManager.value("click_mult")` (base 1.0, ×1.06 por nivel)
 | 15 | Legado `eco_primordial` | `power *= 1.10` |
 | 16 | Legado `resonancia_cognitiva` | `power *= (1 + acc_lvl · 0.05)` |
 | 17 | Ruta `vacio_hambriento` | `power *= 100.0` |
+| 18 | Mut. `omega_cero` | `power += Φ · 0.5` (aditivo; ver §15.5.3) |
+
+**Árbol oscuro — modificadores de click** (gateados por sub-ruta, ver §15.5):
+- `autolisis` / `omega_cero`: `power *= 5.0` (reemplaza el ×3 de MO)
+- `necrosis`: `power *= clamp(0.10/Ω, 1, 25)`
+- Buff `sintesis_vital` (Ω<0.20 ∧ B≥80): `power *= 2.0`
+- Buff `apoptosis_heredada` (Ω<0.30): `power *= clamp(1+(0.30−Ω)·1.67, 1, 1.5)`
+- Buff `plasticidad_terminal` (Ω>0.55 ∨ Ω<0.10): `power *= 1.5`
+- ⚠️ Bajo MO, el ×10 de `hyperassimilation` (fila 5) se desactiva (`and not mutation_met_oscuro`).
 
 ### 3.3 Pasivo manual `d` (Trabajo Manual + Ritmo + Especialización)
 
@@ -241,6 +250,14 @@ P = d_eff + e_eff
 | Legado `eco_primordial` | `P *= 1.10` |
 | Legado `resonancia_cognitiva` | `P *= (1 + acc_lvl · 0.05)` |
 | Ruta `vacio_hambriento` | `P *= 100.0` |
+| Mut. `autolisis` (autofagia) | `P *= 2.0` (restaura el pasivo anulado por MO) |
+| Mut. `necrosis` / `omega_cero` | `P` normal (×1, no 0 como MO puro) |
+| Buff `sintesis_vital` (Ω<0.20 ∧ B≥80) | `P *= 2.0` |
+| Buff `apoptosis_heredada` (Ω<0.30) | `P *= clamp(1+(0.30−Ω)·1.67, 1, 1.5)` |
+| Buff `plasticidad_terminal` (Ω>0.55 ∨ Ω<0.10) | `P *= 1.5` |
+| Buff `control_omega` (offset > 0) | `P *= (1 + offset · 2)` (hasta +30%) |
+| Buff `semilla_cosmica_oscura` | `P *= 3.0` |
+| Buff `memoria_sinaptica` (aditivo, al final) | `P += min(exp(k·(1−Ω))−1, 50000)`, `k=3.5·kernel` |
 
 ---
 
@@ -480,6 +497,8 @@ Tras eso, `Ω = max(Ω, Ω_min)` (Ω_min protege el piso real).
 | `mutation_parasitism` | `Ω ≤ 0.25`, `Ω_min ≤ 0.25` |
 | `mutation_hyperassimilation` | `Ω ≤ 0.75`, cₙ decae hacia 1.0 |
 | Met. Oscuro | `Ω ≤ 0.10` (techo duro) |
+| Sub-rutas oscuras (necrosis / omega_cero / remision) | **override** del clamp de MO: `Ω = ω_de_la_ruta` (ver §15.5) |
+| Buff `control_omega` (runs normales) | `Ω = clamp(Ω + offset, 0, 1)`, `offset ∈ [−0.15, 0.15]` |
 
 ---
 
@@ -831,6 +850,112 @@ Al activarse la mutación `depredador` arranca `depredador_inestabilidad` (cuent
 
 ---
 
+### 15.5 ÁRBOL OSCURO — sub-rutas de Metabolismo Oscuro (v1.0.1.x → v1.0.2.0)
+
+Cinco sub-rutas *dentro* de Met. Oscuro (no son rutas post-trascendencia paralelas: requieren `mutation_met_oscuro` activo). Familia **COLAPSO** (las 4 primeras) + **REDENCIÓN** (REMISIÓN). Detalle de diseño en [`lore_futuro.md`](../design/lore_futuro.md) y memoria `project_post_tras_routes.md`. Las constantes viven en `Balance.gd` (bloques `AUTOLISIS_*`, `NECROSIS_*`, `OMEGA_CERO_*`, `REMISION_*`).
+
+> ⚠️ **Variables internas con prefijo `autolisis_`** (no `autofagia_`): el string de ruta se renombró a "AUTOFAGIA NECRÓTICA" pero las vars/funciones/claves de save siguen como `mutation_autolisis`, `autolisis_devour_count`, etc. (no se renombraron para no romper saves).
+
+**Override de Ω**: durante Necrosis, Omega-Cero y Remisión, `StructuralModel.update_runtime()` reemplaza el clamp 0.10 de MO por la Ω propia de la ruta:
+```
+si mutation_necrosis: Ω = necrosis_omega
+si mutation_omega_cero: Ω = omega_cero_omega
+si mutation_remision:   Ω = remision_omega   (controlada por el jugador)
+```
+
+#### 15.5.1 AUTOFAGIA NECRÓTICA (loop de auto-devour)
+
+| Concepto | Valor |
+|---|---|
+| Gate | `B ≥ 50` (`AUTOLISIS_BIO_REQ`) + `niveles_upgrades ≥ 5` (`AUTOLISIS_UPGRADES_REQ`) |
+| Loop | cada `autofagia_devour_interval()` devora el upgrade más caro |
+| Intervalo base | `30s` (`AUTOLISIS_DEVOUR_INTERVAL`), −5s/nivel de Enzimas Líticas, piso `5s` (`AUTOFAGIA_DEVOUR_FLOOR`) |
+| Burst $ | `cost · 3.0` (`AUTOLISIS_MONEY_BURST_MULT`), cap `$1M` (`AUTOLISIS_MONEY_BURST_CAP`) |
+| Burst bio | `max(8, cost / 50000)` (`AUTOLISIS_BIO_FROM_COST_DIVISOR`), cap `400` (`AUTOLISIS_BIO_BURST_CAP`) |
+| Bio pasiva | `1.0/s` (`AUTOLISIS_BIO_PASSIVE`, ×10 del MO base) |
+| Economía | click ×5 (`AUTOLISIS_CLICK_MULT`), pasivo ×2 (`AUTOLISIS_PASSIVE_MULT`) |
+| Fagocitosis 2º devour | `+16%/nivel` (`AUTOFAGIA_DOUBLE_PER_LEVEL`), cap `80%` (`AUTOFAGIA_DOUBLE_MAX_CHANCE`) |
+| Fagocitosis 3º (triple) | crítico natural `d20 == 20` (`AUTOFAGIA_TRIPLE_CRIT`) |
+| Cierre voluntario | botón COLAPSAR NÚCLEO tras `≥ 40` devours (`AUTOFAGIA_COLAPSO_MIN_DEVOURS`) |
+| Cierre por agotamiento | `niveles_upgrades == 0` |
+
+> **MO reemplaza Hiperasimilación**: el ×10 click / ×0.25 pasivo de hiper se gatea con `and not mutation_met_oscuro` en EconomyManager (antes se acumulaban → click ×30 en MO puro, ×50 en autofagia). Nerf consciente: click MO normal pasa de ×30 a ×3.
+
+#### 15.5.2 NECROSIS CONTROLADA (doble economía Ν)
+
+| Concepto | Valor / fórmula |
+|---|---|
+| Gate | `B ≥ 50` (`NECROSIS_BIO_REQ`) + `Δ$_total ≥ 200` (`NECROSIS_FLOW_REQ`) |
+| Necromasa (Ν) por click | `Ν += power^0.5 · 0.8` (`NECROSIS_MASA_EXP`, `NECROSIS_CONVERSION`) |
+| Ν por pasivo | `+1%` del pasivo realizado (`NECROSIS_PASSIVE_FRACTION`) |
+| Agente Necrótico | `Ω ×= 0.72` (`NECROSIS_AGENT_OMEGA_FACTOR`); costo Ν `100 · 1.75^n` (`NECROSIS_AGENT_COST_BASE/GROWTH`) |
+| Multiplicador de renta | `necrosis_mult = clamp(0.10 / Ω, 1, 25)` (`NECROSIS_MULT_CAP`) — aplica al click |
+| Cierre | `Ω ≤ 0.001` (`NECROSIS_OMEGA_FLOOR`) |
+| Anti-AFK | Ω no decae sola: sin clicks → sin Ν → sin progreso |
+| **Toxicidad** (capa de gestión) | `+0.20/agente` base (`NECROSIS_TOX_PER_AGENT`), escala `×(1+(N−1)·0.06)`, floor `n·0.03`, decae `0.006/s`. Superar umbral → purga de agentes. |
+| Catalizador Necrótico | `+20% Ν/nivel` (`NECROSIS_CATALYST_PER_LEVEL`), reduce toxicidad |
+| Purga | `tox ×= 0.4` (`NECROSIS_PURGE_FRACTION`, limpia 60%) |
+
+#### 15.5.3 PROTOCOLO OMEGA-CERO (recurso Φ — síntesis de las 3 anteriores)
+
+| Concepto | Valor / fórmula |
+|---|---|
+| Desbloqueo | permiso `protocolo_omega_cero` en Banco (12 PL) tras cerrar AUTOFAGIA+NECROSIS+ESCLEROCIO |
+| Gate en-run | `B ≥ 50` (`OMEGA_CERO_BIO_REQ`) + `met_oscuro_devoured ≥ 5` (`OMEGA_CERO_DEVOUR_REQ`) |
+| Loop | cada `6s` (`OMEGA_CERO_DEVOUR_INTERVAL`) devora batch de `10` (`OMEGA_CERO_BATCH_SIZE`) |
+| Φ por devour | `4.0 · phi_mult` (`OMEGA_CERO_PHI_BASE`), `phi_mult = min(0.10/Ω, 10)` (`OMEGA_CERO_K`, `_PHI_CAP`) |
+| Ω por devour | `Ω ×= 0.82` (`OMEGA_CERO_OMEGA_FACTOR`) |
+| Burst $ | `×0` (`OMEGA_CERO_MONEY_BURST_MULT` — el loop se sostiene con Φ, no $) |
+| Sello | habilitado a `Φ ≥ 300` (`OMEGA_CERO_PHI_TARGET`); emergencia a `Ω ≤ 0.001` |
+| Núcleo Φ al cierre | `kernel = clamp(Φ / 300, 1, 3)` (`OMEGA_CERO_KERNEL_CAP`) → intensidad del buff NG+ |
+| Inanición | tras `1` tick de gracia (`OMEGA_CERO_STARVE_GRACE`) sin material, `−20 Φ/tick` (`OMEGA_CERO_PHI_DECAY_TICK`) |
+| Click extra | `power += Φ · 0.5` (`OMEGA_CERO_PHI_CLICK_AMP`, aditivo durante la run) |
+| Economía | click ×5, pasivo ×1 (restaurado, no 0 como MO puro) |
+
+#### 15.5.4 REMISIÓN METABÓLICA (loop de banda — familia REDENCIÓN)
+
+| Concepto | Valor / fórmula |
+|---|---|
+| Desbloqueo | permiso `remision_metabolica` en Banco (15 PL) tras cerrar las 4 sub-rutas oscuras |
+| Gate en-run | `B ≥ 150` (`REMISION_BIO_GATE`) + `remision_locked_run == false` |
+| Deriva de Ω | `−0.015/s` (`REMISION_OMEGA_DRIFT`) hacia el colapso |
+| Empuje del jugador | `±0.03` (`REMISION_NUDGE`) con W/S; clamp `[0.01, 0.60]` (`REMISION_OMEGA_MIN/MAX`) |
+| Banda objetivo (móvil) | centro `0.30 + 0.12·sin(2π·0.15·t)` (`REMISION_BAND_CENTER/AMP/FREQ`); dentro si `\|Ω − c(t)\| ≤ 0.04` (`REMISION_BAND_HALF`) |
+| Biomasa dentro de banda | `+3%/s` compuesto (`REMISION_BLOOM_RATE`) + acumula Θ |
+| Biomasa fuera de banda | `−5%/s` (`REMISION_WITHER_RATE`) + Θ decae `−1.0/s` (`REMISION_THETA_DECAY`) |
+| Sello | Θ continuo `≥ 60s` (`REMISION_THETA_TARGET`) → botón SELLAR [R] |
+| **Involución** (no derrota) | `B < 30` (`REMISION_BIO_FLOOR`) → vuelve a Met. Oscuro, REMISIÓN bloqueada esa run |
+| Biósfera | `BiosphereEngine.process_tick(is_remision=true)` saltea el cap y el crecimiento normal de hifas |
+
+#### 15.5.5 Buffs NG+ del árbol oscuro
+
+| id | tipo | otorga | efecto |
+|---|---|---|---|
+| `catabolismo_heredado` | NG+ (max 3) | gratis al cerrar AUTOFAGIA; lvl 2-3 = 4 PL | `start_bio += 10/nivel` |
+| `ciclo_catabolico` | cross 8 PL | AUTOFAGIA → DEPREDADOR | `×1.5 bio` en todos los devours (ambas rutas) |
+| `apoptosis_heredada` | NG+ | gratis al cerrar NECROSIS | si `Ω < 0.30`: click+pasivo `×clamp(1+(0.30−Ω)·1.67, 1, 1.5)` |
+| `plasticidad_terminal` | cross 8 PL | HOMEORHESIS → NECROSIS | si `Ω > 0.55` o `Ω < 0.10`: income `×1.5` |
+| `memoria_sinaptica` | NG+ | gratis al sellar OMEGA-CERO | pasivo **aditivo** `min(exp(k·(1−Ω))−1, 50000)`, `k = 3.5 · clamp(kernel, 1, 3)` |
+| `sintesis_vital` | cross 8 PL | OMEGA-CERO ↔ REMISIÓN (flag `omega_remision_done`) | si `Ω < 0.20` ∧ `B ≥ 80`: click+pasivo `×2.0` |
+| `control_omega` | NG+ | gratis al cerrar REMISIÓN | empuje manual `±0.02` (`CONTROL_OMEGA_NUDGE`, cooldown 1s, offset cap `±0.15`) en runs normales; **offset positivo → pasivo `×(1 + offset·2)` (hasta +30%)** |
+| `protocolo_omega_cero` | permiso 12 PL | — | habilita la sub-ruta OMEGA-CERO |
+| `remision_metabolica` | permiso 15 PL | — | habilita la sub-ruta REMISIÓN |
+| `semilla_cosmica_oscura` | cross 8 PL | ESCLEROCIO × PANSPERMIA (flag `esclerocio_panspermia_done`) | Memoria Oscura permanente + pasivo `×3` (`SEMILLA_OSCURA_PASIVO_MULT`) |
+
+**Memoria Oscura (semilla durmiente, de ESCLEROCIO):** mientras `dark_legacy_charges > 0`, en TODAS las runs: `+15% bio` (`MEMORIA_OSCURA_BIO_MULT`), subida de ε amortiguada 30% (`MEMORIA_OSCURA_EPS_RISE_DAMP = 0.70`), `−10%` threshold MO (`MEMORIA_OSCURA_MO_THRESH_MULT`).
+
+#### 15.5.6 Logros Mythic del árbol oscuro
+
+| id | ruta | condición |
+|---|---|---|
+| `esporas_contingencia` | ESCLEROCIO | cerrar con `≥ 50` devours |
+| `autofagia_perfecta` | AUTOFAGIA | cerrar con `≥ 15` devours + Enzimas 5/5 + Fagocitosis 5/5 |
+| `funcion_pura` | NECROSIS | cerrar sin que la toxicidad supere el umbral en ningún momento |
+| `singularidad_perfecta` | OMEGA-CERO | sellar con `Φ ≥ 500` (`OMEGA_CERO_ACH_PHI`) ∧ `Ω ≤ 0.01` |
+| `remision_completa` | REMISIÓN | cerrar la ruta (route == "REMISIÓN METABÓLICA") |
+
+---
+
 ## 16. Cierre de run — PL y NG+ bonus
 
 ### 16.1 PL base por ruta (`close_run`)
@@ -846,6 +971,11 @@ Al activarse la mutación `depredador` arranca `depredador_inestabilidad` (cuent
 | PARASITISMO | 2 |
 | HIPERASIMILACIÓN | 1 |
 | METABOLISMO OSCURO / MUTACION_FINAL | 4 |
+| ESCLEROCIO OSCURO | 6 |
+| AUTOFAGIA NECRÓTICA | 6 |
+| NECROSIS CONTROLADA | 5 |
+| PROTOCOLO OMEGA-CERO | 8 |
+| REMISIÓN METABÓLICA | 8 |
 | MENTE COLMENA DISTRIBUIDA | 8 |
 | DEPREDADOR DE REALIDADES | 12 |
 | COLAPSO DEPREDATORIO | 8 |
@@ -874,6 +1004,11 @@ extra_PL = floor(ε_peak · epsilon_peak_pl_bonus)
 | ALLOSTASIS | `disturbances_survived` | 5 |
 | HOMEORHESIS | `floor(omega_min_peak · 10)` | 7 |
 | METABOLISMO OSCURO | `devoured · 2` | 8 |
+| ESCLEROCIO OSCURO | `floor(met_oscuro_devoured / 8)` | 8 |
+| AUTOFAGIA NECRÓTICA | `floor(autolisis_devour_count / 3)` | 8 |
+| NECROSIS CONTROLADA | `floor(necrosis_agent_count / 2)` | 8 |
+| PROTOCOLO OMEGA-CERO | `floor(omega_cero_devour_count / 4)` | 12 |
+| REMISIÓN METABÓLICA | `floor(biomasa / 50)` | 12 |
 | POLIMORFÍA TOTAL | `floor(rotaciones / 2)` | 8 |
 | DOMADOR DEL CAOS | `floor(peak_money / 500K)` | 8 |
 | ASCESIS PROFUNDA | `floor(omega_min_peak · 10)` | 6 |
@@ -1202,7 +1337,14 @@ Cada 30 s. Antes de escribir crea `.bak` del save anterior; recovery automático
 
 ---
 
-**Última revisión**: v1.0.0.10 (rebalance catálogo de logros) — código actual en `claude/great-turing-aa67fe`.
+**Última revisión**: v1.0.2.0 (árbol oscuro completo) — código actual en `claude/great-turing-aa67fe`.
+
+**Cambios incluidos en v1.0.1.x → v1.0.2.0** (árbol oscuro):
+- Nueva **§15.5 ÁRBOL OSCURO**: 5 sub-rutas de Met. Oscuro (AUTOFAGIA, NECROSIS, ESCLEROCIO, OMEGA-CERO, REMISIÓN) con gates, economía, recursos (Ν, Φ, Θ), constantes, 10 buffs NG+ y 5 logros Mythic.
+- §3.2 / §3.5: cadenas de click y pasivo extendidas con los hooks del árbol oscuro (×5 autofagia, necrosis_mult, Φ amp, sintesis_vital, apoptosis_heredada, plasticidad_terminal, control_omega, semilla_cosmica_oscura, memoria_sinaptica aditivo).
+- §8.2: override de Ω por sub-ruta + offset de `control_omega` en runs normales.
+- §16.1 / §16.3: PL base y fórmulas NG+ de las 5 sub-rutas.
+- **Discrepancias doc↔código corregidas (código manda)**: `OMEGA_CERO_PHI_TARGET = 300` (lore decía 100); logro `singularidad_perfecta` pide `Φ ≥ 500` (lore decía 200); `AUTOFAGIA_COLAPSO_MIN_DEVOURS = 40` (lore decía 3).
 
 **Cambios incluidos en v1.0.0.10** (pre-launch):
 - Gate de COLAPSO CONTROLADO: `ε_effective > 0.90` → `ε_runtime > 0.90` (ahora alcanzable con biomasa activa).

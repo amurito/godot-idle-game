@@ -73,6 +73,12 @@ var autofagia_depredador_done: bool = false
 # Flag persistente del cruce HOMEORHESIS → NECROSIS CONTROLADA.
 # Desbloquea el legado plasticidad_terminal. Se preserva al trascender.
 var homeorhesis_necrosis_done: bool = false
+# Flag persistente del cruce PROTOCOLO OMEGA-CERO ↔ REMISIÓN METABÓLICA (cualquier orden).
+# Desbloquea el legado sintesis_vital. Se preserva al trascender.
+var omega_remision_done: bool = false
+# Mejor Núcleo Φ logrado al sellar PROTOCOLO OMEGA-CERO (intensidad del buff memoria_sinaptica).
+# Se preserva al trascender (como las demás estadísticas-pico de desbloqueo).
+var omega_cero_kernel_max: float = 0.0
 
 # Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
 # current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
@@ -243,6 +249,8 @@ func get_save_dict() -> Dictionary:
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"autofagia_depredador_done": autofagia_depredador_done,
 		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
+		"omega_remision_done": omega_remision_done,
+		"omega_cero_kernel_max": omega_cero_kernel_max,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -268,6 +276,8 @@ func save_legacy():
 		"esclerocio_panspermia_done": esclerocio_panspermia_done,
 		"autofagia_depredador_done": autofagia_depredador_done,
 		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
+		"omega_remision_done": omega_remision_done,
+		"omega_cero_kernel_max": omega_cero_kernel_max,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -364,6 +374,8 @@ func load_legacy():
 	esclerocio_panspermia_done = data.get("esclerocio_panspermia_done", false)
 	autofagia_depredador_done = data.get("autofagia_depredador_done", false)
 	homeorhesis_necrosis_done = data.get("homeorhesis_necrosis_done", false)
+	omega_remision_done = data.get("omega_remision_done", false)
+	omega_cero_kernel_max = data.get("omega_cero_kernel_max", 0.0)
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])
@@ -713,6 +725,13 @@ func save_achievement_data(data: Dictionary) -> void:
 #  TRASCENDENCIA — API pública (v0.9.2)
 # =====================================================
 
+## Registra el Núcleo Φ logrado al sellar PROTOCOLO OMEGA-CERO. Guarda solo el máximo
+## histórico → la intensidad del buff memoria_sinaptica nunca baja por una run peor.
+func record_omega_cero_kernel(kernel: float) -> void:
+	if kernel > omega_cero_kernel_max:
+		omega_cero_kernel_max = kernel
+		save_legacy()
+
 func mark_ending_achieved(route: String) -> void:
 	if route == "" or route == "NONE":
 		return
@@ -794,7 +813,9 @@ func transcend() -> int:
 	# endings_achieved, cosmic_unlocked, achievement_data, reencarnacion_snapshot,
 	# esclerocio_panspermia_done (semilla_cosmica_oscura sigue desbloqueable),
 	# autofagia_depredador_done (ciclo_catabolico sigue desbloqueable),
-	# homeorhesis_necrosis_done (plasticidad_terminal sigue desbloqueable)
+	# homeorhesis_necrosis_done (plasticidad_terminal sigue desbloqueable),
+	# omega_remision_done (sintesis_vital sigue desbloqueable),
+	# omega_cero_kernel_max (intensidad de memoria_sinaptica preservada)
 
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])

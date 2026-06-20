@@ -196,6 +196,107 @@ func _build_eventos(parent: VBoxContainer) -> void:
 		LegacyManager.save_legacy()
 		print("♾️ [DEBUG] HOMEORHESIS marcada — cross Plasticidad Terminal listo"))
 
+	var hbox_oc := HBoxContainer.new()
+	hbox_oc.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_oc)
+	# Otorga el permiso del Banco + marca las 3 rutas para testear el desbloqueo de Omega-Cero.
+	_add_event_btn(hbox_oc, "Desbloq. Omega-Cero", func():
+		LegacyManager.endings_achieved["AUTOFAGIA NECRÓTICA"] = true
+		LegacyManager.endings_achieved["NECROSIS CONTROLADA"] = true
+		LegacyManager.endings_achieved["ESCLEROCIO OSCURO"] = true
+		LegacyManager.grant_buff("protocolo_omega_cero")
+		LegacyManager.save_legacy()
+		print("🕳️ [DEBUG] Protocolo Omega-Cero desbloqueado (3 rutas + permiso)"))
+	# Fuerza MO + Omega-Cero activo para testear el loop de síntesis.
+	_add_event_btn(hbox_oc, "Activar Omega-Cero", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.mutation_met_oscuro = true
+		EvoManager.activate_omega_cero()
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("🕳️ [DEBUG] Omega-Cero activado — Ω = %.4f" % EvoManager.omega_cero_omega))
+	# Regala Φ para testear el sello sin grindear devours.
+	_add_event_btn(hbox_oc, "+50 Φ", func():
+		EvoManager.omega_cero_phi += 50.0
+		print("🕳️ [DEBUG] Φ = %.0f" % EvoManager.omega_cero_phi))
+
+	# ── DEBUG REMISIÓN METABÓLICA ──
+	var hbox_rem0 := HBoxContainer.new()
+	hbox_rem0.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_rem0)
+	# Marca las 4 sub-rutas + otorga el permiso del Banco (15 PL) para habilitar el gate.
+	_add_event_btn(hbox_rem0, "Desbloq. Remisión", func():
+		LegacyManager.endings_achieved["AUTOFAGIA NECRÓTICA"] = true
+		LegacyManager.endings_achieved["NECROSIS CONTROLADA"] = true
+		LegacyManager.endings_achieved["ESCLEROCIO OSCURO"] = true
+		LegacyManager.endings_achieved["PROTOCOLO OMEGA-CERO"] = true
+		LegacyManager.grant_buff("remision_metabolica")
+		LegacyManager.save_legacy()
+		print("🌿 [DEBUG] REMISIÓN desbloqueada (4 sub-rutas + permiso)"))
+	# Fuerza las condiciones de gate: bio>=150 en MO + ruta activa.
+	_add_event_btn(hbox_rem0, "Gate listo", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.mutation_met_oscuro = true
+		BiosphereEngine.biomasa = 155.0
+		LegacyManager.endings_achieved["AUTOFAGIA NECRÓTICA"] = true
+		LegacyManager.endings_achieved["NECROSIS CONTROLADA"] = true
+		LegacyManager.endings_achieved["ESCLEROCIO OSCURO"] = true
+		LegacyManager.endings_achieved["PROTOCOLO OMEGA-CERO"] = true
+		LegacyManager.grant_buff("remision_metabolica")
+		LegacyManager.save_legacy()
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("🌿 [DEBUG] Gate listo: MO activo, bio=%.0f, permiso OK" % BiosphereEngine.biomasa))
+	# Activa la ruta directamente (salta el gate) para testear el loop de banda.
+	_add_event_btn(hbox_rem0, "Activar Remisión", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.mutation_met_oscuro = true
+		BiosphereEngine.biomasa = 155.0
+		EvoManager.mutation_remision = true
+		EvoManager.remision_omega = Balance.REMISION_OMEGA_START
+		EvoManager.remision_theta = 0.0
+		EvoManager.remision_band_timer = 0.0
+		EvoManager.remision_sealable = false
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("🌿 [DEBUG] Remisión activa — Ω=%.3f, Θ=0s, bio=%.0f" % [EvoManager.remision_omega, BiosphereEngine.biomasa]))
+
+	var hbox_rem1 := HBoxContainer.new()
+	hbox_rem1.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_rem1)
+	# Sube Θ a 59s para testear el mensaje de sello inminente y el botón SELLAR.
+	_add_event_btn(hbox_rem1, "Θ→59s", func():
+		EvoManager.remision_theta = 59.0
+		print("🌿 [DEBUG] Θ=59s — próximo tick dentro de banda sella"))
+	# Fuerza Θ al target para armar el sello (sin esperar el minuto de grinding).
+	_add_event_btn(hbox_rem1, "Sello listo (Θ=60)", func():
+		EvoManager.remision_theta = Balance.REMISION_THETA_TARGET
+		EvoManager.remision_sealable = true
+		print("🌿 [DEBUG] Sello armado — pulsá R o el botón SELLAR para cerrar"))
+	# Simula la bio baja para forzar la involución (bio < 30 → vuelve a MO).
+	_add_event_btn(hbox_rem1, "Forzar Involución", func():
+		BiosphereEngine.biomasa = 25.0
+		print("🌿 [DEBUG] bio=25 — próximo tick dispara involución"))
+	# Limpia la flag de lock para poder reintentar REMISIÓN la misma run.
+	_add_event_btn(hbox_rem1, "Unlock run-lock", func():
+		EvoManager.remision_locked_run = false
+		print("🌿 [DEBUG] remision_locked_run=false — gate disponible nuevamente"))
+
+	var hbox_rem2 := HBoxContainer.new()
+	hbox_rem2.add_theme_constant_override("separation", 6)
+	parent.add_child(hbox_rem2)
+	# Fuerza el cross: marca omega_remision_done para desbloquear sintesis_vital.
+	_add_event_btn(hbox_rem2, "Marcar Cross Síntesis", func():
+		LegacyManager.omega_remision_done = true
+		LegacyManager.save_legacy()
+		print("🌿 [DEBUG] omega_remision_done=true — sintesis_vital desbloqueable"))
+	# Fuerza el buff Control de Ω para testear la producción pasiva (+30% a offset máx).
+	_add_event_btn(hbox_rem2, "Buff Control Ω", func():
+		LegacyManager.grant_buff("control_omega")
+		LegacyManager.save_legacy()
+		StructuralModel.control_omega_offset = 0.15
+		print("🌿 [DEBUG] control_omega + offset=0.15 → +%.0f%% producción" % (StructuralModel.control_omega_offset * 2.0 * 100)))
+
 
 func _add_event_btn(parent: HBoxContainer, label: String, fn: Callable) -> void:
 	var btn := Button.new()
@@ -277,5 +378,13 @@ func refresh_info() -> void:
 		var s: String = EvoManager.genome[k]
 		if s != "dormido":
 			t += "  %s → %s\n" % [k, s]
+	if EvoManager.mutation_remision:
+		var band_c := EvoManager.remision_band_center()
+		var in_band := EvoManager.remision_in_band()
+		var band_str := "[color=green]DENTRO[/color]" if in_band else "[color=red]FUERA[/color]"
+		t += "[b]REMISIÓN[/b]  %s\n" % band_str
+		t += "  Ω_rem=%.3f  centro=%.3f±%.3f\n" % [EvoManager.remision_omega, band_c, Balance.REMISION_BAND_HALF]
+		t += "  Θ=%.1fs / %.0fs  sealable=%s  locked=%s\n" % [EvoManager.remision_theta, Balance.REMISION_THETA_TARGET, str(EvoManager.remision_sealable), str(EvoManager.remision_locked_run)]
+		t += "  bio=%.1f (floor=%.0f)  ctrl_Ω_offset=%.3f → +%.0f%%\n" % [BiosphereEngine.biomasa, Balance.REMISION_BIO_FLOOR, StructuralModel.control_omega_offset, StructuralModel.control_omega_offset * 2.0 * 100]
 	_info_label.text = t
 

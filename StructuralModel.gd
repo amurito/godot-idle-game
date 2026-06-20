@@ -26,6 +26,7 @@ const EPSILON_DEBUG_INTERVAL := 0.25
 # ==================== FLEXIBILIDAD ====================
 var omega: float = 1.0
 var omega_min: float = 0.0
+var control_omega_offset: float = 0.0  # CONTROL DE Ω (buff NG+ Remisión): empuje manual acotado por run
 
 # ==================== INSTITUCIONES ====================
 var institution_accounting_unlocked: bool = false
@@ -72,6 +73,7 @@ func reset():
 	epsilon_debug_throttle = 0.0
 	omega = 1.0
 	omega_min = 0.0
+	control_omega_offset = 0.0
 	structural_cooldown = 0.0
 	baseline_delta_structural = 0.0
 	last_stable_structural_upgrades = 0
@@ -324,6 +326,19 @@ func update_runtime() -> void:
 		if EvoManager.mutation_necrosis:
 			omega = EvoManager.necrosis_omega
 			omega_min = min(omega_min, EvoManager.necrosis_omega)
+		# PROTOCOLO OMEGA-CERO: la síntesis rigidiza Ω con cada devour (override del clamp de MO).
+		if EvoManager.mutation_omega_cero:
+			omega = EvoManager.omega_cero_omega
+			omega_min = min(omega_min, EvoManager.omega_cero_omega)
+		# REMISIÓN METABÓLICA: el jugador controla Ω para mantenerla en la banda sana.
+		if EvoManager.mutation_remision:
+			omega = EvoManager.remision_omega
+			omega_min = min(omega_min, EvoManager.remision_omega)
+
+	# CONTROL DE Ω (buff NG+ de REMISIÓN): influencia manual acotada en runs normales.
+	# Inerte en sub-rutas oscuras (el offset queda en 0: el empuje está bloqueado ahí).
+	if control_omega_offset != 0.0:
+		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
 
 	if epsilon_debug:
 		print("e breakdown: act=", epsilon_active, " pas=", epsilon_passive, " cmp=", epsilon_complex, " O=", omega)

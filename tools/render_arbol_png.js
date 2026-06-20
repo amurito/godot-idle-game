@@ -9,7 +9,7 @@ const fs = require('fs');
 const puppeteer = require('puppeteer-core');
 
 const REPO = path.resolve(__dirname, '..');
-const HTML = path.join(REPO, 'docs', 'arbol_evoluciones.html');
+const HTML = path.join(REPO, 'docs', 'manuals', 'arbol_evoluciones.html');
 const OUT = path.join(REPO, 'docs', 'arbol_evoluciones.png');
 
 const CHROME_CANDIDATES = [

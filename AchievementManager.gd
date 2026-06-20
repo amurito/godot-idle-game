@@ -78,6 +78,7 @@ func _ready() -> void:
 		"esclerocio_contingencia":_eval_esclerocio_contingencia,
 		"autolisis_perfecta":     _eval_autolisis_perfecta,
 		"funcion_pura":           _eval_funcion_pura,
+		"singularidad_perfecta":  _eval_singularidad_perfecta,
 		"cinco_legados":          _eval_cinco_legados,
 		"omega_inviolable":       _eval_omega_inviolable_cond,
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
@@ -444,6 +445,11 @@ func _eval_funcion_pura(_s: Dictionary) -> bool:
 		and EvoManager.necrosis_active_time <= 75.0 \
 		and not EvoManager.necrosis_tox_maxed
 
+func _eval_singularidad_perfecta(_s: Dictionary) -> bool:
+	return RunManager.final_route == "PROTOCOLO OMEGA-CERO" \
+		and EvoManager.omega_cero_phi >= Balance.OMEGA_CERO_ACH_PHI \
+		and EvoManager.omega_cero_omega <= Balance.OMEGA_CERO_ACH_OMEGA
+
 func _eval_cinco_legados(_s: Dictionary) -> bool:
 	var count := 0
 	for id in LegacyManager.LEGACY_DEFS:
@@ -542,6 +548,8 @@ func on_run_closed(route: String) -> void:
 		unlock("autolisis_perfecta")
 	if route == "NECROSIS CONTROLADA" and _eval_funcion_pura({}):
 		unlock("funcion_pura")
+	if route == "PROTOCOLO OMEGA-CERO" and _eval_singularidad_perfecta({}):
+		unlock("singularidad_perfecta")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

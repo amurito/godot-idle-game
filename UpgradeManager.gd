@@ -87,7 +87,10 @@ func can_buy(id: String, money: float) -> bool:
 	# (el devour da burst proporcional al costo → recomprás material para extender la run).
 	# EXCEPCIÓN — Necrosis Controlada: compras reabiertas (necesitás el motor económico real
 	# que genera Necromasa para comprar Agentes y empujar Ω al floor).
-	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis and not EvoManager.mutation_necrosis:
+	# EXCEPCIÓN — Protocolo Omega-Cero: compras reabiertas (recomprás material para realimentar
+	# el loop de devour que genera Φ).
+	if EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis \
+			and not EvoManager.mutation_necrosis and not EvoManager.mutation_omega_cero:
 		return false
 
 	# Usa cost() que aplica todos los descuentos (memoria_recurso, memoria_estructural, presión_rentable)

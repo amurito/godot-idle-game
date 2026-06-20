@@ -41,10 +41,10 @@ func reset() -> void:
 # INTERFAZ PRINCIPAL (Llamada por el Logic Tick)
 # =====================================================
 
-func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool, is_red_micelial: bool = false, is_parasitism: bool = false, is_colonization: bool = false) -> float:
+func process_tick(delta: float, passive_income: float, epsilon_runtime: float, is_hyperassimilation: bool, is_homeostasis: bool, is_symbiosis: bool, is_red_micelial: bool = false, is_parasitism: bool = false, is_colonization: bool = false, is_remision: bool = false) -> float:
 	_compute_hifas(passive_income, is_homeostasis)
 	_update_nutrients(delta, epsilon_runtime)
-	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism, is_colonization)
+	_grow_biomass(delta, epsilon_runtime, is_hyperassimilation, is_homeostasis, is_symbiosis, is_parasitism, is_colonization, is_remision)
 	_grow_micelio(delta, is_red_micelial, is_colonization)
 	
 	# Aseguramos que el epsilon efectivo se calcule siempre, incluso si no hubo crecimiento
@@ -85,11 +85,15 @@ func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
 		h *= 0.85
 	hifas = h if not (is_nan(h) or is_inf(h)) else 0.0
 
-func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false) -> void:
+func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false, is_remision: bool = false) -> void:
 	if is_nan(hifas) or is_inf(hifas):
 		hifas = 0.0
 	if is_nan(biomasa) or is_inf(biomasa):
 		biomasa = 0.0
+	# REMISIÓN METABÓLICA controla la biomasa por completo (floración/marchitamiento en
+	# EvoManager.process_remision). No crecer por hifas ni aplicar el cap aquí.
+	if is_remision:
+		return
 	if hifas <= 0 or nutrientes <= 0:
 		return
 

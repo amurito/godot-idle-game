@@ -86,6 +86,18 @@ func build_save_data(main: Node) -> Dictionary:
 			"necrosis_tox_maxed": EvoManager.necrosis_tox_maxed,
 			"necrosis_overdose": EvoManager.necrosis_overdose,
 			"necrosis_catalyst_level": EvoManager.necrosis_catalyst_level,
+			"mutation_omega_cero": EvoManager.mutation_omega_cero,
+			"omega_cero_phi": _sf(EvoManager.omega_cero_phi),
+			"omega_cero_devour_count": EvoManager.omega_cero_devour_count,
+			"omega_cero_devour_timer": _sf(EvoManager.omega_cero_devour_timer),
+			"omega_cero_omega": _sf(EvoManager.omega_cero_omega, Balance.OMEGA_CERO_OMEGA_START),
+			"omega_cero_kernel": _sf(EvoManager.omega_cero_kernel),
+			"mutation_remision": EvoManager.mutation_remision,
+			"remision_omega": _sf(EvoManager.remision_omega, Balance.REMISION_OMEGA_START),
+			"remision_theta": _sf(EvoManager.remision_theta),
+			"remision_band_timer": _sf(EvoManager.remision_band_timer),
+			"remision_sealable": EvoManager.remision_sealable,
+			"remision_locked_run": EvoManager.remision_locked_run,
 			"depredador_timer": EvoManager.depredador_timer,
 			"depredador_inestabilidad": EvoManager.depredador_inestabilidad,
 			"depredador_timer_buys": EvoManager.depredador_timer_buys,
@@ -213,6 +225,18 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.necrosis_tox_maxed = ev.get("necrosis_tox_maxed", false)
 		EvoManager.necrosis_overdose = ev.get("necrosis_overdose", false)
 		EvoManager.necrosis_catalyst_level = int(ev.get("necrosis_catalyst_level", 0))
+		EvoManager.mutation_omega_cero = ev.get("mutation_omega_cero", false)
+		EvoManager.omega_cero_phi = _sf(ev.get("omega_cero_phi", 0.0))
+		EvoManager.omega_cero_devour_count = int(ev.get("omega_cero_devour_count", 0))
+		EvoManager.omega_cero_devour_timer = _sf(ev.get("omega_cero_devour_timer", 0.0))
+		EvoManager.omega_cero_omega = _sf(ev.get("omega_cero_omega", Balance.OMEGA_CERO_OMEGA_START), Balance.OMEGA_CERO_OMEGA_START)
+		EvoManager.omega_cero_kernel = _sf(ev.get("omega_cero_kernel", 0.0))
+		EvoManager.mutation_remision = ev.get("mutation_remision", false)
+		EvoManager.remision_omega = _sf(ev.get("remision_omega", Balance.REMISION_OMEGA_START), Balance.REMISION_OMEGA_START)
+		EvoManager.remision_theta = _sf(ev.get("remision_theta", 0.0))
+		EvoManager.remision_band_timer = _sf(ev.get("remision_band_timer", 0.0))
+		EvoManager.remision_sealable = ev.get("remision_sealable", false)
+		EvoManager.remision_locked_run = ev.get("remision_locked_run", false)
 		EvoManager.depredador_timer = ev.get("depredador_timer", EvoManager.depredador_timer)
 		EvoManager.depredador_inestabilidad = ev.get("depredador_inestabilidad", EvoManager.depredador_inestabilidad)
 		EvoManager.depredador_timer_buys = int(ev.get("depredador_timer_buys", EvoManager.depredador_timer_buys))
