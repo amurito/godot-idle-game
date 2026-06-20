@@ -4,7 +4,7 @@ extends Control
 ## Y = Ω (0 abajo, OMEGA_RANGE arriba).
 ## La línea horizontal (Ω actual) es lo que el jugador necesita mantener DENTRO de la banda sombreada.
 
-const TIME_WINDOW := 14.0   # segundos totales mostrados (±7s desde ahora)
+const TIME_WINDOW := 36.0   # segundos totales mostrados (±18s desde ahora) — ~2 períodos de la banda
 const OMEGA_RANGE := 0.62   # tope visual del eje Y
 
 func _ready() -> void:
