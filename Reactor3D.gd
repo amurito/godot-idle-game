@@ -17,10 +17,11 @@ var cam:       Camera3D
 var p_mat:     StandardMaterial3D
 var core_mat:  StandardMaterial3D
 
-var target_scale:  float = BASE_SCALE
-var current_scale: float = BASE_SCALE
-var pulse:         float = 0.0
-var target_tint:   Color = Color(0.15, 0.65, 1.0)
+var target_scale:     float = BASE_SCALE
+var current_scale:    float = BASE_SCALE
+var pulse:            float = 0.0
+var target_tint:      Color = Color(0.15, 0.65, 1.0)
+var _remision_peril:  float = 0.0  # 0=en banda (teal), 1=fuera de banda (violeta oscuro)
 
 # ---- Ciclo de vida ----
 
@@ -156,6 +157,12 @@ func _process(delta: float) -> void:
 	var biomasa: float    = BiosphereEngine.biomasa
 	var seta_bonus: float = 1.25 if EvoManager.seta_formada else 1.0
 	target_tint = UIManager.get_reactor_color()
+	if EvoManager.mutation_remision:
+		var peril_target := 0.0 if EvoManager.remision_in_band() else 1.0
+		_remision_peril = lerpf(_remision_peril, peril_target, delta * 2.0)
+		target_tint = target_tint.lerp(Color(0.20, 0.05, 0.30), _remision_peril)
+	else:
+		_remision_peril = 0.0
 
 	current_scale = lerp(current_scale, target_scale * seta_bonus, 0.12)
 	var display_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.06
