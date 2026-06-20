@@ -76,6 +76,10 @@ const BMP_SYMBOLS: Dictionary = {
 	"⚱️": "",
 	"⚙": "",
 	"⚙️": "",
+	"🌸": "",
+	"⚗️": "",
+	"⚗": "",
+	"⏳": "",
 }
 
 var _web: bool = false

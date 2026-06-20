@@ -154,6 +154,16 @@ func _build_eventos(parent: VBoxContainer) -> void:
 		LegacyManager.esclerocio_panspermia_done = true
 		LegacyManager.save_legacy()
 		print("🦠 [DEBUG] esclerocio_panspermia_done = true — Semilla Cósmica Oscura desbloqueada"))
+	# Fuerza las condiciones de gate: MO activo + 30 devours + bio>=50 + ε<0.25 → botón aparece en panel.
+	_add_event_btn(hbox_esc, "Forzar Esclerocio", func():
+		EvoManager.mutation_depredador = true
+		EvoManager.activate_met_oscuro()
+		EvoManager.met_oscuro_devoured_count = 30
+		BiosphereEngine.biomasa = 55.0
+		StructuralModel.epsilon_runtime = 0.10
+		UIManager.update_ng_plus_buttons()
+		_main.update_ui()
+		print("🌑 [DEBUG] Condiciones Esclerocio forzadas — devoured=30, bio=55, ε=0.10"))
 
 	# ── DEBUG METABOLISMO OSCURO / NECROSIS / AUTOFAGIA ──
 	var hbox_nec := HBoxContainer.new()
