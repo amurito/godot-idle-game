@@ -80,7 +80,7 @@ func _draw() -> void:
 	draw_rect(Rect2(0.0, 0.0, w, h), border_col, false, 1.5)
 
 func _band_center(band_t: float) -> float:
-	return Balance.REMISION_BAND_CENTER + Balance.REMISION_BAND_AMP * sin(TAU * Balance.REMISION_BAND_FREQ * band_t)
+	return Balance.REMISION_BAND_CENTER + Balance.REMISION_BAND_AMP * sin(band_t * Balance.REMISION_BAND_FREQ)
 
 func _to_y(omega_val: float, h: float) -> float:
 	return (1.0 - omega_val / OMEGA_RANGE) * h
