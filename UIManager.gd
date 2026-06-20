@@ -93,6 +93,7 @@ var _fungal_bar_style        # StyleBoxFlat de relleno verde de FungalCycleBar (
 var _met_oscuro_seal_btn: Button = null
 var _esclerocio_btn: Button = null
 var _autolisis_btn: Button = null
+var _mo_subruta_hint: Label = null
 var _autofagia_speed_btn: Button = null
 var _autofagia_double_btn: Button = null
 var _autofagia_colapso_btn: Button = null
@@ -752,6 +753,9 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_autolisis_btn):
 		_autolisis_btn.queue_free()
 		_autolisis_btn = null
+	if is_instance_valid(_mo_subruta_hint):
+		_mo_subruta_hint.queue_free()
+		_mo_subruta_hint = null
 	if is_instance_valid(_autofagia_speed_btn):
 		_autofagia_speed_btn.queue_free()
 		_autofagia_speed_btn = null
@@ -813,6 +817,7 @@ func reset_ng_plus_buttons() -> void:
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
 	_update_met_oscuro_seal_button()
+	_update_mo_subruta_hint()
 	_update_esclerocio_button()
 	_update_autolisis_button()
 	_update_autofagia_upgrade_buttons()
@@ -889,6 +894,27 @@ func _on_met_oscuro_seal_pressed() -> void:
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)
 	RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_VOLUNTARIO") % [bio, pl_total])
+
+func _update_mo_subruta_hint() -> void:
+	var any_subruta := EvoManager.mutation_autolisis or EvoManager.mutation_necrosis \
+		or EvoManager.mutation_omega_cero or EvoManager.mutation_remision
+	var show := EvoManager.mutation_met_oscuro and not RunManager.run_closed \
+		and not any_subruta and BiosphereEngine.biomasa < 50.0
+	if not show:
+		if is_instance_valid(_mo_subruta_hint):
+			_mo_subruta_hint.visible = false
+		return
+	if _mo_subruta_hint == null or not is_instance_valid(_mo_subruta_hint):
+		_mo_subruta_hint = Label.new()
+		_mo_subruta_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_mo_subruta_hint.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+		_mo_subruta_hint.add_theme_color_override("font_color", Color(0.65, 0.55, 0.70))
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_mo_subruta_hint)
+			panel.move_child(_mo_subruta_hint, 0)
+	_mo_subruta_hint.text = "↻ Sub-rutas disponibles con bio ≥ 50 · actual: %.0f" % BiosphereEngine.biomasa
+	_mo_subruta_hint.visible = true
 
 func _update_esclerocio_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision:
