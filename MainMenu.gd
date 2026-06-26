@@ -35,6 +35,8 @@ var cosmic_panel: Panel = null
 var first_trascend_overlay: ColorRect = null
 var credits_panel: Panel = null
 var _credits_close_cb: Callable = Callable()
+var codex_panel: CodexPanel = null
+var btn_codex: Button = null
 
 func _ready():
 	# Web: el canvas de Godot tiene su tamaño de render en atributos HTML (canvas.width/height),
@@ -111,6 +113,17 @@ func _setup_main_menu_for_active_slot() -> void:
 	# --- TRASCENDENCIA UI (si no fue creada todavía) ---
 	if btn_trascendencia == null:
 		_setup_trascendencia_ui()
+
+	# --- BOTÓN COMPENDIO (siempre visible, antes de Créditos) ---
+	if not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnCodex")):
+		btn_codex = Button.new()
+		btn_codex.name = "BtnCodex"
+		btn_codex.custom_minimum_size = Vector2(0, 40)
+		btn_codex.add_theme_color_override("font_color", Color(0.6, 0.85, 1.0))
+		btn_codex.pressed.connect(_on_codex_pressed)
+		var vbox_cx := $CenterContainer/VBoxContainer as VBoxContainer
+		vbox_cx.add_child(btn_codex)
+		vbox_cx.move_child(btn_codex, vbox_cx.get_child_count() - 2)
 
 	# --- BOTÓN CRÉDITOS (siempre visible, antes de Ajustes y Salir) ---
 	if not is_instance_valid(get_node_or_null("CenterContainer/VBoxContainer/BtnCreditos")):
@@ -341,6 +354,11 @@ func _refresh_nav_badges() -> void:
 	var legacy_name := tr("MM_LEGACY_BANK")
 	btn_legacy.text = EmojiToRichText.strip("★ " + legacy_name.to_upper() if has_new_buff else legacy_name)
 
+	if is_instance_valid(btn_codex):
+		var has_new_codex: bool = LegacyManager.has_unseen_codex()
+		var codex_name := tr("MM_CODEX")
+		btn_codex.text = EmojiToRichText.strip("★ " + codex_name.to_upper() if has_new_codex else codex_name)
+
 func _on_achievements_pressed():
 	TutorialManager.hide_gameplay_hints()
 	achievements_panel.visible = true
@@ -357,6 +375,8 @@ func _on_back_pressed():
 	achievements_panel.visible = false
 	legacy_panel.visible = false
 	history_panel.visible = false
+	if is_instance_valid(codex_panel):
+		codex_panel.visible = false
 	# Actualizar badges + gate al cerrar (puede haberse comprado memoria_de_run)
 	_refresh_nav_badges()
 	_refresh_history_gate()
@@ -368,6 +388,8 @@ func _show_slot_selector() -> void:
 	achievements_panel.visible = false
 	legacy_panel.visible = false
 	history_panel.visible = false
+	if is_instance_valid(codex_panel):
+		codex_panel.visible = false
 	_refresh_slot_list()
 
 func _show_main_menu() -> void:
@@ -599,6 +621,19 @@ func _on_history_pressed() -> void:
 	btn_tab_current.button_pressed = true
 	btn_tab_all.button_pressed = false
 	_update_history_view()
+
+# ===================== COMPENDIO (CODEX) =====================
+func _on_codex_pressed() -> void:
+	TutorialManager.hide_gameplay_hints()
+	if codex_panel == null or not is_instance_valid(codex_panel):
+		codex_panel = CodexPanel.new()
+		add_child(codex_panel)
+		codex_panel.closed.connect(_on_codex_closed)
+	else:
+		codex_panel.open()
+
+func _on_codex_closed() -> void:
+	_refresh_nav_badges()
 
 func _on_history_tab_current() -> void:
 	_history_tab = "current"

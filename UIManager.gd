@@ -453,8 +453,13 @@ func update_header_metrics(epsilon: float, omega: float, biomasa: float, biomasa
 	if header_hifas_value:
 		header_hifas_value.text = "%.1f" % hifas
 	if header_nutrientes_value:
-		var nut_disc := int(clamp(nutrientes / 50.0, 0.0, 0.15) * 100.0)
-		header_nutrientes_value.text = "%.1f%s" % [nutrientes, " (-%d%%)" % nut_disc if nut_disc > 0 else ""]
+		# Dos efectos explícitos: descuento de upgrades (-15%/50, cap -45%) y combustible de
+		# biomasa (aporte base = hifas·√nut·0.02, lo que realmente "hace" el nutriente).
+		var nut_disc := int(clamp(floor(nutrientes / 50.0) * 0.15, 0.0, 0.45) * 100.0)
+		var bio_rate := hifas * sqrt(nutrientes) * 0.02
+		var disc_part := " · -%d%% upg" % nut_disc if nut_disc > 0 else ""
+		var bio_part := " · +%.1f bio/s" % bio_rate if bio_rate > 0.005 else ""
+		header_nutrientes_value.text = "%.1f%s%s" % [nutrientes, disc_part, bio_part]
 
 func update_structural_metrics(epsilon: float, omega: float, persistence: float, accounting: int):
 	if structural_eps_value:
@@ -939,7 +944,15 @@ func _update_esclerocio_button() -> void:
 		if panel:
 			panel.add_child(_esclerocio_btn)
 			panel.move_child(_esclerocio_btn, 0)
-	_esclerocio_btn.text = EmojiToRichText.strip("🌑 " + tr("BTN_ESCLEROCIO"))
+	var has_access: bool = LegacyManager.get_buff_value("acceso_esclerocio")
+	if not has_access:
+		_esclerocio_btn.text = EmojiToRichText.strip("🔒 " + tr("BTN_ESCLEROCIO"))
+		_esclerocio_btn.disabled = true
+		_esclerocio_btn.tooltip_text = tr("TOOLTIP_LOCK_ESCLEROCIO")
+	else:
+		_esclerocio_btn.text = EmojiToRichText.strip("🌑 " + tr("BTN_ESCLEROCIO"))
+		_esclerocio_btn.disabled = false
+		_esclerocio_btn.tooltip_text = ""
 	_esclerocio_btn.visible = true
 
 func _on_esclerocio_pressed() -> void:
@@ -972,7 +985,15 @@ func _update_autolisis_button() -> void:
 		if panel:
 			panel.add_child(_autolisis_btn)
 			panel.move_child(_autolisis_btn, 0)
-	_autolisis_btn.text = EmojiToRichText.strip("🔥 " + tr("BTN_AUTOLISIS"))
+	var has_access: bool = LegacyManager.get_buff_value("acceso_autofagia")
+	if not has_access:
+		_autolisis_btn.text = EmojiToRichText.strip("🔒 " + tr("BTN_AUTOLISIS"))
+		_autolisis_btn.disabled = true
+		_autolisis_btn.tooltip_text = tr("TOOLTIP_LOCK_AUTOFAGIA")
+	else:
+		_autolisis_btn.text = EmojiToRichText.strip("🔥 " + tr("BTN_AUTOLISIS"))
+		_autolisis_btn.disabled = false
+		_autolisis_btn.tooltip_text = ""
 	_autolisis_btn.visible = true
 
 func _on_autolisis_pressed() -> void:
@@ -1212,7 +1233,15 @@ func _update_necrosis_button() -> void:
 		if panel:
 			panel.add_child(_necrosis_btn)
 			panel.move_child(_necrosis_btn, 0)
-	_necrosis_btn.text = EmojiToRichText.strip("☠️ " + tr("BTN_NECROSIS"))
+	var has_access: bool = LegacyManager.get_buff_value("acceso_necrosis")
+	if not has_access:
+		_necrosis_btn.text = EmojiToRichText.strip("🔒 " + tr("BTN_NECROSIS"))
+		_necrosis_btn.disabled = true
+		_necrosis_btn.tooltip_text = tr("TOOLTIP_LOCK_NECROSIS")
+	else:
+		_necrosis_btn.text = EmojiToRichText.strip("☠️ " + tr("BTN_NECROSIS"))
+		_necrosis_btn.disabled = false
+		_necrosis_btn.tooltip_text = ""
 	_necrosis_btn.visible = true
 
 func _on_necrosis_pressed() -> void:
@@ -2103,10 +2132,24 @@ func _ensure_fungal_bar_style(bar) -> void:
 		_fungal_bar_label = lbl
 
 func get_reactor_color() -> Color:
-	if RunManager.run_closed and RunManager.final_route == "COLAPSO DEPREDATORIO":
-		return Color(0.12, 0.0, 0.02)
-	if RunManager.run_closed and RunManager.final_route == "REMISIÓN METABÓLICA":
-		return Color(0.08, 0.72, 0.48)
+	if RunManager.run_closed:
+		match RunManager.final_route:
+			"ESCLEROCIO OSCURO":
+				return Color(0.08, 0.0, 0.18)
+			"AUTOFAGIA NECRÓTICA":
+				return Color(0.35, 0.0, 0.08)
+			"NECROSIS CONTROLADA":
+				return Color(0.1, 0.28, 0.02)
+			"METABOLISMO OSCURO":
+				return Color(0.22, 0.08, 0.32)
+			"DEPREDADOR DE REALIDADES":
+				return Color(0.25, 0.0, 0.04)
+			"COLAPSO SINTÉTICO":
+				return Color(0.1, 0.05, 0.2)
+			"COLAPSO DEPREDATORIO":
+				return Color(0.12, 0.0, 0.02)
+			"REMISIÓN METABÓLICA":
+				return Color(0.08, 0.72, 0.48)
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:

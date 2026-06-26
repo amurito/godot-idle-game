@@ -342,14 +342,14 @@ const LEGACY_DEFS: Dictionary = {
 	},
 	"catabolismo_heredado": {
 		"name": "Catabolismo Heredado",
-		"flavor": "Las estructuras digeridas no desaparecen. Vuelven como semilla para el siguiente ciclo.",
+		"flavor": "Las estructuras digeridas no desaparecen. Vuelven como combustible para el siguiente ciclo.",
 		"cat": "ng_plus", "cost": 4, "cost_growth": 1.0, "max_level": 3,
 		"reveal": {"type": "route_closed", "route": "AUTOFAGIA NECRÓTICA"},
 		"unlock": {"type": "route_closed", "route": "AUTOFAGIA NECRÓTICA"},
-		"effect": {"type": "run_start_bio", "value": 10.0},
-		# Nivel 1 (gratis, otorgado al cerrar la ruta): +10 bio al inicio de run.
-		# Nivel 2 (+4 PL): +20 bio. Nivel 3 (+4 PL): +30 bio.
-		# Acelera el acceso a mutaciones tempranas en runs posteriores.
+		"effect": {"type": "run_start_nutrients", "value": 40.0},
+		# Nivel 1 (gratis, otorgado al cerrar la ruta): +40 nutrientes al inicio de run.
+		# Nivel 2 (+4 PL): +80 nut. Nivel 3 (+4 PL): +120 nut.
+		# Acelera el crecimiento de biomasa desde el primer tick con hifas activas.
 	},
 	"ciclo_catabolico": {
 		"name": "Ciclo Catabólico",
@@ -381,16 +381,46 @@ const LEGACY_DEFS: Dictionary = {
 		# Cross HOMEORHESIS → NECROSIS CONTROLADA (homeorhesis completada alguna vez, luego necrosis).
 		# Efecto: ×1.5 income (click y pasivo) cuando Ω>0.55 O Ω<0.10 — premia ambos extremos.
 	},
+	# ── ACCESOS A SUB-RUTAS DE MET. OSCURO ─────────────────────────────────────
+	# Desbloquean los botones de sub-ruta dentro de una run con Met. Oscuro activo.
+	# Progresión en dificultad: Esclerocio → Autofagia → Necrosis → Omega-Cero.
+	"acceso_esclerocio": {
+		"name": "Acceso: Esclerocio Oscuro",
+		"flavor": "La bioquímica oscura ya no es accidental. El hongo aprende a encapsularse con intención.",
+		"cat": "ng_plus", "cost": 30, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "min": 1},
+		"unlock": {"type": "transcendence_count", "min": 1},
+		"effect": {"type": "route_access", "route": "esclerocio"},
+		# Habilita el botón ESCLEROCIO OSCURO durante Met. Oscuro (T≥1).
+	},
+	"acceso_autofagia": {
+		"name": "Acceso: Autofagia Necrótica",
+		"flavor": "El organismo que presenció su propia devoración puede elegir repetirla con control.",
+		"cat": "ng_plus", "cost": 50, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "DEPREDADOR DE REALIDADES"},
+		"unlock": {"type": "route_closed", "route": "DEPREDADOR DE REALIDADES"},
+		"effect": {"type": "route_access", "route": "autolisis"},
+		# Habilita el botón AUTOFAGIA NECRÓTICA durante Met. Oscuro (requiere DEPREDADOR completado).
+	},
+	"acceso_necrosis": {
+		"name": "Acceso: Necrosis Controlada",
+		"flavor": "El colapso metabólico fue explorado. Ahora se puede dirigir el proceso con instrumentos.",
+		"cat": "ng_plus", "cost": 50, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed_any", "routes": ["METABOLISMO OSCURO", "ESCLEROCIO OSCURO", "AUTOFAGIA NECRÓTICA"]},
+		"unlock": {"type": "route_closed_any", "routes": ["METABOLISMO OSCURO", "ESCLEROCIO OSCURO", "AUTOFAGIA NECRÓTICA"]},
+		"effect": {"type": "route_access", "route": "necrosis"},
+		# Habilita el botón NECROSIS CONTROLADA durante Met. Oscuro (requiere cualquier final MO completado).
+	},
 	"protocolo_omega_cero": {
 		"name": "Protocolo Omega-Cero",
 		"flavor": "Tres muertes aprendidas. Una síntesis. El hongo ya no sobrevive a través de una: las ejecuta todas a la vez.",
-		"cat": "ng_plus", "cost": 12, "cost_growth": 1.0, "max_level": 1,
+		"cat": "ng_plus", "cost": 100, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO"]},
 		"unlock": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO"]},
 		"effect": {"type": "protocolo_omega_cero_active", "value": 1.0},
 		# PERMISO: comprarlo habilita la ruta PROTOCOLO OMEGA-CERO dentro de Met. Oscuro.
 		# Gate en EvoManager.omega_cero_gate_ready() chequea get_buff_value("protocolo_omega_cero").
-		# Es el item más caro del banco (final del árbol oscuro).
+		# Requiere T≥2 (check en EvoManager) + haber cerrado las 3 sub-rutas previas.
 	},
 	"memoria_sinaptica": {
 		"name": "Memoria Sináptica",

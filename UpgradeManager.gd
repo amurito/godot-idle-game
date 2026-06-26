@@ -183,10 +183,11 @@ func cost(id: String) -> float:
 			if discount > 0.0:
 				base_cost *= discount  # 0.80 = paga solo el 80%
 
-	# NUTRIENTES: red fúngica subsidia upgrades — hasta -15% con nutrientes >= 50
+	# NUTRIENTES: red fúngica subsidia upgrades — -15% por cada 50 nut, cap -45% a 150 nut
 	var nut := BiosphereEngine.nutrientes
-	if nut > 0.0:
-		base_cost *= (1.0 - clamp(nut / 50.0, 0.0, 0.15))
+	if nut >= 50.0:
+		var nut_mult :float= clamp(floor(nut / 50.0) * 0.15, 0.0, 0.45)
+		base_cost *= (1.0 - nut_mult)
 
 	return base_cost
 

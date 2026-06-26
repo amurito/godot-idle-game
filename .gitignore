@@ -46,3 +46,5 @@ builds/
 analysis_output/
 tools/__pycache__/
 tools/analysis_output/
+# Telemetry data dumps fetched from the hub (runtime, no versionar)
+telemetry_fetched/

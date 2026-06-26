@@ -52,6 +52,7 @@ const AUTOSAVE_INTERVAL := 30.0
 @onready var legacy_panel = $LegacyPanel
 @onready var legacy_list = %LegacyList
 @onready var pl_label = %PLLabel
+var _codex_panel_ingame: CodexPanel = null
 
 
 # ===== BIOSFERA MOVIDA A BiosphereEngine =====
@@ -277,6 +278,12 @@ func _ready():
 	legacy_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
 	legacy_btn.pressed.connect(UIManager.open_legacy_panel)
 	bottom_left_panel.add_child(legacy_btn)
+
+	var codex_btn := Button.new()
+	codex_btn.text = EmojiToRichText.strip("📖 " + tr("MM_CODEX"))
+	codex_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	codex_btn.pressed.connect(_toggle_codex_ingame)
+	bottom_left_panel.add_child(codex_btn)
 
 	var settings_btn := Button.new()
 	settings_btn.text = tr("GAME_BTN_SETTINGS")
@@ -876,6 +883,15 @@ func _on_close_evo_button_pressed():
 func _on_close_legacy_pressed() -> void:
 	UIManager.close_legacy_panel()
 
+## Compendio in-game: overlay full-screen instanciado lazy sobre la escena de juego.
+func _toggle_codex_ingame() -> void:
+	if _codex_panel_ingame == null or not is_instance_valid(_codex_panel_ingame):
+		_codex_panel_ingame = CodexPanel.new()
+		add_child(_codex_panel_ingame)
+		_codex_panel_ingame.closed.connect(func(): pass)
+	else:
+		_codex_panel_ingame.open()
+
 
 func _on_btn_homeostasis_pressed():
 	if EvoManager.mutation_homeostasis:
@@ -1013,6 +1029,14 @@ func _input(event):
 	if event.is_action_pressed("ui_debug"):
 		StructuralModel.epsilon_debug = !StructuralModel.epsilon_debug
 		print("e DEBUG =", StructuralModel.epsilon_debug)
+
+	# Compendio in-game abierto: ESC lo cierra; las demás teclas no actúan sobre el juego
+	# (pero siguen propagándose a la GUI → el buscador del Compendio recibe el texto).
+	if is_instance_valid(_codex_panel_ingame) and _codex_panel_ingame.visible:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+			_codex_panel_ingame.close()
+			get_viewport().set_input_as_handled()
+		return
 
 	# ESC — cerrar panel activo (Settings > Shortcuts > Banco Genético > EvoChoice)
 	if event is InputEventKey and event.pressed and not event.echo:

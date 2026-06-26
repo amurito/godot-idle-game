@@ -838,11 +838,13 @@ func process_necrosis(dt: float) -> void:
 
 # ── PROTOCOLO OMEGA-CERO ──────────────────────────────────────────────────────
 ## ¿El jugador desbloqueó el protocolo en el Banco Genético y cumple el gate en-run?
-## Síntesis de las 3 sub-rutas: requiere el permiso comprado + bio + devours previos.
+## Síntesis de las 3 sub-rutas: requiere T≥2 + permiso comprado + bio + devours previos.
 func omega_cero_gate_ready() -> bool:
 	if RunManager.run_closed or not mutation_met_oscuro:
 		return false
 	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
+		return false
+	if LegacyManager.trascendencia_count < 2:
 		return false
 	if not LegacyManager.get_buff_value("protocolo_omega_cero"):
 		return false

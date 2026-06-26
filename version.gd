@@ -8,8 +8,8 @@ const NAME := "génesis"
 
 const MAJOR := 1
 const MINOR := 0
-const PATCH := 2
-const HOTFIX := 0  # v1.0.2.0 — árbol oscuro completo (REMISIÓN METABÓLICA). Incrementar para hotfixes: 1.0.2.1, etc.
+const PATCH := 3
+const HOTFIX := 0  # v1.0.3.0 — Codex (Compendio), gates rutas oscuras, Banco Cósmico (Latencia/Reserva/Resonancia), nutrientes explícitos. Incrementar para hotfixes: 1.0.3.1, etc.
 
 
 func get_env(var_name: String) -> String:

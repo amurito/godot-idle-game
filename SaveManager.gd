@@ -14,6 +14,9 @@ var SAVE_PATH: String:
 # Flag para detectar si se cargó un save existente (vs run nueva sin archivo).
 # Usado por _apply_cosmic_buffs para no duplicar bonuses al recargar.
 var _file_existed_on_load: bool = false
+# Cuando delete_save_and_restart() tuvo que usar el fallback de overwrite en lugar de delete,
+# este flag fuerza el comportamiento de "run nueva" en load_game().
+var _force_new_run: bool = false
 
 static func _sf(v: float, fallback: float = 0.0, min_val: float = -INF) -> float:
 	var safe := v if not (is_nan(v) or is_inf(v)) else fallback
@@ -321,6 +324,13 @@ func _migrate(data: Dictionary) -> Dictionary:
 
 func load_game(main: Node):
 	var path := SAVE_PATH
+	# _force_new_run se activa cuando delete_save no pudo borrar el archivo y usó el fallback.
+	# En ese caso tratamos la carga como run nueva aunque el archivo exista (vacío).
+	if _force_new_run:
+		_force_new_run = false
+		_file_existed_on_load = false
+		_reset_for_new_slot(main)
+		return
 	if not FileAccess.file_exists(path):
 		print("ℹ️ [SaveManager] No se encontró archivo de guardado en:", path)
 		_file_existed_on_load = false
@@ -376,9 +386,18 @@ func delete_save_and_restart():
 
 	var path := SAVE_PATH
 	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
-		print("🗑️ [SaveManager] Archivo de run eliminado. Iniciando nuevo ciclo.")
-	
+		var del_err := DirAccess.remove_absolute(path)
+		if del_err != OK:
+			# Fallback: sobreescribir con JSON vacío para que load_game no cargue datos viejos
+			var f := FileAccess.open(path, FileAccess.WRITE)
+			if f:
+				f.store_string("{}")
+				f.close()
+			_force_new_run = true
+			push_warning("[SaveManager] delete_save falló (err=%d), sobreescrito con vacío." % del_err)
+		else:
+			print("🗑️ [SaveManager] Archivo de run eliminado. Iniciando nuevo ciclo.")
+
 	# Resetear Autoloads persistentes (solo los de la sesión actual)
 	UpgradeManager.reset()
 	BiosphereEngine.reset()

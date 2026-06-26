@@ -84,6 +84,9 @@ func _compute_hifas(passive_income: float, is_homeostasis: bool) -> void:
 	if is_homeostasis:
 		h *= 0.85
 	hifas = h if not (is_nan(h) or is_inf(h)) else 0.0
+	# LATENCIA HIFAL (Cósmico T1): piso de hifas para que biomasa/ε arranquen sin esperar pasivo.
+	if LegacyManager.has_cosmic_buff("latencia_hifal"):
+		hifas = max(hifas, LegacyManager.LATENCIA_HIFAL_FLOOR)
 
 func _grow_biomass(delta: float, _epsilon_runtime: float, _is_hyperassimilation: bool, is_homeostasis: bool, _is_symbiosis: bool, is_parasitism: bool = false, is_colonization: bool = false, is_remision: bool = false) -> void:
 	if is_nan(hifas) or is_inf(hifas):

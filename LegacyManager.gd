@@ -106,6 +106,7 @@ var cosmic_unlocked: Dictionary = {}
 # =====================================================
 var post_tras_route: String = ""  # "vacio" | "carnaval" | "reencarnacion" | ""
 var reencarnacion_snapshot: Dictionary = {}  # Serializado de UpgradeManager al momento de trascender
+var codex_seen: Dictionary = {}   # { "entry_id": true } — entradas del Compendio ya leídas
 
 const ENDING_FAMILIES := {
 	"HOMEOSTASIS": "orden", "ALLOSTASIS": "orden",
@@ -190,7 +191,25 @@ const COSMIC_DATA := {
 		"desc": "La próxima trascendencia otorga el doble de Esencia (Ξ ×2). Efecto de un solo uso por compra.",
 		"tier": 3,
 	},
+	"latencia_hifal": {
+		"cost": 12, "name": "Latencia Hifal",
+		"desc": "Las hifas mantienen un piso de actividad permanente: ε y biomasa despiertan desde el arranque, sin esperar a que el ingreso pasivo las encienda.",
+		"tier": 1,
+	},
+	"reserva_nutricia": {
+		"cost": 18, "name": "Reserva Nutricia",
+		"desc": "Empezás cada run con +60 nutrientes: combustible inmediato para la biomasa y descuento de upgrades desde el primer segundo.",
+		"tier": 2,
+	},
+	"resonancia_perpetua": {
+		"cost": 60, "name": "Resonancia Perpetua",
+		"desc": "Cada trascendencia otorga +25% de Esencia, de forma permanente (a diferencia del Sustrato Cósmico, no se consume).",
+		"tier": 3,
+	},
 }
+
+# Piso de hifas que sostiene el legado cósmico Latencia Hifal.
+const LATENCIA_HIFAL_FLOOR := 3.0
 
 # =====================================================
 #  CICLO DE VIDA
@@ -254,6 +273,7 @@ func get_save_dict() -> Dictionary:
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
+		"codex_seen": codex_seen,
 	}
 
 func save_legacy():
@@ -281,6 +301,7 @@ func save_legacy():
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
+		"codex_seen": codex_seen,
 	}
 	var path := LEGACY_PATH
 	# Asegurar que el directorio del slot existe antes de escribir
@@ -379,6 +400,7 @@ func load_legacy():
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])
+	codex_seen = data.get("codex_seen", {})
 
 	# Cargar buffs — con migración desde formato antiguo (unlocked_legacies: { id: bool })
 	if data.has("buffs"):
@@ -505,6 +527,10 @@ func is_unlockable(id: String) -> bool:
 	if req_buff != "" and get_buff_level(req_buff) == 0:
 		return false
 	return true
+
+## Wrapper público para evaluar condiciones de unlock (usado por Codex y sistemas externos).
+func check_condition(cond: Dictionary) -> bool:
+	return _check_condition(cond)
 
 ## Condición genérica — evalúa un dict { type, ... }
 func _check_condition(cond: Dictionary) -> bool:
@@ -736,9 +762,51 @@ func mark_ending_achieved(route: String) -> void:
 	if route == "" or route == "NONE":
 		return
 	if not endings_achieved.get(route, false):
+		var before := _codex_revealed_ids()
 		endings_achieved[route] = true
 		save_legacy()
 		print("🏁 [Legacy] Ruta registrada: ", route)
+		_notify_codex_unlocks(before)
+
+# =====================================================
+#  COMPENDIO (CODEX) — desbloqueo y notificación
+# =====================================================
+
+## ¿Hay alguna entrada del Compendio revelada que el jugador aún no abrió?
+func has_unseen_codex() -> bool:
+	for id in CodexDefs.ENTRIES:
+		if _check_condition(CodexDefs.ENTRIES[id].get("unlock", {"type": "always"})) \
+				and not codex_seen.get(id, false):
+			return true
+	return false
+
+## Set de ids de entradas actualmente reveladas (cumplen su condición de unlock).
+func _codex_revealed_ids() -> Dictionary:
+	var out := {}
+	for id in CodexDefs.ENTRIES:
+		if _check_condition(CodexDefs.ENTRIES[id].get("unlock", {"type": "always"})):
+			out[id] = true
+	return out
+
+## Compara las entradas reveladas contra un snapshot previo y avisa de las nuevas.
+func _notify_codex_unlocks(before: Dictionary) -> void:
+	var use_en: bool = LocaleManager.current_locale == "en"
+	var new_names: Array = []
+	for id in CodexDefs.ENTRIES:
+		if before.has(id):
+			continue
+		if _check_condition(CodexDefs.ENTRIES[id].get("unlock", {"type": "always"})):
+			new_names.append(CodexDefs.ENTRIES[id].get("name_en" if use_en else "name_es", id))
+	if new_names.is_empty():
+		return
+	var prefix: String = "New Codex entry: " if use_en else "Nueva entrada en el Codex: "
+	for nm in new_names:
+		LogManager.add(prefix + nm)
+	if new_names.size() == 1:
+		UIManager.show_toast(prefix + new_names[0])
+	else:
+		UIManager.show_toast(("%d new Codex entries" % new_names.size()) if use_en \
+			else ("%d nuevas entradas en el Codex" % new_names.size()))
 
 func get_family_progress() -> Dictionary:
 	var prog := {"orden": false, "biologia": false, "colapso": false}
@@ -774,7 +842,11 @@ func calculate_esencia_gain() -> int:
 	var from_pl := int(legacy_points / 10.0)
 	var from_routes := unique_endings_count() * 5
 	var tier_bonus := trascendencia_count * 2
-	return from_pl + from_routes + tier_bonus
+	var total := from_pl + from_routes + tier_bonus
+	# RESONANCIA PERPETUA (Cósmico T3): +25% Esencia permanente (no se consume).
+	if has_cosmic_buff("resonancia_perpetua"):
+		total = int(total * 1.25)
+	return total
 
 func transcend() -> int:
 	if not can_transcend():
@@ -868,11 +940,11 @@ func apply_legacy_buffs() -> void:
 		EconomyManager.money += run_start_money
 		_register_run_buff("✦ [Legado] Legado Metabólico: +$%.0f al inicio" % run_start_money)
 
-	# CATABOLISMO HEREDADO: biomasa inicial (10 × level)
-	var run_start_bio: float = get_effect_value("run_start_bio")
-	if run_start_bio > 0.0 and not SaveManager._file_existed_on_load:
-		BiosphereEngine.biomasa += run_start_bio
-		_register_run_buff("✦ [NG+] Catabolismo Heredado: +%.0f bio al inicio" % run_start_bio)
+	# CATABOLISMO HEREDADO: nutrientes iniciales (40 × level)
+	var run_start_nutrients: float = get_effect_value("run_start_nutrients")
+	if run_start_nutrients > 0.0 and not SaveManager._file_existed_on_load:
+		BiosphereEngine.nutrientes += run_start_nutrients
+		_register_run_buff("✦ [NG+] Catabolismo Heredado: +%.0f nutrientes al inicio" % run_start_nutrients)
 
 	# PLASTICIDAD ADAPTATIVA: omega_min floor 0.30
 	if get_buff_value("plasticidad_adaptativa"):
@@ -925,7 +997,7 @@ func apply_legacy_buffs() -> void:
 		_register_run_buff("✦ [NG+] Metabolismo Glitch presente — se activa con ε > 0.40 (click ×1.5, pasivo ×1.8)")
 	if get_buff_value("catabolismo_heredado"):
 		var bio_lv: int = get_buff_level("catabolismo_heredado")
-		_register_run_buff("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f bio al inicio" % [bio_lv, get_effect_value("run_start_bio")])
+		_register_run_buff("✦ [NG+] Catabolismo Heredado Nv.%d — +%.0f nutrientes al inicio" % [bio_lv, get_effect_value("run_start_nutrients")])
 	if get_buff_value("apoptosis_heredada"):
 		_register_run_buff("✦ [NG+] Apoptosis Heredada — income escala con Ω bajo (×1.5 máx)")
 	if get_buff_value("plasticidad_terminal"):
@@ -958,6 +1030,12 @@ func apply_cosmic_buffs() -> void:
 		if not SaveManager._file_existed_on_load:
 			add_pl(5)
 			_register_run_buff("✦ [Cósmico] Eco de Legado: +5 PL")
+
+	# RESERVA NUTRICIA (T2): +60 nutrientes al inicio (combustible + descuento de arranque)
+	if has_cosmic_buff("reserva_nutricia"):
+		if not SaveManager._file_existed_on_load:
+			BiosphereEngine.nutrientes += 60.0
+			_register_run_buff("✦ [Cósmico] Reserva Nutricia: +60 nutrientes")
 
 	# MEMORIA PERSISTENTE (T2): Accounting y Trueque nivel 1 gratis
 	if has_cosmic_buff("memoria_persistente"):
