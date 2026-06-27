@@ -101,6 +101,13 @@ var _met_oscuro_status_timer: float = 0.0
 var _met_oscuro_active_time: float = 0.0
 const MET_OSCURO_STATUS_INTERVAL := 12.0
 
+# === FUSIÓN CATABÓLICA (transmutación que revierte HIPERASIMILACIÓN) ===
+var mutation_fusion_catabolica := false
+var fusion_burst_timer: float = 0.0      # Metabolismo Híbrido: s restantes de la ráfaga ×2
+var fusion_burst_cooldown: float = 0.0   # s de cooldown tras la ráfaga
+var fusion_burst_count: int = 0          # usos de Metabolismo Híbrido (gate del sello)
+var fusion_cd_level: int = 0             # niveles comprados de reducción de cooldown (sink de dinero)
+
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
 var mutation_autolisis := false
 var autolisis_devour_count: int = 0
@@ -165,6 +172,11 @@ func reset() -> void:
 		"homeorhesis": "dormido"
 }
 	mutation_hyperassimilation = false
+	mutation_fusion_catabolica = false
+	fusion_burst_timer = 0.0
+	fusion_burst_cooldown = 0.0
+	fusion_burst_count = 0
+	fusion_cd_level = 0
 	mutation_symbiosis = false
 	mutation_homeostasis = false
 	mutation_red_micelial = false
@@ -328,6 +340,7 @@ func activate_homeorhesis():
 
 func activate_depredador():
 	if mutation_homeostasis or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
+	if mutation_fusion_catabolica: return  # motor ya estabilizado: la transmutación cierra el glitch del Depredador
 	LogManager.add(tr("LOG_GLITCH_ALERT"))
 	mutation_depredador = true
 	depredador_inestabilidad = 0.0  # arranca la cuenta hacia la implosión
@@ -356,6 +369,11 @@ func activate_met_oscuro():
 
 func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
+	# TRANSMUTACIÓN: con el buff Fusión Catabólica activo, el trigger de Hiperasimilación
+	# revierte hacia FUSIÓN CATABÓLICA (ruta jugable) en lugar de la hiper salvaje.
+	if LegacyManager.get_buff_value("transmut_fusion"):
+		activate_fusion_catabolica()
+		return
 	mutation_hyperassimilation = true
 	LogManager.add(tr("LOG_HIPER_EFFECTS"))
 	mutation_activated.emit("hiperasimilacion", tr("MUT_HIPERASIMILACION"))
@@ -365,6 +383,77 @@ func activate_hyperassimilation():
 		or LegacyManager.trascendencia_count > 1
 	if not depredador_gate:
 		run_ended_by_mutation.emit("HIPERASIMILACION", "El sistema prioriza absorción total sobre estabilidad")
+
+# ── FUSIÓN CATABÓLICA (transmutación) ──────────────────────────────
+## Activa la ruta revertida. NO cierra la run: es jugable y se sella voluntariamente.
+func activate_fusion_catabolica():
+	if mutation_fusion_catabolica: return
+	mutation_fusion_catabolica = true
+	mutation_hyperassimilation = false  # la reversión apaga la hiper
+	LogManager.add(tr("LOG_FUSION_EFFECTS"))
+	mutation_activated.emit("fusion_catabolica", tr("MUT_FUSION_CATABOLICA"))
+	AchievementManager.on_mutation_activated("hiperasimilacion")  # cuenta como activar la rama hiper
+	UIManager.show_toast(tr("TOAST_FUSION_ON"))
+	_save_after_mutation()
+
+## Dispara la ráfaga Metabolismo Híbrido (×2 a todo el ingreso) si no hay cooldown.
+func activate_fusion_burst() -> void:
+	if not mutation_fusion_catabolica or RunManager.run_closed: return
+	if fusion_burst_timer > 0.0 or fusion_burst_cooldown > 0.0: return
+	fusion_burst_timer = Balance.FUSION_BURST_DURATION
+	fusion_burst_count += 1
+	UIManager.show_toast(tr("TOAST_FUSION_BURST_ON"))
+
+## Tick de Fusión Catabólica: avanza la ráfaga / cooldown del Metabolismo Híbrido.
+func process_fusion(dt: float) -> void:
+	if fusion_burst_timer > 0.0:
+		fusion_burst_timer -= dt
+		if fusion_burst_timer <= 0.0:
+			fusion_burst_timer = 0.0
+			fusion_burst_cooldown = fusion_effective_cooldown()
+			UIManager.show_toast(tr("TOAST_FUSION_BURST_OFF"))
+	elif fusion_burst_cooldown > 0.0:
+		fusion_burst_cooldown = max(0.0, fusion_burst_cooldown - dt)
+
+## El multiplicador activo de la ráfaga (×2 mientras corre, ×1 si no).
+func fusion_burst_mult() -> float:
+	return Balance.FUSION_BURST_MULT if fusion_burst_timer > 0.0 else 1.0
+
+## Cooldown efectivo de la ráfaga según niveles comprados (reducción compuesta, no baja del piso).
+func fusion_effective_cooldown() -> float:
+	var cd := Balance.FUSION_BURST_COOLDOWN * pow(1.0 - Balance.FUSION_CD_REDUCE_PCT, fusion_cd_level)
+	return maxf(Balance.FUSION_CD_FLOOR, cd)
+
+## Costo del próximo nivel de reducción de cooldown.
+func fusion_cd_cost() -> float:
+	return Balance.FUSION_CD_COST_BASE * pow(Balance.FUSION_CD_COST_GROWTH, fusion_cd_level)
+
+## ¿Ya está en el piso de cooldown? (no se puede comprar más)
+func fusion_cd_maxed() -> bool:
+	return fusion_effective_cooldown() <= Balance.FUSION_CD_FLOOR
+
+## ¿Se puede comprar otra reducción de cooldown?
+func can_buy_fusion_cd() -> bool:
+	return mutation_fusion_catabolica and not RunManager.run_closed \
+		and not fusion_cd_maxed() \
+		and EconomyManager.money >= fusion_cd_cost()
+
+## Compra un nivel de reducción de cooldown (tecla W / botón).
+func buy_fusion_cd() -> void:
+	if not can_buy_fusion_cd(): return
+	EconomyManager.money -= fusion_cd_cost()
+	fusion_cd_level += 1
+	# Aplicar de inmediato al cooldown en curso para que se sienta el efecto.
+	if fusion_burst_cooldown > 0.0:
+		fusion_burst_cooldown = minf(fusion_burst_cooldown, fusion_effective_cooldown())
+	UIManager.show_toast(tr("TOAST_FUSION_CD_BUY") % fusion_effective_cooldown())
+
+## ¿Se cumplen las condiciones para habilitar el sello del final?
+func fusion_seal_ready() -> bool:
+	return mutation_fusion_catabolica \
+		and EconomyManager.total_money_generated >= Balance.FUSION_SEAL_MONEY \
+		and fusion_burst_count >= Balance.FUSION_SEAL_BURSTS \
+		and StructuralModel.get_structural_upgrades() >= Balance.FUSION_SEAL_STRUCTURAL_N
 
 func activate_homeostasis():
 	if mutation_homeostasis or mutation_symbiosis: return
@@ -472,665 +561,60 @@ func carnaval_set_mutation(id: String) -> void:
 	print("🎭 [CARNAVAL] Mutación activa → %s" % id)
 
 # =====================================================
-#  PROCESS METHODS — NG+ ROUTES (llamados desde main._on_logic_tick)
+#  PROCESS METHODS — NG+ ROUTES (delegates a DarkTreeLogic)
 # =====================================================
 
-## Retorna true si el botón de sellado debe mostrarse (UI queda en main.gd)
-func process_met_oscuro(dt: float) -> bool:
-	_met_oscuro_active_time += dt
-	var income_rate := BiosphereEngine.biomasa * 0.8
-	_met_oscuro_income_accum += income_rate * dt
-	if _met_oscuro_income_accum >= 1.0:
-		var gain: float = floor(_met_oscuro_income_accum)
-		EconomyManager.money += gain
-		_met_oscuro_income_accum -= gain
-	var _bio_rate: float = Balance.AUTOLISIS_BIO_PASSIVE if mutation_autolisis else 0.1
-	BiosphereEngine.biomasa += _bio_rate * dt
-	StructuralModel.epsilon_runtime = max(0.0, StructuralModel.epsilon_runtime - 0.05 * dt)
-	_met_oscuro_status_timer += dt
-	if _met_oscuro_status_timer >= MET_OSCURO_STATUS_INTERVAL:
-		_met_oscuro_status_timer = 0.0
-		# Suprimir tick genérico cuando autofagia/necrosis están activas — tienen su propio log
-		if not mutation_autolisis and not mutation_necrosis and not mutation_remision:
-			LogManager.add(tr("LOG_MO_TICK") % [BiosphereEngine.biomasa, income_rate, EconomyManager.money])
-	# Autólisis/Necrosis/Omega-Cero/Remisión toman el control del cierre — saltar los auto-cierres de MO
-	if not mutation_autolisis and not mutation_necrosis and not mutation_omega_cero and not mutation_remision:
-		if BiosphereEngine.biomasa >= 100.0 and _met_oscuro_active_time >= 30.0 and not RunManager.run_closed:
-			LegacyManager.add_pl(2)
-			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_SATURACION"))
-			return false
-		if EconomyManager.money >= 1000000.0 and not RunManager.run_closed:
-			RunManager.close_run("METABOLISMO OSCURO", tr("CLOSE_MO_MILLONARIO"))
-			return false
-	return _met_oscuro_active_time >= Balance.MET_OSCURO_SEAL_COOLDOWN
-
-func activate_autolisis() -> void:
-	if mutation_autolisis or mutation_necrosis or mutation_omega_cero or mutation_remision:
-		return
-	mutation_autolisis = true
-	autolisis_devour_timer = 0.0
-	mutation_activated.emit("autolisis", tr("MUT_AUTOLISIS"))
-	LogManager.add(tr("LOG_AUTOLISIS_START"))
-	# Toast con los atajos de teclado de los botones que acaban de aparecer (Q/W/E/R).
-	UIManager.show_toast(tr("TOAST_AUTOFAGIA_KEYS"))
-	# Guardar inmediatamente: el autosave puede haberse ejecutado antes de esta activación,
-	# lo que provocaría que reload vea mutation_met_oscuro=true + money>$1M sin autolisis
-	# → process_met_oscuro cierra la run como METABOLISMO OSCURO en el primer tick.
-	_save_after_mutation()
-
-## Intervalo efectivo entre devours, acortado por Enzimas Líticas (piso AUTOFAGIA_DEVOUR_FLOOR).
-func autofagia_devour_interval() -> float:
-	var reduced: float = Balance.AUTOLISIS_DEVOUR_INTERVAL - autofagia_speed_level * Balance.AUTOFAGIA_SPEED_REDUCTION
-	return max(Balance.AUTOFAGIA_DEVOUR_FLOOR, reduced)
-
-## Probabilidad [0,1] del 2º devour por tick (Fagocitosis Doble). Capeada en MAX_CHANCE (80%).
-func autofagia_double_chance() -> float:
-	return min(Balance.AUTOFAGIA_DOUBLE_MAX_CHANCE, autofagia_double_level * Balance.AUTOFAGIA_DOUBLE_PER_LEVEL)
-
-## Tira 1 d20 contra una chance. Fallan round(20*(1-chance)) caras bajas.
-## Retorna {roll, success_min, success}: con chance 0.80 → success_min=5 (≥5 acierta = 16/20 = 80%).
-func _roll_autofagia_d20(chance: float) -> Dictionary:
-	var fail_faces: int = clampi(int(round(20.0 * (1.0 - chance))), 0, 20)
-	var success_min: int = fail_faces + 1
-	var roll: int = randi_range(1, 20)
-	return {"roll": roll, "success_min": success_min, "success": roll >= success_min}
-
-## Devora el upgrade más caro y aplica el burst. Retorna true si quedaba material.
-func _autofagia_consume_one() -> bool:
-	var result: Dictionary = UpgradeManager.devour_most_expensive_upgrade()
-	if not result.devoured:
-		return false
-	autolisis_devour_count += 1
-	var burst_money: float = min(result.cost * Balance.AUTOLISIS_MONEY_BURST_MULT, Balance.AUTOLISIS_MONEY_BURST_CAP)
-	EconomyManager.money += burst_money
-	var bio_burst: float = max(Balance.AUTOLISIS_BIO_BURST, result.cost / Balance.AUTOLISIS_BIO_FROM_COST_DIVISOR)
-	# Techo anti-snowball: un solo devour no puede liberar más de AUTOLISIS_BIO_BURST_CAP bio.
-	# El multiplicador NG+ (ciclo_catabolico) se aplica DESPUÉS, premiando la meta-progresión.
-	bio_burst = min(bio_burst, Balance.AUTOLISIS_BIO_BURST_CAP)
-	if LegacyManager.get_buff_value("ciclo_catabolico"):
-		bio_burst *= Balance.CICLO_CATABOLICO_BIO_MULT
-	BiosphereEngine.biomasa += bio_burst
-	UIManager.show_toast(tr("TOAST_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money, bio_burst])
-	LogManager.add(tr("LOG_AUTOLISIS_DEVOUR") % [autolisis_devour_count, burst_money, bio_burst])
-	return true
-
-## Tick de autólisis. Cada intervalo (acortable) devora el upgrade más caro; con
-## Fagocitosis Doble/Triple puede devorar hasta 3. Cuando no queda material → cierra por agotamiento.
-func process_autolisis(dt: float) -> void:
-	if autofagia_burst_cooldown > 0.0:
-		autofagia_burst_cooldown = max(0.0, autofagia_burst_cooldown - dt)
-	autolisis_devour_timer += dt
-	if autolisis_devour_timer < autofagia_devour_interval():
-		return
-	autolisis_devour_timer = 0.0
-	if not _autofagia_consume_one():
-		if not RunManager.run_closed:
-			RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
-		return
-	# Fagocitosis Doble: 1 tirada d20. ≥ success_min → 2º devour; nat 20 → además 3er (triple).
-	var chance := autofagia_double_chance()
-	if chance <= 0.0:
-		return
-	var d := _roll_autofagia_d20(chance)
-	var extra: int = 0
-	if d.success:
-		extra = 2 if d.roll >= Balance.AUTOFAGIA_TRIPLE_CRIT else 1
-	autofagia_dice_rolled.emit(d.roll, d.success_min, extra)
-	for _i in range(extra):
-		if not _autofagia_consume_one():
-			if not RunManager.run_closed:
-				RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOLISIS_AGOTADO"))
-			return
-
-## Colapso voluntario del núcleo (cierre manual). Disponible tras N devours.
-func autofagia_colapsar() -> void:
-	if RunManager.run_closed or not mutation_autolisis:
-		return
-	if autolisis_devour_count < Balance.AUTOFAGIA_COLAPSO_MIN_DEVOURS:
-		return
-	# Cierre MANUAL: sin NG+ bonus (ese se reserva al cierre natural por agotamiento de material).
-	RunManager.close_run("AUTOFAGIA NECRÓTICA", tr("CLOSE_AUTOFAGIA_COLAPSO"), true)
-
-# ── Mejoras de autofagia: costo (bio + dinero) y compra ──────────────────────
-## kind: "speed" | "double". Retorna {bio, money, level, maxed}.
-func autofagia_upgrade_cost(kind: String) -> Dictionary:
-	var lvl: int = autofagia_speed_level if kind == "speed" else autofagia_double_level
-	var maxv: int = Balance.AUTOFAGIA_SPEED_MAX_LEVEL if kind == "speed" else Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL
-	var scale: float = pow(Balance.AUTOFAGIA_UPG_COST_GROWTH, lvl)
-	return {
-		"bio": Balance.AUTOFAGIA_UPG_BIO_BASE * scale,
-		"money": Balance.AUTOFAGIA_UPG_MONEY_BASE * scale,
-		"level": lvl,
-		"maxed": lvl >= maxv,
-	}
-
-## Devours requeridos para comprar el SIGUIENTE nivel de Fagocitosis Doble (0 si no hay gate).
-func autofagia_double_gate_req() -> int:
-	var next_level: int = autofagia_double_level + 1
-	return int(Balance.AUTOFAGIA_DOUBLE_GATE.get(next_level, 0))
-
-func can_buy_autofagia_upgrade(kind: String) -> bool:
-	if not mutation_autolisis or RunManager.run_closed:
-		return false
-	var c: Dictionary = autofagia_upgrade_cost(kind)
-	if c.maxed:
-		return false
-	if kind == "double" and autolisis_devour_count < autofagia_double_gate_req():
-		return false
-	return BiosphereEngine.biomasa >= c.bio and EconomyManager.money >= c.money
-
-func buy_autofagia_upgrade(kind: String) -> bool:
-	if not can_buy_autofagia_upgrade(kind):
-		return false
-	var c: Dictionary = autofagia_upgrade_cost(kind)
-	BiosphereEngine.biomasa -= c.bio
-	EconomyManager.money -= c.money
-	if kind == "speed":
-		autofagia_speed_level += 1
-		LogManager.add(tr("LOG_AUTOFAGIA_SPEED") % autofagia_speed_level)
-	else:
-		autofagia_double_level += 1
-		LogManager.add(tr("LOG_AUTOFAGIA_DOUBLE") % int(autofagia_double_chance() * 100))
-	AudioManager.play_sfx("upgrade")
-	return true
-
-# ── Digestión Masiva (late — ambas mejoras en MAX) ────────────────────────────
-const AUTOFAGIA_BURST_COOLDOWN := 60.0  # s entre usos del botón
-
-## True si la Digestión Masiva está disponible: ambas mejoras en MAX, recursos suficientes,
-## ≥ 3 upgrades restantes y sin cooldown.
-func can_autofagia_digest_burst() -> bool:
-	if not mutation_autolisis or RunManager.run_closed:
-		return false
-	if autofagia_speed_level < Balance.AUTOFAGIA_SPEED_MAX_LEVEL:
-		return false
-	if autofagia_double_level < Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL:
-		return false
-	if UpgradeManager.get_owned_levels_count() < 3:
-		return false
-	if autofagia_burst_cooldown > 0.0:
-		return false
-	return BiosphereEngine.biomasa >= Balance.AUTOFAGIA_BURST_BIO_COST and EconomyManager.money >= Balance.AUTOFAGIA_BURST_MONEY_COST
-
-## Consume la mitad de los upgrades restantes de golpe, pagando el costo previo. Retorna devours hechos.
-func autofagia_digest_burst() -> int:
-	if not can_autofagia_digest_burst():
-		return 0
-	BiosphereEngine.biomasa -= Balance.AUTOFAGIA_BURST_BIO_COST
-	EconomyManager.money -= Balance.AUTOFAGIA_BURST_MONEY_COST
-	var levels: int = UpgradeManager.get_owned_levels_count()
-	var to_devour: int = maxi(1, levels / 2)
-	var done: int = 0
-	for _i in range(to_devour):
-		if not _autofagia_consume_one():
-			break
-		done += 1
-	autofagia_burst_cooldown = AUTOFAGIA_BURST_COOLDOWN
-	if done > 0:
-		UIManager.show_toast(tr("TOAST_AUTOFAGIA_BURST") % done)
-		LogManager.add(tr("LOG_AUTOFAGIA_BURST") % [done, autolisis_devour_count])
-	return done
-
-# ── NECROSIS CONTROLADA ──────────────────────────────────────────────────────
-## Activa la sub-ruta. Necrosis toma control de Ω (override del clamp de MO) y
-## abre la doble economía: el flujo real genera Necromasa (Ν), Ν compra Agentes
-## que empujan Ω hacia el floor. Irreversible.
-func activate_necrosis() -> void:
-	if mutation_necrosis or mutation_autolisis or mutation_omega_cero or mutation_remision:
-		return
-	mutation_necrosis = true
-	necrosis_omega = Balance.NECROSIS_OMEGA_START
-	necromasa = 0.0
-	necrosis_agent_count = 0
-	necrosis_active_time = 0.0
-	necrosis_toxicidad = 0.0
-	necrosis_tox_maxed = false
-	necrosis_overdose = false
-	necrosis_catalyst_level = 0
-	mutation_activated.emit("necrosis", tr("MUT_NECROSIS"))
-	LogManager.add(tr("LOG_NECROSIS_START"))
-	# Toast con los atajos de teclado de los botones que acaban de aparecer (Q/W/E).
-	UIManager.show_toast(tr("TOAST_NECROSIS_KEYS"))
-	_save_after_mutation()  # mismo motivo que autolisis
-
-## Multiplicador necrótico: rampa suave que premia cada paso, capeada cerca del floor.
-func necrosis_mult() -> float:
-	if not mutation_necrosis:
-		return 1.0
-	var safe_omega: float = max(necrosis_omega, Balance.NECROSIS_OMEGA_FLOOR)
-	return clampf(Balance.NECROSIS_OMEGA_START / safe_omega, 1.0, Balance.NECROSIS_MULT_CAP)
-
-## Índice necrótico [0,1]: progreso desde Ω inicial hasta el floor (para barra de progreso).
-func necrosis_index() -> float:
-	var span: float = Balance.NECROSIS_OMEGA_START - Balance.NECROSIS_OMEGA_FLOOR
-	return clampf((Balance.NECROSIS_OMEGA_START - necrosis_omega) / max(span, 0.0001), 0.0, 1.0)
-
-## Costo en Ν del próximo Agente Necrótico (escala con la cantidad comprada).
-func necrosis_agent_cost() -> float:
-	return Balance.NECROSIS_AGENT_COST_BASE * pow(Balance.NECROSIS_AGENT_COST_GROWTH, necrosis_agent_count)
-
-func can_buy_necrosis_agent() -> bool:
-	if not mutation_necrosis or RunManager.run_closed:
-		return false
-	return necromasa >= necrosis_agent_cost()
-
-## Compra un Agente Necrótico: baja Ω (×factor), sube el multiplicador Y la toxicidad (escalada).
-## Cierra al cruzar el floor.
-func buy_necrosis_agent() -> bool:
-	if not can_buy_necrosis_agent():
-		return false
-	necromasa -= necrosis_agent_cost()
-	necrosis_agent_count += 1
-	necrosis_omega *= Balance.NECROSIS_AGENT_OMEGA_FACTOR
-	# Toxicidad escala: agentes tardíos son más tóxicos (agente N → base × (1 + (N-1)×SCALE))
-	var tox_add: float = Balance.NECROSIS_TOX_PER_AGENT * (1.0 + (necrosis_agent_count - 1) * Balance.NECROSIS_TOX_SCALE_PER_AGENT)
-	necrosis_toxicidad = minf(1.0, necrosis_toxicidad + tox_add)
-	if necrosis_toxicidad >= 0.99:
-		necrosis_tox_maxed = true
-		_trigger_necrosis_overdose()
-	AudioManager.play_sfx("upgrade")
-	LogManager.add(tr("LOG_NECROSIS_AGENT") % [necrosis_agent_count, necrosis_omega])
-	if necrosis_omega <= Balance.NECROSIS_OMEGA_FLOOR and not RunManager.run_closed:
-		RunManager.close_run("NECROSIS CONTROLADA", tr("CLOSE_NECROSIS"))
-	return true
-
-## SOBREDOSIS TÓXICA: destruye toda la Ν y bloquea la generación hasta que tox < OVERDOSE_RECOVER.
-func _trigger_necrosis_overdose() -> void:
-	if necrosis_overdose:
-		return  # ya en sobredosis
-	necromasa = 0.0
-	necrosis_overdose = true
-	LogManager.add(tr("LOG_NECROSIS_OVERDOSE"))
-
-## Factor de eficiencia [piso,1] de generación de Ν.
-## En sobredosis = 0.0. Normal: basado en EXCESO sobre el floor (en floor = 100%).
-## Solo penaliza la toxicidad que está por encima del nivel adaptado.
-func necrosis_efficiency() -> float:
-	if necrosis_overdose:
-		return 0.0
-	var tox_excess: float = maxf(0.0, necrosis_toxicidad - necrosis_tox_floor())
-	return clampf(1.0 - tox_excess, Balance.NECROSIS_EFF_FLOOR, 1.0)
-
-## Tasa de Ν pasiva (% del pasivo de economía, gateada por eficiencia y catalizador).
-func necrosis_passive_rate() -> float:
-	if not mutation_necrosis or RunManager.run_closed:
-		return 0.0
-	return EconomyManager.get_passive_total() * Balance.NECROSIS_PASSIVE_FRACTION * necrosis_efficiency() * necrosis_catalyst_mult()
-
-## Ν estimada por el próximo click (para display en MSTAT). Usa el click power actual.
-func necrosis_click_preview() -> float:
-	var power: float = EconomyManager.get_click_power()
-	var base: float = pow(maxf(power, 0.0), Balance.NECROSIS_MASA_EXP) * Balance.NECROSIS_CONVERSION
-	return base * necrosis_efficiency() * necrosis_catalyst_mult()
-
-## Multiplicador de Ν del Catalizador Necrótico (aditivo: 1 + nivel×0.20).
-func necrosis_catalyst_mult() -> float:
-	return 1.0 + necrosis_catalyst_level * Balance.NECROSIS_CATALYST_PER_LEVEL
-
-## Ν generada por un click (sublineal en el poder, gateada por toxicidad, ×catalizador). Llamado desde main.
-func add_necromasa_from_click(power: float) -> void:
-	if not mutation_necrosis or RunManager.run_closed:
-		return
-	var base: float = pow(max(power, 0.0), Balance.NECROSIS_MASA_EXP) * Balance.NECROSIS_CONVERSION
-	necromasa += base * necrosis_efficiency() * necrosis_catalyst_mult()
-
-## Costo en Ν del próximo nivel de Catalizador (escala ×2 por nivel).
-func necrosis_catalyst_cost() -> float:
-	return Balance.NECROSIS_CATALYST_COST_BASE * pow(Balance.NECROSIS_CATALYST_COST_GROWTH, necrosis_catalyst_level)
-
-func can_buy_necrosis_catalyst() -> bool:
-	if not mutation_necrosis or RunManager.run_closed:
-		return false
-	return necromasa >= necrosis_catalyst_cost()
-
-## Compra un nivel de Catalizador: gasta Ν y sube el multiplicador de generación de Ν.
-func buy_necrosis_catalyst() -> bool:
-	if not can_buy_necrosis_catalyst():
-		return false
-	necromasa -= necrosis_catalyst_cost()
-	necrosis_catalyst_level += 1
-	AchievementManager.push_event("necrosis_catalyst_bought", {})
-	AudioManager.play_sfx("upgrade")
-	LogManager.add(tr("LOG_NECROSIS_CATALYST") % [necrosis_catalyst_level, int(necrosis_catalyst_mult() * 100.0)])
-	return true
-
-## Costo de una Depuración. Cuadrático en toxicidad: purgar barato con tox baja,
-## caro si la dejaste acumular (incentiva purgas frecuentes).
-func necrosis_purge_cost() -> float:
-	return Balance.NECROSIS_PURGE_COST_BASE * (1.0 + necrosis_toxicidad * necrosis_toxicidad * 5.0)
-
-## Floor de toxicidad según agentes desplegados (tox nunca decae por debajo de esto).
-func necrosis_tox_floor() -> float:
-	return necrosis_agent_count * Balance.NECROSIS_TOX_FLOOR_PER_AGENT
-
-func can_purge_necrosis() -> bool:
-	if not mutation_necrosis or RunManager.run_closed:
-		return false
-	# Solo disponible cuando hay tox significativa POR ENCIMA del floor
-	return necrosis_toxicidad > necrosis_tox_floor() + 0.05 and necromasa >= necrosis_purge_cost()
-
-## Depuración: gastás Ν para reducir la toxicidad, clampea al floor (no puede bajar de n×0.03).
-func purge_necrosis() -> bool:
-	if not can_purge_necrosis():
-		return false
-	necromasa -= necrosis_purge_cost()
-	necrosis_toxicidad = maxf(necrosis_tox_floor(), necrosis_toxicidad * Balance.NECROSIS_PURGE_FRACTION)
-	AudioManager.play_sfx("upgrade")
-	LogManager.add(tr("LOG_NECROSIS_PURGE") % (necrosis_toxicidad * 100.0))
-	return true
-
-## Tick de necrosis: cuenta el tiempo activo, decae toxicidad (con floor por agentes) y
-## verifica recuperación de sobredosis. La Ν se genera por click (anti-AFK).
-func process_necrosis(dt: float) -> void:
-	if not mutation_necrosis or RunManager.run_closed:
-		return
-	necrosis_active_time += dt
-	# Decay con floor acumulado: tox nunca baja de n_agentes × FLOOR_PER_AGENT
-	var tox_floor: float = necrosis_tox_floor()
-	if necrosis_toxicidad > tox_floor:
-		necrosis_toxicidad = maxf(tox_floor, necrosis_toxicidad - Balance.NECROSIS_TOX_DECAY * dt)
-	# Recuperación de sobredosis cuando tox baja del umbral
-	if necrosis_overdose and necrosis_toxicidad < Balance.NECROSIS_TOX_OVERDOSE_RECOVER:
-		necrosis_overdose = false
-		LogManager.add(tr("LOG_NECROSIS_OVERDOSE_RECOVER"))
-	# Ν pasiva: % del flujo pasivo de economía (gateada por eficiencia y catalizador)
-	necromasa += necrosis_passive_rate() * dt
-
-# ── PROTOCOLO OMEGA-CERO ──────────────────────────────────────────────────────
-## ¿El jugador desbloqueó el protocolo en el Banco Genético y cumple el gate en-run?
-## Síntesis de las 3 sub-rutas: requiere T≥2 + permiso comprado + bio + devours previos.
-func omega_cero_gate_ready() -> bool:
-	if RunManager.run_closed or not mutation_met_oscuro:
-		return false
-	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
-		return false
-	if LegacyManager.trascendencia_count < 2:
-		return false
-	if not LegacyManager.get_buff_value("protocolo_omega_cero"):
-		return false
-	return BiosphereEngine.biomasa >= Balance.OMEGA_CERO_BIO_REQ \
-		and met_oscuro_devoured_count >= Balance.OMEGA_CERO_DEVOUR_REQ
-
-## Activa el protocolo. Toma control de Ω (override del clamp de MO) y abre el loop de síntesis.
-func activate_omega_cero() -> void:
-	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
-		return
-	mutation_omega_cero = true
-	omega_cero_phi = 0.0
-	omega_cero_devour_count = 0
-	omega_cero_devour_timer = 0.0
-	omega_cero_omega = Balance.OMEGA_CERO_OMEGA_START
-	_omega_cero_starve_ticks = 0
-	mutation_activated.emit("omega_cero", tr("MUT_OMEGA_CERO"))
-	LogManager.add(tr("LOG_OMEGA_CERO_START"))
-	UIManager.show_toast(tr("TOAST_OMEGA_CERO_KEYS"))
-	_save_after_mutation()  # mismo motivo que autolisis/necrosis
-
-## Multiplicador de Φ por devour: escala con la rigidez (Ω bajo amplifica), capeado.
-func omega_cero_phi_mult() -> float:
-	if not mutation_omega_cero:
-		return 1.0
-	var safe_omega: float = max(omega_cero_omega, Balance.OMEGA_CERO_OMEGA_FLOOR)
-	return clampf(Balance.OMEGA_CERO_K / safe_omega, 1.0, Balance.OMEGA_CERO_PHI_CAP)
-
-## Progreso [0,1] hacia el sello (Φ acumulada / target). Para la barra del HUD.
-func omega_cero_progress() -> float:
-	return clampf(omega_cero_phi / Balance.OMEGA_CERO_PHI_TARGET, 0.0, 1.0)
-
-## El sello está disponible cuando se alcanzó el target de Φ.
-func omega_cero_can_seal() -> bool:
-	return mutation_omega_cero and not RunManager.run_closed \
-		and omega_cero_phi >= Balance.OMEGA_CERO_PHI_TARGET
-
-## Devora el upgrade más caro: genera Φ (amplificada por Ω), baja Ω y libera $ para realimentar.
-## Retorna true si quedaba material.
-## Consume un upgrade del batch (sin modificar Φ/Ω — eso se aplica una vez por evento de síntesis).
-## Retorna el costo del upgrade consumido, o -1.0 si no hay material.
-func _omega_cero_consume_upgrade() -> float:
-	var result: Dictionary = UpgradeManager.devour_most_expensive_upgrade()
-	if not result.devoured:
-		return -1.0
-	EconomyManager.money += result.cost * Balance.OMEGA_CERO_MONEY_BURST_MULT
-	return result.cost
-
-## Tick del protocolo. Batch de hasta BATCH_SIZE consumos por tick, pero Φ y Ω se aplican
-## UNA SOLA VEZ por evento de síntesis (no ×batch). Φ amplifica el click durante la run.
-## Cierra por floor de Ω, o colapsa por inanición si Φ llega a cero.
-func process_omega_cero(dt: float) -> void:
-	if not mutation_omega_cero or RunManager.run_closed:
-		return
-	omega_cero_devour_timer += dt
-	if omega_cero_devour_timer < Balance.OMEGA_CERO_DEVOUR_INTERVAL:
-		return
-	omega_cero_devour_timer = 0.0
-
-	var batch_count: int = 0
-	for _i in range(Balance.OMEGA_CERO_BATCH_SIZE):
-		if _omega_cero_consume_upgrade() < 0.0:
-			break
-		batch_count += 1
-
-	if batch_count == 0:
-		_omega_cero_starve_ticks += 1
-		if _omega_cero_starve_ticks > Balance.OMEGA_CERO_STARVE_GRACE:
-			omega_cero_phi = maxf(omega_cero_phi - Balance.OMEGA_CERO_PHI_DECAY_TICK, 0.0)
-			UIManager.show_toast(tr("TOAST_OMEGA_CERO_INANICION") % [omega_cero_phi, _omega_cero_starve_ticks - Balance.OMEGA_CERO_STARVE_GRACE])
-			if omega_cero_phi <= 0.0 and not RunManager.run_closed:
-				_omega_cero_finalize()
-				RunManager.close_run("COLAPSO SINTÉTICO", tr("CLOSE_OMEGA_CERO_COLAPSO"))
-		return
-
-	# Evento de síntesis: Ω cae y Φ sube UNA vez, independiente del tamaño del batch.
-	_omega_cero_starve_ticks = 0
-	omega_cero_devour_count += 1
-	omega_cero_omega = maxf(omega_cero_omega * Balance.OMEGA_CERO_OMEGA_FACTOR, Balance.OMEGA_CERO_OMEGA_FLOOR)
-	var phi_gain: float = Balance.OMEGA_CERO_PHI_BASE * omega_cero_phi_mult()
-	omega_cero_phi += phi_gain
-	UIManager.show_toast(tr("TOAST_OMEGA_CERO_DEVOUR") % [batch_count, omega_cero_devour_count, phi_gain, omega_cero_omega])
-	LogManager.add(tr("LOG_OMEGA_CERO_DEVOUR") % [batch_count, omega_cero_devour_count, phi_gain, omega_cero_omega])
-	if omega_cero_omega <= Balance.OMEGA_CERO_OMEGA_FLOOR and not RunManager.run_closed:
-		_omega_cero_finalize()
-		RunManager.close_run("PROTOCOLO OMEGA-CERO", tr("CLOSE_OMEGA_CERO_FLOOR"))
-
-## Sello intencional (eco escleroidal): el hongo decide que la síntesis está completa.
-func omega_cero_seal() -> void:
-	if not omega_cero_can_seal():
-		return
-	_omega_cero_finalize()
-	RunManager.close_run("PROTOCOLO OMEGA-CERO", tr("CLOSE_OMEGA_CERO_SEAL"))
-
-## Fija el Núcleo Φ (intensidad del buff NG+) antes de cerrar. Capeado.
-func _omega_cero_finalize() -> void:
-	omega_cero_kernel = clampf(omega_cero_phi / Balance.OMEGA_CERO_PHI_TARGET, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
-
-# ── REMISIÓN METABÓLICA (última post-MO — sanación / floración) ───────────────
-## ¿El jugador desbloqueó el permiso y cumple el gate en-run? Última ruta del árbol oscuro.
-## Requiere las 4 sub-rutas cerradas (vía el permiso del Banco) + biomasa muy alta en MO.
-func remision_gate_ready() -> bool:
-	if RunManager.run_closed or not mutation_met_oscuro:
-		return false
-	if mutation_omega_cero or mutation_autolisis or mutation_necrosis or mutation_remision:
-		return false
-	if remision_locked_run:
-		return false
-	if not LegacyManager.get_buff_value("remision_metabolica"):
-		return false
-	return BiosphereEngine.biomasa >= Balance.REMISION_BIO_GATE
-
-## Activa la ruta. Toma control de Ω (override del clamp de MO) y abre el loop de sanación.
-func activate_remision() -> void:
-	if mutation_remision or mutation_omega_cero or mutation_autolisis or mutation_necrosis:
-		return
-	mutation_remision = true
-	remision_omega = Balance.REMISION_OMEGA_START
-	remision_theta = 0.0
-	remision_band_timer = 0.0
-	remision_sealable = false
-	mutation_activated.emit("remision", tr("MUT_REMISION"))
-	LogManager.add(tr("LOG_REMISION_START"))
-	UIManager.show_toast(tr("TOAST_REMISION_KEYS"))
-	_save_after_mutation()  # mismo motivo que las otras sub-rutas
-
-## Centro actual de la banda objetivo (se desplaza senoidal lento).
-func remision_band_center() -> float:
-	return Balance.REMISION_BAND_CENTER + Balance.REMISION_BAND_AMP * sin(remision_band_timer * Balance.REMISION_BAND_FREQ)
-
-## ¿Ω dentro de la banda objetivo en este instante?
-func remision_in_band() -> bool:
-	return absf(remision_omega - remision_band_center()) <= Balance.REMISION_BAND_HALF
-
-## Empuje manual de Ω (dir = +1 sube, −1 baja). Clampeado al rango de la ruta.
-func remision_nudge(dir: int) -> void:
-	if not mutation_remision or RunManager.run_closed:
-		return
-	remision_omega = clampf(remision_omega + dir * Balance.REMISION_NUDGE, Balance.REMISION_OMEGA_MIN, Balance.REMISION_OMEGA_MAX)
-
-## Progreso [0,1] del contador Θ hacia el sello.
-func remision_progress() -> float:
-	return clampf(remision_theta / Balance.REMISION_THETA_TARGET, 0.0, 1.0)
-
-## El sello queda armado al alcanzar el target de Θ; no se revierte salvo involución.
-func remision_can_seal() -> bool:
-	return mutation_remision and not RunManager.run_closed and remision_sealable
-
-## Tick de la ruta. Ω deriva al colapso; dentro de banda la biomasa florece (compuesto) y
-## Θ sube; fuera, la biomasa se marchita y Θ se reinicia (hasta armar el sello). Si la
-## biomasa cae bajo el piso, NO cierra: INVOLUCIONA a Met. Oscuro (REMISIÓN bloqueada esa run).
-func process_remision(dt: float) -> void:
-	if not mutation_remision or RunManager.run_closed:
-		return
-	remision_band_timer += dt
-	remision_omega = clampf(remision_omega - Balance.REMISION_OMEGA_DRIFT * dt, Balance.REMISION_OMEGA_MIN, Balance.REMISION_OMEGA_MAX)
-	if remision_in_band():
-		BiosphereEngine.biomasa += BiosphereEngine.biomasa * Balance.REMISION_BLOOM_RATE * dt
-		remision_theta += dt
-		if remision_theta >= Balance.REMISION_THETA_TARGET and not remision_sealable:
-			remision_sealable = true
-			UIManager.show_toast(tr("TOAST_REMISION_SELLO"))
-			LogManager.add(tr("LOG_REMISION_SELLO"))
-	else:
-		BiosphereEngine.biomasa = maxf(BiosphereEngine.biomasa - BiosphereEngine.biomasa * Balance.REMISION_WITHER_RATE * dt, 0.0)
-		if not remision_sealable:
-			remision_theta = maxf(remision_theta - Balance.REMISION_THETA_DECAY * dt, 0.0)
-	if BiosphereEngine.biomasa < Balance.REMISION_BIO_FLOOR and not RunManager.run_closed:
-		_remision_involucionar()
-
-## Sello intencional: el organismo declara la remisión completa. Cierra exitosamente.
-func remision_seal() -> void:
-	if not remision_can_seal():
-		return
-	mutation_remision = false
-	RunManager.close_run("REMISIÓN METABÓLICA", tr("CLOSE_REMISION_SELLO") % BiosphereEngine.biomasa)
-
-## Involución: la enfermedad regresa. NO cierra la run — degrada a Met. Oscuro y bloquea
-## REMISIÓN esta run. Met. Oscuro reanuda solo (su guard excluía remisión); el jugador
-## debe elegir otra sub-ruta (autólisis / necrosis / omega-cero / esclerocio).
-func _remision_involucionar() -> void:
-	mutation_remision = false
-	remision_locked_run = true
-	remision_sealable = false
-	remision_theta = 0.0
-	UIManager.show_toast(tr("TOAST_REMISION_INVOLUCION"))
-	LogManager.add(tr("LOG_REMISION_INVOLUCION"))
-	_save_after_mutation()
-
-# ── CONTROL DE Ω (buff NG+ de REMISIÓN) ───────────────────────────────────────
-## ¿Disponible el empuje manual de Ω? Solo con el buff y fuera de las sub-rutas
-## oscuras (que ya controlan Ω por completo).
-func control_omega_available() -> bool:
-	if RunManager.run_closed or mutation_met_oscuro:
-		return false
-	return LegacyManager.get_buff_value("control_omega")
-
-## Empuje manual de Ω en runs normales (dir = +1/−1). Acotado en magnitud y con cooldown.
-func control_omega_nudge(dir: int) -> void:
-	if not control_omega_available():
-		return
-	var now: int = Time.get_ticks_msec()
-	if now - control_omega_last_ms < int(Balance.CONTROL_OMEGA_COOLDOWN * 1000.0):
-		return
-	control_omega_last_ms = now
-	StructuralModel.control_omega_offset = clampf(
-		StructuralModel.control_omega_offset + dir * Balance.CONTROL_OMEGA_NUDGE,
-		-Balance.CONTROL_OMEGA_MAX, Balance.CONTROL_OMEGA_MAX)
-
-func process_depredador(dt: float) -> void:
-	# Timer de inestabilidad: el Depredador es una mutación que no se sostiene.
-	# Si el jugador no la resuelve antes del límite (sellando MET.OSCURO o
-	# consumiendo todos los upgrades), el sistema implosiona → COLAPSO DEPREDATORIO.
-	depredador_inestabilidad += dt
-	if depredador_inestabilidad >= DEPREDADOR_INESTABILIDAD_MAX and not RunManager.run_closed:
-		RunManager.close_run("COLAPSO DEPREDATORIO", tr("CLOSE_COLAPSO_DEP"))
-		return
-	_depredador_active_tick += dt
-	# El frenesí acelera tras DEP_DEVOUR_TICK_FAST_AT comidos.
-	var devour_tick: float = Balance.DEP_DEVOUR_TICK_FAST if met_oscuro_devoured_count >= Balance.DEP_DEVOUR_TICK_FAST_AT else Balance.DEP_DEVOUR_TICK_BASE
-	if _depredador_active_tick >= devour_tick:
-		_depredador_active_tick = 0.0
-		var devoured: bool = UpgradeManager.devour_random_upgrade()
-		if devoured:
-			var dep_bio: float = 15.0
-			if LegacyManager.get_buff_value("ciclo_catabolico"):
-				dep_bio *= Balance.CICLO_CATABOLICO_BIO_MULT
-			BiosphereEngine.biomasa += dep_bio
-			met_oscuro_devoured_count += 1
-			AchievementManager.push_event("depredador_devour", {})
-			UIManager.show_toast(tr("TOAST_MO_DIGEST") % met_oscuro_devoured_count)
-			# Hitos de devorado: regalar tiempo al cruzar 30/50/70/90 comidos para que
-			# llegar a DEPREDADOR DE REALIDADES no sea una carrera imposible contra el timer.
-			# El conteo sube de a 1, así que cada hito se cruza exactamente una vez.
-			if met_oscuro_devoured_count in Balance.DEP_DEVOUR_MILESTONES:
-				depredador_inestabilidad = max(0.0, depredador_inestabilidad - Balance.DEP_DEVOUR_MILESTONE_BONUS)
-				UIManager.show_toast(tr("TOAST_DEP_DEVOUR_MILESTONE") % [met_oscuro_devoured_count, Balance.DEP_DEVOUR_MILESTONE_BONUS])
-			if is_instance_valid(UIManager.big_click_button):
-				UIManager.big_click_button.modulate = Color(randf(), randf(), randf())
-		else:
-			# Consumió toda la realidad antes de la implosión → trascendencia depredatoria.
-			RunManager.close_run("DEPREDADOR DE REALIDADES", tr("CLOSE_DEP_REALIDADES"))
-
-# Costo en biomasa de la próxima compra de tiempo del timer de inestabilidad.
-# Escala exponencialmente para que estirar el timer sea cada vez más caro.
-func depredador_time_cost() -> float:
-	return Balance.DEP_TIME_COST_BASE * pow(Balance.DEP_TIME_COST_GROWTH, float(depredador_timer_buys))
-
-# Compra DEP_TIME_EXTENSION segundos de timer pagando biomasa. Retorna true si tuvo éxito.
-func buy_depredador_time() -> bool:
-	if not mutation_depredador or RunManager.run_closed:
-		return false
-	var cost: float = depredador_time_cost()
-	if BiosphereEngine.biomasa < cost:
-		return false
-	BiosphereEngine.biomasa -= cost
-	depredador_timer_buys += 1
-	depredador_inestabilidad = max(0.0, depredador_inestabilidad - Balance.DEP_TIME_EXTENSION)
-	UIManager.show_toast(tr("TOAST_DEP_TIME_BOUGHT") % Balance.DEP_TIME_EXTENSION)
-	return true
-
-func process_depredador_progress(dt: float) -> void:
-	_depredador_status_timer += dt
-	if _depredador_status_timer >= DEPREDADOR_STATUS_INTERVAL:
-		_depredador_status_timer = 0.0
-		var dep_threshold := 30.0 * (0.6 if LegacyManager.has_cosmic_buff("arbol_acelerado") else 1.0)
-		var pct := int((depredador_timer / dep_threshold) * 100.0)
-		var bar_len := int(pct / 5.0)
-		var bar := ""
-		for i in range(20):
-			bar += "|" if i < bar_len else "."
-		LogManager.add(tr("LOG_DEP_TICK") % [StructuralModel.epsilon_runtime, bar, pct, depredador_timer])
-		UIManager.show_toast(tr("TOAST_DEP_PROGRESS") % [pct, depredador_timer])
-
-## Retorna 1 si glitch se activó, -1 si se desactivó, 0 si sin cambio
-func process_glitch(_dt: float) -> int:
-	if not LegacyManager.get_buff_value("metabolismo_glitch"):
-		return 0
-	var glitch_now := StructuralModel.epsilon_runtime > 0.40
-	var result := 0
-	if glitch_now and not _glitch_was_active:
-		LogManager.add(tr("LOG_GLITCH_ACTIVO"))
-		UIManager.show_toast(tr("TOAST_MG_ACTIVO"))
-		result = 1
-	elif not glitch_now and _glitch_was_active:
-		UIManager.show_toast(tr("TOAST_MG_INACTIVO"))
-		result = -1
-	_glitch_was_active = glitch_now
-	return result
+func process_met_oscuro(dt: float) -> bool: return DarkTreeLogic.process_met_oscuro(dt)
+func activate_autolisis() -> void: DarkTreeLogic.activate_autolisis()
+func autofagia_devour_interval() -> float: return DarkTreeLogic.autofagia_devour_interval()
+func autofagia_double_chance() -> float: return DarkTreeLogic.autofagia_double_chance()
+func process_autolisis(dt: float) -> void: DarkTreeLogic.process_autolisis(dt)
+func autofagia_colapsar() -> void: DarkTreeLogic.autofagia_colapsar()
+func autofagia_upgrade_cost(kind: String) -> Dictionary: return DarkTreeLogic.autofagia_upgrade_cost(kind)
+func autofagia_double_gate_req() -> int: return DarkTreeLogic.autofagia_double_gate_req()
+func can_buy_autofagia_upgrade(kind: String) -> bool: return DarkTreeLogic.can_buy_autofagia_upgrade(kind)
+func buy_autofagia_upgrade(kind: String) -> bool: return DarkTreeLogic.buy_autofagia_upgrade(kind)
+func can_autofagia_digest_burst() -> bool: return DarkTreeLogic.can_autofagia_digest_burst()
+func autofagia_digest_burst() -> int: return DarkTreeLogic.autofagia_digest_burst()
+func activate_necrosis() -> void: DarkTreeLogic.activate_necrosis()
+func necrosis_mult() -> float: return DarkTreeLogic.necrosis_mult()
+func necrosis_index() -> float: return DarkTreeLogic.necrosis_index()
+func necrosis_agent_cost() -> float: return DarkTreeLogic.necrosis_agent_cost()
+func can_buy_necrosis_agent() -> bool: return DarkTreeLogic.can_buy_necrosis_agent()
+func buy_necrosis_agent() -> bool: return DarkTreeLogic.buy_necrosis_agent()
+func necrosis_efficiency() -> float: return DarkTreeLogic.necrosis_efficiency()
+func necrosis_passive_rate() -> float: return DarkTreeLogic.necrosis_passive_rate()
+func necrosis_click_preview() -> float: return DarkTreeLogic.necrosis_click_preview()
+func necrosis_catalyst_mult() -> float: return DarkTreeLogic.necrosis_catalyst_mult()
+func add_necromasa_from_click(power: float) -> void: DarkTreeLogic.add_necromasa_from_click(power)
+func necrosis_catalyst_cost() -> float: return DarkTreeLogic.necrosis_catalyst_cost()
+func can_buy_necrosis_catalyst() -> bool: return DarkTreeLogic.can_buy_necrosis_catalyst()
+func buy_necrosis_catalyst() -> bool: return DarkTreeLogic.buy_necrosis_catalyst()
+func necrosis_purge_cost() -> float: return DarkTreeLogic.necrosis_purge_cost()
+func necrosis_tox_floor() -> float: return DarkTreeLogic.necrosis_tox_floor()
+func can_purge_necrosis() -> bool: return DarkTreeLogic.can_purge_necrosis()
+func purge_necrosis() -> bool: return DarkTreeLogic.purge_necrosis()
+func process_necrosis(dt: float) -> void: DarkTreeLogic.process_necrosis(dt)
+func omega_cero_gate_ready() -> bool: return DarkTreeLogic.omega_cero_gate_ready()
+func activate_omega_cero() -> void: DarkTreeLogic.activate_omega_cero()
+func omega_cero_phi_mult() -> float: return DarkTreeLogic.omega_cero_phi_mult()
+func omega_cero_progress() -> float: return DarkTreeLogic.omega_cero_progress()
+func omega_cero_can_seal() -> bool: return DarkTreeLogic.omega_cero_can_seal()
+func process_omega_cero(dt: float) -> void: DarkTreeLogic.process_omega_cero(dt)
+func omega_cero_seal() -> void: DarkTreeLogic.omega_cero_seal()
+func remision_gate_ready() -> bool: return DarkTreeLogic.remision_gate_ready()
+func activate_remision() -> void: DarkTreeLogic.activate_remision()
+func remision_band_center() -> float: return DarkTreeLogic.remision_band_center()
+func remision_in_band() -> bool: return DarkTreeLogic.remision_in_band()
+func remision_nudge(dir: int) -> void: DarkTreeLogic.remision_nudge(dir)
+func remision_progress() -> float: return DarkTreeLogic.remision_progress()
+func remision_can_seal() -> bool: return DarkTreeLogic.remision_can_seal()
+func process_remision(dt: float) -> void: DarkTreeLogic.process_remision(dt)
+func remision_seal() -> void: DarkTreeLogic.remision_seal()
+func control_omega_available() -> bool: return DarkTreeLogic.control_omega_available()
+func control_omega_nudge(dir: int) -> void: DarkTreeLogic.control_omega_nudge(dir)
+func process_depredador(dt: float) -> void: DarkTreeLogic.process_depredador(dt)
+func depredador_time_cost() -> float: return DarkTreeLogic.depredador_time_cost()
+func buy_depredador_time() -> bool: return DarkTreeLogic.buy_depredador_time()
+func process_depredador_progress(dt: float) -> void: DarkTreeLogic.process_depredador_progress(dt)
+func process_glitch(dt: float) -> int: return DarkTreeLogic.process_glitch(dt)

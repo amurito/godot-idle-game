@@ -178,6 +178,27 @@ const DEP_DEVOUR_TICK_BASE         := 1.5   # s entre devorados al inicio
 const DEP_DEVOUR_TICK_FAST         := 1.2   # s entre devorados tras DEP_DEVOUR_TICK_FAST_AT
 const DEP_DEVOUR_TICK_FAST_AT      := 50    # a partir de N devorados el tick acelera
 
+# ── TRANSMUTACIÓN · FUSIÓN CATABÓLICA (revierte HIPERASIMILACIÓN) ──
+# "Un paso atrás para tomar impulso": se compra el buff transmut_fusion en el Banco
+# Genético (categoría Transmutaciones). Con el buff activo, al dispararse el trigger de
+# Hiperasimilación se activa FUSIÓN CATABÓLICA en su lugar: la run NO se cierra, es jugable.
+# Se sacrifica el ×10 salvaje de click por un Click ×5 + Pasivo ×5 estable + una ráfaga
+# activable (Metabolismo Híbrido) anti-AFK. Cierre voluntario al sello tras alcanzar el hito.
+const FUSION_CLICK_MULT       := 5.0        # click ×5 (reemplaza el ×10 de Hiperasimilación)
+const FUSION_PASSIVE_MULT     := 5.0        # pasivo ×5 (restaura el pasivo que hiper nerfeaba a ×0.25)
+const FUSION_BURST_MULT       := 2.0        # Metabolismo Híbrido: ×2 a TODO el ingreso mientras corre
+const FUSION_BURST_DURATION   := 30.0       # s que dura la ráfaga
+const FUSION_BURST_COOLDOWN   := 120.0      # s de cooldown tras la ráfaga
+const FUSION_SEAL_MONEY       := 100_000_000.0 # $ generados para habilitar el sello del final
+const FUSION_SEAL_BURSTS      := 3          # usos mínimos de Metabolismo Híbrido (cada ciclo ~150s → gate de tiempo)
+const FUSION_SEAL_STRUCTURAL_N := 150       # upgrades estructurales (n) mínimos: fuerza inversión estructural real
+# Reducción de cooldown de la ráfaga (sink de dinero, tecla W). El $ abundante acelera las ráfagas.
+# Cada nivel multiplica el cooldown por (1 - PCT): efecto compuesto, claramente perceptible.
+const FUSION_CD_REDUCE_PCT        := 0.20   # -20% del cooldown por nivel comprado
+const FUSION_CD_FLOOR             := 30.0   # cooldown mínimo alcanzable (no baja de aquí)
+const FUSION_CD_COST_BASE         := 10_000_000.0 # costo del nivel 1
+const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
+
 # ── RAMA VERDE · COLONIZACIÓN activa (Empuje de Frontera) ────────
 # Anti-AFK: el micelio ya NO se llena solo desde hifas. Las hifas sólo sostienen
 # un piso bajo; por encima la frontera RETROCEDE. Se empuja con clicks manuales
@@ -287,6 +308,8 @@ const PL_REWARDS: Dictionary = {
 	"POLIMORFIA TOTAL":          9,
 	"DOMADOR DEL CAOS":          11,
 	"ASCESIS_PROFUNDA":          7,
+	"FUSIÓN CATABÓLICA":         9,
+	"FUSION CATABOLICA":         9,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -317,4 +340,6 @@ const NG_CAPS: Dictionary = {
 	"DEPREDADOR DE REALIDADES":  8,
 	"COLAPSO DEPREDATORIO":      5,
 	"PANSPERMIA NEGRA":          6,
+	"FUSIÓN CATABÓLICA":         8,
+	"FUSION CATABOLICA":         8,
 }

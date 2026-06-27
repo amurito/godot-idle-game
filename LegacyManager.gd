@@ -560,7 +560,9 @@ func _check_condition(cond: Dictionary) -> bool:
 				return AchievementManager.is_unlocked(ach_id)
 			return false
 		"transcendence_count":
-			return trascendencia_count >= int(cond.get("count", 1))
+			# Acepta "count" o "min" (histórico): varias defs usan "min". Sin esto, un "min": 2
+			# se trataría silenciosamente como ≥1 (default de count).
+			return trascendencia_count >= int(cond.get("count", cond.get("min", 1)))
 		"buff_owned":
 			return get_buff_level(cond.get("id", "")) > 0
 		"mu_peak_reached":
@@ -889,9 +891,33 @@ func transcend() -> int:
 	# omega_remision_done (sintesis_vital sigue desbloqueable),
 	# omega_cero_kernel_max (intensidad de memoria_sinaptica preservada)
 
+	_notify_transcendence_milestones(trascendencia_count)
 	save_legacy()
 	print("⚡ [TRASCENDENCIA #%d] +%d Ξ · Total: %d Ξ" % [trascendencia_count, esencia_gain, esencia])
 	return esencia_gain
+
+## Hitos de meta-progresión por trascendencia: avisa qué capa se desbloquea al cruzar
+## un umbral (T≥1, T≥2, T≥3, …). El registro completo vive en la entrada de Codex
+## "Hitos de Trascendencia". new_count = trascendencia_count tras incrementar.
+const TRANSCENDENCE_MILESTONES: Dictionary = {
+	1: "MILESTONE_T1",
+	2: "MILESTONE_T2",
+	3: "MILESTONE_T3",
+}
+
+func _notify_transcendence_milestones(new_count: int) -> void:
+	var msg := milestone_message_for(new_count)
+	if msg == "":
+		return
+	# Registro en el log; el aviso visible lo muestra MainMenu en la pantalla de resultado
+	# (transcend() corre desde el menú, donde el toast in-game no está montado).
+	LogManager.add("✦ " + msg)
+
+## Mensaje del hito de meta-progresión para un Tier dado, o "" si ese Tier no tiene hito.
+func milestone_message_for(count: int) -> String:
+	if not TRANSCENDENCE_MILESTONES.has(count):
+		return ""
+	return tr(TRANSCENDENCE_MILESTONES[count])
 
 func get_trascendencia_title() -> String:
 	if trascendencia_count <= 0:

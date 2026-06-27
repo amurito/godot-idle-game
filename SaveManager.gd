@@ -68,6 +68,11 @@ func build_save_data(main: Node) -> Dictionary:
 			"genome": EvoManager.genome,
 			"mutation_homeostasis": EvoManager.mutation_homeostasis,
 			"mutation_hyperassimilation": EvoManager.mutation_hyperassimilation,
+			"mutation_fusion_catabolica": EvoManager.mutation_fusion_catabolica,
+			"fusion_burst_timer": _sf(EvoManager.fusion_burst_timer),
+			"fusion_burst_cooldown": _sf(EvoManager.fusion_burst_cooldown),
+			"fusion_burst_count": EvoManager.fusion_burst_count,
+			"fusion_cd_level": EvoManager.fusion_cd_level,
 			"mutation_symbiosis": EvoManager.mutation_symbiosis,
 			"mutation_red_micelial": EvoManager.mutation_red_micelial,
 			"mutation_sporulation": EvoManager.mutation_sporulation,
@@ -207,6 +212,11 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.genome = ev.get("genome", EvoManager.genome)
 		EvoManager.mutation_homeostasis = ev.get("mutation_homeostasis", EvoManager.mutation_homeostasis)
 		EvoManager.mutation_hyperassimilation = ev.get("mutation_hyperassimilation", EvoManager.mutation_hyperassimilation)
+		EvoManager.mutation_fusion_catabolica = ev.get("mutation_fusion_catabolica", false)
+		EvoManager.fusion_burst_timer = _sf(ev.get("fusion_burst_timer", 0.0), 0.0, 0.0)
+		EvoManager.fusion_burst_cooldown = _sf(ev.get("fusion_burst_cooldown", 0.0), 0.0, 0.0)
+		EvoManager.fusion_burst_count = int(ev.get("fusion_burst_count", 0))
+		EvoManager.fusion_cd_level = int(ev.get("fusion_cd_level", 0))
 		EvoManager.mutation_symbiosis = ev.get("mutation_symbiosis", EvoManager.mutation_symbiosis)
 		EvoManager.mutation_red_micelial = ev.get("mutation_red_micelial", EvoManager.mutation_red_micelial)
 		EvoManager.mutation_sporulation = ev.get("mutation_sporulation", EvoManager.mutation_sporulation)

@@ -727,13 +727,13 @@ func _populate_legacy_items():
 		["estructura"],
 		["biologia", "conocimiento"],
 		["ruta"],
-		["ng_plus", "secreto"],
+		["transmutaciones", "ng_plus", "secreto"],
 	]
 	var cat_colors: Dictionary = {
 		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
 		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
 		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
-		"secreto": Color(0.5, 0.5, 0.5),
+		"transmutaciones": Color(0.2, 0.9, 0.75), "secreto": Color(0.5, 0.5, 0.5),
 	}
 
 	var h_cols: HBoxContainer = HBoxContainer.new()
@@ -1203,6 +1203,16 @@ func _show_first_trascendencia_screen(esencia_gain: int) -> void:
 	reward.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
 	vbox.add_child(reward)
 
+	var milestone := LegacyManager.milestone_message_for(LegacyManager.trascendencia_count)
+	if milestone != "":
+		var ms_lbl := Label.new()
+		ms_lbl.text = EmojiToRichText.strip("✦ " + milestone)
+		ms_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ms_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+		ms_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		ms_lbl.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+		vbox.add_child(ms_lbl)
+
 	var hint := Label.new()
 	hint.text = tr("TRAS_FIRST_HINT")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1230,9 +1240,13 @@ func _on_first_trascend_continue() -> void:
 func _show_trascendencia_result(esencia_gain: int) -> void:
 	var popup := AcceptDialog.new()
 	popup.title = "Trascendencia #%d" % LegacyManager.trascendencia_count
-	popup.dialog_text = EmojiToRichText.strip("⚡ Ciclo disuelto ⚡\n\n+%d Ξ (Esencia)\n\nTotal acumulado: %d Ξ" % [esencia_gain, LegacyManager.esencia])
+	var body := "⚡ Ciclo disuelto ⚡\n\n+%d Ξ (Esencia)\n\nTotal acumulado: %d Ξ" % [esencia_gain, LegacyManager.esencia]
+	var milestone := LegacyManager.milestone_message_for(LegacyManager.trascendencia_count)
+	if milestone != "":
+		body += "\n\n✦ %s" % milestone
+	popup.dialog_text = EmojiToRichText.strip(body)
 	add_child(popup)
-	popup.popup_centered(Vector2(400, 200))
+	popup.popup_centered(Vector2(440, 240))
 	popup.confirmed.connect(func(): get_tree().reload_current_scene())
 
 # =====================================================

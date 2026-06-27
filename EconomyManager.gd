@@ -64,6 +64,9 @@ func get_click_power() -> float:
 	# Hiperasimilación: el ×10 deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
 	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
 		power *= 10.0 # RUSH DE CLICK EXTREMO
+	# FUSIÓN CATABÓLICA (transmutación): click ×5 estable + ráfaga Metabolismo Híbrido ×2
+	if EvoManager.mutation_fusion_catabolica:
+		power *= Balance.FUSION_CLICK_MULT * EvoManager.fusion_burst_mult()
 
 	# HOMEOSTASIS: Orden Administrativo — +50% solo mientras ε está en banda (0.03–0.30)
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
@@ -205,6 +208,9 @@ func get_passive_total() -> float:
 	# Hiperasimilación: el nerf de pasivo deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
 	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
 		total *= 0.25 # Sacrifica el pasivo por el núcleo
+	# FUSIÓN CATABÓLICA (transmutación): pasivo ×5 estable + ráfaga Metabolismo Híbrido ×2
+	if EvoManager.mutation_fusion_catabolica:
+		total *= Balance.FUSION_PASSIVE_MULT * EvoManager.fusion_burst_mult()
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		total *= 1.5 # Orden Administrativa (+50% — solo activo mientras ε en banda 0.03–0.30)
 	if EvoManager.mutation_parasitism:
@@ -324,12 +330,33 @@ func get_dominant_term() -> String:
 	if m == d: return "Trabajo Manual domina el sistema"
 	return "Trueque domina el sistema"
 
+# Término aditivo de Memoria Sináptica (se suma al pasivo DESPUÉS de los multiplicadores).
+# Inerte salvo en el árbol oscuro (omega-cero). Se aísla para no distorsionar el multiplicador.
+func get_memoria_sinaptica_additive() -> float:
+	if not LegacyManager.get_buff_value("memoria_sinaptica"):
+		return 0.0
+	var kernel: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
+	var k_eff: float = Balance.OMEGA_CERO_BUFF_K_BASE * kernel
+	return min(exp(k_eff * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
+
+# Multiplicador efectivo aplicado al pasivo base (auto+trueque) por todas las rutas/legados.
+# get_passive_total() = (auto+trueque) × ESTE + términos aditivos (ms). Lo usamos para que el
+# header y los segmentos muestren las contribuciones REALES, no los valores base.
+func get_passive_multiplier() -> float:
+	var base := get_auto_income_effective() + get_trueque_income_effective()
+	if base <= 0.0:
+		return 1.0
+	return (get_passive_total() - get_memoria_sinaptica_additive()) / base
+
 func get_contribution_breakdown() -> Dictionary:
 	var push := get_click_power() * CLICK_RATE
-	var d := get_auto_income_effective()
-	var e := get_trueque_income_effective()
+	var pmult := get_passive_multiplier()
+	# Contribuciones efectivas: el pasivo base se escala por todos los multiplicadores (Fusión, PL, bio…).
+	var d := get_auto_income_effective() * pmult
+	var e := get_trueque_income_effective() * pmult
+	var ms := get_memoria_sinaptica_additive()
 
-	var total := push + d + e
+	var total := push + d + e + ms
 	if total == 0.0 or is_nan(total) or is_inf(total):
 		total = 0.00001
 

@@ -550,6 +550,10 @@ func on_run_closed(route: String) -> void:
 		unlock("funcion_pura")
 	if route == "PROTOCOLO OMEGA-CERO" and _eval_singularidad_perfecta({}):
 		unlock("singularidad_perfecta")
+	# Coloso Estructural: cualquier ruta, con $1.000M generados + n≥200 upgrades estructurales.
+	if EconomyManager.total_money_generated >= 1_000_000_000.0 \
+			and StructuralModel.get_structural_upgrades() >= 200:
+		unlock("coloso_estructural")
 
 func on_upgrade_bought(id: String) -> void:
 	_upgrades_this_run += 1

@@ -155,18 +155,23 @@ static func update_click_stats_panel(_main: Node) -> String:
 	var ap := EconomyManager.get_active_passive_breakdown()
 	var push: float = ap.push_abs
 
+	# Contribución EFECTIVA de cada fuente: el pasivo base (auto+trueque) se escala por todos
+	# los multiplicadores (Fusión ×10, PL, bio, legados…). Usamos los helpers de EconomyManager
+	# (misma fuente que el header) para que Click + Trabajo + Trueque + ms = Δ$ total exacto.
+	var _p_ms_a: float = EconomyManager.get_memoria_sinaptica_additive()
+	var _pmult: float = EconomyManager.get_passive_multiplier()
+
 	var t := "[b]" + TranslationServer.translate("LAB_APORTE_ACTUAL") + "[/b]\n"
-	t += "[color=#cccccc]" + TranslationServer.translate("LAB_CLICK_PUSH_LINE") % push + "\n"
-	if StructuralModel.unlocked_d: t += TranslationServer.translate("LAB_TRABAJO_LINE") % EconomyManager.get_auto_income_effective() + "\n"
-	if StructuralModel.unlocked_e: t += TranslationServer.translate("LAB_TRUEQUE_LINE") % EconomyManager.get_trueque_income_effective() + "\n"
-	if LegacyManager.get_buff_value("memoria_sinaptica"):
-		var _kernel_a: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
-		var _k_eff_a: float = Balance.OMEGA_CERO_BUFF_K_BASE * _kernel_a
-		var _p_ms_a: float = min(exp(_k_eff_a * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
-		t += TranslationServer.translate("LAB_MS_APORTE_LINE") % _p_ms_a + "\n"
+	t += "[color=#cccccc]" + TranslationServer.translate("LAB_CLICK_PUSH_LINE") % format_compact(push) + "\n"
+	if StructuralModel.unlocked_d: t += TranslationServer.translate("LAB_TRABAJO_LINE") % format_compact(EconomyManager.get_auto_income_effective() * _pmult) + "\n"
+	if StructuralModel.unlocked_e: t += TranslationServer.translate("LAB_TRUEQUE_LINE") % format_compact(EconomyManager.get_trueque_income_effective() * _pmult) + "\n"
+	if _pmult > 1.001:
+		t += "[color=#f5c20a](pasivo ×%.2f aplicado)[/color]\n" % _pmult
+	if _p_ms_a > 0.0:
+		t += TranslationServer.translate("LAB_MS_APORTE_LINE") % format_compact(_p_ms_a) + "\n"
 	t += "[/color]\n\n"
 
-	t += "[b]" + TranslationServer.translate("LAB_DELTA_TOTAL") % ap.total + "[/b]\n"
+	t += "[b]" + TranslationServer.translate("LAB_DELTA_TOTAL") % format_compact(ap.total) + "[/b]\n"
 	if ap.total > 0:
 		if ap.activo > ap.pasivo:
 			t += TranslationServer.translate("LAB_CLICK_DOM") + "\n\n"
@@ -475,6 +480,21 @@ static func build_evo_checklist(_main: Node) -> String:
 		t += ch + TranslationServer.translate("EVO_ACCOUNTING_GE1") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if activo_domina else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_ACTIVE_DOM") % [int(ap_snap.activo), int(ap_snap.pasivo)] + "[/color]\n"
+
+		# HIPERASIMILACIÓN — o FUSIÓN CATABÓLICA si está el buff de transmutación (se activa por el mismo trigger).
+		var hiper_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
+		var is_transmut: bool = LegacyManager.get_buff_value("transmut_fusion")
+		t += "\n[b]" + (TranslationServer.translate("EVO_FUSION_TITLE") if is_transmut else TranslationServer.translate("EVO_HIPER_TITLE")) + "[/b]\n"
+		ch = ok_color + "[x] " if ap_snap.activo > 80.0 else fail_color + "[ ] "
+		t += ch + TranslationServer.translate("EVO_HIPER_ACTIVO80") % int(ap_snap.activo) + "[/color]\n"
+		ch = ok_color + "[x] " if StructuralModel.epsilon_runtime > 0.40 else fail_color + "[ ] "
+		t += ch + TranslationServer.translate("EVO_HIPER_EPS04") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
+		ch = ok_color + "[x] " if BiosphereEngine.biomasa > 4.0 else fail_color + "[ ] "
+		t += ch + TranslationServer.translate("EVO_HIPER_BIO4") % snapped(BiosphereEngine.biomasa, 0.1) + "[/color]\n"
+		ch = ok_color + "[x] " if acc == 0 else fail_color + "[ ] "
+		t += ch + TranslationServer.translate("EVO_HIPER_NOACC") % acc + "[/color]\n"
+		ch = ok_color + "[x] " if RunManager.run_time > hiper_req else fail_color + "[ ] "
+		t += ch + TranslationServer.translate("EVO_HIPER_TIME") % [format_time(hiper_req), format_time(RunManager.run_time)] + "[/color]\n"
 
 	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
 		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial \
@@ -1158,4 +1178,50 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 		t += "\nBio %.1f · Pasivo %.1f/s" % [BiosphereEngine.biomasa, BiosphereEngine.biomasa * 0.8]
 		t += "\nCierre auto: Bio≥100 o $≥1M"
 
+	return t
+
+# ── FUSIÓN CATABÓLICA — builders de panel central ─────────────────────────────
+
+static func build_fusion_catabolica_closed_text() -> String:
+	var t := "[color=#f5c20a]⊗ FUSIÓN CATABÓLICA — SELLADA[/color]\n\n"
+	t += "[i]%s[/i]\n" % TranslationServer.translate("CLOSE_FUSION")
+	t += "\n[color=#f5c20a]⊛ Recompensa permanente:[/color]\n"
+	t += "  %s (+25%% a todo el ingreso)\n" % TranslationServer.translate("LEGACY_LEGADO_MOTOR_FUNDIDO_NAME")
+	return t
+
+static func build_fusion_catabolica_panel_text() -> String:
+	var t := "[color=#f5c20a]⊗ FUSIÓN CATABÓLICA ACTIVA[/color]\n"
+	t += "Click ×%d | Pasivo ×%d [estable]\n" % [
+		int(Balance.FUSION_CLICK_MULT), int(Balance.FUSION_PASSIVE_MULT)]
+
+	t += "\n[color=yellow]Metabolismo Híbrido (×%d, %ds):[/color]\n" % [
+		int(Balance.FUSION_BURST_MULT), int(Balance.FUSION_BURST_DURATION)]
+	if EvoManager.fusion_burst_timer > 0.0:
+		t += "  ⚡ ACTIVO — %.0fs restantes\n" % EvoManager.fusion_burst_timer
+	elif EvoManager.fusion_burst_cooldown > 0.0:
+		t += "  Recargando — %.0fs\n" % EvoManager.fusion_burst_cooldown
+	else:
+		t += "  [Listo — usa el botón en el panel derecho]\n"
+	if EvoManager.fusion_cd_level > 0:
+		t += "  ⏱ Cooldown: %.0fs (base %.0fs · nivel %d)\n" % [
+			EvoManager.fusion_effective_cooldown(), Balance.FUSION_BURST_COOLDOWN, EvoManager.fusion_cd_level]
+
+	t += "\n[color=#f5c20a]Condiciones para sellar:[/color]\n"
+	var gen: float = EconomyManager.total_money_generated
+	var need_m: float = Balance.FUSION_SEAL_MONEY
+	var money_ok: bool = gen >= need_m
+	var ck_m: String = "[color=green]✓[/color]" if money_ok else "[ ]"
+	t += "  %s Dinero generado: %s / %s\n" % [ck_m, format_compact(gen), format_compact(need_m)]
+	var burst_ok: bool = EvoManager.fusion_burst_count >= Balance.FUSION_SEAL_BURSTS
+	var ck_b: String = "[color=green]✓[/color]" if burst_ok else "[ ]"
+	t += "  %s Ráfagas usadas: %d / %d\n" % [ck_b, EvoManager.fusion_burst_count, Balance.FUSION_SEAL_BURSTS]
+	var n_struct: int = StructuralModel.get_structural_upgrades()
+	var n_ok: bool = n_struct >= Balance.FUSION_SEAL_STRUCTURAL_N
+	var ck_n: String = "[color=green]✓[/color]" if n_ok else "[ ]"
+	t += "  %s Estructura (n): %d / %d\n" % [ck_n, n_struct, Balance.FUSION_SEAL_STRUCTURAL_N]
+	if money_ok and burst_ok and n_ok:
+		t += "\n  [color=#f5c20a]→ Sello disponible en el panel derecho[/color]"
+	else:
+		t += "\n  [$%s generados · %d ráfagas · n≥%d upgrades estructurales]" % [
+			format_compact(need_m), Balance.FUSION_SEAL_BURSTS, Balance.FUSION_SEAL_STRUCTURAL_N]
 	return t

@@ -117,6 +117,9 @@ var _control_omega_up_btn: Button = null
 var _control_omega_down_btn: Button = null
 var _depredador_buytime_btn: Button = null
 var _mc_override_btn: Button = null
+var _fusion_burst_btn: Button = null     # Metabolismo Híbrido (ráfaga ×2) de Fusión Catabólica
+var _fusion_cd_btn: Button = null        # Reducción de cooldown de la ráfaga (sink de dinero, tecla W)
+var _fusion_seal_btn: Button = null      # Sello del final FUSIÓN CATABÓLICA
 var _simbiosis_seal_btn: Button = null
 var _run_buffs_btn: Button = null        # Botón "Buffs activos (N)" del panel derecho
 var _run_buffs_panel: PanelContainer = null  # Panel flotante con la lista de buffs heredados
@@ -576,21 +579,34 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		genome_summary_label = _find("GenomeSummaryLabel")
 		if not is_instance_valid(genome_summary_label):
 			return
-	var t := UITextBuilders.build_genome_text()
-	if not RunManager.run_closed:
-		t += UITextBuilders.build_mutation_status_text()
-	if RunManager.homeostasis_mode:
-		t += "\n\n⚖️ " + tr("INST_HOME_MODE")
-		t += "\n" + tr("INST_RESILIENCE") % snapped(RunManager.resilience_score, 1)
-		t += "\n" + tr("INST_DISTURBANCE") % RunManager.DISTURBANCE_INTERVAL
-	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
-		t += "\n" + tr("INST_NET_WARN")
-	var _post_tras: bool = RouteManager.has_active_route()
-	if main != null and not _post_tras:
-		t += UITextBuilders.build_evo_checklist(main)
+	var t: String
+	if EvoManager.mutation_fusion_catabolica:
+		if RunManager.run_closed:
+			t = _build_fusion_catabolica_closed_text()
+		else:
+			t = _build_fusion_catabolica_panel_text()
+	else:
+		t = UITextBuilders.build_genome_text()
+		if not RunManager.run_closed:
+			t += UITextBuilders.build_mutation_status_text()
+		if RunManager.homeostasis_mode:
+			t += "\n\n⚖️ " + tr("INST_HOME_MODE")
+			t += "\n" + tr("INST_RESILIENCE") % snapped(RunManager.resilience_score, 1)
+			t += "\n" + tr("INST_DISTURBANCE") % RunManager.DISTURBANCE_INTERVAL
+		if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2:
+			t += "\n" + tr("INST_NET_WARN")
+		var _post_tras: bool = RouteManager.has_active_route()
+		if main != null and not _post_tras:
+			t += UITextBuilders.build_evo_checklist(main)
 	genome_summary_label.visible = true
 	genome_summary_label.clear()
 	genome_summary_label.append_text(EmojiToRichText.rich(t))
+
+func _build_fusion_catabolica_closed_text() -> String:
+	return UITextBuilders.build_fusion_catabolica_closed_text()
+
+func _build_fusion_catabolica_panel_text() -> String:
+	return UITextBuilders.build_fusion_catabolica_panel_text()
 
 # =====================================================
 # PANEL DE BIFURCACIÓN Y BARRA DE CICLO FÚNGICO
@@ -818,6 +834,15 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_run_buffs_panel):
 		_run_buffs_panel.queue_free()
 		_run_buffs_panel = null
+	if is_instance_valid(_fusion_burst_btn):
+		_fusion_burst_btn.queue_free()
+		_fusion_burst_btn = null
+	if is_instance_valid(_fusion_cd_btn):
+		_fusion_cd_btn.queue_free()
+		_fusion_cd_btn = null
+	if is_instance_valid(_fusion_seal_btn):
+		_fusion_seal_btn.queue_free()
+		_fusion_seal_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -839,6 +864,7 @@ func update_ng_plus_buttons() -> void:
 	_update_control_omega_buttons()
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
+	_update_fusion_buttons()
 	_update_simbiosis_seal_button()
 	_update_run_buffs_button()
 
@@ -1647,6 +1673,101 @@ func _on_mc_override_pressed() -> void:
 	RunManager.activate_mc_burst()
 	_update_mc_override_button()
 
+# ── FUSIÓN CATABÓLICA (transmutación): Metabolismo Híbrido + sello ──
+func _update_fusion_buttons() -> void:
+	_update_fusion_burst_button()
+	_update_fusion_cd_button()
+	_update_fusion_seal_button()
+
+func _update_fusion_burst_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_fusion_catabolica:
+		if is_instance_valid(_fusion_burst_btn):
+			_fusion_burst_btn.visible = false
+		return
+	if _fusion_burst_btn == null or not is_instance_valid(_fusion_burst_btn):
+		_fusion_burst_btn = Button.new()
+		_fusion_burst_btn.clip_text = true
+		_fusion_burst_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_fusion_burst_btn.add_theme_color_override("font_color", Color(0.3, 0.95, 0.8))
+		_fusion_burst_btn.custom_minimum_size = Vector2(0, 50)
+		_fusion_burst_btn.pressed.connect(_on_fusion_burst_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_fusion_burst_btn)
+			panel.move_child(_fusion_burst_btn, 0)
+	if EvoManager.fusion_burst_timer > 0.0:
+		_fusion_burst_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_ACTIVE") % EvoManager.fusion_burst_timer)
+		_fusion_burst_btn.disabled = true
+	elif EvoManager.fusion_burst_cooldown > 0.0:
+		_fusion_burst_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_COOLDOWN") % EvoManager.fusion_burst_cooldown)
+		_fusion_burst_btn.disabled = true
+	else:
+		_fusion_burst_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_READY") % Balance.FUSION_BURST_DURATION)
+		_fusion_burst_btn.disabled = false
+	_fusion_burst_btn.visible = true
+
+func _on_fusion_burst_pressed() -> void:
+	EvoManager.activate_fusion_burst()
+	_update_fusion_burst_button()
+
+func _update_fusion_cd_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_fusion_catabolica:
+		if is_instance_valid(_fusion_cd_btn):
+			_fusion_cd_btn.visible = false
+		return
+	if _fusion_cd_btn == null or not is_instance_valid(_fusion_cd_btn):
+		_fusion_cd_btn = Button.new()
+		_fusion_cd_btn.clip_text = true
+		_fusion_cd_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_fusion_cd_btn.add_theme_color_override("font_color", Color(0.97, 0.82, 0.3))
+		_fusion_cd_btn.custom_minimum_size = Vector2(0, 46)
+		_fusion_cd_btn.pressed.connect(_on_fusion_cd_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_fusion_cd_btn)
+			panel.move_child(_fusion_cd_btn, 1)  # debajo del botón de ráfaga
+	if EvoManager.fusion_cd_maxed():
+		_fusion_cd_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_CD_MAXED") % Balance.FUSION_CD_FLOOR)
+		_fusion_cd_btn.disabled = true
+	else:
+		var cur_cd := EvoManager.fusion_effective_cooldown()
+		var next_cd := maxf(Balance.FUSION_CD_FLOOR, Balance.FUSION_BURST_COOLDOWN * pow(1.0 - Balance.FUSION_CD_REDUCE_PCT, EvoManager.fusion_cd_level + 1))
+		var cost := EvoManager.fusion_cd_cost()
+		_fusion_cd_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_CD") % [cur_cd, next_cd, format_compact(cost)])
+		_fusion_cd_btn.disabled = not EvoManager.can_buy_fusion_cd()
+	_fusion_cd_btn.visible = true
+
+func _on_fusion_cd_pressed() -> void:
+	EvoManager.buy_fusion_cd()
+	_update_fusion_cd_button()
+
+func _update_fusion_seal_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_fusion_catabolica or not EvoManager.fusion_seal_ready():
+		if is_instance_valid(_fusion_seal_btn):
+			_fusion_seal_btn.visible = false
+		return
+	if _fusion_seal_btn == null or not is_instance_valid(_fusion_seal_btn):
+		_fusion_seal_btn = Button.new()
+		_fusion_seal_btn.clip_text = true
+		_fusion_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_fusion_seal_btn.add_theme_color_override("font_color", Color(0.4, 0.95, 0.82))
+		_fusion_seal_btn.custom_minimum_size = Vector2(0, 70)
+		_fusion_seal_btn.pressed.connect(_on_fusion_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_fusion_seal_btn)
+			panel.move_child(_fusion_seal_btn, 0)
+	var pl: int = int(Balance.PL_REWARDS.get("FUSIÓN CATABÓLICA", 9))
+	_fusion_seal_btn.text = EmojiToRichText.strip(tr("BTN_FUSION_SEAL") % pl)
+	_fusion_seal_btn.visible = true
+
+func _on_fusion_seal_pressed() -> void:
+	if RunManager.run_closed or not EvoManager.fusion_seal_ready():
+		return
+	if is_instance_valid(_fusion_seal_btn):
+		_fusion_seal_btn.visible = false
+	RunManager.close_run("FUSIÓN CATABÓLICA", tr("CLOSE_FUSION"))
+
 func _update_simbiosis_seal_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
 		if is_instance_valid(_simbiosis_seal_btn):
@@ -1755,13 +1876,13 @@ func refresh_legacy_store() -> void:
 		["estructura"],
 		["biologia", "conocimiento"],
 		["ruta"],
-		["ng_plus", "secreto"],
+		["transmutaciones", "ng_plus", "secreto"],
 	]
 	var cat_colors: Dictionary = {
 		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
 		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
 		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
-		"secreto": Color(0.5, 0.5, 0.5),
+		"transmutaciones": Color(0.2, 0.9, 0.75), "secreto": Color(0.5, 0.5, 0.5),
 	}
 
 	var h_cols: HBoxContainer = HBoxContainer.new()
@@ -2150,6 +2271,8 @@ func get_reactor_color() -> Color:
 				return Color(0.12, 0.0, 0.02)
 			"REMISIÓN METABÓLICA":
 				return Color(0.08, 0.72, 0.48)
+			"FUSIÓN CATABÓLICA":
+				return Color(0.45, 0.30, 0.01)  # ámbar oscuro: oro metabolico, distinto del teal de Homeostasis
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
@@ -2172,6 +2295,10 @@ func get_reactor_color() -> Color:
 		return Color(0.45, 1.0, 0.05)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		return Color(0.0, 0.9, 1.0)
+	if EvoManager.mutation_fusion_catabolica:
+		if EvoManager.fusion_burst_timer > 0.0:
+			return Color(1.1, 0.92, 0.12)  # oro brillante durante ráfaga
+		return Color(0.97, 0.76, 0.05)  # ámbar/oro: energía metabólica estable
 	if EvoManager.mutation_hyperassimilation:
 		if RunManager._fractura_carga_timer > 0.0:
 			var t := clampf(RunManager._fractura_carga_timer / RunManager.FRACTURA_CARGA_DURATION, 0.0, 1.0)

@@ -228,6 +228,10 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 				var raw := int(floor(BiosphereEngine.micelio / 20.0))
 				ng_bonus = min(raw, cap)
 				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
+			"FUSIÓN CATABÓLICA":
+				var raw := int(floor(EconomyManager.total_money_generated / 10_000_000.0))
+				ng_bonus = min(raw, cap)
+				ng_formula = "generado $%.1fM / $10M = %d (cap %d)" % [EconomyManager.total_money_generated / 1_000_000.0, ng_bonus, cap]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
@@ -266,6 +270,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 		LegacyManager.autofagia_depredador_done = true
 		LogManager.add(tr("LOG_CICLO_CATABOLICO_UNLOCK"))
 		UIManager.show_toast(tr("TOAST_CICLO_CATABOLICO_UNLOCK"))
+
+	# FUSIÓN CATABÓLICA: recompensa OP permanente al sellar → +25% a todo el ingreso (Motor Fundido).
+	if route == "FUSIÓN CATABÓLICA":
+		if not LegacyManager.get_buff_value("legado_motor_fundido"):
+			LegacyManager.grant_buff("legado_motor_fundido")
+			UIManager.show_toast(tr("TOAST_FUSION_REWARD"))
+			LogManager.add(tr("LOG_FUSION_REWARD"))
 
 	# NECROSIS CONTROLADA: primera vez que cierra → desbloquear Apoptosis Heredada.
 	if route == "NECROSIS CONTROLADA":

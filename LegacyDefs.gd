@@ -467,6 +467,30 @@ const LEGACY_DEFS: Dictionary = {
 	},
 
 	# ────────────────────────────────────────────────
+	# TRANSMUTACIONES (1) — revertir una mutación dominada para abrir una ruta más OP
+	# ────────────────────────────────────────────────
+	"transmut_fusion": {
+		"name": "Transmutación: Fusión Catabólica",
+		"flavor": "El hongo desaprende el frenesí absorbente. En su lugar, funde click y metabolismo en un solo motor estable.",
+		"cat": "transmutaciones", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "transcendence_count", "count": 3},
+		"effect": {"type": "transmut_fusion_active", "value": 1.0},
+		# TODAS las transmutaciones se revelan a partir de T≥3 (hito de meta-progresión).
+		# Con el buff activo (toggle on), el trigger de HIPERASIMILACIÓN activa FUSIÓN CATABÓLICA
+		# en su lugar (gate en EvoManager.activate_hyperassimilation). Togglearlo off → hiper normal.
+	},
+	# Recompensa de SELLAR Fusión Catabólica (otorgada vía grant_buff, cost 0, no comprable).
+	"legado_motor_fundido": {
+		"name": "Legado: Motor Fundido",
+		"flavor": "El motor singular dejó su huella en el genoma. Click y metabolismo ya nunca corren por separado: todo ingreso fluye un 25% más fuerte, para siempre.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
+		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
+		"effect": {"type": "all_income_mult", "value": 0.25},
+	},
+
+	# ────────────────────────────────────────────────
 	# SECRETOS (3)
 	# ────────────────────────────────────────────────
 	"glitch_persistente": {
@@ -496,7 +520,7 @@ const LEGACY_DEFS: Dictionary = {
 }
 
 # Orden de categorías para la UI
-const CAT_ORDER: Array = ["economia", "estructura", "biologia", "conocimiento", "ruta", "ng_plus", "secreto"]
+const CAT_ORDER: Array = ["economia", "estructura", "biologia", "conocimiento", "ruta", "ng_plus", "transmutaciones", "secreto"]
 const CAT_NAMES: Dictionary = {
 	"economia":     "ECONOMÍA",
 	"estructura":   "ESTRUCTURA",
@@ -504,5 +528,6 @@ const CAT_NAMES: Dictionary = {
 	"conocimiento": "CONOCIMIENTO",
 	"ruta":         "RUTAS",
 	"ng_plus":      "NG+",
+	"transmutaciones": "TRANSMUTACIONES",
 	"secreto":      "???",
 }

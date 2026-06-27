@@ -401,6 +401,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	TutorialManager.notify_reactor_clicked()
 	var power := EconomyManager.get_click_power()
 	EconomyManager.money += power
+	EconomyManager.total_money_generated += power
 	AchievementManager.on_click()
 	# NECROSIS CONTROLADA: el flujo activo (click) genera Necromasa (Ν). Sin clicks, no hay progreso.
 	if EvoManager.mutation_necrosis:
@@ -554,6 +555,7 @@ func _on_logic_tick():
 		# Auto-click: simula 10 clicks por segundo
 		var sim_power = EconomyManager.get_click_power() * 10.0 * dt
 		EconomyManager.money += sim_power
+		EconomyManager.total_money_generated += sim_power
 		StructuralModel.epsilon_runtime += 0.008 * 10.0 * dt
 		if is_instance_valid(UIManager.big_click_button):
 			UIManager.big_click_button.set_active_delta(sim_power)
@@ -599,6 +601,9 @@ func _on_logic_tick():
 			EvoManager.process_omega_cero(dt)
 		if EvoManager.mutation_remision:
 			EvoManager.process_remision(dt)
+	# TRANSMUTACIÓN Fusión Catabólica (ráfaga Metabolismo Híbrido + cooldown)
+	elif EvoManager.mutation_fusion_catabolica:
+		EvoManager.process_fusion(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)
@@ -1152,6 +1157,18 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_fusion_catabolica:
+				match kc:
+					KEY_Q:
+						if EvoManager.fusion_burst_timer <= 0.0 and EvoManager.fusion_burst_cooldown <= 0.0:
+							EvoManager.activate_fusion_burst()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_W:
+						if EvoManager.can_buy_fusion_cd():
+							EvoManager.buy_fusion_cd()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_omega_cero:
 				if kc == KEY_R and EvoManager.omega_cero_can_seal():
 					EvoManager.omega_cero_seal()
@@ -1301,8 +1318,9 @@ func update_ui():
 	UIManager.update_core_labels()
 	UIManager.update_buttons()
 
-	# Header bar
-	UIManager.update_header_money(EconomyManager.money, EconomyManager.delta_per_sec)
+	# Header bar — usar el total de contribución (push + pasivo efectivo) para que coincida
+	# con el Δ$ total del desglose, no solo el pasivo (delta_per_sec).
+	UIManager.update_header_money(EconomyManager.money, EconomyManager.get_contribution_breakdown().total)
 	UIManager.update_header_metrics(
 		StructuralModel.epsilon_runtime,
 		StructuralModel.omega,

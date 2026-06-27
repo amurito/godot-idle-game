@@ -555,6 +555,19 @@ const DEFS := {
 		"trigger": "event_count", "event_name": "necrosis_catalyst_bought", "target": 10,
 		"progress_key": "ACH_PROGFMT_CATALYSTS",
 	},
+	"ruta_fusion_catabolica": {
+		"name": "Motor Singular",
+		"desc": "El organismo desaprendió el frenesí y lo fundió en un motor estable. Ni click ni metabolismo — ambos.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "FUSIÓN CATABÓLICA"}],
+	},
+	"coloso_estructural": {
+		"name": "Coloso Estructural",
+		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "coloso_estructural",
+	},
 	"ultima_espora": {
 		"name": "Última Espora",
 		"desc": "Desbloquear todos los logros del juego.",

@@ -3,7 +3,7 @@
 ## La condición usa los mismos tipos que LegacyManager._check_condition().
 class_name CodexDefs
 
-const CATEGORIES: Array = ["mecanicas", "simbolos", "mutaciones", "rutas", "arbol_oscuro", "finales", "cruces", "cosmica", "valores"]
+const CATEGORIES: Array = ["mecanicas", "simbolos", "mutaciones", "rutas", "arbol_oscuro", "transmutaciones", "finales", "cruces", "cosmica", "valores"]
 
 const CATEGORY_NAMES: Dictionary = {
 	"mecanicas":    {"es": "Mecánicas", "en": "Mechanics"},
@@ -11,6 +11,7 @@ const CATEGORY_NAMES: Dictionary = {
 	"mutaciones":   {"es": "Mutaciones", "en": "Mutations"},
 	"rutas":        {"es": "Rutas", "en": "Routes"},
 	"arbol_oscuro": {"es": "Árbol Oscuro", "en": "Dark Tree"},
+	"transmutaciones": {"es": "Transmutaciones", "en": "Transmutations"},
 	"finales":      {"es": "Finales", "en": "Endings"},
 	"cruces":       {"es": "Cruces de Legado", "en": "Legacy Crosses"},
 	"cosmica":      {"es": "Capa Cósmica", "en": "Cosmic Layer"},
@@ -173,7 +174,28 @@ const ENTRIES: Dictionary = {
 			+ "On transcending you earn Essence (Ξ) for the Cosmic Bank, rise a Tier (T), and unlock the post-transcendence routes for the next run."
 		),
 		"unlock": {"type": "always"},
-		"see_also": ["sym_meta", "post_tras_routes", "cosmica_intro"],
+		"see_also": ["sym_meta", "post_tras_routes", "cosmica_intro", "hitos_trascendencia"],
+	},
+
+	"hitos_trascendencia": {
+		"cat": "mecanicas",
+		"name_es": "Hitos de Trascendencia", "name_en": "Transcendence Milestones",
+		"body_es": (
+			"Registro de qué capa de meta-progresión se desbloquea al cruzar cada Tier (T) de trascendencia. Al alcanzar un hito aparece un aviso en pantalla.\n\n"
+			+ "• [b]T ≥ 1[/b] — Banco Cósmico (moneda Esencia Ξ) y Rutas Post-Trascendencia (Vacío Hambriento, Carnaval, Reencarnación). Acceso: Esclerocio Oscuro comprable (30 PL).\n"
+			+ "• [b]T ≥ 2[/b] — Síntesis del árbol oscuro: el Protocolo Omega-Cero queda al alcance (requiere además cerrar Autofagia + Necrosis + Esclerocio).\n"
+			+ "• [b]T ≥ 3[/b] — [b]TRANSMUTACIONES[/b]: nueva categoría del Banco Genético para revertir mutaciones dominadas y abrir rutas más OP.\n\n"
+			+ "[i]Las condiciones de cada ruta y buff puntual siguen aplicando además del Tier (cerrar tal final, tener tal PL, etc.).[/i]"
+		),
+		"body_en": (
+			"Record of which meta-progression layer unlocks when crossing each transcendence Tier (T). Reaching a milestone shows an on-screen notice.\n\n"
+			+ "• [b]T ≥ 1[/b] — Cosmic Bank (Essence Ξ currency) and Post-Transcendence Routes (Hungry Void, Carnival, Reincarnation). Access: Dark Sclerotium purchasable (30 LP).\n"
+			+ "• [b]T ≥ 2[/b] — Dark tree synthesis: the Omega-Zero Protocol comes within reach (also requires closing Autophagy + Necrosis + Sclerotium).\n"
+			+ "• [b]T ≥ 3[/b] — [b]TRANSMUTATIONS[/b]: a new Genetic Bank category to revert mastered mutations and open more OP routes.\n\n"
+			+ "[i]Each route's and buff's specific conditions still apply on top of the Tier (close a given ending, hold a given LP amount, etc.).[/i]"
+		),
+		"unlock": {"type": "always"},
+		"see_also": ["trascendencia", "transmut_intro", "cosmica_intro"],
 	},
 
 	"banco_genetico": {
@@ -978,6 +1000,58 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "transcendence_count", "min": 1},
 		"see_also": ["cosmica_intro"],
+	},
+
+	# ── TRANSMUTACIONES (revertir una mutación dominada para abrir una ruta más OP) ──
+	"transmut_intro": {
+		"cat": "transmutaciones",
+		"name_es": "Qué son las Transmutaciones", "name_en": "What Transmutations are",
+		"body_es": (
+			"Una capa nueva del Banco Genético (categoría TRANSMUTACIONES) que se abre tras dominar una mutación. La idea: [b]dar un paso atrás para tomar impulso[/b].\n\n"
+			+ "Al comprar una transmutación, [b]revertís[/b] una mutación que ya completaste: perdés sus efectos originales, pero a cambio se desbloquea una ruta alternativa más poderosa, con su propio botón activo y su propio final.\n\n"
+			+ "• Se revelan solo tras haber cerrado la mutación correspondiente.\n"
+			+ "• Son toggles: si las desactivás, jugás la mutación original como siempre.\n"
+			+ "• Con la transmutación activa, el trigger de la mutación original activa la ruta revertida en su lugar.\n\n"
+			+ "[i]Primera transmutación: Fusión Catabólica (revierte Hiperasimilación).[/i]"
+		),
+		"body_en": (
+			"A new Genetic Bank layer (TRANSMUTATIONS category) that opens after mastering a mutation. The idea: [b]a step back to gain momentum[/b].\n\n"
+			+ "Buying a transmutation [b]reverts[/b] a mutation you already completed: you lose its original effects, but in exchange an alternative, more powerful route unlocks, with its own active button and its own ending.\n\n"
+			+ "• Revealed only after closing the corresponding mutation.\n"
+			+ "• They are toggles: disable them and you play the original mutation as usual.\n"
+			+ "• With the transmutation active, the original mutation's trigger activates the reverted route instead.\n\n"
+			+ "[i]First transmutation: Catabolic Fusion (reverts Hyperassimilation).[/i]"
+		),
+		"unlock": {"type": "transcendence_count", "count": 3},
+		"see_also": ["transmut_fusion", "hiperasimilacion", "banco_genetico", "hitos_trascendencia"],
+	},
+	"transmut_fusion": {
+		"cat": "transmutaciones",
+		"name_es": "Fusión Catabólica", "name_en": "Catabolic Fusion",
+		"body_es": (
+			"Transmutación que revierte [b]Hiperasimilación[/b]. Se compra en el Banco Genético (15 PL, tras cerrar Hiperasimilación).\n\n"
+			+ "Renunciás al click ×10 salvaje y al pasivo nerfeado a ×0.25. A cambio, el sistema se vuelve un motor estable:\n\n"
+			+ "• [b]Click ×5[/b] permanente\n"
+			+ "• [b]Pasivo ×5[/b] permanente (sin el nerf de la hiper)\n"
+			+ "• Botón [b]Metabolismo Híbrido[/b] (tecla [b]Q[/b]): ×2 a TODO el ingreso durante 30 s, cooldown 120 s\n"
+			+ "• Botón [b]Reducir cooldown[/b] (tecla [b]W[/b]): gastás dinero para bajar el cooldown −20% por nivel (piso 30 s). Sink que convierte el ingreso en más ráfagas.\n\n"
+			+ "[b]La run no se cierra[/b]: Fusión Catabólica es jugable. Para sellar el final necesitás [b]$100M generados + 3 ráfagas usadas + n≥150 upgrades estructurales[/b] → botón de sello → [b]FUSIÓN CATABÓLICA[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa al sellar[/b]: [b]Legado: Motor Fundido[/b] — +25% a TODO el ingreso, permanente en todas las runs futuras.\n\n"
+			+ "[i]Anti-AFK: la ráfaga premia clickear el botón en el momento justo; el motor base ×5/×5 sostiene la run entre ráfagas.[/i]"
+		),
+		"body_en": (
+			"Transmutation that reverts [b]Hyperassimilation[/b]. Bought in the Genetic Bank (15 LP, after closing Hyperassimilation).\n\n"
+			+ "You give up the wild ×10 click and the passive nerfed to ×0.25. In exchange, the system becomes a stable engine:\n\n"
+			+ "• [b]Click ×5[/b] permanent\n"
+			+ "• [b]Passive ×5[/b] permanent (without the hyper nerf)\n"
+			+ "• [b]Hybrid Metabolism[/b] button (key [b]Q[/b]): ×2 to ALL income for 30 s, 120 s cooldown\n"
+			+ "• [b]Reduce cooldown[/b] button (key [b]W[/b]): spend money to lower the cooldown −20% per level (floor 30 s). A sink that turns income into more bursts.\n\n"
+			+ "[b]The run does not close[/b]: Catabolic Fusion is playable. To seal the ending you need [b]$100M generated + 3 bursts used + n≥150 structural upgrades[/b] → seal button → [b]CATABOLIC FUSION[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward on sealing[/b]: [b]Legacy: Fused Engine[/b] — +25% to ALL income, permanent across all future runs.\n\n"
+			+ "[i]Anti-AFK: the burst rewards clicking the button at the right moment; the base ×5/×5 engine sustains the run between bursts.[/i]"
+		),
+		"unlock": {"type": "buff_owned", "id": "transmut_fusion"},
+		"see_also": ["transmut_intro", "hiperasimilacion", "formula_produccion"],
 	},
 
 	# ── VALORES (hojas de referencia rápida; números reales de Balance.gd) ──────
