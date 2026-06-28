@@ -1172,6 +1172,17 @@ func _input(event):
 							EvoManager.buy_fusion_cd()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_ayuno_primordial:
+				match kc:
+					KEY_Q:
+						EvoManager.activate_ayuno_burst()
+						UIManager.update_ng_plus_buttons()
+						get_viewport().set_input_as_handled()
+					KEY_W:
+						if EvoManager.can_buy_ayuno_ascesis():
+							EvoManager.buy_ayuno_ascesis()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_omega_cero:
 				if kc == KEY_R and EvoManager.omega_cero_can_seal():
 					EvoManager.omega_cero_seal()
