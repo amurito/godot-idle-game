@@ -315,10 +315,10 @@ static func build_evo_checklist(_main: Node) -> String:
 	if RunManager.run_closed:
 		return _build_run_end_lore(RunManager.final_route)
 
-	# Sub-rutas de MO muestran su propio panel; el checklist genérico no aplica aquí.
+	# Sub-rutas de MO y transmutaciones activas muestran su propio panel.
 	if EvoManager.mutation_met_oscuro or EvoManager.mutation_autolisis \
 			or EvoManager.mutation_necrosis or EvoManager.mutation_omega_cero \
-			or EvoManager.mutation_remision:
+			or EvoManager.mutation_remision or EvoManager.mutation_ayuno_primordial:
 		return ""
 
 	var t := "[color=cyan][b]" + TranslationServer.translate("EVO_NEXT_TRANS") + "[/b][/color]\n"
@@ -481,10 +481,18 @@ static func build_evo_checklist(_main: Node) -> String:
 		ch = ok_color + "[x] " if activo_domina else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_ACTIVE_DOM") % [int(ap_snap.activo), int(ap_snap.pasivo)] + "[/color]\n"
 
-		# HIPERASIMILACIÓN — o FUSIÓN CATABÓLICA si está el buff de transmutación (se activa por el mismo trigger).
+		# HIPERASIMILACIÓN — o transmutación activa (FC/Ayuno), según el buff del Banco Genético.
 		var hiper_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
-		var is_transmut: bool = LegacyManager.get_buff_value("transmut_fusion")
-		t += "\n[b]" + (TranslationServer.translate("EVO_FUSION_TITLE") if is_transmut else TranslationServer.translate("EVO_HIPER_TITLE")) + "[/b]\n"
+		var is_fc: bool = LegacyManager.get_buff_value("transmut_fusion")
+		var is_ayuno: bool = LegacyManager.get_buff_value("transmut_ayuno")
+		var hiper_label: String
+		if is_fc:
+			hiper_label = TranslationServer.translate("EVO_FUSION_TITLE")
+		elif is_ayuno:
+			hiper_label = TranslationServer.translate("EVO_AYUNO_TITLE")
+		else:
+			hiper_label = TranslationServer.translate("EVO_HIPER_TITLE")
+		t += "\n[b]" + hiper_label + "[/b]\n"
 		ch = ok_color + "[x] " if ap_snap.activo > 80.0 else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_HIPER_ACTIVO80") % int(ap_snap.activo) + "[/color]\n"
 		ch = ok_color + "[x] " if StructuralModel.epsilon_runtime > 0.40 else fail_color + "[ ] "
@@ -1187,6 +1195,44 @@ static func build_fusion_catabolica_closed_text() -> String:
 	t += "[i]%s[/i]\n" % TranslationServer.translate("CLOSE_FUSION")
 	t += "\n[color=#f5c20a]⊛ Recompensa permanente:[/color]\n"
 	t += "  %s (+25%% a todo el ingreso)\n" % TranslationServer.translate("LEGACY_LEGADO_MOTOR_FUNDIDO_NAME")
+	return t
+
+static func build_ayuno_primordial_closed_text() -> String:
+	var t := "[color=#a8c0d8]⊗ AYUNO PRIMORDIAL — SELLADO[/color]\n\n"
+	t += "[i]%s[/i]\n" % TranslationServer.translate("CLOSE_AYUNO")
+	t += "\n[color=#a8c0d8]⊛ Recompensa permanente:[/color]\n"
+	t += "  %s (pasivo ×2.0→×1.0 en 90 s)\n" % TranslationServer.translate("LEGACY_LEGADO_PRIMICIA_DEL_VACIO_NAME")
+	return t
+
+static func build_ayuno_primordial_panel_text() -> String:
+	var t := "[color=#a8c0d8]⊗ AYUNO PRIMORDIAL ACTIVO[/color]\n"
+	var s := EvoManager.ayuno_silencio
+	var s_total := EvoManager.ayuno_silencio_total
+	var s_rate: float = 1.0 + EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
+	t += "Silencio (S): %.1f  ·  Tasa: ×%.2f\n" % [s, s_rate]
+	t += "Pasivo: ×%.2f  (1 + S×%.2f)\n" % [EvoManager.ayuno_silencio_mult(), Balance.AYUNO_SILENCIO_FACTOR]
+
+	if EvoManager.ayuno_burst_active:
+		t += "\n[color=white]⚡ BURST ACTIVO — %.0fs restantes[/color]\n" % EvoManager.ayuno_burst_timer
+		t += "  Multiplicador: ×%.2f\n" % EvoManager.ayuno_burst_mult()
+	else:
+		t += "\n[Romper el ayuno ahora daría ×%.2f por %.0fs]\n" % [
+			1.0 + s / Balance.AYUNO_BURST_DIVISOR, Balance.AYUNO_BURST_DURATION]
+	if EvoManager.ayuno_ascesis_level > 0:
+		t += "ASCESIS nv.%d (S_rate +%.0f%%)\n" % [EvoManager.ayuno_ascesis_level, EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS * 100.0]
+
+	t += "\n[color=#a8c0d8]Condiciones para sellar:[/color]\n"
+	var cycles_ok: bool = EvoManager.ayuno_cycles >= Balance.AYUNO_SELLO_CYCLES
+	var total_ok: bool = s_total >= Balance.AYUNO_SELLO_TOTAL
+	var streak_ok: bool = EvoManager.ayuno_longest_streak >= Balance.AYUNO_SELLO_STREAK
+	var ck_c: String = "[color=green]✓[/color]" if cycles_ok else "[ ]"
+	var ck_t: String = "[color=green]✓[/color]" if total_ok else "[ ]"
+	var ck_s: String = "[color=green]✓[/color]" if streak_ok else "[ ]"
+	t += "  %s Ciclos: %d / %d\n" % [ck_c, EvoManager.ayuno_cycles, Balance.AYUNO_SELLO_CYCLES]
+	t += "  %s S acumulado: %.0f / %.0f\n" % [ck_t, s_total, Balance.AYUNO_SELLO_TOTAL]
+	t += "  %s Streak limpio: %.0fs / %.0fs\n" % [ck_s, EvoManager.ayuno_longest_streak, Balance.AYUNO_SELLO_STREAK]
+	if cycles_ok and total_ok and streak_ok:
+		t += "\n  [color=#a8c0d8]→ Sello disponible en el panel derecho[/color]"
 	return t
 
 static func build_fusion_catabolica_panel_text() -> String:

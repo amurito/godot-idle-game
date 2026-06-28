@@ -604,6 +604,9 @@ func _on_logic_tick():
 	# TRANSMUTACIÓN Fusión Catabólica (ráfaga Metabolismo Híbrido + cooldown)
 	elif EvoManager.mutation_fusion_catabolica:
 		EvoManager.process_fusion(dt)
+	# TRANSMUTACIÓN Ayuno Primordial (drain B + acumular Silencio + burst)
+	elif EvoManager.mutation_ayuno_primordial:
+		EvoManager.process_ayuno(dt)
 	# NG+ Depredador de Realidades (Glitch Survival)
 	elif EvoManager.mutation_depredador:
 		EvoManager.process_depredador(dt)

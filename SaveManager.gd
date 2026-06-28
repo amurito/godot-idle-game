@@ -73,6 +73,16 @@ func build_save_data(main: Node) -> Dictionary:
 			"fusion_burst_cooldown": _sf(EvoManager.fusion_burst_cooldown),
 			"fusion_burst_count": EvoManager.fusion_burst_count,
 			"fusion_cd_level": EvoManager.fusion_cd_level,
+			"mutation_ayuno_primordial": EvoManager.mutation_ayuno_primordial,
+			"ayuno_silencio": _sf(EvoManager.ayuno_silencio),
+			"ayuno_silencio_peak": _sf(EvoManager.ayuno_silencio_peak),
+			"ayuno_silencio_total": _sf(EvoManager.ayuno_silencio_total),
+			"ayuno_longest_streak": _sf(EvoManager.ayuno_longest_streak),
+			"ayuno_cycles": EvoManager.ayuno_cycles,
+			"ayuno_burst_active": EvoManager.ayuno_burst_active,
+			"ayuno_burst_timer": _sf(EvoManager.ayuno_burst_timer),
+			"ayuno_burst_saved_mult": _sf(EvoManager.ayuno_burst_mult()),
+			"ayuno_ascesis_level": EvoManager.ayuno_ascesis_level,
 			"mutation_symbiosis": EvoManager.mutation_symbiosis,
 			"mutation_red_micelial": EvoManager.mutation_red_micelial,
 			"mutation_sporulation": EvoManager.mutation_sporulation,
@@ -217,6 +227,16 @@ func apply_save_data(main: Node, data: Dictionary) -> void:
 		EvoManager.fusion_burst_cooldown = _sf(ev.get("fusion_burst_cooldown", 0.0), 0.0, 0.0)
 		EvoManager.fusion_burst_count = int(ev.get("fusion_burst_count", 0))
 		EvoManager.fusion_cd_level = int(ev.get("fusion_cd_level", 0))
+		EvoManager.mutation_ayuno_primordial = ev.get("mutation_ayuno_primordial", false)
+		EvoManager.ayuno_silencio = _sf(ev.get("ayuno_silencio", 0.0), 0.0, 0.0)
+		EvoManager.ayuno_silencio_peak = _sf(ev.get("ayuno_silencio_peak", 0.0), 0.0, 0.0)
+		EvoManager.ayuno_silencio_total = _sf(ev.get("ayuno_silencio_total", 0.0), 0.0, 0.0)
+		EvoManager.ayuno_longest_streak = _sf(ev.get("ayuno_longest_streak", 0.0), 0.0, 0.0)
+		EvoManager.ayuno_cycles = int(ev.get("ayuno_cycles", 0))
+		EvoManager.ayuno_burst_active = ev.get("ayuno_burst_active", false)
+		EvoManager.ayuno_burst_timer = _sf(ev.get("ayuno_burst_timer", 0.0), 0.0, 0.0)
+		EvoManager._ayuno_burst_saved_mult = _sf(ev.get("ayuno_burst_saved_mult", 1.0), 1.0, 1.0)
+		EvoManager.ayuno_ascesis_level = int(ev.get("ayuno_ascesis_level", 0))
 		EvoManager.mutation_symbiosis = ev.get("mutation_symbiosis", EvoManager.mutation_symbiosis)
 		EvoManager.mutation_red_micelial = ev.get("mutation_red_micelial", EvoManager.mutation_red_micelial)
 		EvoManager.mutation_sporulation = ev.get("mutation_sporulation", EvoManager.mutation_sporulation)

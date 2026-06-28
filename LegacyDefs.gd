@@ -489,6 +489,26 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
 		"effect": {"type": "all_income_mult", "value": 0.25},
 	},
+	# SOMBRA de Hiperasimilación: abandona el consumo por completo.
+	# Con este buff activo, el trigger de HIPERASIMILACIÓN activa AYUNO PRIMORDIAL en su lugar.
+	# Mutuamente exclusivo con transmut_fusion (solo uno activo a la vez).
+	"transmut_ayuno": {
+		"name": "Transmutación: Ayuno Primordial",
+		"flavor": "El hongo desaprende el frenesí absorbente. Sin sustrato, sin nutrientes — descubre que el silencio también produce.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "transcendence_count", "count": 3},
+		"effect": {"type": "transmut_ayuno_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Ayuno Primordial (otorgada vía grant_buff, cost 0, no comprable).
+	"legado_primicia_del_vacio": {
+		"name": "Legado: Primicia del Vacío",
+		"flavor": "El sistema ya estaba produciendo en el silencio antes de nacer. Al inicio de cada run, el metabolismo pasivo florece ×2 durante 90 segundos.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "AYUNO PRIMORDIAL"},
+		"unlock": {"type": "route_closed", "route": "AYUNO PRIMORDIAL"},
+		"effect": {"type": "primicia_del_vacio_active", "value": 1.0},
+	},
 
 	# ────────────────────────────────────────────────
 	# SECRETOS (3)

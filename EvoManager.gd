@@ -108,6 +108,19 @@ var fusion_burst_cooldown: float = 0.0   # s de cooldown tras la ráfaga
 var fusion_burst_count: int = 0          # usos de Metabolismo Híbrido (gate del sello)
 var fusion_cd_level: int = 0             # niveles comprados de reducción de cooldown (sink de dinero)
 
+# === AYUNO PRIMORDIAL (transmutación SOMBRA — anti-Hiperasimilación) ===
+var mutation_ayuno_primordial := false
+var ayuno_silencio: float = 0.0          # S — recurso central (amplifica pasivo, base del burst)
+var ayuno_silencio_peak: float = 0.0     # máximo histórico de la run (para NG+)
+var ayuno_silencio_total: float = 0.0    # acumulado total (para sello 2)
+var ayuno_longest_streak: float = 0.0    # s consecutivos con B<1 y ε<0.10 (para sello 3)
+var ayuno_cycles: int = 0                # veces que se usó ROMPER EL AYUNO (para sello 1)
+var ayuno_streak_timer: float = 0.0      # timer del streak limpio actual
+var ayuno_burst_active: bool = false     # true durante los 15 s del burst
+var ayuno_burst_timer: float = 0.0       # s restantes del burst
+var ayuno_ascesis_level: int = 0         # niveles del upgrade ASCESIS [W]
+var _ayuno_burst_saved_mult: float = 1.0 # mult fijado al activar el burst (1 + S/50 al momento)
+
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
 var mutation_autolisis := false
 var autolisis_devour_count: int = 0
@@ -177,6 +190,17 @@ func reset() -> void:
 	fusion_burst_cooldown = 0.0
 	fusion_burst_count = 0
 	fusion_cd_level = 0
+	mutation_ayuno_primordial = false
+	ayuno_silencio = 0.0
+	ayuno_silencio_peak = 0.0
+	ayuno_silencio_total = 0.0
+	ayuno_longest_streak = 0.0
+	ayuno_cycles = 0
+	ayuno_streak_timer = 0.0
+	ayuno_burst_active = false
+	ayuno_burst_timer = 0.0
+	ayuno_ascesis_level = 0
+	_ayuno_burst_saved_mult = 1.0
 	mutation_symbiosis = false
 	mutation_homeostasis = false
 	mutation_red_micelial = false
@@ -369,10 +393,13 @@ func activate_met_oscuro():
 
 func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
-	# TRANSMUTACIÓN: con el buff Fusión Catabólica activo, el trigger de Hiperasimilación
-	# revierte hacia FUSIÓN CATABÓLICA (ruta jugable) en lugar de la hiper salvaje.
+	# TRANSMUTACIONES: con el buff activo el trigger de Hiperasimilación desvía a la ruta revertida.
+	# FC y Ayuno son mutuamente excluyentes; FC tiene prioridad si por algún bug ambos están activos.
 	if LegacyManager.get_buff_value("transmut_fusion"):
 		activate_fusion_catabolica()
+		return
+	if LegacyManager.get_buff_value("transmut_ayuno"):
+		activate_ayuno_primordial()
 		return
 	mutation_hyperassimilation = true
 	LogManager.add(tr("LOG_HIPER_EFFECTS"))
@@ -454,6 +481,90 @@ func fusion_seal_ready() -> bool:
 		and EconomyManager.total_money_generated >= Balance.FUSION_SEAL_MONEY \
 		and fusion_burst_count >= Balance.FUSION_SEAL_BURSTS \
 		and StructuralModel.get_structural_upgrades() >= Balance.FUSION_SEAL_STRUCTURAL_N
+
+# ── AYUNO PRIMORDIAL (transmutación SOMBRA) ────────────────────────────────
+## Activa la ruta revertida. NO cierra la run: es jugable y se sella voluntariamente.
+func activate_ayuno_primordial() -> void:
+	if mutation_ayuno_primordial: return
+	mutation_ayuno_primordial = true
+	mutation_hyperassimilation = false  # la reversión apaga la hiper
+	LogManager.add(tr("LOG_AYUNO_EFFECTS"))
+	mutation_activated.emit("ayuno_primordial", tr("MUT_AYUNO_PRIMORDIAL"))
+	AchievementManager.on_mutation_activated("ayuno_primordial")
+	UIManager.show_toast(tr("TOAST_AYUNO_ON"))
+	_save_after_mutation()
+
+## Tick de Ayuno Primordial: drena B, acumula Silencio, gestiona burst.
+func process_ayuno(dt: float) -> void:
+	if not mutation_ayuno_primordial or RunManager.run_closed: return
+	# Drenar biomasa activamente
+	BiosphereEngine.biomasa = maxf(0.0, BiosphereEngine.biomasa - Balance.AYUNO_BIOMASA_DRAIN * dt)
+	# Acumular Silencio cuando el sistema está "en ayuno limpio"
+	var b_factor: float = clampf(1.0 - BiosphereEngine.biomasa * 0.2, 0.0, 1.0)
+	var e_factor: float = clampf(1.0 - StructuralModel.epsilon_runtime * 3.0, 0.0, 1.0)
+	var ascesis_bonus: float = 1.0 + ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
+	var rate: float = b_factor * e_factor * ascesis_bonus
+	ayuno_silencio += rate * dt
+	ayuno_silencio_total += rate * dt
+	ayuno_silencio_peak = maxf(ayuno_silencio_peak, ayuno_silencio)
+	# Streak limpio: B < 1 y ε < 0.10
+	if BiosphereEngine.biomasa < 1.0 and StructuralModel.epsilon_runtime < 0.10:
+		ayuno_streak_timer += dt
+		ayuno_longest_streak = maxf(ayuno_longest_streak, ayuno_streak_timer)
+	else:
+		ayuno_streak_timer = 0.0
+	# Tick del burst
+	if ayuno_burst_active:
+		ayuno_burst_timer -= dt
+		if ayuno_burst_timer <= 0.0:
+			ayuno_burst_timer = 0.0
+			ayuno_burst_active = false
+			UIManager.show_toast(tr("TOAST_AYUNO_BURST_OFF"))
+
+## Multiplicador de pasivo durante el ayuno (S acumulado amplifica el ingreso pasivo).
+func ayuno_silencio_mult() -> float:
+	if not mutation_ayuno_primordial: return 1.0
+	return 1.0 + ayuno_silencio * Balance.AYUNO_SILENCIO_FACTOR
+
+## Multiplicador extra durante el burst (×(1 + S/50) al momento de romper, luego fijo 15s).
+func ayuno_burst_mult() -> float:
+	return _ayuno_burst_saved_mult if ayuno_burst_active else 1.0
+
+## [Q] ROMPER EL AYUNO: libera el Silencio acumulado como burst de 15 s.
+func activate_ayuno_burst() -> void:
+	if not mutation_ayuno_primordial or RunManager.run_closed: return
+	if ayuno_burst_active: return
+	_ayuno_burst_saved_mult = 1.0 + ayuno_silencio / Balance.AYUNO_BURST_DIVISOR
+	ayuno_silencio = 0.0
+	ayuno_streak_timer = 0.0
+	BiosphereEngine.biomasa += Balance.AYUNO_BURST_BIO_SPIKE
+	ayuno_burst_active = true
+	ayuno_burst_timer = Balance.AYUNO_BURST_DURATION
+	ayuno_cycles += 1
+	UIManager.show_toast(tr("TOAST_AYUNO_BURST_ON"))
+
+## Costo del próximo nivel de ASCESIS.
+func ayuno_ascesis_cost() -> float:
+	return Balance.AYUNO_ASCESIS_COST * pow(Balance.AYUNO_ASCESIS_SCALE, ayuno_ascesis_level)
+
+## ¿Se puede comprar ASCESIS?
+func can_buy_ayuno_ascesis() -> bool:
+	return mutation_ayuno_primordial and not RunManager.run_closed \
+		and EconomyManager.money >= ayuno_ascesis_cost()
+
+## [W] ASCESIS: mejora la tasa de acumulación de Silencio.
+func buy_ayuno_ascesis() -> void:
+	if not can_buy_ayuno_ascesis(): return
+	EconomyManager.money -= ayuno_ascesis_cost()
+	ayuno_ascesis_level += 1
+	UIManager.show_toast(tr("TOAST_AYUNO_ASCESIS_BUY") % ayuno_ascesis_level)
+
+## ¿Se cumplen las 3 condiciones de sello?
+func ayuno_seal_ready() -> bool:
+	return mutation_ayuno_primordial \
+		and ayuno_cycles >= Balance.AYUNO_SELLO_CYCLES \
+		and ayuno_silencio_total >= Balance.AYUNO_SELLO_TOTAL \
+		and ayuno_longest_streak >= Balance.AYUNO_SELLO_STREAK
 
 func activate_homeostasis():
 	if mutation_homeostasis or mutation_symbiosis: return

@@ -31,7 +31,7 @@
 9. [Biosfera fúngica — B, N, hifas, micelio](#9-biosfera-fúngica--b-n-hifas-micelio)
 10. [Metabolismo](#10-metabolismo)
 11. [Upgrades — costos y curvas](#11-upgrades--costos-y-curvas)
-12. [Mutaciones y rutas — modificadores](#12-mutaciones-y-rutas--modificadores) *(§12.4 FUSIÓN CATABÓLICA)*
+12. [Mutaciones y rutas — modificadores](#12-mutaciones-y-rutas--modificadores) *(§12.4 FUSIÓN CATABÓLICA · §12.5 AYUNO PRIMORDIAL)*
 13. [Banco Genético (PL) — buffs de legado](#13-banco-genético-pl--buffs-de-legado) *(§13.7 Transmutaciones)*
 14. [Banco Cósmico (Ξ) — buffs post-trascendencia](#14-banco-cósmico-ξ--buffs-post-trascendencia)
 15. [Rutas post-trascendencia](#15-rutas-post-trascendencia)
@@ -153,6 +153,22 @@
 | `FUSION_SEAL_STRUCTURAL_N` | 150 | Balance | upgrades estructurales para habilitar sello |
 | `FUSION_SEAL_MONEY` | 100_000_000 | Balance | dinero generado total para habilitar sello ($100M) |
 | `FUSION_SEAL_BURSTS` | 3 | Balance | ráfagas activadas para habilitar sello |
+| `AYUNO_BIOMASA_DRAIN` | 0.5 | Balance | drenaje de B por segundo mientras ayuno activo |
+| `AYUNO_SILENCIO_FACTOR` | 0.01 | Balance | contribución de S al mult pasivo (×(1+S×0.01)) |
+| `AYUNO_ASCESIS_RATE_BONUS` | 0.15 | Balance | bonus de tasa de Silencio por nivel [W] (+15%) |
+| `AYUNO_ASCESIS_COST` | 50.0 | Balance | costo base del upgrade [W] |
+| `AYUNO_ASCESIS_SCALE` | 2.5 | Balance | factor exponencial de costo [W] |
+| `AYUNO_BURST_DURATION` | 15.0 | Balance | duración de la ráfaga [Q] en segundos |
+| `AYUNO_BURST_DIVISOR` | 50.0 | Balance | divisor para calcular mult del burst (1+S/50) |
+| `AYUNO_BURST_BIO_SPIKE` | 5.0 | Balance | spike de B al romper el ayuno [Q] |
+| `AYUNO_SELLO_CYCLES` | 5 | Balance | ciclos [Q] completados para habilitar sello |
+| `AYUNO_SELLO_TOTAL` | 500.0 | Balance | S acumulado total (silencio_total) para sello |
+| `AYUNO_SELLO_STREAK` | 90.0 | Balance | streak limpio más largo (s) para sello |
+| `AYUNO_NG_PEAK_DIV` | 50.0 | Balance | divisor de S_peak para NG+ bonus |
+| `AYUNO_NG_CAP` | 8 | Balance | techo del NG+ bonus de Ayuno |
+| `AYUNO_PL_BASE` | 8 | Balance | PL base al cerrar AYUNO PRIMORDIAL |
+| `AYUNO_LEGACY_DURATION` | 90.0 | Balance | duración del legado Primicia en segundos |
+| `AYUNO_LEGACY_MULT_START` | 2.0 | Balance | mult inicial del legado Primicia (decae a ×1.0) |
 
 ---
 
@@ -757,6 +773,83 @@ Al sellar: otorga `legado_motor_fundido` (ver §13.7) y cierra el run.
 
 ---
 
+### 12.5 AYUNO PRIMORDIAL (transmutación SOMBRA de HIPERASIMILACIÓN)
+
+> Spec completa: `docs/design/ayuno_primordial.md`. Implementada en v1.0.4.0.
+
+**Disparo:** mismas condiciones de HIPERASIMILACIÓN + `LegacyManager.get_buff_value("transmut_ayuno")` activo. Si `transmut_fusion` también está activo, **FC tiene prioridad**. Las dos transmutaciones son mutuamente excluyentes.
+
+**Estado en `EvoManager`** (persiste en `SaveManager`):
+
+| Variable | Descripción |
+|---|---|
+| `mutation_ayuno_primordial: bool` | transmutación activa |
+| `ayuno_silencio: float` | S acumulado actual (se reinicia al romper [Q]) |
+| `ayuno_silencio_peak: float` | S máximo alcanzado en la run (para NG+) |
+| `ayuno_silencio_total: float` | S acumulado total (para sello) |
+| `ayuno_longest_streak: float` | streak limpio más largo en segundos (para sello) |
+| `ayuno_cycles: int` | número de bursts [Q] completados (para sello) |
+| `ayuno_streak_timer: float` | timer del streak actual (B<1 y ε<0.10) |
+| `ayuno_burst_active: bool` | burst [Q] en curso |
+| `ayuno_burst_timer: float` | tiempo restante del burst |
+| `ayuno_ascesis_level: int` | nivel del upgrade [W] |
+| `_ayuno_burst_saved_mult: float` | mult fijado al activar el burst (1+S/50 en ese momento) |
+
+**Mecánica de Silencio (S):**
+
+Cada tick (`process_ayuno(dt)`):
+
+```
+B = max(0, B − AYUNO_BIOMASA_DRAIN × dt)           # drenaje constante
+
+b_factor = clamp(1 − B × 0.2, 0, 1)               # B < 5 para acumular S
+e_factor = clamp(1 − ε_rt × 3.0, 0, 1)            # ε < 0.33 para acumular S
+ascesis_bonus = 1 + ayuno_ascesis_level × 0.15
+
+rate = b_factor × e_factor × ascesis_bonus
+
+S += rate × dt
+silencio_total += rate × dt
+```
+
+Si B < 1 **y** ε_rt < 0.10 simultáneamente: `streak_timer += dt`.
+
+**Efecto sobre el pasivo** (`EconomyManager.get_passive_total()`):
+
+```
+pasivo_total *= (1 + S × AYUNO_SILENCIO_FACTOR)    # S=100 → ×2.0, S=300 → ×4.0
+```
+
+**Botones activos:**
+
+| Tecla | Condición | Efecto |
+|---|---|---|
+| [Q] ROMPER EL AYUNO | siempre disponible si ayuno activo | burst `mult = 1 + S/50` durante 15 s; S→0; B+5; `ayuno_cycles++` |
+| [W] ASCESIS (nv.n) | `EconomyManager.money >= costo` | +15% tasa S por nivel; costo = `$50 × 2.5^n` |
+
+Mult del burst se captura al momento de activación en `_ayuno_burst_saved_mult` (S se reinicia, no se puede recalcular después).
+
+**Condiciones de sello** (`EvoManager.ayuno_seal_ready()`):
+
+| Condición | Constante | Valor |
+|---|---|---|
+| `ayuno_cycles >= 5` | `AYUNO_SELLO_CYCLES` | 5 bursts completados |
+| `ayuno_silencio_total >= 500` | `AYUNO_SELLO_TOTAL` | 500 de S acumulado total |
+| `ayuno_longest_streak >= 90s` | `AYUNO_SELLO_STREAK` | 90s de streak limpio |
+
+Al sellar: otorga `legado_primicia_del_vacio` (ver §13.7) y cierra el run.
+
+**Legado Primicia del Vacío** en runs futuras (`EconomyManager.get_passive_total()`):
+
+```
+if run_time < AYUNO_LEGACY_DURATION:
+    pasivo_total *= lerp(2.0, 1.0, run_time / 90.0)
+```
+
+El pasivo arranca con ×2.0 y decae linealmente a ×1.0 en los primeros 90 s de cada run futura.
+
+---
+
 ## 13. Banco Genético (PL) — buffs de legado
 
 > Categorías: ECONOMÍA, ESTRUCTURA, BIOLOGÍA, CONOCIMIENTO, RUTAS, NG+, ???
@@ -840,10 +933,12 @@ Buffs que modifican el comportamiento de mutaciones existentes en lugar de agreg
 
 | id | nombre | costo PL | efecto |
 |---|---|---|---|
-| `transmut_fusion` | Fusión Catabólica | (Banco Genético) | Transforma HIPERASIMILACIÓN en FUSIÓN CATABÓLICA (ver §12.4). Reveal + unlock: cerrar la ruta `FUSIÓN CATABÓLICA` |
-| `legado_motor_fundido` | Motor Fundido | gratis (otorgado al sellar FC) | `all_income_mult += 0.25` a TODO el ingreso (click + pasivo). Stackeable. Categoría `transmutaciones`. |
+| `transmut_fusion` | Fusión Catabólica | 20 PL | Transforma HIPERASIMILACIÓN en FUSIÓN CATABÓLICA (ver §12.4). Reveal + unlock: cerrar `FUSIÓN CATABÓLICA`. Prioritario sobre `transmut_ayuno`. |
+| `legado_motor_fundido` | Motor Fundido | gratis (otorgado al sellar FC) | `all_income_mult += 0.25` a TODO el ingreso (click + pasivo). Stackeable. |
+| `transmut_ayuno` | Ayuno Primordial | 20 PL | Transforma HIPERASIMILACIÓN en AYUNO PRIMORDIAL (ver §12.5). Reveal + unlock: T≥3. Mutuamente excluyente con `transmut_fusion` (FC gana). |
+| `legado_primicia_del_vacio` | Primicia del Vacío | gratis (otorgado al sellar AP) | Pasivo ×2.0→×1.0 lineal durante los primeros 90 s de cada run. No stackeable (se otorga una sola vez). |
 
-> Patrón de implementación: `LegacyDefs.gd` (definición del buff) + `GenomeEvaluator` (hook de disparo) + `RunManager.close_run()` (otorga legado al cerrar) + `SaveManager` (persist estado). Blueprint completo en `docs/design/fusion_catabolica.md §8`.
+> Patrón de implementación (compartido por todas las transmutaciones): `LegacyDefs.gd` (buff) + hook en `EvoManager.activate_hyperassimilation()` + `RunManager.close_run()` (legado) + `SaveManager` (persist estado). Blueprint en `docs/design/fusion_catabolica.md §8`, aplicado en `docs/design/ayuno_primordial.md`.
 
 ---
 
@@ -1423,9 +1518,16 @@ Cada 30 s. Antes de escribir crea `.bak` del save anterior; recovery automático
 
 ---
 
-**Última revisión**: v1.0.3.0 (2026-06-28) — commits `f70a571` (FC + refactor) + `b50f899` (NGPlusButtonManager).
+**Última revisión**: v1.0.4.0 (2026-06-28) — AYUNO PRIMORDIAL implementado (14 archivos).
 
-**Cambios incluidos en v1.0.3.0** (Fusión Catabólica + refactor + Banco Cósmico):
+**Cambios incluidos en v1.0.4.0** (Ayuno Primordial — primera transmutación SOMBRA):
+- Nueva **§12.5 AYUNO PRIMORDIAL**: segunda transmutación. Estado completo en EvoManager (11 vars), mecánica de Silencio (S), botones [Q]/[W], 3 gates de sello, legado Primicia del Vacío (decay lineal ×2.0→×1.0 en 90s).
+- **§2**: 17 nuevas constantes `AYUNO_*`.
+- **§13.7 Transmutaciones**: agregados `transmut_ayuno` (20 PL, reveal T≥3) y `legado_primicia_del_vacio` (gratis, decay pasivo).
+- **Logros**: `ayuno_iniciado` (ESPORA), `primer_ayuno` (ANCESTRAL), `ayuno_perfecto` (MYTHIC — streak ≥ 180s y cycles ≥ 7).
+- **NG+ bonus**: `floor(ayuno_silencio_peak / 50)`, cap 8. PL base: 8.
+
+**Cambios incluidos en v1.0.3.0** (Fusión Catabólica + refactor + Banco Cósmico) — commits `f70a571` + `b50f899`:
 - Nueva **§12.4 FUSIÓN CATABÓLICA**: primera transmutación del juego. Variables de estado, economía ×5/×10, cooldown compounding [W], condiciones de sello (3 gates), legado permanente.
 - Nueva **§13.7 Transmutaciones**: categoría especial en Banco Genético. `transmut_fusion` + `legado_motor_fundido` (+25% all_income_mult).
 - §3.2 / §3.5: cadenas de click y pasivo extendidas con FC ×5 base + ×2 burst + `legado_motor_fundido` aditivo.

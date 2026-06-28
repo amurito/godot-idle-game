@@ -84,6 +84,7 @@ func _ready() -> void:
 		"metabolismo_oscuro_pico":_eval_met_oscuro_pico_cond,
 		"legado_absoluto":        _eval_legado_absoluto,
 		"dios_de_las_moscas":     _eval_dios_de_las_moscas,
+		"ayuno_perfecto":          _eval_ayuno_perfecto,
 	}
 	_init_timers()
 
@@ -440,6 +441,11 @@ func _eval_autolisis_perfecta(_s: Dictionary) -> bool:
 		and EvoManager.autofagia_speed_level >= Balance.AUTOFAGIA_SPEED_MAX_LEVEL \
 		and EvoManager.autofagia_double_level >= Balance.AUTOFAGIA_DOUBLE_MAX_LEVEL
 
+func _eval_ayuno_perfecto(_s: Dictionary) -> bool:
+	return RunManager.final_route == "AYUNO PRIMORDIAL" \
+		and EvoManager.ayuno_longest_streak >= 180.0 \
+		and EvoManager.ayuno_cycles >= 7
+
 func _eval_funcion_pura(_s: Dictionary) -> bool:
 	return RunManager.final_route == "NECROSIS CONTROLADA" \
 		and EvoManager.necrosis_active_time <= 75.0 \
@@ -546,6 +552,8 @@ func on_run_closed(route: String) -> void:
 		unlock("esclerocio_contingencia")
 	if route == "AUTOFAGIA NECRÓTICA" and _eval_autolisis_perfecta({}):
 		unlock("autolisis_perfecta")
+	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
+		unlock("ayuno_perfecto")
 	if route == "NECROSIS CONTROLADA" and _eval_funcion_pura({}):
 		unlock("funcion_pura")
 	if route == "PROTOCOLO OMEGA-CERO" and _eval_singularidad_perfecta({}):

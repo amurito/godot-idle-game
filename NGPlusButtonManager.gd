@@ -47,6 +47,9 @@ var _mc_override_btn: Button = null
 var _fusion_burst_btn: Button = null     # Metabolismo Híbrido (ráfaga ×2) de Fusión Catabólica
 var _fusion_cd_btn: Button = null        # Reducción de cooldown de la ráfaga (sink de dinero, tecla W)
 var _fusion_seal_btn: Button = null      # Sello del final FUSIÓN CATABÓLICA
+var _ayuno_burst_btn: Button = null      # [Q] ROMPER EL AYUNO — burst basado en Silencio
+var _ayuno_ascesis_btn: Button = null    # [W] ASCESIS — mejora la tasa de S
+var _ayuno_seal_btn: Button = null       # Sello del final AYUNO PRIMORDIAL
 var _simbiosis_seal_btn: Button = null
 var _run_buffs_btn: Button = null        # Botón "Buffs activos (N)" del panel derecho
 var _run_buffs_panel: PanelContainer = null  # Panel flotante con la lista de buffs heredados
@@ -140,6 +143,15 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_fusion_seal_btn):
 		_fusion_seal_btn.queue_free()
 		_fusion_seal_btn = null
+	if is_instance_valid(_ayuno_burst_btn):
+		_ayuno_burst_btn.queue_free()
+		_ayuno_burst_btn = null
+	if is_instance_valid(_ayuno_ascesis_btn):
+		_ayuno_ascesis_btn.queue_free()
+		_ayuno_ascesis_btn = null
+	if is_instance_valid(_ayuno_seal_btn):
+		_ayuno_seal_btn.queue_free()
+		_ayuno_seal_btn = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -162,6 +174,7 @@ func update_ng_plus_buttons() -> void:
 	_update_depredador_buytime_button()
 	_update_mc_override_button()
 	_update_fusion_buttons()
+	_update_ayuno_buttons()
 	_update_simbiosis_seal_button()
 	_update_run_buffs_button()
 
@@ -1064,6 +1077,95 @@ func _on_fusion_seal_pressed() -> void:
 	if is_instance_valid(_fusion_seal_btn):
 		_fusion_seal_btn.visible = false
 	RunManager.close_run("FUSIÓN CATABÓLICA", TranslationServer.translate("CLOSE_FUSION"))
+
+# ── AYUNO PRIMORDIAL (transmutación SOMBRA): burst de Silencio + Ascesis + sello ──
+func _update_ayuno_buttons() -> void:
+	_update_ayuno_burst_button()
+	_update_ayuno_ascesis_button()
+	_update_ayuno_seal_button()
+
+func _update_ayuno_burst_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_ayuno_primordial:
+		if is_instance_valid(_ayuno_burst_btn):
+			_ayuno_burst_btn.visible = false
+		return
+	if _ayuno_burst_btn == null or not is_instance_valid(_ayuno_burst_btn):
+		_ayuno_burst_btn = Button.new()
+		_ayuno_burst_btn.clip_text = true
+		_ayuno_burst_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(16))
+		_ayuno_burst_btn.add_theme_color_override("font_color", Color(0.75, 0.85, 0.95))
+		_ayuno_burst_btn.custom_minimum_size = Vector2(0, 50)
+		_ayuno_burst_btn.pressed.connect(_on_ayuno_burst_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_ayuno_burst_btn)
+			panel.move_child(_ayuno_burst_btn, 0)
+	if EvoManager.ayuno_burst_active:
+		_ayuno_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_AYUNO_BURST_ACTIVE") % EvoManager.ayuno_burst_timer)
+		_ayuno_burst_btn.disabled = true
+	else:
+		var s_val := EvoManager.ayuno_silencio
+		_ayuno_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_AYUNO_BURST_READY") % [s_val, 1.0 + s_val / Balance.AYUNO_BURST_DIVISOR])
+		_ayuno_burst_btn.disabled = false
+	_ayuno_burst_btn.visible = true
+
+func _on_ayuno_burst_pressed() -> void:
+	EvoManager.activate_ayuno_burst()
+	_update_ayuno_burst_button()
+
+func _update_ayuno_ascesis_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_ayuno_primordial:
+		if is_instance_valid(_ayuno_ascesis_btn):
+			_ayuno_ascesis_btn.visible = false
+		return
+	if _ayuno_ascesis_btn == null or not is_instance_valid(_ayuno_ascesis_btn):
+		_ayuno_ascesis_btn = Button.new()
+		_ayuno_ascesis_btn.clip_text = true
+		_ayuno_ascesis_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_ayuno_ascesis_btn.add_theme_color_override("font_color", Color(0.65, 0.75, 0.88))
+		_ayuno_ascesis_btn.custom_minimum_size = Vector2(0, 46)
+		_ayuno_ascesis_btn.pressed.connect(_on_ayuno_ascesis_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_ayuno_ascesis_btn)
+			panel.move_child(_ayuno_ascesis_btn, 1)
+	var cost := EvoManager.ayuno_ascesis_cost()
+	var current_bonus := EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS * 100.0
+	var next_bonus := (EvoManager.ayuno_ascesis_level + 1) * Balance.AYUNO_ASCESIS_RATE_BONUS * 100.0
+	_ayuno_ascesis_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_AYUNO_ASCESIS") % [EvoManager.ayuno_ascesis_level, current_bonus, next_bonus, UITextBuilders.format_compact(cost)])
+	_ayuno_ascesis_btn.disabled = not EvoManager.can_buy_ayuno_ascesis()
+	_ayuno_ascesis_btn.visible = true
+
+func _on_ayuno_ascesis_pressed() -> void:
+	EvoManager.buy_ayuno_ascesis()
+	_update_ayuno_ascesis_button()
+
+func _update_ayuno_seal_button() -> void:
+	if RunManager.run_closed or not EvoManager.mutation_ayuno_primordial or not EvoManager.ayuno_seal_ready():
+		if is_instance_valid(_ayuno_seal_btn):
+			_ayuno_seal_btn.visible = false
+		return
+	if _ayuno_seal_btn == null or not is_instance_valid(_ayuno_seal_btn):
+		_ayuno_seal_btn = Button.new()
+		_ayuno_seal_btn.clip_text = true
+		_ayuno_seal_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		_ayuno_seal_btn.add_theme_color_override("font_color", Color(0.8, 0.92, 1.0))
+		_ayuno_seal_btn.custom_minimum_size = Vector2(0, 70)
+		_ayuno_seal_btn.pressed.connect(_on_ayuno_seal_pressed)
+		var panel := _right_panel()
+		if panel:
+			panel.add_child(_ayuno_seal_btn)
+			panel.move_child(_ayuno_seal_btn, 0)
+	var pl: int = int(Balance.PL_REWARDS.get("AYUNO PRIMORDIAL", 8))
+	_ayuno_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_AYUNO_SEAL") % pl)
+	_ayuno_seal_btn.visible = true
+
+func _on_ayuno_seal_pressed() -> void:
+	if RunManager.run_closed or not EvoManager.ayuno_seal_ready():
+		return
+	if is_instance_valid(_ayuno_seal_btn):
+		_ayuno_seal_btn.visible = false
+	RunManager.close_run("AYUNO PRIMORDIAL", TranslationServer.translate("CLOSE_AYUNO"))
 
 func _update_simbiosis_seal_button() -> void:
 	if RunManager.run_closed or not EvoManager.mutation_symbiosis:

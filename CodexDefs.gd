@@ -271,6 +271,84 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "always"},
 		"see_also": ["epsilon", "homeostasis", "allostasis", "homeorhesis"],
 	},
+	"hifas": {
+		"cat": "mecanicas",
+		"name_es": "Hifas y Micelio", "name_en": "Hyphae & Mycelium",
+		"body_es": (
+			"[b]Hifas (H):[/b] filamentos activos del hongo. Son la variable más opaca del sistema.\n\n"
+			+ "[b]Fórmula:[/b] `H = (pasivo^0.6) / (1 + pasivo^0.6 / 40)` — asíntota suave en ~40 hifas.\n"
+			+ "• Crecen con el ingreso pasivo (Trabajo Manual + Trueque). Sin pasivo activo, las hifas no crecen.\n"
+			+ "• Homeostasis las reduce: H ×= 0.85 mientras homeostasis_mode esté activo.\n\n"
+			+ "[b]Rol de las hifas:[/b]\n"
+			+ "• Alimentan la biomasa junto con los nutrientes: `ganancia_bio ≈ H · √N · 0.02 / s`.\n"
+			+ "• En Red Micelial (≥ 5 hifas): sostienen el piso de micelio en 8%.\n"
+			+ "• Sin hifas, los nutrientes son inútiles para crecer biomasa.\n\n"
+			+ "[b]Micelio (M):[/b] red cristalizada activa solo en la Rama Verde (Red Micelial).\n"
+			+ "• Si hifas ≥ 5: M crece `+hifas · 0.4 / s`, cap 100.\n"
+			+ "• Si hifas < 5: M decae `−1.5 / s`.\n"
+			+ "• Meta en Colonización: llegar a M = 60% para desencadenar el Primordio.\n"
+			+ "• Bonus NG+: Esporulación, Panspermia y Esclerocio escalan con M al cerrar (`floor(M/20)`)."
+		),
+		"body_en": (
+			"[b]Hyphae (H):[/b] active fungal filaments. The most opaque variable in the system.\n\n"
+			+ "[b]Formula:[/b] `H = (passive^0.6) / (1 + passive^0.6 / 40)` — soft asymptote near ~40 hyphae.\n"
+			+ "• Grow with passive income (Manual Labor + Barter). Without active passive, hyphae don't grow.\n"
+			+ "• Homeostasis reduces them: H ×= 0.85 while homeostasis_mode is active.\n\n"
+			+ "[b]Role of hyphae:[/b]\n"
+			+ "• Feed biomass together with nutrients: `bio_gain ≈ H · √N · 0.02 / s`.\n"
+			+ "• In Mycelial Network (≥ 5 hyphae): sustains the 8% mycelium floor.\n"
+			+ "• Without hyphae, nutrients are useless for growing biomass.\n\n"
+			+ "[b]Mycelium (M):[/b] crystallized network, active only in the Green Branch (Mycelial Network).\n"
+			+ "• If hyphae ≥ 5: M grows `+hyphae · 0.4 / s`, cap 100.\n"
+			+ "• If hyphae < 5: M decays `−1.5 / s`.\n"
+			+ "• Goal in Colonization: reach M = 60% to trigger Primordium.\n"
+			+ "• NG+ bonus: Sporulation, Panspermia and Sclerotium scale with M at close (`floor(M/20)`)."
+		),
+		"unlock": {"type": "always"},
+		"see_also": ["biomasa", "nutrientes", "colonizacion_mecanica", "red_micelial"],
+	},
+	"homeostasis_banda": {
+		"cat": "mecanicas",
+		"name_es": "Banda homeostática y Resiliencia", "name_en": "Homeostatic band & Resilience",
+		"body_es": (
+			"El sistema tiene una zona de operación óptima llamada [b]banda homeostática[/b]: [b]0.03 ≤ ε_eff ≤ 0.30[/b]. Estar dentro tiene consecuencias acumulativas.\n\n"
+			+ "[b]Resiliencia (resilience_score):[/b]\n"
+			+ "• Se acumula cada tick que el sistema está en banda y sobrevivió perturbaciones.\n"
+			+ "• Efecto directo: μ recibe hasta +30% cuando resilience ≥ 300 (`(resilience/300) · 0.30`).\n"
+			+ "• Clave para Homeorresis: el bonus NG+ escala con el pico de resiliencia (`floor(omega_min_peak · 10)`, tope 7).\n\n"
+			+ "[b]Homeostasis mode:[/b]\n"
+			+ "• 18 segundos continuos dentro de banda → se activa `homeostasis_mode`.\n"
+			+ "• Consecuencias: cap duro de biomasa = 10, hifas reducidas ×0.85.\n"
+			+ "• Habilita [b]Allostasis y Homeorresis[/b] como finales jugables (sin homeostasis_mode no aparecen como opciones).\n\n"
+			+ "[b]Perturbaciones estándar:[/b]\n"
+			+ "• Cada 20 s: un shock aleatorio [0–1] reduce Ω temporalmente y empuja ε hacia arriba.\n"
+			+ "• Shock extremo (> 0.8): caída de Ω más pronunciada.\n"
+			+ "• Sobrevivir un shock dentro de banda suma resiliencia.\n"
+			+ "• Legado [b]Cristalización Permanente[/b]: shock de Ω reducido a la mitad.\n"
+			+ "• Legado [b]Umbral Adaptativo[/b]: recovery speed ×1.40.\n\n"
+			+ "[i]Estar en banda no es solo 'no explotar' — es activamente productivo: da resiliencia, mejora μ y habilita las rutas de Orden.[/i]"
+		),
+		"body_en": (
+			"The system has an optimal operating zone called the [b]homeostatic band[/b]: [b]0.03 ≤ ε_eff ≤ 0.30[/b]. Staying inside has cumulative effects.\n\n"
+			+ "[b]Resilience (resilience_score):[/b]\n"
+			+ "• Accumulates each tick the system is in band and survived perturbations.\n"
+			+ "• Direct effect: μ gains up to +30% when resilience ≥ 300 (`(resilience/300) · 0.30`).\n"
+			+ "• Key for Homeorhesis: the NG+ bonus scales with the peak of resilience (`floor(omega_min_peak · 10)`, cap 7).\n\n"
+			+ "[b]Homeostasis mode:[/b]\n"
+			+ "• 18 continuous seconds inside band → activates `homeostasis_mode`.\n"
+			+ "• Consequences: hard biomass cap = 10, hyphae reduced ×0.85.\n"
+			+ "• Enables [b]Allostasis and Homeorhesis[/b] as playable endings (without homeostasis_mode they don't appear).\n\n"
+			+ "[b]Standard perturbations:[/b]\n"
+			+ "• Every 20 s: a random shock [0–1] temporarily reduces Ω and pushes ε upward.\n"
+			+ "• Extreme shock (> 0.8): more pronounced Ω drop.\n"
+			+ "• Surviving a shock while in band grants resilience.\n"
+			+ "• Legacy [b]Permanent Crystallization[/b]: Ω shock halved.\n"
+			+ "• Legacy [b]Adaptive Threshold[/b]: recovery speed ×1.40.\n\n"
+			+ "[i]Being in band isn't just 'not exploding' — it's actively productive: grants resilience, boosts μ, and enables Order routes.[/i]"
+		),
+		"unlock": {"type": "always"},
+		"see_also": ["epsilon", "omega", "homeostasis", "allostasis", "homeorhesis"],
+	},
 	"perturbaciones": {
 		"cat": "mecanicas",
 		"name_es": "Perturbaciones y eventos", "name_en": "Perturbations & events",
@@ -586,16 +664,35 @@ const ENTRIES: Dictionary = {
 		"cat": "rutas",
 		"name_es": "Depredador de Realidades", "name_en": "Reality Predator",
 		"body_es": (
-			"Se activa cuando la economía entra en crisis profunda (estrés alto, sin flujo activo).\n"
-			+ "El organismo devora sus propios upgrades para generar dinero. Tiene un timer de inestabilidad: si llega a cero → COLAPSO DEPREDATORIO.\n"
-			+ "Si consumís TODOS los upgrades antes del colapso → DEPREDADOR DE REALIDADES (final exitoso). Desde ahí se puede sellar MET.OSCURO."
+			"Se activa cuando la economía entra en crisis profunda: estrés alto, sin flujo activo. El sistema comienza a devorar sus propios upgrades para generar dinero.\n\n"
+			+ "[b]Timer de inestabilidad (60 s):[/b]\n"
+			+ "• Cada tick de devorado consume un upgrade (nivel −1; no se elimina, se puede recomprar). Aporta +15 biomasa y suma al contador de devorados.\n"
+			+ "• Velocidad base: 1 upgrade cada 1.5 s. Tras 50 devorados → 1 cada 1.2 s.\n\n"
+			+ "[b]Cómo frenar el timer:[/b]\n"
+			+ "• Botón [b]ESTABILIZAR[/b] (panel derecho): resta 10 s pagando biomasa. Costo: 40 × 1.8^n (n = veces compradas en esta run). Escala brutalmente rápido; usarlo con criterio.\n"
+			+ "• Hitos de devorado [30, 50, 70, 90]: al cruzar cada uno, el timer recibe −10 s automáticamente. En total pueden restar 40 s.\n\n"
+			+ "[b]Tres salidas:[/b]\n"
+			+ "• [b]COLAPSO DEPREDATORIO[/b] — el timer llega a 0 sin resolver. Final de fracaso (+8 PL). Reactor rojo casi negro.\n"
+			+ "• [b]DEPREDADOR DE REALIDADES[/b] — consumís TODOS los upgrades antes del colapso. Final exitoso (+12 PL). Habilita el sello de Met. Oscuro y la ruta Autofagia.\n"
+			+ "• [b]METABOLISMO OSCURO[/b] — sello durante el Depredador: necesitás ≥ 10 devorados + biomasa ≥ 50 + mantenerlos 15 s simultáneamente.\n\n"
+			+ "[i]Dilema central: ¿gastar biomasa en ESTABILIZAR para llegar a Met. Oscuro, o dejar correr el timer y confiar en los hitos de devorado?[/i]"
 		),
 		"body_en": (
-			"Activates when the economy enters deep crisis (high stress, no active flow).\n"
-			+ "The organism devours its own upgrades to generate money. Has an instability timer: if it hits zero → PREDATORY COLLAPSE.\n"
-			+ "Consume ALL upgrades before collapse → PREDATOR OF REALITIES (success ending). From there you can seal DARK MET."
+			"Activates when the economy enters deep crisis: high stress, no active flow. The system begins devouring its own upgrades to generate money.\n\n"
+			+ "[b]Instability timer (60 s):[/b]\n"
+			+ "• Each devour tick consumes an upgrade (level −1; not deleted, can be repurchased). Grants +15 biomass and adds to the devour counter.\n"
+			+ "• Base rate: 1 upgrade every 1.5 s. After 50 devoured → 1 every 1.2 s.\n\n"
+			+ "[b]How to slow the timer:[/b]\n"
+			+ "• [b]STABILIZE[/b] button (right panel): deducts 10 s by paying biomass. Cost: 40 × 1.8^n (n = times bought this run). Scales brutally fast; use wisely.\n"
+			+ "• Devour milestones [30, 50, 70, 90]: each one automatically deducts 10 s when crossed. Up to 40 s total.\n\n"
+			+ "[b]Three exits:[/b]\n"
+			+ "• [b]PREDATORY COLLAPSE[/b] — timer hits 0 unresolved. Failure ending (+8 LP). Reactor turns near-black red.\n"
+			+ "• [b]PREDATOR OF REALITIES[/b] — consume ALL upgrades before collapse. Success ending (+12 LP). Enables Dark Met. seal and Autophagy route.\n"
+			+ "• [b]DARK METABOLISM[/b] — seal during Predator: need ≥ 10 devoured + biomass ≥ 50 + hold both for 15 s simultaneously.\n\n"
+			+ "[i]Central dilemma: spend biomass on STABILIZE to reach Dark Met., or let the timer run and trust the devour milestones?[/i]"
 		),
 		"unlock": {"type": "always"},
+		"see_also": ["colapso_depredatorio", "met_oscuro", "autofagia"],
 	},
 	"met_oscuro": {
 		"cat": "rutas",
@@ -706,14 +803,32 @@ const ENTRIES: Dictionary = {
 		"name_es": "Autofagia Necrótica", "name_en": "Necrotic Autophagy",
 		"see_also": ["met_oscuro", "depredador", "omega_cero", "cross_ciclo"],
 		"body_es": (
-			"El organismo comienza a digerir sus propias estructuras de forma controlada. Irreversible.\n"
-			+ "Genera bursts de dinero al devorar upgrades. Con suficientes devours, se puede colapsar manualmente para el cierre.\n"
-			+ "Requisito: comprar 'Acceso: Autofagia Necrótica' (50 PL, requiere DEPREDADOR DE REALIDADES completado)."
+			"El organismo comienza a digerir sus propias estructuras de forma controlada. Loop irreversible de auto-devour.\n\n"
+			+ "[b]Gate de entrada:[/b] biomasa ≥ 50 + al menos 5 niveles de upgrades disponibles.\n\n"
+			+ "[b]Economía interna:[/b]\n"
+			+ "• Click ×5, pasivo ×2, biomasa pasiva +1.0/s (×10 del MO base).\n"
+			+ "• Cada devour genera un burst de dinero (costo_upgrade × 3.0, cap $1M) y biomasa (max(8, costo/50000), cap 400).\n\n"
+			+ "[b]Upgrades internos (progresión dentro de la ruta):[/b]\n"
+			+ "• [b]Enzimas Líticas[/b]: reduce el intervalo de devour en −5 s por nivel; piso 5 s (base: 30 s).\n"
+			+ "• [b]Fagocitosis[/b]: +16% de probabilidad de devour doble por nivel, cap 80%. Nivel máximo da también probabilidad de devour triple (dado natural 20).\n\n"
+			+ "[b]Cierre:[/b]\n"
+			+ "• [b]Colapso voluntario[/b]: botón COLAPSAR NÚCLEO, disponible tras ≥ 40 devours.\n"
+			+ "• [b]Cierre por agotamiento[/b]: si todos los upgrades llegan a nivel 0.\n\n"
+			+ "Requisito para acceder: comprar 'Acceso: Autofagia Necrótica' (50 PL, DEPREDADOR DE REALIDADES completado)."
 		),
 		"body_en": (
-			"The organism begins digesting its own structures in a controlled way. Irreversible.\n"
-			+ "Generates money bursts when devouring upgrades. With enough devours, can manually collapse to close.\n"
-			+ "Requirement: buy 'Access: Necrotic Autophagy' (50 LP, requires PREDATOR OF REALITIES completed)."
+			"The organism begins digesting its own structures in a controlled way. Irreversible auto-devour loop.\n\n"
+			+ "[b]Entry gate:[/b] biomass ≥ 50 + at least 5 available upgrade levels.\n\n"
+			+ "[b]Internal economy:[/b]\n"
+			+ "• Click ×5, passive ×2, passive biomass +1.0/s (×10 of base Dark Met.).\n"
+			+ "• Each devour generates a money burst (upgrade_cost × 3.0, cap $1M) and biomass (max(8, cost/50000), cap 400).\n\n"
+			+ "[b]Internal upgrades (in-route progression):[/b]\n"
+			+ "• [b]Lytic Enzymes[/b]: reduces devour interval by −5 s per level; floor 5 s (base: 30 s).\n"
+			+ "• [b]Phagocytosis[/b]: +16% chance of double devour per level, cap 80%. Max level also enables triple devour (natural die 20).\n\n"
+			+ "[b]Close:[/b]\n"
+			+ "• [b]Voluntary collapse[/b]: COLLAPSE CORE button, available after ≥ 40 devours.\n"
+			+ "• [b]Exhaustion close[/b]: if all upgrades reach level 0.\n\n"
+			+ "Access requirement: buy 'Access: Necrotic Autophagy' (50 LP, PREDATOR OF REALITIES completed)."
 		),
 		"unlock": {"type": "route_closed", "route": "DEPREDADOR DE REALIDADES"},
 	},
@@ -723,14 +838,30 @@ const ENTRIES: Dictionary = {
 		"lore_prefix": "LORE_NECROSIS",
 		"see_also": ["met_oscuro", "omega_cero", "cross_plasticidad"],
 		"body_es": (
-			"Doble economía: dinero estándar + Necromasa (Ν). La Ν se genera por clicks y pasivos, se gasta en Agentes Necróticos.\n"
-			+ "Cada Agente empuja Ω hacia un floor cada vez más bajo. Al alcanzar el floor → cierre NECROSIS CONTROLADA.\n"
-			+ "Requisito: comprar 'Acceso: Necrosis Controlada' (50 PL, requiere cualquier final de Met. Oscuro completado)."
+			"Doble economía: dinero estándar + [b]Necromasa (Ν)[/b]. La Ν se genera por clicks y pasivos; se gasta en Agentes Necróticos que empujan Ω hacia el piso.\n\n"
+			+ "[b]Gate:[/b] biomasa ≥ 50 + Δ$ ≥ 200/s (economía activa).\n\n"
+			+ "[b]Ν por tick:[/b] click aporta `power^0.5 · 0.8`; pasivo aporta 1% del ingreso pasivo.\n\n"
+			+ "[b]Agente Necrótico:[/b] costo Ν = `100 · 1.75^n`. Cada compra: Ω ×= 0.72. Objetivo: llevar Ω ≤ 0.001.\n"
+			+ "Multiplicador de ingreso por Ω bajo: `necrosis_mult = clamp(0.10 / Ω, 1, 25)` — aplica solo al click.\n\n"
+			+ "[b]Toxicidad — capa de gestión:[/b]\n"
+			+ "• Cada Agente suma toxicidad: `+0.20 × (1 + (n−1) · 0.06)` base, mínimo `n · 0.03`.\n"
+			+ "• Decae 0.006/s. Si supera el umbral → [b]Purga[/b]: elimina agentes activos, limpia 60% de toxicidad.\n\n"
+			+ "[b]Upgrades internos:[/b]\n"
+			+ "• [b]Catalizador Necrótico[/b]: +20% Ν/nivel; también reduce la toxicidad acumulada por agente.\n\n"
+			+ "Requisito: comprar 'Acceso: Necrosis Controlada' (50 PL, cualquier final de Met. Oscuro completado)."
 		),
 		"body_en": (
-			"Dual economy: standard money + Necromass (Ν). Ν is generated by clicks and passives, spent on Necrotic Agents.\n"
-			+ "Each Agent pushes Ω toward an ever-lower floor. Reaching the floor → CONTROLLED NECROSIS close.\n"
-			+ "Requirement: buy 'Access: Controlled Necrosis' (50 LP, requires any Dark Met. ending completed)."
+			"Dual economy: standard money + [b]Necromass (Ν)[/b]. Ν is generated by clicks and passives; spent on Necrotic Agents that push Ω toward the floor.\n\n"
+			+ "[b]Gate:[/b] biomass ≥ 50 + Δ$ ≥ 200/s (active economy).\n\n"
+			+ "[b]Ν per tick:[/b] click contributes `power^0.5 · 0.8`; passive contributes 1% of passive income.\n\n"
+			+ "[b]Necrotic Agent:[/b] cost Ν = `100 · 1.75^n`. Each purchase: Ω ×= 0.72. Goal: drive Ω ≤ 0.001.\n"
+			+ "Income multiplier from low Ω: `necrosis_mult = clamp(0.10 / Ω, 1, 25)` — click only.\n\n"
+			+ "[b]Toxicity — management layer:[/b]\n"
+			+ "• Each Agent adds toxicity: `+0.20 × (1 + (n−1) · 0.06)` base, minimum `n · 0.03`.\n"
+			+ "• Decays 0.006/s. If it exceeds the threshold → [b]Purge[/b]: removes active agents, clears 60% of toxicity.\n\n"
+			+ "[b]Internal upgrades:[/b]\n"
+			+ "• [b]Necrotic Catalyst[/b]: +20% Ν/level; also reduces toxicity accumulated per agent.\n\n"
+			+ "Requirement: buy 'Access: Controlled Necrosis' (50 LP, any Dark Met. ending completed)."
 		),
 		"unlock": {"type": "route_closed_any", "routes": ["METABOLISMO OSCURO", "ESCLEROCIO OSCURO", "AUTOFAGIA NECRÓTICA"]},
 	},
@@ -740,14 +871,28 @@ const ENTRIES: Dictionary = {
 		"lore_prefix": "LORE_OMEGA_CERO",
 		"see_also": ["autofagia", "necrosis", "esclerocio", "remision", "cross_sintesis"],
 		"body_es": (
-			"La síntesis de las tres muertes: devour (autofagia) + Ω-combustible (necrosis) + sello intencional (esclerocio).\n"
-			+ "Genera Φ con cada devour; a menor Ω, mayor Φ (hasta ×10). Al alcanzar Φ objetivo → sello del protocolo.\n"
+			"La síntesis de las tres muertes: devour (autofagia) + Ω-combustible (necrosis) + sello intencional (esclerocio).\n\n"
+			+ "[b]Gate:[/b] biomasa ≥ 50 + 5 devorados acumulados + permiso 'Protocolo Omega-Cero' (100 PL, T≥2, las 3 sub-rutas).\n\n"
+			+ "[b]Loop de devour:[/b] cada 6 s devora un batch de 10 upgrades.\n"
+			+ "Φ generado por devour: `4.0 · min(0.10 / Ω, 10)` — a menor Ω, hasta ×10 de Φ.\n"
+			+ "Cada devour: Ω ×= 0.82.\n\n"
+			+ "[b]Click amplifier:[/b] durante la run, cada punto de Φ suma `+Φ · 0.5` aditivo al click (crece con la run).\n\n"
+			+ "[b]Inanición:[/b] si no hay material para devorar → tras 1 tick de gracia, Φ pierde −20/tick. Sin material = sin progreso.\n\n"
+			+ "[b]Sello:[/b] a Φ ≥ 300 → botón SELLAR. Emergencia: se sella automáticamente si Ω ≤ 0.001.\n\n"
+			+ "[b]Núcleo Φ al cerrar:[/b] `kernel = clamp(Φ / 300, 1, 3)`. Determina la intensidad del legado [b]Memoria Sináptica[/b] en runs futuras: a mayor kernel, mayor pasivo aditivo post-Remisión.\n\n"
 			+ "Requiere comprar 'Protocolo Omega-Cero' (100 PL, T≥2, las 3 sub-rutas completadas). Final del árbol oscuro."
 		),
 		"body_en": (
-			"Synthesis of three deaths: devour (autophagy) + Ω-fuel (necrosis) + intentional seal (sclerotium).\n"
-			+ "Generates Φ with each devour; lower Ω = more Φ (up to ×10). Reaching Φ target → seal the protocol.\n"
-			+ "Requires 'Omega-Zero Protocol' buff (100 LP, T≥2, all 3 sub-routes completed). End of dark tree."
+			"Synthesis of three deaths: devour (autophagy) + Ω-fuel (necrosis) + intentional seal (sclerotium).\n\n"
+			+ "[b]Gate:[/b] biomass ≥ 50 + 5 cumulative devoured + 'Omega-Zero Protocol' permit (100 LP, T≥2, all 3 sub-routes).\n\n"
+			+ "[b]Devour loop:[/b] every 6 s devours a batch of 10 upgrades.\n"
+			+ "Φ generated per devour: `4.0 · min(0.10 / Ω, 10)` — lower Ω = up to ×10 Φ.\n"
+			+ "Each devour: Ω ×= 0.82.\n\n"
+			+ "[b]Click amplifier:[/b] during the run, each Φ point adds `+Φ · 0.5` additive to click (grows as the run progresses).\n\n"
+			+ "[b]Starvation:[/b] if no material to devour → after 1 tick of grace, Φ loses −20/tick. No material = no progress.\n\n"
+			+ "[b]Seal:[/b] at Φ ≥ 300 → SEAL button. Emergency: auto-seals if Ω ≤ 0.001.\n\n"
+			+ "[b]Φ Core at close:[/b] `kernel = clamp(Φ / 300, 1, 3)`. Determines the intensity of the [b]Synaptic Memory[/b] legacy in future runs: higher kernel = higher additive passive post-Remission.\n\n"
+			+ "Requires 'Omega-Zero Protocol' (100 LP, T≥2, all 3 sub-routes completed). End of the dark tree."
 		),
 		"unlock": {"type": "route_closed_all", "routes": ["AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA", "ESCLEROCIO OSCURO"]},
 	},
@@ -757,14 +902,28 @@ const ENTRIES: Dictionary = {
 		"lore_prefix": "LORE_REMISION",
 		"see_also": ["omega_cero", "cross_sintesis"],
 		"body_es": (
-			"Después de aprender todas las formas de morir, el organismo aprende a sanar.\n"
-			+ "Combate entre el organismo sanador y la enfermedad residual de Met. Oscuro. La biomasa sube y la Ω se recupera.\n"
-			+ "Requiere 'Remisión Metabólica' en el Banco (15 PL, las 4 sub-rutas previas completadas). Final último del árbol."
+			"Después de aprender todas las formas de morir, el organismo aprende a sanar. Combate entre el organismo sanador y la enfermedad residual de Met. Oscuro.\n\n"
+			+ "[b]Gate:[/b] biomasa ≥ 150 + permiso 'Remisión Metabólica' (15 PL, las 4 sub-rutas oscuras completadas).\n\n"
+			+ "[b]Mecánica de banda (control activo):[/b]\n"
+			+ "• Ω deriva −0.015/s hacia el colapso. Vos la empujás con [b]W[/b] (+0.03) o [b]S[/b] (−0.03), cooldown 1 s. Rango válido: [0.01, 0.60].\n"
+			+ "• La [b]banda objetivo es móvil[/b]: su centro oscila `0.30 + 0.12·sin(2π · 0.15 · t)`. Dentro de la banda (±0.04 del centro): biomasa +3%/s y Θ acumula. Fuera: biomasa −5%/s y Θ decae −1.0/s.\n\n"
+			+ "[b]Θ (medidor de sanación):[/b]\n"
+			+ "• Acumulás Θ estando dentro de banda. Sello disponible al alcanzar Θ ≥ 60 s continuos → botón SELLAR [R].\n\n"
+			+ "[b]Involución (no derrota permanente):[/b]\n"
+			+ "• Si biomasa cae a < 30 → Involución: la ruta vuelve a Met. Oscuro y REMISIÓN queda bloqueada el resto de esa run. Se puede reintentar en la próxima.\n\n"
+			+ "Requiere 'Remisión Metabólica' en el Banco (15 PL, las 4 sub-rutas previas). Final último del árbol oscuro."
 		),
 		"body_en": (
-			"After learning all ways to die, the organism learns to heal.\n"
-			+ "Battle between healing organism and residual Dark Met. disease. Biomass rises and Ω recovers.\n"
-			+ "Requires 'Metabolic Remission' buff (15 LP, all 4 prior sub-routes completed). Final dark tree ending."
+			"After learning all ways to die, the organism learns to heal. Battle between the healing organism and residual Dark Met. disease.\n\n"
+			+ "[b]Gate:[/b] biomass ≥ 150 + 'Metabolic Remission' permit (15 LP, all 4 dark sub-routes completed).\n\n"
+			+ "[b]Band mechanic (active control):[/b]\n"
+			+ "• Ω drifts −0.015/s toward collapse. You push it with [b]W[/b] (+0.03) or [b]S[/b] (−0.03), cooldown 1 s. Valid range: [0.01, 0.60].\n"
+			+ "• The [b]target band is mobile[/b]: its center oscillates `0.30 + 0.12·sin(2π · 0.15 · t)`. Inside the band (±0.04 of center): biomass +3%/s and Θ accumulates. Outside: biomass −5%/s and Θ decays −1.0/s.\n\n"
+			+ "[b]Θ (healing meter):[/b]\n"
+			+ "• Θ accumulates while inside the band. Seal available at Θ ≥ 60 continuous seconds → SEAL button [R].\n\n"
+			+ "[b]Involution (not a permanent defeat):[/b]\n"
+			+ "• If biomass drops below 30 → Involution: route returns to Dark Met. and REMISSION is locked for the rest of that run. Can retry next run.\n\n"
+			+ "Requires 'Metabolic Remission' buff (15 LP, all 4 prior sub-routes). Final dark tree ending."
 		),
 		"unlock": {"type": "route_closed", "route": "PROTOCOLO OMEGA-CERO"},
 	},
@@ -803,6 +962,32 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "route_closed", "route": "COLAPSO CONTROLADO"},
 		"see_also": ["hiperasimilacion", "cosmica_buffs"],
+	},
+	"final_fusion_catabolica": {
+		"cat": "finales",
+		"name_es": "Fusión Catabólica — final", "name_en": "Catabolic Fusion — ending",
+		"body_es": (
+			"Sellás la transmutación después de dominar el motor híbrido. La Hiperasimilación revertida llega a su forma estable máxima.\n\n"
+			+ "[b]+9 PL base[/b] (más bonus proporcional al rendimiento).\n\n"
+			+ "[b]Gate de sello (los tres simultáneos):[/b]\n"
+			+ "• $100M generados en total durante la run\n"
+			+ "• 3 ráfagas de Metabolismo Híbrido [Q] activadas\n"
+			+ "• ≥ 150 upgrades estructurales comprados\n\n"
+			+ "Al sellar: se otorga el legado [b]Motor Fundido[/b] permanente (+25% a todo el ingreso, stackeable en runs futuras).\n\n"
+			+ "[i]Sin Contabilidad ≥ 1 no existe Fusión Catabólica — esa tensión de build es intencional.[/i]"
+		),
+		"body_en": (
+			"You seal the transmutation after mastering the hybrid engine. Reverted Hyperassimilation reaches its maximum stable form.\n\n"
+			+ "[b]+9 LP base[/b] (plus a bonus proportional to performance).\n\n"
+			+ "[b]Seal gate (all three simultaneously):[/b]\n"
+			+ "• $100M total generated during the run\n"
+			+ "• 3 Hybrid Metabolism [Q] bursts activated\n"
+			+ "• ≥ 150 structural upgrades purchased\n\n"
+			+ "On sealing: the [b]Fused Engine[/b] permanent legacy is granted (+25% to all income, stackable in future runs).\n\n"
+			+ "[i]Without Accounting ≥ 1 Catabolic Fusion cannot exist — that build tension is intentional.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
+		"see_also": ["transmut_fusion", "hiperasimilacion", "legados_economia"],
 	},
 	"colapso_sintetico": {
 		"cat": "finales",
@@ -867,6 +1052,164 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "route_closed", "route": "DOMADOR DEL CAOS"},
 		"see_also": ["carnaval"],
+	},
+
+	# ── FINALES: RUTAS BÁSICAS ───────────────────────────────────────────────────
+	"final_homeostasis": {
+		"cat": "finales",
+		"name_es": "Homeostasis — final", "name_en": "Homeostasis — ending",
+		"body_es": (
+			"El organismo alcanza equilibrio estable sostenido: ε en banda, biomasa dentro del cap, Ω mantenida.\n\n"
+			+ "[b]+3 PL base.[/b] NG+: floor(resilience_score / 50), tope 6.\n\n"
+			+ "Cerrar HOMEOSTASIS revela [b]Allostasis[/b] en el Banco Genético.\n\n"
+			+ "[i]Ruta de entrada y de optimización: el bonus NG+ puede triplicar el PL base si mantenés resiliencia alta.[/i]"
+		),
+		"body_en": (
+			"The organism reaches sustained stable equilibrium: ε in band, biomass within cap, Ω held.\n\n"
+			+ "[b]+3 LP base.[/b] NG+: floor(resilience_score / 50), cap 6.\n\n"
+			+ "Closing HOMEOSTASIS reveals [b]Allostasis[/b] in the Genetic Bank.\n\n"
+			+ "[i]Entry and optimization route: the NG+ bonus can triple the base LP if you keep resilience high.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "HOMEOSTASIS"},
+		"see_also": ["homeostasis", "homeostasis_banda", "allostasis"],
+	},
+	"final_allostasis": {
+		"cat": "finales",
+		"name_es": "Allostasis — final", "name_en": "Allostasis — ending",
+		"body_es": (
+			"El organismo aprende a adaptarse activamente a las perturbaciones: homeostasis_mode sostenido con Ω rebotando en cada shock.\n\n"
+			+ "[b]+4 PL base.[/b] NG+: disturbances_survived (perturbaciones sobrevividas en la run), tope 5.\n\n"
+			+ "Cerrar ALLOSTASIS revela [b]Homeorresis[/b] en el Banco Genético.\n\n"
+			+ "[i]Para maximizar el NG+: dejá que los shocks lleguen y sobrevivílos dentro de banda.[/i]"
+		),
+		"body_en": (
+			"The organism learns to actively adapt to perturbations: homeostasis_mode sustained with Ω rebounding at each shock.\n\n"
+			+ "[b]+4 LP base.[/b] NG+: disturbances_survived (perturbations survived this run), cap 5.\n\n"
+			+ "Closing ALLOSTASIS reveals [b]Homeorhesis[/b] in the Genetic Bank.\n\n"
+			+ "[i]To maximize NG+: let the shocks come and survive them inside band.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "ALLOSTASIS"},
+		"see_also": ["allostasis", "homeostasis_banda", "homeorhesis"],
+	},
+	"final_homeorhesis": {
+		"cat": "finales",
+		"name_es": "Homeorresis — final", "name_en": "Homeorhesis — ending",
+		"body_es": (
+			"El organismo mantiene una trayectoria de recuperación incluso bajo perturbaciones extremas: Ω_min sostenida en niveles altos.\n\n"
+			+ "[b]+8 PL base.[/b] NG+: floor(omega_min_peak · 10), tope 7.\n\n"
+			+ "[i]Ruta de mayor PL en la familia Orden. Omega_min_peak mide el piso histórico más alto que Ω logró sostener.[/i]"
+		),
+		"body_en": (
+			"The organism holds a recovery trajectory even under extreme perturbations: Ω_min sustained at high levels.\n\n"
+			+ "[b]+8 LP base.[/b] NG+: floor(omega_min_peak · 10), cap 7.\n\n"
+			+ "[i]Highest LP route in the Order family. Omega_min_peak measures the highest Ω floor ever sustained.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "HOMEORHESIS"},
+		"see_also": ["homeorhesis", "homeostasis_banda", "omega"],
+	},
+	"final_simbiosis": {
+		"cat": "finales",
+		"name_es": "Simbiosis — final", "name_en": "Symbiosis — ending",
+		"body_es": (
+			"El organismo y su entorno entran en resonancia sostenida: click y pasivo se potencian mutuamente con la biomasa.\n\n"
+			+ "[b]+4 PL base.[/b] NG+: floor(run_time / 300), tope 6. Escala con el tiempo de la run (1 bonus por cada 5 minutos).\n\n"
+			+ "[i]Ruta de runs largas: cuanto más tiempo sostengás la simbiosis, más PL NG+ acumulás.[/i]"
+		),
+		"body_en": (
+			"The organism and its environment enter sustained resonance: click and passive amplify each other through biomass.\n\n"
+			+ "[b]+4 LP base.[/b] NG+: floor(run_time / 300), cap 6. Scales with run time (1 bonus per 5 minutes).\n\n"
+			+ "[i]Long-run route: the longer you sustain the symbiosis, the more NG+ LP you accumulate.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
+		"see_also": ["simbiosis"],
+	},
+	"final_parasitismo": {
+		"cat": "finales",
+		"name_es": "Parasitismo — final", "name_en": "Parasitism — ending",
+		"body_es": (
+			"El organismo consume al huésped hasta el agotamiento. Corrosión parasitaria al máximo, biomasa sin cap.\n\n"
+			+ "[b]+2 PL base.[/b] NG+: floor(biomasa / 8) al cerrar, tope 4.\n\n"
+			+ "Cerrar PARASITISMO revela la ruta [b]Depredador[/b] (NG+).\n\n"
+			+ "[i]PL base bajo, pero la ruta de Depredador que abre vale la pena.[/i]"
+		),
+		"body_en": (
+			"The organism consumes the host to exhaustion. Parasitic corrosion at maximum, biomass uncapped.\n\n"
+			+ "[b]+2 LP base.[/b] NG+: floor(biomass / 8) at close, cap 4.\n\n"
+			+ "Closing PARASITISM reveals the [b]Predator[/b] route (NG+).\n\n"
+			+ "[i]Low base LP, but the Predator route it opens is worth it.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "PARASITISMO"},
+		"see_also": ["parasitismo", "depredador"],
+	},
+	"final_esporulacion": {
+		"cat": "finales",
+		"name_es": "Esporulación — final", "name_en": "Sporulation — ending",
+		"body_es": (
+			"El hongo completa su ciclo biológico y libera esporas. Requiere la Seta Formada para el bonus máximo.\n\n"
+			+ "[b]+5 PL base.[/b] NG+: floor(micelio / 20) al cerrar, tope 5.\n\n"
+			+ "Cerrar ESPORULACIÓN revela la ruta [b]Panspermia Negra[/b] y habilita la Colonización y el Primordio como mecánicas.\n\n"
+			+ "[i]La Seta Formada (completar Primordio) da ×3 esporas al esporular y abre Panspermia.[/i]"
+		),
+		"body_en": (
+			"The fungus completes its biological cycle and releases spores. Requires Formed Mushroom for the maximum bonus.\n\n"
+			+ "[b]+5 LP base.[/b] NG+: floor(mycelium / 20) at close, cap 5.\n\n"
+			+ "Closing SPORULATION reveals the [b]Black Panspermia[/b] route and enables Colonization and Primordium as mechanics.\n\n"
+			+ "[i]Formed Mushroom (completing Primordium) gives ×3 spores on sporulation and opens Panspermia.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "ESPORULACIÓN"},
+		"see_also": ["esporulacion", "panspermia", "colonizacion_mecanica", "primordio_mecanica"],
+	},
+	"final_mente_colmena": {
+		"cat": "finales",
+		"name_es": "Mente Colmena — final", "name_en": "Hive Mind — ending",
+		"body_es": (
+			"El organismo distribuye su inteligencia en toda la red: produce pasivo automáticamente y compra upgrades sin intervención.\n\n"
+			+ "[b]+8 PL base.[/b] NG+: floor(run_time / 600), tope 8. Escala con el tiempo de la run (1 bonus por cada 10 minutos).\n\n"
+			+ "[i]Ruta AFK por excelencia: dejás la IA comprar mientras vos gestionás el estrés.[/i]"
+		),
+		"body_en": (
+			"The organism distributes its intelligence across the entire network: produces passive income automatically and buys upgrades without intervention.\n\n"
+			+ "[b]+8 LP base.[/b] NG+: floor(run_time / 600), cap 8. Scales with run time (1 bonus per 10 minutes).\n\n"
+			+ "[i]The AFK route par excellence: let the AI buy while you manage stress.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "MENTE COLMENA DISTRIBUIDA"},
+		"see_also": ["mente_colmena"],
+	},
+	"final_singularidad": {
+		"cat": "finales",
+		"name_es": "Singularidad — final", "name_en": "Singularity — ending",
+		"body_es": (
+			"El Núcleo de Conciencia se estabiliza: el sistema trasciende su propia complejidad estructural.\n\n"
+			+ "[b]+6 PL base + bonus_ε[/b] (bonus adicional proporcional al pico de ε_runtime al cerrar).\n\n"
+			+ "[b]Gate de cierre:[/b] Contabilidad ≥ 3, Ω ≥ 0.55, ε entre 0.10 y 0.22, biomasa ≥ 6 — [i]sostenidos[/i] hasta encender el Núcleo.\n\n"
+			+ "[i]El único final que escala con ε: correrla con algo de estrés activo maximiza el PL.[/i]"
+		),
+		"body_en": (
+			"The Consciousness Core stabilizes: the system transcends its own structural complexity.\n\n"
+			+ "[b]+6 LP base + bonus_ε[/b] (additional bonus proportional to the ε_runtime peak at close).\n\n"
+			+ "[b]Close gate:[/b] Accounting ≥ 3, Ω ≥ 0.55, ε between 0.10 and 0.22, biomass ≥ 6 — [i]sustained[/i] until igniting the Core.\n\n"
+			+ "[i]The only ending that scales with ε: running it with some active stress maximizes LP.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "SINGULARIDAD"},
+		"see_also": ["singularidad", "nucleo_conciencia"],
+	},
+	"final_depredador_realidades": {
+		"cat": "finales",
+		"name_es": "Depredador de Realidades — final", "name_en": "Predator of Realities — ending",
+		"body_es": (
+			"Consumiste TODOS los upgrades antes de que el timer llegara a 0. El sistema devoró su propia estructura para sobrevivir.\n\n"
+			+ "[b]+12 PL base.[/b] NG+: devorados totales en la run, tope 8.\n\n"
+			+ "Cerrar DEPREDADOR DE REALIDADES revela [b]Autofagia Necrótica[/b] en el Banco Genético (50 PL).\n\n"
+			+ "[i]Para maximizar NG+: dejá que el timer corra y alcanzá los hitos de devorado en lugar de gastar biomasa en ESTABILIZAR.[/i]"
+		),
+		"body_en": (
+			"You consumed ALL upgrades before the timer hit 0. The system devoured its own structure to survive.\n\n"
+			+ "[b]+12 LP base.[/b] NG+: total devoured this run, cap 8.\n\n"
+			+ "Closing PREDATOR OF REALITIES reveals [b]Necrotic Autophagy[/b] in the Genetic Bank (50 LP).\n\n"
+			+ "[i]To maximize NG+: let the timer run and reach the devour milestones instead of spending biomass on STABILIZE.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "DEPREDADOR DE REALIDADES"},
+		"see_also": ["depredador", "autofagia", "colapso_depredatorio"],
 	},
 
 	# ── CRUCES DE LEGADO (legados permanentes por cruzar dos rutas) ────────────
@@ -934,6 +1277,72 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "legacy_flag", "flag": "omega_remision_done"},
 		"see_also": ["omega_cero", "remision"],
+	},
+
+	# ── LEGADOS DESTACADOS ────────────────────────────────────────────────────────
+	"legados_economia": {
+		"cat": "cosmica",
+		"name_es": "Legados — Economía e Ingresos", "name_en": "Legacies — Economy & Income",
+		"body_es": (
+			"Los legados del Banco Genético con mayor impacto directo en la producción:\n\n"
+			+ "• [b]Aura Dorada[/b] — click ×2.5. Reveal: tras cerrar una ruta avanzada.\n"
+			+ "• [b]Semilla Cósmica[/b] — click ×2 y pasivo ×2 simultáneamente.\n"
+			+ "• [b]Mente Colmena[/b] — pasivo ×3 + auto-buy de upgrades. Reveal: tras Singularidad.\n"
+			+ "• [b]Motor Fundido[/b] (Transmutación) — todo el ingreso ×1.25. Stackeable (un stack por sello de FC).\n"
+			+ "• [b]Resonancia Simbionte[/b] — click ×(1 + biomasa · 0.05), cap ×2.5.\n"
+			+ "• [b]Convergencia Cíclica[/b] (Cósmico) — click y pasivo ×(1 + trascendencias · 0.05).\n"
+			+ "• [b]Sinfonía Total[/b] — β (multiplicador de biomasa) también afecta al click.\n"
+			+ "• [b]Redirección de Energía[/b] — el 10% del poder de click se suma al pasivo.\n"
+			+ "• [b]Entropía Domesticada[/b] — si ε > 0.65: ingresos ×hasta ~1.7 escalando con el estrés (reveal: cerrar COLAPSO CONTROLADO).\n\n"
+			+ "[i]Muchos de estos legados se revelan solo tras cerrar la ruta correspondiente.[/i]"
+		),
+		"body_en": (
+			"The Genetic Bank legacies with the highest direct production impact:\n\n"
+			+ "• [b]Golden Aura[/b] — click ×2.5. Reveal: after closing an advanced route.\n"
+			+ "• [b]Cosmic Seed[/b] — click ×2 and passive ×2 simultaneously.\n"
+			+ "• [b]Hive Mind[/b] — passive ×3 + auto-buy of upgrades. Reveal: after Singularity.\n"
+			+ "• [b]Fused Engine[/b] (Transmutation) — all income ×1.25. Stackable (one stack per FC seal).\n"
+			+ "• [b]Symbiont Resonance[/b] — click ×(1 + biomass · 0.05), cap ×2.5.\n"
+			+ "• [b]Cyclic Convergence[/b] (Cosmic) — click and passive ×(1 + transcendences · 0.05).\n"
+			+ "• [b]Total Sync[/b] — β (biomass multiplier) also affects click.\n"
+			+ "• [b]Energy Redirection[/b] — 10% of click power is added to passive.\n"
+			+ "• [b]Domesticated Entropy[/b] — if ε > 0.65: income ×up to ~1.7 scaling with stress (reveal: close CONTROLLED COLLAPSE).\n\n"
+			+ "[i]Many of these legacies only reveal after closing the corresponding route.[/i]"
+		),
+		"unlock": {"type": "transcendence_count", "min": 1},
+		"see_also": ["banco_genetico", "transmut_fusion", "formula_produccion"],
+	},
+	"legados_estructura": {
+		"cat": "cosmica",
+		"name_es": "Legados — Estructura y Meta", "name_en": "Legacies — Structure & Meta",
+		"body_es": (
+			"Legados del Banco Genético que afectan la estructura del sistema y la meta-progresión:\n\n"
+			+ "• [b]Horizonte Estructural[/b] — elimina los caps de κμ y α(n). El sistema puede escalar sin techo estructural.\n"
+			+ "• [b]Memoria Estructural[/b] (×3) — reduce el costo de upgrades estructurales −5% por nivel (hasta −15%).\n"
+			+ "• [b]Deflación Biótica[/b] — escalado de precios reducido ×0.95.\n"
+			+ "• [b]Deriva Controlada[/b] — la persistencia cₙ converge a fⁿ un 40% más rápido.\n"
+			+ "• [b]Plasticidad Adaptativa[/b] — Ω_min sostenido ≥ 0.30 en todas las runs.\n"
+			+ "• [b]Inercia de Escala[/b] — Contabilidad también multiplica el Ritmo de Trabajo (md): +5%/nivel.\n"
+			+ "• [b]Colapso Controlado[/b] (legado-ruta) — PL extra al cerrar = floor(ε_peak · 2.0).\n"
+			+ "• [b]Memoria de Run[/b] (Conocimiento) — muestra el historial de ciclos anteriores en el panel.\n"
+			+ "• [b]Observatorio Genómico[/b] (Conocimiento) — revela logros ocultos en el panel de logros.\n\n"
+			+ "[i]Horizonte Estructural es probablemente el legado de mayor impacto a largo plazo: sin él, κμ y α tienen cap fijo.[/i]"
+		),
+		"body_en": (
+			"Genetic Bank legacies affecting system structure and meta-progression:\n\n"
+			+ "• [b]Structural Horizon[/b] — removes the κμ and α(n) caps. The system can scale without a structural ceiling.\n"
+			+ "• [b]Structural Memory[/b] (×3) — reduces structural upgrade costs by −5% per level (up to −15%).\n"
+			+ "• [b]Biotic Deflation[/b] — price scaling reduced ×0.95.\n"
+			+ "• [b]Controlled Drift[/b] — persistence cₙ converges to fⁿ 40% faster.\n"
+			+ "• [b]Adaptive Plasticity[/b] — Ω_min sustained ≥ 0.30 in all runs.\n"
+			+ "• [b]Scale Inertia[/b] — Accounting also multiplies Work Rhythm (md): +5%/level.\n"
+			+ "• [b]Controlled Collapse[/b] (route-legacy) — extra LP at close = floor(ε_peak · 2.0).\n"
+			+ "• [b]Run Memory[/b] (Knowledge) — shows past cycle history in the panel.\n"
+			+ "• [b]Genomic Observatory[/b] (Knowledge) — reveals hidden achievements in the achievement panel.\n\n"
+			+ "[i]Structural Horizon is probably the highest long-term impact legacy: without it, κμ and α have a fixed cap.[/i]"
+		),
+		"unlock": {"type": "transcendence_count", "min": 1},
+		"see_also": ["banco_genetico", "omega", "formula_produccion"],
 	},
 
 	# ── CAPA CÓSMICA (meta-progresión sobre la trascendencia) ──────────────────
@@ -1053,6 +1462,38 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "buff_owned", "id": "transmut_fusion"},
 		"see_also": ["transmut_intro", "hiperasimilacion", "formula_produccion"],
 	},
+	"ayuno_primordial": {
+		"cat": "transmutaciones",
+		"name_es": "Ayuno Primordial", "name_en": "Primal Fast",
+		"body_es": (
+			"Transmutación que revierte [b]Hiperasimilación[/b] hacia su opuesto filosófico. Se compra en el Banco Genético (20 PL).\n\n"
+			+ "[b]Mecánica central:[/b] abandonás el consumo. La biomasa drena activamente a 0.5/s. A cambio acumulás [b]Silencio (S)[/b]: un recurso que se construye cuando B es bajo y ε es bajo. El pasivo vale ×(1 + S×0.01).\n\n"
+			+ "Botones activos:\n"
+			+ "• [b][Q] Romper el Ayuno[/b]: liberás todo el S como burst de producción (×(1+S/50) durante 15 s). Reset de S=0 y un spike de B+5.\n"
+			+ "• [b][W] Ascesis[/b]: mejora la tasa de acumulación de S en +15% por nivel.\n\n"
+			+ "Condiciones de sello:\n"
+			+ "• Ciclos (usos de Romper) ≥ 5\n"
+			+ "• S acumulado total ≥ 500\n"
+			+ "• Streak limpio (B<1 y ε<0.10 consecutivos) ≥ 90 s\n\n"
+			+ "[b]Recompensa al sellar:[/b] [b]Primicia del Vacío[/b] — al inicio de cada run, el pasivo arranca ×2.0 y decae a ×1.0 en 90 segundos.\n\n"
+			+ "[i]Mutualmente excluyente con Fusión Catabólica: activá uno o el otro en el Banco Genético.[/i]"
+		),
+		"body_en": (
+			"Transmutation that reverts [b]Hyperassimilation[/b] to its philosophical opposite. Purchased in the Genetic Bank (20 LP).\n\n"
+			+ "[b]Core mechanic:[/b] you abandon consumption. Biomass drains actively at 0.5/s. In return you accumulate [b]Silence (S)[/b]: a resource that builds when B is low and ε is low. Passive income = ×(1 + S×0.01).\n\n"
+			+ "Active buttons:\n"
+			+ "• [b][Q] Break the Fast[/b]: release all S as a production burst (×(1+S/50) for 15 s). Resets S=0 and spikes B+5.\n"
+			+ "• [b][W] Ascesis[/b]: improves S accumulation rate by +15% per level.\n\n"
+			+ "Seal conditions:\n"
+			+ "• Cycles (uses of Break the Fast) ≥ 5\n"
+			+ "• Total accumulated S ≥ 500\n"
+			+ "• Clean streak (B<1 and ε<0.10 consecutive) ≥ 90 s\n\n"
+			+ "[b]Reward on sealing:[/b] [b]Primacy of Void[/b] — at the start of each run, passive income starts at ×2.0 and decays to ×1.0 over 90 seconds.\n\n"
+			+ "[i]Mutually exclusive with Catabolic Fusion: activate one or the other in the Genetic Bank.[/i]"
+		),
+		"unlock": {"type": "route_closed", "route": "AYUNO PRIMORDIAL"},
+		"see_also": ["transmut_fusion", "transmut_intro", "hiperasimilacion", "formula_produccion"],
+	},
 
 	# ── VALORES (hojas de referencia rápida; números reales de Balance.gd) ──────
 	"ref_umbrales": {
@@ -1119,6 +1560,141 @@ const ENTRIES: Dictionary = {
 			+ "• Omega-Zero: Φ per devour up to ×10 (lower Ω, more Φ)\n"
 			+ "• Dark Memory (Sclerotium): +15% biomass · ε resists 30% · −10% MO threshold\n"
 			+ "• Dark Cosmic Seed: permanent ×3 passive (Sclerotium → Panspermia cross)"
+		),
+		"unlock": {"type": "always"},
+	},
+	"ref_ng_plus": {
+		"cat": "valores",
+		"name_es": "NG+ — bonus PL por ruta", "name_en": "NG+ — LP bonus per route",
+		"body_es": (
+			"En runs con trascendencia ≥ 1, cada ruta suma PL extra al cerrar (adicional al base):\n\n"
+			+ "• Homeostasis — floor(resilience / 50), tope 6\n"
+			+ "• Allostasis — disturbances_survived, tope 5\n"
+			+ "• Homeorresis — floor(omega_min_peak · 10), tope 7\n"
+			+ "• Simbiosis — floor(run_time / 300 s), tope 6\n"
+			+ "• Parasitismo — floor(biomasa / 8), tope 4\n"
+			+ "• Hiperasimilación — floor(epsilon_peak · 5), tope 5\n"
+			+ "• Esporulación — floor(micelio / 20), tope 5\n"
+			+ "• Mente Colmena — floor(run_time / 600 s), tope 8\n"
+			+ "• Depredador de Realidades — devorados, tope 8\n"
+			+ "• Colapso Depredatorio — devorados · 2, tope 5\n"
+			+ "• Met. Oscuro / Esclerocio — floor(devorados / 8), tope 8\n"
+			+ "• Autofagia — floor(autolisis_devour_count / 3), tope 8\n"
+			+ "• Necrosis — floor(necrosis_agent_count / 2), tope 8\n"
+			+ "• Omega-Cero — floor(omega_cero_devour_count / 4), tope 12\n"
+			+ "• Remisión — floor(biomasa_al_cerrar / 50), tope 12\n"
+			+ "• Panspermia — floor(micelio / 20), tope 6\n"
+			+ "• Ascesis Profunda — floor(omega_min_peak · 10), tope 6\n"
+			+ "• Polimorfía Total — floor(rotaciones / 2), tope 8\n"
+			+ "• Domador del Caos — floor(peak_money / 500K), tope 8\n\n"
+			+ "PL total = (base + bonus NG+) · pl_gain_mult (×1.25 con Deriva Esporada)."
+		),
+		"body_en": (
+			"In runs with transcendence ≥ 1, each route adds extra LP on close (on top of the base):\n\n"
+			+ "• Homeostasis — floor(resilience / 50), cap 6\n"
+			+ "• Allostasis — disturbances_survived, cap 5\n"
+			+ "• Homeorhesis — floor(omega_min_peak · 10), cap 7\n"
+			+ "• Symbiosis — floor(run_time / 300 s), cap 6\n"
+			+ "• Parasitism — floor(biomass / 8), cap 4\n"
+			+ "• Hyperassimilation — floor(epsilon_peak · 5), cap 5\n"
+			+ "• Sporulation — floor(mycelium / 20), cap 5\n"
+			+ "• Hive Mind — floor(run_time / 600 s), cap 8\n"
+			+ "• Predator of Realities — devoured, cap 8\n"
+			+ "• Predatory Collapse — devoured · 2, cap 5\n"
+			+ "• Dark Met. / Sclerotium — floor(devoured / 8), cap 8\n"
+			+ "• Autophagy — floor(autolisis_devour_count / 3), cap 8\n"
+			+ "• Necrosis — floor(necrosis_agent_count / 2), cap 8\n"
+			+ "• Omega-Zero — floor(omega_cero_devour_count / 4), cap 12\n"
+			+ "• Remission — floor(biomass_at_close / 50), cap 12\n"
+			+ "• Panspermia — floor(mycelium / 20), cap 6\n"
+			+ "• Deep Ascesis — floor(omega_min_peak · 10), cap 6\n"
+			+ "• Total Polymorphia — floor(rotations / 2), cap 8\n"
+			+ "• Chaos Tamer — floor(peak_money / 500K), cap 8\n\n"
+			+ "Total LP = (base + NG+ bonus) · pl_gain_mult (×1.25 with Spored Drift)."
+		),
+		"unlock": {"type": "transcendence_count", "min": 1},
+		"see_also": ["ref_pl_rutas", "banco_genetico"],
+	},
+	"ref_curvas_costo": {
+		"cat": "valores",
+		"name_es": "Curvas de costo — upgrades", "name_en": "Cost curves — upgrades",
+		"body_es": (
+			"Cómo escala el precio de cada compra dentro de la run:\n\n"
+			+ "[b]Fórmula efectiva:[/b] `costo(n) = base_cost · cost_scale^n · 1.5^n`\n"
+			+ "El `1.5^n` es un componente exponencial duro garantizado independiente del cost_scale del upgrade.\n\n"
+			+ "[b]cost_scale por upgrade:[/b]\n"
+			+ "• Click (1.5) · Click_mult (1.4) · Auto (1.6) · Auto_mult (1.2)\n"
+			+ "• Especialización (1.35) · Trueque (1.45) · Red de Intercambio (1.35)\n"
+			+ "• Escalado Alostático (3.5) — el más caro en términos de escalado\n"
+			+ "• Capital Cognitivo (1.45) · Contabilidad (2.0) · Persistencia (1.0)\n\n"
+			+ "[b]Modificadores que reducen el costo:[/b]\n"
+			+ "• [b]Deflación Biótica[/b] (legado): `effective_scale = 1 + (cs − 1) · 0.95` (−5% de la pendiente)\n"
+			+ "• [b]Deflación Cósmica[/b] (cósmico): −8% adicional sobre la pendiente (mismo patrón)\n"
+			+ "• [b]Memoria Estructural[/b] (legado ×3): −5%/nivel → hasta −15% del costo\n"
+			+ "• [b]Presión Rentable[/b] (legado): si ε_rt activo, upgrades de click al 80% del precio\n"
+			+ "• [b]Memoria de Recurso[/b] (legado): primer productor de cada categoría gratis\n"
+			+ "• [b]Memoria Persistente[/b] (cósmico): 1er nivel de Contabilidad y Trueque gratis al inicio\n\n"
+			+ "[i]Persistencia (cost_scale 1.0) es el único upgrade donde el 1.5^n domina solo — se hace muy cara rápido igual.[/i]"
+		),
+		"body_en": (
+			"How the price of each purchase scales during the run:\n\n"
+			+ "[b]Effective formula:[/b] `cost(n) = base_cost · cost_scale^n · 1.5^n`\n"
+			+ "The `1.5^n` is a hard exponential component guaranteed regardless of the upgrade's cost_scale.\n\n"
+			+ "[b]cost_scale per upgrade:[/b]\n"
+			+ "• Click (1.5) · Click_mult (1.4) · Auto (1.6) · Auto_mult (1.2)\n"
+			+ "• Specialization (1.35) · Barter (1.45) · Exchange Network (1.35)\n"
+			+ "• Allostatic Scaling (3.5) — steepest scaling of all\n"
+			+ "• Cognitive Capital (1.45) · Accounting (2.0) · Persistence (1.0)\n\n"
+			+ "[b]Modifiers that reduce cost:[/b]\n"
+			+ "• [b]Biotic Deflation[/b] (legacy): `effective_scale = 1 + (cs − 1) · 0.95` (−5% of the slope)\n"
+			+ "• [b]Cosmic Deflation[/b] (cosmic): −8% additional on the slope (same pattern)\n"
+			+ "• [b]Structural Memory[/b] (legacy ×3): −5%/level → up to −15% cost\n"
+			+ "• [b]Profitable Pressure[/b] (legacy): if ε_rt active, click upgrades at 80% price\n"
+			+ "• [b]Resource Memory[/b] (legacy): first producer of each category free\n"
+			+ "• [b]Persistent Memory[/b] (cosmic): 1st Accounting and Barter level free at start\n\n"
+			+ "[i]Persistence (cost_scale 1.0) is the only upgrade where 1.5^n alone dominates — it still gets expensive fast.[/i]"
+		),
+		"unlock": {"type": "always"},
+		"see_also": ["upgrades_estructura", "banco_genetico"],
+	},
+	"ref_logros": {
+		"cat": "valores",
+		"name_es": "Logros — tiers y mecánica", "name_en": "Achievements — tiers & mechanics",
+		"body_es": (
+			"El sistema de logros tiene 5 tiers con rareza creciente. Los de tier alto suelen estar ocultos hasta que se cumplen.\n\n"
+			+ "• [b]MICELIO[/b] (marrón) — onboarding, primeros hitos. Visibles desde el principio.\n"
+			+ "• [b]ESPORA[/b] (blanco) — progresión media, primeras rutas cerradas.\n"
+			+ "• [b]FRUTO[/b] (dorado) — hitos avanzados, optimización y combinaciones.\n"
+			+ "• [b]ANCESTRAL[/b] (rojo) — desafíos endgame y secretos. Mayoría ocultos.\n"
+			+ "• [b]MYTHIC[/b] (violeta) — rutas exóticas y meta-logros. Todos ocultos.\n\n"
+			+ "[b]Tipos de trigger:[/b]\n"
+			+ "• [b]threshold[/b] — una métrica supera un umbral (ej: $1M totales)\n"
+			+ "• [b]sustained[/b] — una métrica se mantiene N segundos continuos (ej: ε < 0.20 durante 180 s)\n"
+			+ "• [b]event[/b] — se dispara al ocurrir un evento (ej: cerrar una ruta)\n"
+			+ "• [b]event_count[/b] — el evento ocurre N veces (ej: 5 upgrades comprados)\n"
+			+ "• [b]custom[/b] — evaluador propio con lógica compleja\n\n"
+			+ "[b]Desbloquear logros ocultos:[/b] el legado [b]Observatorio Genómico[/b] los revela en el panel antes de obtenerlos.\n\n"
+			+ "[b]Meta-logros (ANCESTRAL/MYTHIC):[/b]\n"
+			+ "• [b]Reino Subterráneo[/b] — todos los MICELIO + ESPORA + FRUTO obtenidos\n"
+			+ "• [b]Última Espora[/b] — TODOS los logros del juego obtenidos (se excluye a sí mismo del conteo)"
+		),
+		"body_en": (
+			"The achievement system has 5 tiers of increasing rarity. Higher-tier ones are usually hidden until met.\n\n"
+			+ "• [b]MYCELIUM[/b] (brown) — onboarding, first milestones. Visible from the start.\n"
+			+ "• [b]SPORE[/b] (white) — mid progression, first route closures.\n"
+			+ "• [b]FRUIT[/b] (gold) — advanced milestones, optimization and combos.\n"
+			+ "• [b]ANCESTRAL[/b] (red) — endgame challenges and secrets. Mostly hidden.\n"
+			+ "• [b]MYTHIC[/b] (violet) — exotic routes and meta-achievements. All hidden.\n\n"
+			+ "[b]Trigger types:[/b]\n"
+			+ "• [b]threshold[/b] — a metric exceeds a value (e.g. $1M total)\n"
+			+ "• [b]sustained[/b] — a metric holds for N continuous seconds (e.g. ε < 0.20 for 180 s)\n"
+			+ "• [b]event[/b] — fires when an event occurs (e.g. closing a route)\n"
+			+ "• [b]event_count[/b] — event occurs N times (e.g. 5 upgrades bought)\n"
+			+ "• [b]custom[/b] — custom evaluator with complex logic\n\n"
+			+ "[b]Unlocking hidden achievements:[/b] the [b]Genomic Observatory[/b] legacy reveals them in the panel before you earn them.\n\n"
+			+ "[b]Meta-achievements (ANCESTRAL/MYTHIC):[/b]\n"
+			+ "• [b]Underground Kingdom[/b] — all MYCELIUM + SPORE + FRUIT obtained\n"
+			+ "• [b]Last Spore[/b] — ALL game achievements obtained (excludes itself from the count)"
 		),
 		"unlock": {"type": "always"},
 	},

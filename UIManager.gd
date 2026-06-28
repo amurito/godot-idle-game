@@ -556,6 +556,11 @@ func update_mutation_center_panel(main: Node = null) -> void:
 			t = _build_fusion_catabolica_closed_text()
 		else:
 			t = _build_fusion_catabolica_panel_text()
+	elif EvoManager.mutation_ayuno_primordial:
+		if RunManager.run_closed:
+			t = UITextBuilders.build_ayuno_primordial_closed_text()
+		else:
+			t = UITextBuilders.build_ayuno_primordial_panel_text()
 	else:
 		t = UITextBuilders.build_genome_text()
 		if not RunManager.run_closed:
@@ -1203,6 +1208,8 @@ func get_reactor_color() -> Color:
 				return Color(0.08, 0.72, 0.48)
 			"FUSIÓN CATABÓLICA":
 				return Color(0.45, 0.30, 0.01)  # ámbar oscuro: oro metabolico, distinto del teal de Homeostasis
+			"AYUNO PRIMORDIAL":
+				return Color(0.55, 0.62, 0.70)  # plateado frío: el silencio grabado en el genoma
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
@@ -1229,6 +1236,10 @@ func get_reactor_color() -> Color:
 		if EvoManager.fusion_burst_timer > 0.0:
 			return Color(1.1, 0.92, 0.12)  # oro brillante durante ráfaga
 		return Color(0.97, 0.76, 0.05)  # ámbar/oro: energía metabólica estable
+	if EvoManager.mutation_ayuno_primordial:
+		if EvoManager.ayuno_burst_active:
+			return Color(1.0, 1.0, 1.05)  # blanco brillante durante el burst
+		return Color(0.15, 0.18, 0.22)  # casi negro con toque azul frío: vacío productivo
 	if EvoManager.mutation_hyperassimilation:
 		if RunManager._fractura_carga_timer > 0.0:
 			var t := clampf(RunManager._fractura_carga_timer / RunManager.FRACTURA_CARGA_DURATION, 0.0, 1.0)

@@ -568,6 +568,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "coloso_estructural",
 	},
+	"ayuno_iniciado": {
+		"name": "El Primer Silencio",
+		"desc": "Activar la transmutación AYUNO PRIMORDIAL por primera vez.",
+		"tier": Tier.ESPORA, "secret": true, "toast": "full",
+		"trigger": "event", "event_name": "mutation_activated",
+		"conditions": [{"key": "id", "op": "==", "value": "ayuno_primordial"}],
+	},
+	"primer_ayuno": {
+		"name": "Primicia del Vacío",
+		"desc": "Sellar AYUNO PRIMORDIAL — la producción que emerge del silencio.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "AYUNO PRIMORDIAL"}],
+	},
+	"ayuno_perfecto": {
+		"name": "Ayuno Absoluto",
+		"desc": "Cerrar AYUNO PRIMORDIAL con el ayuno más largo >= 180 s Y >= 7 ciclos completados.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "ayuno_perfecto",
+	},
 	"ultima_espora": {
 		"name": "Última Espora",
 		"desc": "Desbloquear todos los logros del juego.",

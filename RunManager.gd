@@ -232,6 +232,10 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 				var raw := int(floor(EconomyManager.total_money_generated / 10_000_000.0))
 				ng_bonus = min(raw, cap)
 				ng_formula = "generado $%.1fM / $10M = %d (cap %d)" % [EconomyManager.total_money_generated / 1_000_000.0, ng_bonus, cap]
+			"AYUNO PRIMORDIAL":
+				var raw := int(floor(EvoManager.ayuno_silencio_peak / Balance.AYUNO_NG_PEAK_DIV))
+				ng_bonus = min(raw, cap)
+				ng_formula = "S_peak %.1f / %.0f = %d (cap %d)" % [EvoManager.ayuno_silencio_peak, Balance.AYUNO_NG_PEAK_DIV, ng_bonus, cap]
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
@@ -277,6 +281,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			LegacyManager.grant_buff("legado_motor_fundido")
 			UIManager.show_toast(tr("TOAST_FUSION_REWARD"))
 			LogManager.add(tr("LOG_FUSION_REWARD"))
+
+	# AYUNO PRIMORDIAL: recompensa permanente al sellar → pasivo ×2→×1 en los primeros 90 s de run.
+	if route == "AYUNO PRIMORDIAL":
+		if not LegacyManager.get_buff_value("legado_primicia_del_vacio"):
+			LegacyManager.grant_buff("legado_primicia_del_vacio")
+			UIManager.show_toast(tr("TOAST_AYUNO_REWARD"))
+			LogManager.add(tr("LOG_AYUNO_REWARD"))
 
 	# NECROSIS CONTROLADA: primera vez que cierra → desbloquear Apoptosis Heredada.
 	if route == "NECROSIS CONTROLADA":
@@ -794,6 +805,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_symbiosis:              return "SIMBIOSIS"
 	if EvoManager.mutation_red_micelial:           return "ESPORULACIÓN"
 	if EvoManager.mutation_parasitism:             return "PARASITISMO"
+	if EvoManager.mutation_ayuno_primordial:        return "AYUNO PRIMORDIAL"
 	if EvoManager.mutation_hyperassimilation:      return "HIPERASIMILACIÓN"
 	return ""
 
@@ -844,6 +856,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = EvoManager.met_oscuro_devoured_count * 2
 		"PANSPERMIA NEGRA":
 			raw = int(floor(BiosphereEngine.micelio / 20.0))
+		"AYUNO PRIMORDIAL":
+			raw = int(floor(EvoManager.ayuno_silencio_peak / Balance.AYUNO_NG_PEAK_DIV))
 	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 

@@ -465,4 +465,37 @@ Condiciones de entrada:
 
 ---
 
-*Última actualización: 2026-06-28*
+### ⊘ AYUNO PRIMORDIAL (transmutación SOMBRA de HIPERASIMILACIÓN)
+
+**Requisito:** buff `transmut_ayuno` activo en Banco Genético (unlock: T≥3). Si `transmut_fusion` también está activo, FC tiene prioridad.
+
+**Disparo:** mismas condiciones de HIPERASIMILACIÓN. Sin restricción de Contabilidad.
+
+**Mecánica central — Silencio (S):**
+- B drena −0.5/s constantemente
+- S se acumula cuando B < 5 **y** ε < 0.33 (rate = b_factor × e_factor × ascesis_bonus)
+- Pasivo ×(1 + S × 0.01) — S=100 → ×2.0, S=300 → ×4.0
+
+**Botones activos:**
+- [Q] ROMPER EL AYUNO: burst pasivo ×(1+S/50) durante 15s; S→0; B+5; ciclos++
+- [W] ASCESIS: +15% tasa de S por nivel; costo $50 × 2.5^n
+
+**Condiciones de sello:**
+- Ciclos [Q] completados ≥ 5
+- S acumulado total ≥ 500
+- Streak limpio más largo ≥ 90s (B<1 y ε<0.10 simultáneos)
+
+**Recompensa permanente:** `legado_primicia_del_vacio` — pasivo ×2.0→×1.0 linealmente en los primeros 90s de cada run futura.
+
+**NG+ bonus:** floor(S_peak / 50), cap 8. PL base: 8.
+
+**Logros:**
+- El Primer Silencio (ESPORA): activar AYUNO PRIMORDIAL por primera vez
+- Primicia del Vacío (ANCESTRAL): sellar AYUNO PRIMORDIAL
+- Ayuno Absoluto (MYTHIC): cerrar con streak ≥ 180s Y ciclos ≥ 7
+
+> Spec completa: `docs/design/ayuno_primordial.md`
+
+---
+
+*Última actualización: 2026-06-28 — AYUNO PRIMORDIAL (v1.0.4.0)*
