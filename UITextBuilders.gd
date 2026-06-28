@@ -1230,7 +1230,7 @@ static func build_ayuno_primordial_panel_text() -> String:
 	var ck_s: String = "[color=green]✓[/color]" if streak_ok else "[ ]"
 	t += "  %s Ciclos: %d / %d\n" % [ck_c, EvoManager.ayuno_cycles, Balance.AYUNO_SELLO_CYCLES]
 	t += "  %s S acumulado: %.0f / %.0f\n" % [ck_t, s_total, Balance.AYUNO_SELLO_TOTAL]
-	t += "  %s Streak limpio: %.0fs / %.0fs\n" % [ck_s, EvoManager.ayuno_longest_streak, Balance.AYUNO_SELLO_STREAK]
+	t += "  %s Ayuno continuo (sin [Q]): %.0fs / %.0fs\n" % [ck_s, EvoManager.ayuno_longest_streak, Balance.AYUNO_SELLO_STREAK]
 	if cycles_ok and total_ok and streak_ok:
 		t += "\n  [color=#a8c0d8]→ Sello disponible en el panel derecho[/color]"
 	return t

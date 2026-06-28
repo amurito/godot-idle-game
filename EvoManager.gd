@@ -499,20 +499,14 @@ func process_ayuno(dt: float) -> void:
 	if not mutation_ayuno_primordial or RunManager.run_closed: return
 	# Drenar biomasa activamente
 	BiosphereEngine.biomasa = maxf(0.0, BiosphereEngine.biomasa - Balance.AYUNO_BIOMASA_DRAIN * dt)
-	# Acumular Silencio cuando el sistema está "en ayuno limpio"
-	var b_factor: float = clampf(1.0 - BiosphereEngine.biomasa * 0.2, 0.0, 1.0)
-	var e_factor: float = clampf(1.0 - StructuralModel.epsilon_runtime * 3.0, 0.0, 1.0)
+	# Silencio siempre acumula (la presión económica del drain ya es suficiente tensión)
 	var ascesis_bonus: float = 1.0 + ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
-	var rate: float = b_factor * e_factor * ascesis_bonus
-	ayuno_silencio += rate * dt
-	ayuno_silencio_total += rate * dt
+	ayuno_silencio += ascesis_bonus * dt
+	ayuno_silencio_total += ascesis_bonus * dt
 	ayuno_silencio_peak = maxf(ayuno_silencio_peak, ayuno_silencio)
-	# Streak limpio: B < 1 y ε < 0.10
-	if BiosphereEngine.biomasa < 1.0 and StructuralModel.epsilon_runtime < 0.10:
-		ayuno_streak_timer += dt
-		ayuno_longest_streak = maxf(ayuno_longest_streak, ayuno_streak_timer)
-	else:
-		ayuno_streak_timer = 0.0
+	# Streak = tiempo continuo sin romper el ayuno ([Q] lo reinicia)
+	ayuno_streak_timer += dt
+	ayuno_longest_streak = maxf(ayuno_longest_streak, ayuno_streak_timer)
 	# Tick del burst
 	if ayuno_burst_active:
 		ayuno_burst_timer -= dt
