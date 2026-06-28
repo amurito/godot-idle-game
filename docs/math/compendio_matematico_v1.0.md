@@ -31,8 +31,8 @@
 9. [Biosfera fúngica — B, N, hifas, micelio](#9-biosfera-fúngica--b-n-hifas-micelio)
 10. [Metabolismo](#10-metabolismo)
 11. [Upgrades — costos y curvas](#11-upgrades--costos-y-curvas)
-12. [Mutaciones y rutas — modificadores](#12-mutaciones-y-rutas--modificadores)
-13. [Banco Genético (PL) — buffs de legado](#13-banco-genético-pl--buffs-de-legado)
+12. [Mutaciones y rutas — modificadores](#12-mutaciones-y-rutas--modificadores) *(§12.4 FUSIÓN CATABÓLICA)*
+13. [Banco Genético (PL) — buffs de legado](#13-banco-genético-pl--buffs-de-legado) *(§13.7 Transmutaciones)*
 14. [Banco Cósmico (Ξ) — buffs post-trascendencia](#14-banco-cósmico-ξ--buffs-post-trascendencia)
 15. [Rutas post-trascendencia](#15-rutas-post-trascendencia)
 16. [Cierre de run — PL y NG+ bonus](#16-cierre-de-run--pl-y-ng-bonus)
@@ -141,6 +141,18 @@
 | `DEP_DEVOUR_TICK_FAST_AT` | 50 | Balance | umbral de comidos para acelerar el tick |
 | `PARASITISM_STATUS_INTERVAL` | 45.0 | main.gd | log status parásito |
 | `TRASCENDENCIA_PL_GATE` | 50 | LegacyManager | PL requerido para 1ª trascendencia |
+| `FUSION_CLICK_MULT` | 5.0 | Balance | multiplicador click en FUSIÓN CATABÓLICA |
+| `FUSION_PASSIVE_MULT` | 5.0 | Balance | multiplicador pasivo en FUSIÓN CATABÓLICA |
+| `FUSION_BURST_MULT` | 2.0 | Balance | multiplicador adicional durante ráfaga [Q] |
+| `FUSION_BURST_DURATION` | 30.0 | Balance | duración de la ráfaga [Q] en segundos |
+| `FUSION_BURST_COOLDOWN` | 120.0 | Balance | cooldown base de la ráfaga [Q] |
+| `FUSION_CD_REDUCE_PCT` | 0.20 | Balance | reducción compounding de cooldown por nivel [W] |
+| `FUSION_CD_FLOOR` | 30.0 | Balance | piso mínimo de cooldown [W] |
+| `FUSION_CD_COST_BASE` | 10_000_000 | Balance | costo base del upgrade [W] ($10M) |
+| `FUSION_CD_COST_GROWTH` | 1.9 | Balance | factor de crecimiento exponencial [W] |
+| `FUSION_SEAL_STRUCTURAL_N` | 150 | Balance | upgrades estructurales para habilitar sello |
+| `FUSION_SEAL_MONEY` | 100_000_000 | Balance | dinero generado total para habilitar sello ($100M) |
+| `FUSION_SEAL_BURSTS` | 3 | Balance | ráfagas activadas para habilitar sello |
 
 ---
 
@@ -184,6 +196,8 @@ y `click_mult = UpgradeManager.value("click_mult")` (base 1.0, ×1.06 por nivel)
 | 16 | Legado `resonancia_cognitiva` | `power *= (1 + acc_lvl · 0.05)` |
 | 17 | Ruta `vacio_hambriento` | `power *= 100.0` |
 | 18 | Mut. `omega_cero` | `power += Φ · 0.5` (aditivo; ver §15.5.3) |
+| 19 | Transmutación `fusion_catabolica` | `power *= 5.0` (reemplaza ×10 de hyperassimilation) |
+| 20 | Ráfaga FC activa (`fusion_burst_active`) | `power *= 2.0` adicional durante 30 s |
 
 **Árbol oscuro — modificadores de click** (gateados por sub-ruta, ver §15.5):
 - `autolisis` / `omega_cero`: `power *= 5.0` (reemplaza el ×3 de MO)
@@ -258,6 +272,26 @@ P = d_eff + e_eff
 | Buff `control_omega` (offset > 0) | `P *= (1 + offset · 2)` (hasta +30%) |
 | Buff `semilla_cosmica_oscura` | `P *= 3.0` |
 | Buff `memoria_sinaptica` (aditivo, al final) | `P += min(exp(k·(1−Ω))−1, 50000)`, `k=3.5·kernel` |
+| Transmutación `fusion_catabolica` | `P *= 5.0` (reemplaza ×0.25 de hyperassimilation) |
+| Ráfaga FC activa (`fusion_burst_active`) | `P *= 2.0` adicional durante 30 s |
+| Legado `legado_motor_fundido` (aditivo all_income_mult) | `P *= (1 + 0.25)` por copia (stackeable) |
+
+### 3.6 Helpers de desglose — `EconomyManager` (v1.0.3.0)
+
+Agregados para que el panel de stats muestre click + trabajo + trueque + ms = Δ$ total exacto:
+
+```
+get_passive_multiplier() -> float
+    base := get_auto_income_effective() + get_trueque_income_effective()
+    if base <= 0: return 1.0
+    return (get_passive_total() - get_memoria_sinaptica_additive()) / base
+
+get_memoria_sinaptica_additive() -> float
+    # término aditivo de Memoria Sináptica POST todos los multiplicadores
+    # separado para no inflar el multiplicador pasivo al calcularlo
+```
+
+`total_money_generated` acumula tanto ingreso pasivo como clicks (fix aplicado en `main.gd:on_reactor_click` y en el bloque Mente Colmena).
 
 ---
 
@@ -683,6 +717,44 @@ Adicionalmente: el `purchase_upgrade` multiplica el estado por `effective_cost_s
 
 `parasitism_corrosion` converge de 1.0 hacia 0.0 mientras la mutación está activa. Multiplicador uniforme sobre click y pasivo.
 
+### 12.4 FUSIÓN CATABÓLICA (transmutación de HIPERASIMILACIÓN)
+
+> Spec completa: `docs/design/fusion_catabolica.md`. Implementada en v1.0.3.0.
+
+**Disparo:** mismas condiciones de HIPERASIMILACIÓN + `LegacyManager.get_buff_value("transmut_fusion")` activo. Contabilidad ≥ Nv.1 **bloquea** la transmutación (tensión de build).
+
+**Estado en `EvoManager`** (persiste en `SaveManager`):
+
+| Variable | Descripción |
+|---|---|
+| `mutation_fusion_catabolica: bool` | transmutación activa |
+| `fusion_burst_active: bool` | ráfaga [Q] en curso |
+| `fusion_burst_timer: float` | tiempo restante de ráfaga |
+| `fusion_burst_cooldown: float` | cooldown actual (decrece con upgrades [W]) |
+| `fusion_burst_count: int` | ráfagas activadas en esta run |
+| `fusion_cd_level: int` | nivel del upgrade [W] (persistido) |
+
+**Economía durante la transmutación:**
+
+| Modo | Click | Pasivo |
+|---|---|---|
+| FC activa (base) | ×5 | ×5 |
+| Ráfaga [Q] activa | ×10 (5×2) | ×10 (5×2) |
+
+Cooldown efectivo de [Q]: `max(FUSION_CD_FLOOR, FUSION_BURST_COOLDOWN × (1−FUSION_CD_REDUCE_PCT)^n)`
+
+donde `n = fusion_cd_level`.
+
+**Condiciones de sello** (`EvoManager.fusion_seal_ready()`):
+
+| Condición | Constante | Valor |
+|---|---|---|
+| Upgrades estructurales | `FUSION_SEAL_STRUCTURAL_N` | ≥ 150 |
+| `total_money_generated` | `FUSION_SEAL_MONEY` | ≥ $100M |
+| Ráfagas activadas | `FUSION_SEAL_BURSTS` | ≥ 3 |
+
+Al sellar: otorga `legado_motor_fundido` (ver §13.7) y cierra el run.
+
 ---
 
 ## 13. Banco Genético (PL) — buffs de legado
@@ -762,6 +834,17 @@ Adicionalmente: el `purchase_upgrade` multiplica el estado por `effective_cost_s
 | `setpoint_adaptativo` | `omega_recovery_speed = ×1.50` |
 | `eco_primordial` | `all_income_mult = +0.10` |
 
+### 13.7 Transmutaciones (categoría especial — v1.0.3.0+)
+
+Buffs que modifican el comportamiento de mutaciones existentes en lugar de agregar rutas nuevas. Se compran con PL y se activan antes del run; el cambio ocurre en el momento en que la mutación base se dispararía.
+
+| id | nombre | costo PL | efecto |
+|---|---|---|---|
+| `transmut_fusion` | Fusión Catabólica | (Banco Genético) | Transforma HIPERASIMILACIÓN en FUSIÓN CATABÓLICA (ver §12.4). Reveal + unlock: cerrar la ruta `FUSIÓN CATABÓLICA` |
+| `legado_motor_fundido` | Motor Fundido | gratis (otorgado al sellar FC) | `all_income_mult += 0.25` a TODO el ingreso (click + pasivo). Stackeable. Categoría `transmutaciones`. |
+
+> Patrón de implementación: `LegacyDefs.gd` (definición del buff) + `GenomeEvaluator` (hook de disparo) + `RunManager.close_run()` (otorga legado al cerrar) + `SaveManager` (persist estado). Blueprint completo en `docs/design/fusion_catabolica.md §8`.
+
 ---
 
 ## 14. Banco Cósmico (Ξ) — buffs post-trascendencia
@@ -778,6 +861,9 @@ Adicionalmente: el `purchase_upgrade` multiplica el estado por `effective_cost_s
 | `convergencia_ciclica` | 28 | 2 | click y pasivo ×(1 + t · 0.05) |
 | `fractura_epistemica` | 35 | 3 | desbloquea COLAPSO CONTROLADO (gate: `ε_rt > 0.90 ∧ Ω > 0.30`) |
 | `sustrato_cosmico` | 50 | 3 | próxima trascendencia ×2 Ξ (one-shot) |
+| `latencia_hifal` | 12 | 1 | hifas mantienen un piso de `LATENCIA_HIFAL_FLOOR = 3.0` desde el arranque; ε y biomasa despiertan sin esperar al pasivo |
+| `reserva_nutricia` | 18 | 2 | +60 nutrientes al inicio de cada run |
+| `resonancia_perpetua` | 60 | 3 | cada trascendencia otorga +25% de Ξ de forma permanente (no se consume; cf. `sustrato_cosmico` one-shot) |
 
 Gate inicial: `TRASCENDENCIA_PL_GATE = 50` PL para la primera trascendencia.
 
@@ -1337,7 +1423,16 @@ Cada 30 s. Antes de escribir crea `.bak` del save anterior; recovery automático
 
 ---
 
-**Última revisión**: v1.0.2.0 (árbol oscuro completo) — código actual en `claude/great-turing-aa67fe`.
+**Última revisión**: v1.0.3.0 (2026-06-28) — commits `f70a571` (FC + refactor) + `b50f899` (NGPlusButtonManager).
+
+**Cambios incluidos en v1.0.3.0** (Fusión Catabólica + refactor + Banco Cósmico):
+- Nueva **§12.4 FUSIÓN CATABÓLICA**: primera transmutación del juego. Variables de estado, economía ×5/×10, cooldown compounding [W], condiciones de sello (3 gates), legado permanente.
+- Nueva **§13.7 Transmutaciones**: categoría especial en Banco Genético. `transmut_fusion` + `legado_motor_fundido` (+25% all_income_mult).
+- §3.2 / §3.5: cadenas de click y pasivo extendidas con FC ×5 base + ×2 burst + `legado_motor_fundido` aditivo.
+- Nueva **§3.6**: helpers `get_passive_multiplier()` y `get_memoria_sinaptica_additive()` — necesarios para que el panel de stats muestre desglose exacto.
+- §2: constantes `FUSION_*` (12 nuevas) y `FUSION_SEAL_*`.
+- §14: 3 nuevos buffs cósmicos (`latencia_hifal` T1, `reserva_nutricia` T2, `resonancia_perpetua` T3).
+- **Regla de actualización**: a partir de v1.0.3.0, toda mecánica nueva debe actualizarse en este doc en el mismo commit de implementación.
 
 **Cambios incluidos en v1.0.1.x → v1.0.2.0** (árbol oscuro):
 - Nueva **§15.5 ÁRBOL OSCURO**: 5 sub-rutas de Met. Oscuro (AUTOFAGIA, NECROSIS, ESCLEROCIO, OMEGA-CERO, REMISIÓN) con gates, economía, recursos (Ν, Φ, Θ), constantes, 10 buffs NG+ y 5 logros Mythic.
