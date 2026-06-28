@@ -1,8 +1,18 @@
 # Roadmap post-v1.0.0.3
 
-Última actualización: 2026-06-05
+Última actualización: 2026-06-27
 
-**Estado actual:** `v1.0.1.0 "génesis"` (`version.gd` PATCH=1, HOTFIX=0 → muestra `1.0.1`) — **rama verde (Red Micelial) reworkeada anti-AFK**. Antes: `v1.0.0.10` — el juego es **HYPHAE: genesis** (ex-AntiIDLE), publicado en web en `hyphae-game-hub.onrender.com`, bilingüe ES/EN, export web (HTML5) + `.exe` Windows.
+**Estado actual:** `v1.0.3.0 "génesis"` — el juego es **HYPHAE: genesis** (ex-AntiIDLE), publicado en web
+en `hyphae-game-hub.onrender.com`, bilingüe ES/EN, export web (HTML5) + `.exe` Windows.
+
+Hitos desde v1.0.1.0:
+- **v1.0.2.0** — árbol oscuro completo + REMISIÓN METABÓLICA (primera ruta de redención). Sin tag en git.
+- **v1.0.3.0** — Codex (panel enciclopedia) + gates de rutas oscuras + Banco Cósmico ampliado (base
+  taggeada `19c3f8c`), y encima la **primera transmutación: FUSIÓN CATABÓLICA** (Hiperasimilación → motor
+  estable). Ver spec de diseño en [`docs/design/fusion_catabolica.md`](../design/fusion_catabolica.md).
+- **Refactor de arquitectura (2026-06-27):** `DarkTreeLogic.gd` (árbol oscuro fuera de EvoManager) +
+  `NGPlusButtonManager.gd` (botones NG+ fuera de UIManager). Ver
+  [`docs/design/arquitectura_scripts.md`](../design/arquitectura_scripts.md).
 
 **Nota de versionado:** la numeración pública saltó a `.10` porque las tags `.7/.8/.9` ya existían en remote apuntando a commits previos de i18n (sin bump de `version.gd`, el juego mostraba `1.0.0.6`). Todo el sprint quedó consolidado en `v1.0.0.10 "génesis"`; los parches post-release (gameplay, balance, bugs) van sobre la misma versión sin re-bump. El detalle granular vive en `CHANGELOG.md`.
 
@@ -163,6 +173,13 @@ El *pulido de código* pre-launch está hecho. Falta la **ejecución de marketin
 - **Mobile** (responsive / touch)
 - **Auditoría de retención**: cada milestone (primera mutación, primera ruta post-trascendencia, Dark Metabolism) necesita mensaje "felicitación + explicación + qué sigue" — ver `launch_plan_hyphae_genesis.md § Retención`
 
-### Futuro — endgame post-trascendencia t>2 (diseño, no implementado)
-- **Refactor `RouteManager`** (registry único, data-driven) para escalar más allá de las 3 rutas básicas. Plan completo en [`docs/design/arquitectura_rutas.md`](../design/arquitectura_rutas.md).
-- **Transmutaciones** (reversión de mutaciones → rutas OP), **rutas avanzadas/fantasma** y **meta-endgame "Jardín Primigenio"** (subjuego paralelo). Diseño en [`docs/design/nuevas transmutaciones.md`](../design/nuevas%20transmutaciones.md).
+### Futuro — endgame post-trascendencia t>2 (diseño)
+- **Refactor `RouteManager`** (registry único, data-driven) — ✅ mergeado (Opción B, 2026-06-06).
+- **Transmutaciones** — 🚧 en progreso. La **primera (FUSIÓN CATABÓLICA) está implementada** en
+  v1.0.3.0; sirve de blueprint para las siguientes. Spec + patrón generalizable en
+  [`docs/design/fusion_catabolica.md`](../design/fusion_catabolica.md).
+- **SOMBRA** (involución "anti-A": revertir una mutación abre su opuesto mecánico) — 💡 diseño. Pilotos
+  recomendados: AYUNO PRIMORDIAL, INESTABILIDAD CONSCIENTE. Teoría en
+  [`docs/design/enciclopedia_rutas.md`](../design/enciclopedia_rutas.md) § 4.
+- **FANTASMA** (combos de doble reversión) y **meta-endgame "Jardín Primigenio"** (subjuego paralelo) —
+  💡 diseño, horizonte lejano. Detalle en [`docs/design/nuevas transmutaciones.md`](../design/nuevas%20transmutaciones.md).

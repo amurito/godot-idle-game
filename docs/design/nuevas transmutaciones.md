@@ -1,3 +1,11 @@
+> **NOTA (2026-06-27):** este documento es el **brainstorm de concepción** original. Los valores aquí
+> son ideas iniciales, no necesariamente los implementados. **FUSIÓN CATABÓLICA ya está implementada**
+> (v1.0.3.0) y su spec real y canónica vive en [`fusion_catabolica.md`](fusion_catabolica.md) — ante
+> cualquier discrepancia, ese doc manda. La teoría de las familias de rutas (SOMBRA / FANTASMA /
+> redención / secretas) está consolidada en [`enciclopedia_rutas.md`](enciclopedia_rutas.md).
+
+---
+
 Vamos a hacer brainstorming sobre ideas para buffs de post-trascendencia que permitan revertir mutaciones y desbloquear contenido nuevo (rutas alternativas, easter eggs, finales secretos). El objetivo es expandir el endgame sin romper la coherencia del sistema evolutivo.
 
 🧠 Premisa base

@@ -1,6 +1,13 @@
 # Arquitectura de scripts — HYPHAE: genesis
 
-Última actualización: 2026-06-07 (post-refactor steps 6–9, v1.0.1)
+Última actualización: 2026-06-27 (refactor v1.0.3.0: DarkTreeLogic + NGPlusButtonManager).
+Refactor previo: 2026-06-07 (steps 6–9, v1.0.1).
+
+> **Regla de techo: ~600 LOC por archivo.** Cuando un archivo supera ese umbral, evaluar
+> extracción *antes* de añadir el siguiente bloque de funcionalidad. Razón doble: legibilidad
+> y costo de lectura (un archivo de 1200L cuesta el doble de tokens leer que uno de 600L; si el
+> trabajo está en una sola sección, cargar el archivo entero desperdicia contexto). Esta regla
+> nació porque `EvoManager.gd` creció a 1225L acumulando árbol oscuro sin extracción planificada.
 
 ---
 
@@ -28,8 +35,8 @@
 | Archivo | LOC | Rol |
 |---|---|---|
 | `main.gd` | 1214 | Orquestador de escena: loop `_process`, input, conecta managers en `_ready`. **No contiene sistemas.** |
-| `UIManager.gd` | 1266 | Toda la UI runtime: toasts, paneles, labels, botones NG+, reactor color, legacy store |
-| `EvoManager.gd` | 494 | Estado de mutaciones y genome (flags, timers, fases). Delega lógica a GenomeEvaluator/PrimordioLogic |
+| `UIManager.gd` | 1251 | UI runtime: toasts, paneles, labels, reactor color, legacy store. **Los botones NG+ se delegan a NGPlusButtonManager.** |
+| `EvoManager.gd` | 620 | Estado de mutaciones y genome (flags, timers, fases). Delega evaluación a GenomeEvaluator/PrimordioLogic y **el árbol oscuro completo a DarkTreeLogic** |
 | `StructuralModel.gd` | 312 | ε/ω/persistence math. `update_runtime()` calcula ε cada tick |
 | `RunManager.gd` | 678 | Tiempo de run, `close_run()`, `LOGIC_TICK`, historial de ciclos |
 | `EconomyManager.gd` | 303 | `money`, `delta`, income acumulado |
@@ -53,13 +60,33 @@
 |---|---|---|
 | `GenomeEvaluator.gd` | 310 | Toda la lógica de evaluación del genoma (llamada desde `EvoManager.update_genome()`) |
 | `PrimordioLogic.gd` | 245 | Ciclo biológico: Primordio, Panspermia Negra, Colonización activa |
-| `UITextBuilders.gd` | 983 | Constructores de texto para HUD: fórmula, click stats, genome panel |
+| `DarkTreeLogic.gd` | 625 | **Árbol oscuro completo**: met_oscuro, autólisis/autofagia, necrosis, omega_cero, remisión, depredador, glitch. Extraído de EvoManager (2026-06-27). El estado vive en EvoManager; ésta es lógica pura |
+| `UITextBuilders.gd` | 1227 | Constructores de texto para HUD: fórmula, click stats, genome panel, checklist evo, paneles de Fusión Catabólica |
 | `AchievementDefs.gd` | 532 | `enum Tier` + `TIER_NAMES/COLORS/ICONS` + `DEFS` (50 logros) |
 | `LegacyDefs.gd` | 383 | `LEGACY_DEFS` (40 buffs) + `CAT_ORDER`/`CAT_NAMES` |
 | `Balance.gd` | 182 | Constantes de balance del juego (autoload, pero es solo consts) |
 | `EcoModel.gd` | 62 | Helpers de fórmula económica |
 | `RunSnapshot.gd` | 175 | Estructura de snapshot de run (para evaluadores de logros) |
 | `EmojiToRichText.gd` | 124 | Emoji → BBCode/textura (sistema Twemoji) |
+
+### Clases instanciadas (`RefCounted` con estado, no autoload)
+
+Tercer tipo de objeto: una clase con `class_name X extends RefCounted` que **sí tiene estado mutable**
+pero **no es autoload** — la instancia y posee otro objeto. Se usa cuando la lógica maneja referencias
+a nodos de escena (Button, Label, Control) como estado, lo que impide usar una static class.
+
+| Archivo | LOC | Rol | Quién lo instancia |
+|---|---|---|---|
+| `NGPlusButtonManager.gd` | 1096 | Todos los botones dinámicos de rutas NG+ (árbol oscuro, Fusión Catabólica, simbiosis, dado d20, panel de buffs heredados). Extraído de UIManager (2026-06-27) | `UIManager` en `setup()` vía `_ng_buttons.setup(root, scene)` |
+
+**Por qué RefCounted y no static:** maneja refs a `Button`/`Label`/`Control` como estado interno → una
+static class no puede tener estado. **Por qué no autoload:** es un colaborador privado de UIManager, no
+un singleton global. UIManager le delega `update_ng_plus_buttons()` / `reset_ng_plus_buttons()`.
+
+> ⚠️ `RefCounted` **no extiende `Node`** → no tiene `tr()`, `create_tween()`, `get_tree()`, etc.
+> - `tr("KEY")` → `TranslationServer.translate("KEY")`
+> - `create_tween()` → guardar un ref a un `Node` (aquí `_scene`) y usar `_scene.create_tween()`
+> - señales de otros autoloads se conectan al método de la instancia: `EvoManager.señal.connect(_ng_buttons._on_x)`
 
 ### Scripts de escena (attachados a nodos)
 
@@ -98,9 +125,12 @@
 | Nuevo evaluador custom de logro | `AchievementManager.gd` — nuevo `_eval_X()` + registrar en `CUSTOM_EVALUATORS` | |
 | Nuevo buff de legado | `LegacyDefs.gd` — nueva entrada en `LEGACY_DEFS` | Categoría en `cat:`, `effect.type` debe ser manejado en `get_effect_value()` |
 | Nueva constante de balance | `Balance.gd` | Usar `const` con nombre `UPPER_CASE` |
-| Nuevo panel de UI o label | `UIManager.gd` | Onready vars en `setup()`, funciones de update separadas |
-| Nuevo constructor de texto para HUD | `UITextBuilders.gd` | `static func`, accede a autoloads por nombre explícito |
+| Nueva mecánica de árbol oscuro / sub-ruta de colapso | `DarkTreeLogic.gd` — nuevo `static func` | El estado (flags/timers) vive en `EvoManager`; agregar thin delegate ahí |
+| Botón dinámico de ruta NG+ (árbol oscuro, SOMBRA, transmutaciones) | `NGPlusButtonManager.gd` | Crear `_update_X_button()` + `_on_X_pressed()`; registrar en `update_ng_plus_buttons()` y `reset_ng_plus_buttons()` |
+| Nuevo panel de UI o label (no-NG+) | `UIManager.gd` | Onready vars en `setup()`, funciones de update separadas |
+| Nuevo constructor de texto para HUD | `UITextBuilders.gd` | `static func`, accede a autoloads por nombre explícito. `tr()` no existe en static → `TranslationServer.translate()` |
 | Nueva ruta post-trascendencia | `routes/RouteX.gd` + registrar en `RouteManager.ROUTE_DEFS` | Extender `PostTrasRoute` |
+| Nueva transmutación (revertir/transformar mutación) | Ver [`fusion_catabolica.md`](fusion_catabolica.md) — es el blueprint completo | Buff `transmutaciones` en `LegacyDefs` + hook en `GenomeEvaluator` + botones en `NGPlusButtonManager` |
 | Nueva métrica estructural (derivada de ε/ω) | `StructuralModel.gd` | Dentro de `update_runtime()` o nueva func |
 | Nuevo efecto de economía | `EconomyManager.gd` | |
 | Nueva mecánica de biosfera | `BiosphereEngine.gd` | |
@@ -146,9 +176,33 @@ open(path, 'w', encoding='utf-8')
 ```
 El Edit tool del CLI puede corromper estos chars. Preferir Python para ediciones que involucren esas líneas.
 
+### `tr()` solo existe en contexto Node
+
+`tr()` es método de instancia de `Object`/`Node`. **No es invocable desde `static func` ni desde
+`RefCounted`.** En esos contextos usar `TranslationServer.translate("KEY")` (idéntico resultado).
+Aplica a: `UITextBuilders`, `DarkTreeLogic` (static), `NGPlusButtonManager` (RefCounted).
+
+### Extracción dirigida por tamaño (cómo se hizo DarkTreeLogic + NGPlusButtonManager)
+
+Cuando un archivo supera el techo de ~600L y la lógica forma un bloque cohesivo:
+
+1. **Mapear dependencias antes de mover** (grep): qué del bloque se llama desde afuera (necesita
+   thin delegate) y qué del resto del archivo usa el bloque (no se mueve).
+2. **Elegir el tipo de objeto destino**:
+   - bloque sin estado, sin node refs → **static class** (`DarkTreeLogic`)
+   - bloque con node refs como estado → **clase instanciada `RefCounted`** (`NGPlusButtonManager`)
+3. **Mover con script Python** (no a mano) si el bloque tiene emojis/símbolos especiales — el Edit
+   tool los corrompe. Usar `assert` de sanidad sobre el contenido esperado en cada índice de corte,
+   para que el script falle en vez de corromper si algún número está corrido.
+4. **Dejar thin delegates** en el archivo original para los callers externos → cero cambios en
+   `main.gd`/`DebugPanel`/etc.
+
 ---
 
 ## Orden de autoloads en project.godot
+
+> `DarkTreeLogic` y `NGPlusButtonManager` **no son autoloads** (uno es static, el otro es instanciado
+> por UIManager) → no van en esta lista ni en `project.godot`. Godot los registra por `class_name`.
 
 Orden real verificado (v1.0.1, crítico — Balance debe ir último):
 
