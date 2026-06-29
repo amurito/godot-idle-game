@@ -554,6 +554,8 @@ func on_run_closed(route: String) -> void:
 		unlock("autolisis_perfecta")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
+	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:
+		unlock("trampa_del_vacio")
 	if route == "NECROSIS CONTROLADA" and _eval_funcion_pura({}):
 		unlock("funcion_pura")
 	if route == "PROTOCOLO OMEGA-CERO" and _eval_singularidad_perfecta({}):

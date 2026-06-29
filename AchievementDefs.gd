@@ -588,6 +588,12 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "ayuno_perfecto",
 	},
+	"trampa_del_vacio": {
+		"name": "La Trampa del Vacío",
+		"desc": "Cerrar con Parasitismo mientras el hongo practicaba el ayuno. El vacío siempre invita algo.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "trampa_del_vacio",
+	},
 	"ultima_espora": {
 		"name": "Última Espora",
 		"desc": "Desbloquear todos los logros del juego.",
