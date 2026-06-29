@@ -1448,7 +1448,7 @@ const TRANSLATIONS := {
 		"LOG_FUSION_REWARD": "⊛ Motor Fundido grabado en el legado — +25% a todo el ingreso, permanente",
 		"TOAST_FUSION_REWARD": "⊛ Recompensa permanente: Motor Fundido (+25% a todo el ingreso)",
 		# ── AYUNO PRIMORDIAL (transmutación SOMBRA de Hiperasimilación) ──
-		"MUT_AYUNO_PRIMORDIAL": "Ayuno Primordial activado",
+		"MUT_AYUNO_PRIMORDIAL": "AYUNO PRIMORDIAL",
 		"LOG_AYUNO_EFFECTS": "El hongo abandona el consumo. El silencio empieza a producir.",
 		"TOAST_AYUNO_ON": "AYUNO PRIMORDIAL: El vacío comienza a rendir frutos",
 		"EVO_AYUNO_TITLE": "⊗ AYUNO PRIMORDIAL (transmutación)",
@@ -2937,7 +2937,7 @@ const TRANSLATIONS := {
 		"LOG_FUSION_REWARD": "⊛ Fused Engine etched into legacy — +25% to all income, permanent",
 		"TOAST_FUSION_REWARD": "⊛ Permanent reward: Fused Engine (+25% to all income)",
 		# ── AYUNO PRIMORDIAL (SOMBRA transmutation of Hyperassimilation) ──
-		"MUT_AYUNO_PRIMORDIAL": "Primal Fast activated",
+		"MUT_AYUNO_PRIMORDIAL": "PRIMAL FAST",
 		"LOG_AYUNO_EFFECTS": "The fungus abandons consumption. The silence begins to produce.",
 		"TOAST_AYUNO_ON": "PRIMAL FAST: The void begins to bear fruit",
 		"EVO_AYUNO_TITLE": "⊗ PRIMAL FAST (transmutation)",

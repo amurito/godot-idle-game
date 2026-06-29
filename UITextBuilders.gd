@@ -456,7 +456,8 @@ static func build_evo_checklist(_main: Node) -> String:
 
 	elif not EvoManager.mutation_red_micelial and not EvoManager.mutation_homeostasis \
 		and not EvoManager.mutation_hyperassimilation and not EvoManager.mutation_parasitism \
-		and not EvoManager.mutation_symbiosis:
+		and not EvoManager.mutation_symbiosis \
+		and not EvoManager.mutation_fusion_catabolica and not EvoManager.mutation_ayuno_primordial:
 		var ap_snap := EconomyManager.get_active_passive_breakdown()
 		var pasivo_domina: bool = ap_snap.pasivo > ap_snap.activo
 		var activo_domina: bool = ap_snap.activo > ap_snap.pasivo
@@ -503,7 +504,8 @@ static func build_evo_checklist(_main: Node) -> String:
 
 	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
 		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial \
-		and not EvoManager.mutation_symbiosis:
+		and not EvoManager.mutation_symbiosis \
+		and not EvoManager.mutation_fusion_catabolica and not EvoManager.mutation_ayuno_primordial:
 		t += "\n[color=gray]" + TranslationServer.translate("EVO_HOME_HINT_LABEL") + "[/color]\n"
 		ch = ok_color + "[x] " if RunManager.get_en_banda_homeostatica() else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_BAND_VALUE") % snapped(StructuralModel.epsilon_runtime, 0.01) + "[/color]\n"
@@ -803,6 +805,10 @@ static func build_genome_text() -> String:
 		t += "\n☠️ " + _route_prefix + TranslationServer.translate("MUT_DEPREDADOR")
 	elif EvoManager.mutation_homeostasis:
 		t += "\n⚖️ " + _route_prefix + TranslationServer.translate("MUT_HOMEOSTASIS")
+	elif EvoManager.mutation_fusion_catabolica:
+		t += "\n🔥 " + _route_prefix + TranslationServer.translate("MUT_FUSION_CATABOLICA")
+	elif EvoManager.mutation_ayuno_primordial:
+		t += "\n⬛ " + _route_prefix + TranslationServer.translate("MUT_AYUNO_PRIMORDIAL")
 	elif EvoManager.mutation_hyperassimilation:
 		t += "\n⚠️ " + _route_prefix + TranslationServer.translate("MUT_HIPERASIMILACION")
 	elif EvoManager.mutation_symbiosis:

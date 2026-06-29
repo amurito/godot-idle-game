@@ -48,6 +48,10 @@ static func build_eval_context() -> Dictionary:
 
 ## HIPERASIMILACIÓN (Exceso): activo > 80, ε > 0.4, biomasa > 4, sin contabilidad, run > 180s
 static func update_hiperasimilacion(ctx: Dictionary) -> void:
+	# Transmutación activa: Hiper fue reemplazada, no re-evaluar ni re-disparar.
+	if EvoManager.mutation_ayuno_primordial or EvoManager.mutation_fusion_catabolica:
+		EvoManager._set_genome_state("hiperasimilacion", "bloqueado")
+		return
 	# Gate de tiempo: en runs avanzadas (t>2) baja de 180s a 60s — el jugador ya
 	# conoce la ruta y no debería gastar 3 min por run cuando busca rutas largas.
 	var hiper_time_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
