@@ -1066,6 +1066,13 @@ func update_legacy_indicators() -> void:
 		if RunManager._has_permanent_dark_legacy():
 			mo_tip += "\n" + tr("CHIP_MEMORIA_OSCURA_PERM")
 		_add_chip.call(EmojiToRichText.strip("🌑 " + tr("CHIP_MEMORIA_OSCURA")), mo_tip, Color(0.82, 0.55, 1.0))
+	var _all_inc := LegacyManager.get_effect_value("all_income_mult")
+	if _all_inc > 0.0:
+		_add_chip.call("Motor x%.2f" % (1.0 + _all_inc), "Legado: Motor Fundido\n+%.0f%% a todo el ingreso" % (_all_inc * 100.0), Color(0.97, 0.76, 0.05))
+	if LegacyManager.get_buff_value("legado_primicia_del_vacio") and RunManager.run_time < Balance.AYUNO_LEGACY_DURATION:
+		var _t := RunManager.run_time / Balance.AYUNO_LEGACY_DURATION
+		var _m := lerpf(Balance.AYUNO_LEGACY_MULT_START, 1.0, _t)
+		_add_chip.call("Primicia x%.2f" % _m, "Legado: Primicia del Vacío\nPasivo x%.2f (decae a x1 en %.0fs)" % [_m, Balance.AYUNO_LEGACY_DURATION - RunManager.run_time], Color(0.55, 0.75, 0.95))
 
 func update_lab_metrics() -> void:
 	var contrib: Dictionary = EconomyManager.get_contribution_breakdown()
