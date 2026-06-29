@@ -552,15 +552,19 @@ func update_mutation_center_panel(main: Node = null) -> void:
 			return
 	var t: String
 	if EvoManager.mutation_fusion_catabolica:
-		if RunManager.run_closed:
+		if RunManager.run_closed and RunManager.final_route == "FUSIÓN CATABÓLICA":
 			t = _build_fusion_catabolica_closed_text()
-		else:
+		elif not RunManager.run_closed:
 			t = _build_fusion_catabolica_panel_text()
-	elif EvoManager.mutation_ayuno_primordial:
-		if RunManager.run_closed:
-			t = UITextBuilders.build_ayuno_primordial_closed_text()
 		else:
+			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_ayuno_primordial:
+		if RunManager.run_closed and RunManager.final_route == "AYUNO PRIMORDIAL":
+			t = UITextBuilders.build_ayuno_primordial_closed_text()
+		elif not RunManager.run_closed:
 			t = UITextBuilders.build_ayuno_primordial_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
 	else:
 		t = UITextBuilders.build_genome_text()
 		if not RunManager.run_closed:
@@ -1217,6 +1221,7 @@ func get_reactor_color() -> Color:
 				return Color(0.45, 0.30, 0.01)  # ámbar oscuro: oro metabolico, distinto del teal de Homeostasis
 			"AYUNO PRIMORDIAL":
 				return Color(0.55, 0.62, 0.70)  # plateado frío: el silencio grabado en el genoma
+		return Color(0.3, 0.3, 0.32)  # fallback genérico para cualquier ruta no listada
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
