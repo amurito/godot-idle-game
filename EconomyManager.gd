@@ -214,9 +214,9 @@ func get_passive_total() -> float:
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	if EvoManager.mutation_ayuno_primordial:
 		total *= EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult()
-	# LEGADO PRIMICIA DEL VACÍO: pasivo ×2.0→×1.0 linealmente en los primeros 90 s de run
+	# LEGADO PRIMICIA DEL VACÍO: pasivo ×3.0→×1.0 linealmente en los primeros 10 min de run
 	if LegacyManager.get_buff_value("legado_primicia_del_vacio") and RunManager.run_time < Balance.AYUNO_LEGACY_DURATION:
-		var t: float = RunManager.run_time / Balance.AYUNO_LEGACY_DURATION
+		var t: float = clampf(RunManager.run_time / Balance.AYUNO_LEGACY_DURATION, 0.0, 1.0)
 		total *= lerpf(Balance.AYUNO_LEGACY_MULT_START, 1.0, t)
 	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
 		total *= 1.5 # Orden Administrativa (+50% — solo activo mientras ε en banda 0.03–0.30)

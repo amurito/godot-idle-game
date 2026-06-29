@@ -1216,8 +1216,11 @@ static func build_ayuno_primordial_panel_text() -> String:
 	var b_bonus: float = 1.0 + maxf(0.0, (5.0 - b_val) / 5.0)
 	var s_rate: float = ascesis * b_bonus
 	var drain_now: float = Balance.AYUNO_BIOMASA_DRAIN + b_val * Balance.AYUNO_BIOMASA_DRAIN_PCT
-	t += "Silencio (S): %.1f  ·  S/s: ×%.2f  (drain B: %.1f/s)\n" % [s, s_rate, drain_now]
-	t += "Pasivo: ×%.2f  (1 + S×%.2f)\n" % [EvoManager.ayuno_silencio_mult(), Balance.AYUNO_SILENCIO_FACTOR]
+	var asc_factor: float = 1.0 + EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_PASSIVE_BONUS
+	var s_factor: float = 1.0 + s * Balance.AYUNO_SILENCIO_FACTOR
+	t += "Silencio (S): %.1f\n" % s
+	t += "  S/s: ×%.2f  [Ascesis ×%.2f · B-bonus ×%.2f]  |  drain B: %.1f/s\n" % [s_rate, ascesis, b_bonus, drain_now]
+	t += "Pasivo: ×%.2f  [(1+S×0.01) ×%.2f · Ascesis ×%.2f]\n" % [EvoManager.ayuno_silencio_mult(), s_factor, asc_factor]
 
 	if EvoManager.ayuno_burst_active:
 		t += "\n[color=white]⚡ BURST ACTIVO — %.0fs restantes[/color]\n" % EvoManager.ayuno_burst_timer
@@ -1237,7 +1240,7 @@ static func build_ayuno_primordial_panel_text() -> String:
 	var ck_s: String = "[color=green]✓[/color]" if streak_ok else "[ ]"
 	t += "  %s Ciclos: %d / %d\n" % [ck_c, EvoManager.ayuno_cycles, Balance.AYUNO_SELLO_CYCLES]
 	t += "  %s S acumulado: %.0f / %.0f\n" % [ck_t, s_total, Balance.AYUNO_SELLO_TOTAL]
-	t += "  %s Ayuno continuo (sin [Q]): %.0fs / %.0fs\n" % [ck_s, EvoManager.ayuno_longest_streak, Balance.AYUNO_SELLO_STREAK]
+	t += "  %s Silencio absoluto (sin click ni [Q]): %.0fs / %.0fs\n" % [ck_s, EvoManager.ayuno_longest_streak, Balance.AYUNO_SELLO_STREAK]
 	if cycles_ok and total_ok and streak_ok:
 		t += "\n  [color=#a8c0d8]→ Sello disponible en el panel derecho[/color]"
 	return t

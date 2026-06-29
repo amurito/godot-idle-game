@@ -202,11 +202,12 @@ const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
 # ── TRANSMUTACIÓN · AYUNO PRIMORDIAL (SOMBRA de Hiperasimilación) ────────────
 # Con el buff transmut_ayuno activo, el trigger de Hiper activa AYUNO PRIMORDIAL en su lugar.
 # El ayuno drena B activamente; la ausencia de B/ε acumula Silencio (S) que amplifica el pasivo.
-# [Q] ROMPER EL AYUNO: burst basado en S acumulado, resetea S. [W] ASCESIS: mejora S_rate.
+# [Q] ROMPER EL AYUNO: burst basado en S acumulado, resetea S. [W] ASCESIS: mejora S_rate Y pasivo.
 const AYUNO_BIOMASA_DRAIN         := 2.0    # componente fija del drain de B (/s)
 const AYUNO_BIOMASA_DRAIN_PCT     := 0.20   # componente proporcional: drain += B × 0.20 /s
 const AYUNO_SILENCIO_FACTOR       := 0.01   # pasivo × (1 + S × factor); S=100 → ×2.0
 const AYUNO_ASCESIS_RATE_BONUS    := 0.15   # +15% a S_rate por nivel de Ascesis
+const AYUNO_ASCESIS_PASSIVE_BONUS := 0.08   # +8% al mult pasivo por nivel (directo, stacks con S)
 const AYUNO_ASCESIS_COST          := 50.0   # costo base ($ del primer nivel)
 const AYUNO_ASCESIS_SCALE         := 2.5    # multiplicador de costo por nivel
 const AYUNO_BURST_DURATION        := 15.0   # s que dura el burst de ROMPER EL AYUNO
@@ -214,12 +215,12 @@ const AYUNO_BURST_DIVISOR         := 50.0   # burst_mult = 1 + S / divisor (S=50
 const AYUNO_BURST_BIO_SPIKE       := 5.0    # B añadida al romper el ayuno (el sistema "comió")
 const AYUNO_SELLO_CYCLES          := 5      # ciclos (bursts) mínimos para sello 1
 const AYUNO_SELLO_TOTAL           := 500.0  # S acumulado total mínimo para sello 2
-const AYUNO_SELLO_STREAK          := 90.0   # segundos de ayuno limpio consecutivo para sello 3
+const AYUNO_SELLO_STREAK          := 180.0  # s de silencio sin click NI [Q] (antes 90s)
 const AYUNO_NG_PEAK_DIV           := 50.0   # NG+ bonus = floor(S_peak / div), cap AYUNO_NG_CAP
 const AYUNO_NG_CAP                := 8      # cap del bonus NG+ variable
 const AYUNO_PL_BASE               := 8      # PL base al sellar AYUNO PRIMORDIAL
-const AYUNO_LEGACY_DURATION       := 90.0   # s que dura el efecto de legado_primicia_del_vacio
-const AYUNO_LEGACY_MULT_START     := 2.0    # pasivo ×2.0 al inicio, decae linealmente a ×1.0
+const AYUNO_LEGACY_DURATION       := 600.0  # s que dura el efecto legado_primicia_del_vacio (antes 90s)
+const AYUNO_LEGACY_MULT_START     := 3.0    # pasivo ×3.0 al inicio, decae a ×1.0 en 10 min
 
 # ── RAMA VERDE · COLONIZACIÓN activa (Empuje de Frontera) ────────
 # Anti-AFK: el micelio ya NO se llena solo desde hifas. Las hifas sólo sostienen

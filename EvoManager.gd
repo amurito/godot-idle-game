@@ -520,7 +520,9 @@ func process_ayuno(dt: float) -> void:
 ## Multiplicador de pasivo durante el ayuno (S acumulado amplifica el ingreso pasivo).
 func ayuno_silencio_mult() -> float:
 	if not mutation_ayuno_primordial: return 1.0
-	return 1.0 + ayuno_silencio * Balance.AYUNO_SILENCIO_FACTOR
+	var s_factor: float = 1.0 + ayuno_silencio * Balance.AYUNO_SILENCIO_FACTOR
+	var asc_factor: float = 1.0 + ayuno_ascesis_level * Balance.AYUNO_ASCESIS_PASSIVE_BONUS
+	return s_factor * asc_factor
 
 ## Multiplicador extra durante el burst (×(1 + S/50) al momento de romper, luego fijo 15s).
 func ayuno_burst_mult() -> float:

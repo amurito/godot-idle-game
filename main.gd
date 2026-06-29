@@ -397,6 +397,8 @@ func _ready():
 
 func on_reactor_click(epsilon_delta: float = 0.015):
 	EconomyManager.time_since_last_click = 0.0
+	if EvoManager.mutation_ayuno_primordial:
+		EvoManager.ayuno_streak_timer = 0.0
 	AudioManager.play_sfx("click")
 	TutorialManager.notify_reactor_clicked()
 	var power := EconomyManager.get_click_power()
