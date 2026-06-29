@@ -497,12 +497,14 @@ func activate_ayuno_primordial() -> void:
 ## Tick de Ayuno Primordial: drena B, acumula Silencio, gestiona burst.
 func process_ayuno(dt: float) -> void:
 	if not mutation_ayuno_primordial or RunManager.run_closed: return
-	# Drenar biomasa activamente
-	BiosphereEngine.biomasa = maxf(0.0, BiosphereEngine.biomasa - Balance.AYUNO_BIOMASA_DRAIN * dt)
-	# Silencio siempre acumula (la presión económica del drain ya es suficiente tensión)
+	# Drain proporcional: cuanto más B tengas, más rápido drena → presión real
+	var drain: float = Balance.AYUNO_BIOMASA_DRAIN + BiosphereEngine.biomasa * Balance.AYUNO_BIOMASA_DRAIN_PCT
+	BiosphereEngine.biomasa = maxf(0.0, BiosphereEngine.biomasa - drain * dt)
+	# S sube más rápido con B bajo: incentivo a aguantar el dolor económico
 	var ascesis_bonus: float = 1.0 + ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
-	ayuno_silencio += ascesis_bonus * dt
-	ayuno_silencio_total += ascesis_bonus * dt
+	var b_bonus: float = 1.0 + maxf(0.0, (5.0 - BiosphereEngine.biomasa) / 5.0)
+	ayuno_silencio += ascesis_bonus * b_bonus * dt
+	ayuno_silencio_total += ascesis_bonus * b_bonus * dt
 	ayuno_silencio_peak = maxf(ayuno_silencio_peak, ayuno_silencio)
 	# Streak = tiempo continuo sin romper el ayuno ([Q] lo reinicia)
 	ayuno_streak_timer += dt

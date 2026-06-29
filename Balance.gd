@@ -203,7 +203,8 @@ const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
 # Con el buff transmut_ayuno activo, el trigger de Hiper activa AYUNO PRIMORDIAL en su lugar.
 # El ayuno drena B activamente; la ausencia de B/ε acumula Silencio (S) que amplifica el pasivo.
 # [Q] ROMPER EL AYUNO: burst basado en S acumulado, resetea S. [W] ASCESIS: mejora S_rate.
-const AYUNO_BIOMASA_DRAIN         := 0.5    # B drenada por segundo durante el ayuno
+const AYUNO_BIOMASA_DRAIN         := 2.0    # componente fija del drain de B (/s)
+const AYUNO_BIOMASA_DRAIN_PCT     := 0.20   # componente proporcional: drain += B × 0.20 /s
 const AYUNO_SILENCIO_FACTOR       := 0.01   # pasivo × (1 + S × factor); S=100 → ×2.0
 const AYUNO_ASCESIS_RATE_BONUS    := 0.15   # +15% a S_rate por nivel de Ascesis
 const AYUNO_ASCESIS_COST          := 50.0   # costo base ($ del primer nivel)

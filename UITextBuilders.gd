@@ -1205,8 +1205,12 @@ static func build_ayuno_primordial_panel_text() -> String:
 	var t := "[color=#a8c0d8]⊗ AYUNO PRIMORDIAL ACTIVO[/color]\n"
 	var s := EvoManager.ayuno_silencio
 	var s_total := EvoManager.ayuno_silencio_total
-	var s_rate: float = 1.0 + EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
-	t += "Silencio (S): %.1f  ·  Tasa: ×%.2f\n" % [s, s_rate]
+	var b_val: float = BiosphereEngine.biomasa
+	var ascesis: float = 1.0 + EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS
+	var b_bonus: float = 1.0 + maxf(0.0, (5.0 - b_val) / 5.0)
+	var s_rate: float = ascesis * b_bonus
+	var drain_now: float = Balance.AYUNO_BIOMASA_DRAIN + b_val * Balance.AYUNO_BIOMASA_DRAIN_PCT
+	t += "Silencio (S): %.1f  ·  S/s: ×%.2f  (drain B: %.1f/s)\n" % [s, s_rate, drain_now]
 	t += "Pasivo: ×%.2f  (1 + S×%.2f)\n" % [EvoManager.ayuno_silencio_mult(), Balance.AYUNO_SILENCIO_FACTOR]
 
 	if EvoManager.ayuno_burst_active:
