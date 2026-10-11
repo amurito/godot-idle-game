@@ -59,6 +59,7 @@ Refactor previo: 2026-06-07 (steps 6–9, v1.0.1).
 | Archivo | LOC | Rol |
 |---|---|---|
 | `GenomeEvaluator.gd` | 310 | Toda la lógica de evaluación del genoma (llamada desde `EvoManager.update_genome()`) |
+| `SaveSchema.gd` | 300 | **Esquema declarativo del savegame**: única fuente de verdad de qué se persiste y con qué semántica (default, saneamiento, casteo). `SaveManager.build_save_data()`/`apply_save_data()` lo recorren. `validate()` detecta propiedades inexistentes (refactor 2026-10) |
 | `PrimordioLogic.gd` | 245 | Ciclo biológico: Primordio, Panspermia Negra, Colonización activa |
 | `DarkTreeLogic.gd` | 625 | **Árbol oscuro completo**: met_oscuro, autólisis/autofagia, necrosis, omega_cero, remisión, depredador, glitch. Extraído de EvoManager (2026-06-27). El estado vive en EvoManager; ésta es lógica pura |
 | `UITextBuilders.gd` | 1227 | Constructores de texto para HUD: fórmula, click stats, genome panel, checklist evo, paneles de Fusión Catabólica |
@@ -120,6 +121,7 @@ un singleton global. UIManager le delega `update_ng_plus_buttons()` / `reset_ng_
 |---|---|---|
 | Nueva mutación del genoma (lógica de evaluación) | `GenomeEvaluator.gd` — nuevo `static func update_X(ctx: Dictionary)` | Registrarlo en `EvoManager.update_genome()` también |
 | Nuevo flag/estado de mutación | `EvoManager.gd` — nueva `var` | El estado vive acá; la lógica en GenomeEvaluator |
+| Nuevo campo persistente (save) | `SaveSchema.gd` — UNA línea `_f(...)` en la sección | Campos nuevos: `"default"` literal (saves viejos no lo tienen). Floats: `save_sf` + `load_sf`. Después: `run_golden.ps1` falla como corresponde → re-grabar con `-Mode record` |
 | Nueva mecánica de Primordio/Panspermia/Colonización | `PrimordioLogic.gd` | Agregar thin delegate en EvoManager si hay callers externos |
 | Nuevo logro | `AchievementDefs.gd` — nueva entrada en `DEFS` | Tipo `threshold`, `event`, `event_count`, o `custom` |
 | Nuevo evaluador custom de logro | `AchievementManager.gd` — nuevo `_eval_X()` + registrar en `CUSTOM_EVALUATORS` | |
@@ -135,6 +137,7 @@ un singleton global. UIManager le delega `update_ng_plus_buttons()` / `reset_ng_
 | Nuevo efecto de economía | `EconomyManager.gd` | |
 | Nueva mecánica de biosfera | `BiosphereEngine.gd` | |
 | Nuevo evento de telemetría | `TelemetryManager.gd` | |
+| Escenario de simulación / test | `tests/sim/Scenarios.gd`, `tests/golden/` | Correr SIEMPRE vía `tools/sim/*.ps1` (sandbox con `user://` propio). Ver `docs/design/auditoria_arquitectura_2026-10.md` |
 
 ---
 

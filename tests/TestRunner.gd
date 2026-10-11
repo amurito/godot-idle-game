@@ -24,6 +24,9 @@ var institutions_unlocked: bool = false
 func update_ui() -> void:
 	pass  # Stub: apply_save_data llama main.update_ui() al final
 
+func reset_local_state() -> void:
+	pass  # Stub: load_game() sin archivo → _reset_for_new_slot(main) llama main.reset_local_state()
+
 # ---------------------------------------------------
 # FRAMEWORK MÍNIMO
 # ---------------------------------------------------

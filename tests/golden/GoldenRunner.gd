@@ -264,6 +264,16 @@ func suite_save() -> void:
 	add_child(mock)
 	var base := StateDump.capture_autoloads(RESTORE_AUTOLOADS)
 
+	# El esquema no puede referenciar propiedades inexistentes (get/set las ignorarían en silencio).
+	checks += 1
+	var schema_errors := SaveSchema.validate(mock)
+	if schema_errors.is_empty():
+		print("  [OK] SaveSchema.validate()")
+	else:
+		failures += 1
+		for e in schema_errors:
+			print("  [ERROR] SaveSchema: %s" % e)
+
 	# ── build: cada variable con un valor distinto → cualquier campo mal mapeado salta ──
 	var build := {}
 	var fixtures := {}
