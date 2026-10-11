@@ -1324,6 +1324,8 @@ func _sync_reactor_color() -> void:
 	if _use_3d_reactor and is_instance_valid(reactor_3d):
 		reactor_3d.set_tint(UIManager.get_reactor_color())
 func update_ui():
+	# La vista sólo LEE los insumos económicos: el pipeline se calcula una vez por refresco.
+	EconomyManager.begin_memo()
 	update_epsilon_sticky()
 	UIManager.update_bifurcation_panel()
 	UIManager.update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biológico)
@@ -1388,6 +1390,7 @@ func update_ui():
 	if RunManager.run_closed and UIManager.export_run_button:
 		UIManager.export_run_button.disabled = false
 		UIManager.export_run_button.text = EmojiToRichText.strip("📤 Export run")
+	EconomyManager.end_memo()
 
 
 # =====================================================

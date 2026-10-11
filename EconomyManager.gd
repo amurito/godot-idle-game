@@ -23,6 +23,46 @@ var parasitism_corrosion: float = 1.0 # 1.0 -> 0.0 (Colapso total)
 # ==================== CONSTANTES ====================
 const CLICK_RATE := 1.0
 
+# ==================== MEMO DE ALCANCE ACOTADO ====================
+# Dentro de un bloque begin_memo()/end_memo() cada getter del pipeline se calcula UNA vez y se
+# reutiliza (un refresco de UI pedía get_click_power() ~10 veces y los ingresos ~20). El bloque
+# sólo debe envolver código que LEE los insumos del pipeline sin modificarlos (main.update_ui()).
+# Fuera del bloque todo se calcula como siempre: no hay invalidaciones manuales que olvidar.
+# Un bloque que no se cierre (p.ej. por un error de script a mitad de update_ui) caduca solo al
+# cambiar de frame, así nunca puede congelar la economía.
+var _memo: Dictionary = {}
+var _memo_depth: int = 0
+var _memo_frame: int = -1
+
+func begin_memo() -> void:
+	var frame := Engine.get_process_frames()
+	if _memo_depth == 0 or frame != _memo_frame:
+		_memo_depth = 0
+		_memo.clear()
+		_memo_frame = frame
+	_memo_depth += 1
+
+func end_memo() -> void:
+	_memo_depth = maxi(0, _memo_depth - 1)
+	if _memo_depth == 0:
+		_memo.clear()
+
+func _memo_active() -> bool:
+	if _memo_depth <= 0:
+		return false
+	if Engine.get_process_frames() != _memo_frame:
+		_memo_depth = 0
+		_memo.clear()
+		return false
+	return true
+
+## Los Dictionary se devuelven como copia: un consumidor que mute el resultado no corrompe el caché.
+func _memoized(key: String, compute: Callable) -> Variant:
+	if not _memo.has(key):
+		_memo[key] = compute.call()
+	var value: Variant = _memo[key]
+	return value.duplicate() if value is Dictionary else value
+
 # ==================== INICIALIZACIÓN ====================
 func set_main(m: Node):
 	main = m
@@ -40,6 +80,11 @@ func reset():
 
 # ==================== CÁLCULOS DE PODER ====================
 func get_click_power() -> float:
+	if _memo_active():
+		return _memoized("get_click_power", _compute_click_power)
+	return _compute_click_power()
+
+func _compute_click_power() -> float:
 	var base := UpgradeManager.value("click")
 	# LEGADO: Impulso Manual (Base 1.0 -> 2.0)
 	if LegacyManager.get_buff_value("impulso_manual"):
@@ -151,6 +196,11 @@ func get_click_power() -> float:
 	return power
 
 func get_auto_income_effective() -> float:
+	if _memo_active():
+		return _memoized("get_auto_income_effective", _compute_auto_income_effective)
+	return _compute_auto_income_effective()
+
+func _compute_auto_income_effective() -> float:
 	var auto_mult := UpgradeManager.value("auto_mult") * mutation_auto_factor
 
 	# LEGADO: Inercia de Escala (Bonus md por contabilidad)
@@ -177,6 +227,11 @@ func get_trueque_raw() -> float:
 	return UpgradeManager.value("trueque")
 
 func get_trueque_income_effective() -> float:
+	if _memo_active():
+		return _memoized("get_trueque_income_effective", _compute_trueque_income_effective)
+	return _compute_trueque_income_effective()
+
+func _compute_trueque_income_effective() -> float:
 	var allo_mult = UpgradeManager.value("trueque_allo") if UpgradeManager.level("trueque_allo") > 0 else 1.0
 	var base := EcoModel.get_trueque_income_effective(
 		get_trueque_raw(),
@@ -194,6 +249,11 @@ func get_trueque_income_effective() -> float:
 	return base
 
 func get_passive_total() -> float:
+	if _memo_active():
+		return _memoized("get_passive_total", _compute_passive_total)
+	return _compute_passive_total()
+
+func _compute_passive_total() -> float:
 	var total := get_auto_income_effective() + get_trueque_income_effective()
 
 	# LEGADO: Redirección de Energía (10% click a pasivo)
@@ -340,6 +400,11 @@ func get_dominant_term() -> String:
 # Término aditivo de Memoria Sináptica (se suma al pasivo DESPUÉS de los multiplicadores).
 # Inerte salvo en el árbol oscuro (omega-cero). Se aísla para no distorsionar el multiplicador.
 func get_memoria_sinaptica_additive() -> float:
+	if _memo_active():
+		return _memoized("get_memoria_sinaptica_additive", _compute_memoria_sinaptica_additive)
+	return _compute_memoria_sinaptica_additive()
+
+func _compute_memoria_sinaptica_additive() -> float:
 	if not LegacyManager.get_buff_value("memoria_sinaptica"):
 		return 0.0
 	var kernel: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
@@ -350,12 +415,22 @@ func get_memoria_sinaptica_additive() -> float:
 # get_passive_total() = (auto+trueque) × ESTE + términos aditivos (ms). Lo usamos para que el
 # header y los segmentos muestren las contribuciones REALES, no los valores base.
 func get_passive_multiplier() -> float:
+	if _memo_active():
+		return _memoized("get_passive_multiplier", _compute_passive_multiplier)
+	return _compute_passive_multiplier()
+
+func _compute_passive_multiplier() -> float:
 	var base := get_auto_income_effective() + get_trueque_income_effective()
 	if base <= 0.0:
 		return 1.0
 	return (get_passive_total() - get_memoria_sinaptica_additive()) / base
 
 func get_contribution_breakdown() -> Dictionary:
+	if _memo_active():
+		return _memoized("get_contribution_breakdown", _compute_contribution_breakdown)
+	return _compute_contribution_breakdown()
+
+func _compute_contribution_breakdown() -> Dictionary:
 	var push := get_click_power() * CLICK_RATE
 	var pmult := get_passive_multiplier()
 	# Contribuciones efectivas: el pasivo base se escala por todos los multiplicadores (Fusión, PL, bio…).
@@ -375,6 +450,11 @@ func get_contribution_breakdown() -> Dictionary:
 	}
 
 func get_active_passive_breakdown() -> Dictionary:
+	if _memo_active():
+		return _memoized("get_active_passive_breakdown", _compute_active_passive_breakdown)
+	return _compute_active_passive_breakdown()
+
+func _compute_active_passive_breakdown() -> Dictionary:
 	var push := get_click_power() * CLICK_RATE
 	var passive := get_passive_total()  # incluye re, ms y todos los términos aditivos
 
