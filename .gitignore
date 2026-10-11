@@ -39,6 +39,9 @@ runs/
 # Build outputs (carpeta local)
 builds/
 
+# Simulador de bots — reportes generados (tools/sim/run_scenarios.ps1)
+tests/sim/reports/
+
 # Claude worktrees
 .claude/
 

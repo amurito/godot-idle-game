@@ -1,0 +1,209 @@
+extends RefCounted
+## BotPolicy — qué hace el "jugador" simulado en cada frame.
+##
+## Sólo usa acciones que el jugador real tiene, por el mismo camino de código que la UI:
+##   · click en el reactor                      → SimDriver.click()
+##   · compra de upgrades                       → SimDriver.buy()  (= teclas 1-9)
+##   · botones del panel de mutación            → handlers de main, habilitados con
+##                                                UITextBuilders.build_bifurcation_data()
+##                                                (lo mismo que decide si el botón está activo)
+##   · teclas Q/W de transmutaciones y sellos   → mismas funciones que main._input() /
+##                                                NGPlusButtonManager
+##
+## Configuración (todas opcionales):
+##   click_cps: float              clicks por segundo (0 = idle)
+##   click_schedule: [[t, cps]..]  cps por tramos (reemplaza a click_cps): rige el último t <= ahora
+##   click_from / click_until: s   ventana de clickeo (-1 = sin límite)
+##   priority: [ids]               se compran primero apenas alcanza el dinero
+##   save_for_priority: bool       si una prioridad no comprada no alcanza, no compra nada más (ahorra)
+##   save_from: s                  desde cuándo empieza a ahorrar para las prioridades
+##   stop_click_when: [ids]        deja de clickear si EvoManager.mutation_<id> es true
+##   buy: "cheapest" | "none"      estrategia de compra
+##   buy_ids / avoid: [ids]        upgrades permitidos / excluidos
+##   unavoid_on: {id: mutation}    deja de evitar `id` cuando EvoManager.mutation_<mutation> es true
+##   max_passive_pct: float        no compra upgrades pasivos si el % pasivo ya lo supera
+##                                 (perfil "busco Hiperasimilación": exige >80% activo)
+##   max_buys_per_decision: int
+##   decision_interval: s          cada cuánto decide compras/botones (default 0.5)
+##   mutation: "none" | "homeostasis" | "simbiosis" | "red_micelial"
+##   branch: "none" | "colonization" | "symbiosis"      (sub-rama de Red Micelial)
+##   allostasis: bool
+##   fusion_bursts / fusion_cd / fusion_seal: bool
+##   ayuno_burst_at: float (-1 = nunca)  /  ayuno_ascesis / ayuno_seal: bool
+
+const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
+	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
+## Upgrades que alimentan el término pasivo (d, md, e, me y especialización).
+const PASSIVE_IDS := ["auto", "auto_mult", "trueque", "trueque_net", "specialization"]
+
+var cfg: Dictionary
+var actions: Array = []
+
+var _click_acc: float = 0.0
+var _next_decision_frame: int = 0
+
+
+func _init(config: Dictionary) -> void:
+	cfg = config
+
+
+func act(d: RefCounted) -> void:
+	if RunManager.run_closed:
+		return
+	var cps := _current_cps()
+	if cps > 0.0:
+		_click_acc += cps * d.dt()
+		while _click_acc >= 1.0:
+			_click_acc -= 1.0
+			d.click()
+	if d.frame >= _next_decision_frame:
+		var interval: float = float(cfg.get("decision_interval", 0.5))
+		_next_decision_frame = d.frame + maxi(1, int(roundf(interval / d.dt())))
+		_buy(d)
+		_mutation_choice(d)
+		_route_keys(d)
+
+
+func _current_cps() -> float:
+	var t := RunManager.run_time
+	if t < float(cfg.get("click_from", 0.0)):
+		return 0.0
+	var until: float = float(cfg.get("click_until", -1.0))
+	if until >= 0.0 and t >= until:
+		return 0.0
+	for m in cfg.get("stop_click_when", []):
+		if bool(EvoManager.get("mutation_" + str(m))):
+			return 0.0
+	if cfg.has("click_schedule"):
+		var cps := 0.0
+		for entry in cfg.click_schedule:
+			if t >= float(entry[0]):
+				cps = float(entry[1])
+		return cps
+	return float(cfg.get("click_cps", 0.0))
+
+
+# ── Compras ─────────────────────────────────────────────────────────────────────
+
+func _buy(d: RefCounted) -> void:
+	if str(cfg.get("buy", "cheapest")) == "none":
+		return
+	var avoid: Array = _effective_avoid()
+	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
+	var max_passive: float = float(cfg.get("max_passive_pct", 100.0))
+
+	# Prioridades: se compran apenas alcanzan; opcionalmente se ahorra para ellas.
+	for id in cfg.get("priority", []):
+		if id in avoid or UpgradeManager.level(id) > 0 or not UpgradeManager.is_unlocked(id):
+			continue
+		if UpgradeManager.can_buy(id, EconomyManager.money):
+			d.buy(id)
+		elif cfg.get("save_for_priority", false) and RunManager.run_time >= float(cfg.get("save_from", 0.0)):
+			return  # ahorrando: no se gasta en nada más
+
+	for _i in int(cfg.get("max_buys_per_decision", 30)):
+		var passive_capped := false
+		if max_passive < 100.0:
+			passive_capped = float(EconomyManager.get_active_passive_breakdown().pasivo) >= max_passive
+		var best := ""
+		var best_cost := INF
+		for id in ids:
+			if id in avoid:
+				continue
+			if passive_capped and id in PASSIVE_IDS:
+				continue
+			if not UpgradeManager.can_buy(id, EconomyManager.money):
+				continue
+			var c := UpgradeManager.cost(id)
+			if c < best_cost:
+				best_cost = c
+				best = id
+		if best == "" or not d.buy(best):
+			return
+
+
+func _effective_avoid() -> Array:
+	var avoid: Array = cfg.get("avoid", []).duplicate()
+	var unavoid: Dictionary = cfg.get("unavoid_on", {})
+	for id in unavoid:
+		if bool(EvoManager.get("mutation_" + str(unavoid[id]))):
+			avoid.erase(id)
+	return avoid
+
+
+# ── Panel de mutación ───────────────────────────────────────────────────────────
+
+func _mutation_choice(d: RefCounted) -> void:
+	var want := str(cfg.get("mutation", "none"))
+	var branch := str(cfg.get("branch", "none"))
+	var want_allo := bool(cfg.get("allostasis", false))
+	if want == "none" and branch == "none" and not want_allo:
+		return
+	if EvoManager.mutation_parasitism:
+		return  # el botón de mutación está bloqueado durante Parasitismo
+
+	var data: Dictionary = UITextBuilders.build_bifurcation_data()
+	var mode := str(data.get("tier_mode", ""))
+
+	if mode == "tier1":
+		# El botón "Iniciar mutación" sólo es visible con alguna mutación tier 1 latente.
+		if not EvoManager.is_any_latent_tier1():
+			return
+		match want:
+			"homeostasis":
+				if data.get("homeostasis_ready", false):
+					_press(d, "_on_btn_homeostasis_pressed", "mutation:homeostasis")
+			"simbiosis":
+				if data.get("simbiosis_ready", false):
+					_press(d, "_on_btn_symbiosis_pressed", "mutation:simbiosis")
+			"red_micelial":
+				if data.get("red_micelial_ready", false):
+					_press(d, "_on_btn_colonization_pressed", "mutation:red_micelial")
+	elif mode == "tier2_branches" and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE:
+		if branch == "colonization" and data.get("colonization_ready", false):
+			_press(d, "_on_btn_colonization_pressed", "branch:colonization")
+		elif branch == "symbiosis" and data.get("symbiosis_ready", false):
+			_press(d, "_on_btn_symbiosis_pressed", "branch:symbiosis")
+	elif mode == "tier2_homeostasis" and want_allo and not EvoManager.mutation_allostasis:
+		if data.get("allostasis_ready", false):
+			_press(d, "_on_btn_homeostasis_pressed", "mutation:allostasis")
+
+
+func _press(d: RefCounted, method: String, label: String) -> void:
+	d.main.call(method)
+	_log(label)
+
+
+# ── Teclas de transmutación y sellos ────────────────────────────────────────────
+
+func _route_keys(_d: RefCounted) -> void:
+	if EvoManager.mutation_fusion_catabolica:
+		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_timer <= 0.0 and EvoManager.fusion_burst_cooldown <= 0.0:
+			EvoManager.activate_fusion_burst()
+			_after_key("key:Q fusion_burst")
+		if cfg.get("fusion_cd", false) and EvoManager.can_buy_fusion_cd():
+			EvoManager.buy_fusion_cd()
+			_after_key("key:W fusion_cd")
+		if cfg.get("fusion_seal", false) and EvoManager.fusion_seal_ready():
+			UIManager._ng_buttons._on_fusion_seal_pressed()
+			_log("seal:fusion")
+	elif EvoManager.mutation_ayuno_primordial:
+		var burst_at: float = float(cfg.get("ayuno_burst_at", -1.0))
+		if burst_at >= 0.0 and EvoManager.ayuno_silencio >= burst_at and not EvoManager.ayuno_burst_active:
+			EvoManager.activate_ayuno_burst()
+			_after_key("key:Q ayuno_burst S=%.0f" % burst_at)
+		if cfg.get("ayuno_ascesis", false) and EvoManager.can_buy_ayuno_ascesis():
+			EvoManager.buy_ayuno_ascesis()
+			_after_key("key:W ayuno_ascesis")
+		if cfg.get("ayuno_seal", false) and EvoManager.ayuno_seal_ready():
+			UIManager._ng_buttons._on_ayuno_seal_pressed()
+			_log("seal:ayuno")
+
+
+func _after_key(label: String) -> void:
+	UIManager.update_ng_plus_buttons()  # main._input() hace lo mismo tras cada tecla
+	_log(label)
+
+
+func _log(label: String) -> void:
+	actions.append({"t": snappedf(RunManager.run_time, 0.001), "action": label})
