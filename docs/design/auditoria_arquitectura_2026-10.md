@@ -330,11 +330,11 @@ corrigió en este trabajo: o cambian comportamiento, o son decisiones de diseño
 | 12 | **C8** bono NG+ de `close_run` como tabla de reglas (−95 líneas de `match`); nueva suite golden `close_run` (29 rutas × 3 perfiles) | ✅ `e95db58` + `c6dd4da` |
 | 13 | **C3** reglas fuera de los handlers de UI: `EvoManager.trigger_allostasis()`, `EvoManager.select_red_branch()`, `RunManager.resolve_sporulation_final()`; nueva suite golden `actions` (11 casos) | ✅ `788c2ba` + este commit |
 | 14 | **C7** `_on_logic_tick` de 235 → 25 líneas: secuencia de fases nombradas; Ω en `StructuralModel.resolve_omega()` con las 4 capas documentadas (base → techos → overrides oscuros → pisos); Mente Colmena → `RunManager.tick_mente_colmena()`; procesos de ruta → `EvoManager.tick_route_processes()`; drenaje → `EconomyManager.apply_parasitism_drain()`. Nueva suite golden `tick` (28 casos, una por rama; verificada con mutación: reordenar fases → 153 diffs) | ✅ |
-| — | Hallazgo C7: `update_runtime()` calcula Ω y `resolve_omega()` lo reemplaza; sólo sobrevive su efecto en `omega_min`. Consecuencia: `control_omega_offset` (buff NG+ Control de Ω) no llega al Ω final | **decisión del autor** |
+| — | Hallazgo C7: `control_omega_offset` (buff NG+ Control de Ω) no llegaba al Ω final → ahora es la capa 5 de `resolve_omega()` (±0.15 de offset mueve Ω ≈ ±0.15) | ✅ |
 | 15 | **C5** `IncomeModifiers.gd`: una fila por regla con factor de click y de pasivo lado a lado + orden por canal; `_compute_click_power`/`_compute_passive_total` −200 líneas; chips `click×`/`pas×` del header leen la tabla (antes una 3ª copia desincronizada). Golden economy bit-exacto | ✅ |
 | 16 | **C6 (alcance acotado)** `EvoManager.reset()` automático desde las declaraciones (−90 líneas a mano) + `TRANSIENT_VARS`: `SaveSchema.validate()` exige que toda variable de EvoManager persista o esté declarada transitoria. Invariantes nuevos en la suite save (reset == instancia nueva; clasificación). Agregar una ruta: de ~6 lugares a declaración + SaveSchema + su `process_*` en `tick_route_processes` | ✅ |
 | — | C6 completo (objetos de ruta en vez de 90 vars/436 refs) descartado por ahora: cambia formato de save y claves de goldens con poco beneficio extra | descartado |
-| — | Hallazgos C6: `nucleo_conciencia` y `primordio_integrity` NO persisten (reload a mitad de Rama Azul pierde el hito / resetea integridad); `allostasis_timer` y `homeorhesis_timer` son código muerto | **decisión del autor** |
+| — | Hallazgos C6: `nucleo_conciencia`, `primordio_integrity` y `primordio_pert_timer` ahora persisten en el save; `allostasis_timer` y `homeorhesis_timer` (código muerto) eliminados | ✅ |
 
 ### Resultado de C9 (mismo escenario, desktop, 6 cps)
 

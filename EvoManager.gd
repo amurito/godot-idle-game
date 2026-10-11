@@ -72,8 +72,6 @@ var colonizacion_pert_timer: float = 0.0   # acumulador hacia el próximo evento
 var colonizacion_phase_time: float = 0.0   # s en fase de empuje (escala la mordida de retracción)
 
 # === NG+ SECRETOS ===
-var allostasis_timer: float = 0.0
-var homeorhesis_timer: float = 0.0
 var mutation_depredador := false
 var depredador_timer: float = 0.0
 var _depredador_active_tick: float = 0.0
@@ -169,8 +167,7 @@ var _glitch_was_active: bool = false
 ## countdowns de log, acumuladores sub-tick). Si una de estas debería sobrevivir a un reload,
 ## pasala a SaveSchema.
 const TRANSIENT_VARS := [
-	"nucleo_conciencia", "primordio_integrity", "primordio_pert_timer", "primordio_regar_cd",
-	"allostasis_timer", "homeorhesis_timer",
+	"primordio_regar_cd",
 	"_depredador_active_tick", "_depredador_status_timer", "_depredador_countdown_last",
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",

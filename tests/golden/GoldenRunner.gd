@@ -590,6 +590,8 @@ const TICK_CASES := {
 	"ayuno": {"mut": "ayuno"},
 	"fractura": {"mut": "hyper", "cosmic": ["fractura_epistemica"]},
 	"cooldown": {"mut": "none", "pre": {"StructuralModel": {"structural_cooldown": 3.0}}},
+	"control_omega_up": {"mut": "none", "buffs": {"control_omega": 1}, "pre": {"StructuralModel": {"control_omega_offset": 0.15}}},
+	"control_omega_down": {"mut": "none", "buffs": {"control_omega": 1}, "pre": {"StructuralModel": {"control_omega_offset": -0.15}}},
 }
 
 func suite_tick() -> void:

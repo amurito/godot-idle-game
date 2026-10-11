@@ -345,13 +345,15 @@ func update_runtime() -> void:
 
 ## Ω definitivo del tick (fase "estructura" del logic tick, después de update_genome).
 ## OJO: reemplaza el Ω que calculó update_runtime() — de aquel sólo sobrevive su efecto sobre
-## omega_min (incluido control_omega_offset, que por eso hoy no llega al Ω final).
+## omega_min; por eso control_omega_offset se vuelve a aplicar acá, como última capa.
 ## El orden de las capas ES balance; cada capa asume las anteriores:
 ##   1. base: 1 / (1 + ε_eff · n_struct/μ)  (μ = capital cognitivo, amortigua la complejidad)
 ##   2. techos de ruta: Parasitismo 0.25, Metabolismo Oscuro 0.10
 ##   3. overrides de sub-ruta oscura (DESPUÉS del techo de MO, si no quedarían fijos en 0.10):
 ##      Necrosis → necrosis_omega, Omega-Cero → omega_cero_omega
 ##   4. pisos de legado (sólo fuera de Parasitismo/MO): omega_min, Alostasis 0.60 / Homeorresis 0.55
+##   5. CONTROL DE Ω (buff NG+ de REMISIÓN): empuje manual acotado, encima de todo (inerte en
+##      sub-rutas oscuras: ahí el empuje está bloqueado y el offset queda en 0)
 func resolve_omega() -> void:
 	# 1. Base
 	var complexity_impact: float = get_effective_structural_n() / max(EconomyManager.cached_mu, 1.0)
@@ -381,6 +383,10 @@ func resolve_omega() -> void:
 			omega = max(omega, 0.60)
 		elif LegacyManager.get_buff_value("legado_homeorresis"):
 			omega = max(omega, 0.55)
+
+	# 5. Control de Ω
+	if control_omega_offset != 0.0:
+		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
 
 ## Estrés post-Red Micelial: en fase 2 (antes de esporular) ε sube sostenidamente.
 func apply_red_micelial_stress(dt: float) -> void:
