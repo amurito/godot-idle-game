@@ -579,8 +579,7 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if main != null and not _post_tras:
 			t += UITextBuilders.build_evo_checklist(main)
 	genome_summary_label.visible = true
-	genome_summary_label.clear()
-	genome_summary_label.append_text(EmojiToRichText.rich(t))
+	set_rich_text(genome_summary_label, t)
 
 func _build_fusion_catabolica_closed_text() -> String:
 	return UITextBuilders.build_fusion_catabolica_closed_text()
@@ -1119,8 +1118,7 @@ func update_lab_metrics() -> void:
 		var txt := act_col + "▲ ACT  %d%%  +%s/s[/color]\n" % [pct_act, push_str]
 		txt += pas_col + "▼ PAS  %d%%  +%s/s[/color]\n" % [pct_pas, pass_str]
 		txt += "[color=#555555][%s][/color]" % bar
-		sys_active_passive_label.clear()
-		sys_active_passive_label.append_text(EmojiToRichText.rich(txt))
+		set_rich_text(sys_active_passive_label, txt)
 
 	if sys_breakdown_label:
 		var c_pct := clampi(int(contrib.click), 0, 100)
@@ -1149,17 +1147,27 @@ func update_lab_metrics() -> void:
 				var cap_mark := " ✓" if ng_info.saturated else ""
 				var ng_line := ng_col + "✦ NG+ %d/%d%s — %s[/color]" % [ng_info.bonus, ng_info.cap, cap_mark, ng_route]
 				txt += "\n" + ng_line
-		sys_breakdown_label.clear()
-		sys_breakdown_label.append_text(EmojiToRichText.rich(txt))
+		set_rich_text(sys_breakdown_label, txt)
+
+## Escribe BBCode en un RichTextLabel sólo si cambió. clear()+append_text() re-parsea el BBCode,
+## reemplaza emojis y re-maqueta el texto aunque sea idéntico; los paneles que se refrescan en
+## cada tick de UI pagaban eso 10 veces por segundo. REGLA: un label escrito con este helper debe
+## escribirse SIEMPRE con él (también para vaciarlo), o el caché queda desincronizado.
+func set_rich_text(label: RichTextLabel, bbcode: String) -> void:
+	# has_meta antes de get_meta: en Godot 4.5 get_meta(k, null) trata null como "sin default" y loguea error.
+	if label.has_meta("_rich_src") and label.get_meta("_rich_src") == bbcode:
+		return
+	label.set_meta("_rich_src", bbcode)
+	label.clear()
+	if bbcode != "":
+		label.append_text(EmojiToRichText.rich(bbcode))
 
 func update_core_labels() -> void:
 	update_money(EconomyManager.money)
 	if formula_label:
-		formula_label.clear()
-		formula_label.append_text(EmojiToRichText.rich(UITextBuilders.build_formula_text(scene)))
+		set_rich_text(formula_label, UITextBuilders.build_formula_text(scene))
 	if click_stats_label:
-		click_stats_label.clear()
-		click_stats_label.append_text(EmojiToRichText.rich(UITextBuilders.update_click_stats_panel(scene)))
+		set_rich_text(click_stats_label, UITextBuilders.update_click_stats_panel(scene))
 
 func update_buttons() -> void:
 	for btn in get_tree().get_nodes_in_group("upgrade_buttons"):

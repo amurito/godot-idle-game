@@ -191,8 +191,7 @@ func update_achievements_label():
 		]
 
 	if UIManager.system_achievements_label:
-		UIManager.system_achievements_label.clear()
-		UIManager.system_achievements_label.append_text(EmojiToRichText.rich(t))
+		UIManager.set_rich_text(UIManager.system_achievements_label, t)
 
 
 # =====================================================
@@ -1359,8 +1358,7 @@ func update_ui():
 	if institutions_unlocked or UpgradeManager.level("accounting") >= 1:
 		if UIManager.institution_panel_label:
 			UIManager.institution_panel_label.visible = true
-			UIManager.institution_panel_label.clear()
-			UIManager.institution_panel_label.append_text(EmojiToRichText.rich(UIManager.build_institution_panel_text(self)))
+			UIManager.set_rich_text(UIManager.institution_panel_label, UIManager.build_institution_panel_text(self))
 
 	if StructuralModel.institution_accounting_unlocked:
 		pass # Los botones genéricos se encargan de visibilidad

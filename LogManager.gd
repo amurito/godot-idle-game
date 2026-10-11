@@ -54,7 +54,7 @@ func update_log_label() -> void:
 	if not UIManager.lap_log_label: return
 
 	if not UIManager.lab_mode:
-		UIManager.lap_log_label.clear()
+		UIManager.set_rich_text(UIManager.lap_log_label, "")
 		return
 
 	var txt := ""
@@ -77,8 +77,7 @@ func update_log_label() -> void:
 			if shown >= 6:
 				break
 	
-	UIManager.lap_log_label.clear()
-	UIManager.lap_log_label.append_text(EmojiToRichText.rich(txt))
+	UIManager.set_rich_text(UIManager.lap_log_label, txt)
 
 func update_toggle_button() -> void:
 	if UIManager.toggle_lap_button:
