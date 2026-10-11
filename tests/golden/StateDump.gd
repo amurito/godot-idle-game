@@ -23,6 +23,10 @@ const READ_ONLY := {
 const VOLATILE_KEYS := ["unlocked_at", "timestamp", "created_at", "control_omega_last_ms",
 	"_last_ui_tick_ms", "session_id", "_session_started_at", "_run_started_at"]
 
+## Cachés internos (no son estado de juego): se excluyen de los volcados por completo.
+## Su corrección se verifica con invariantes explícitos (ver GoldenRunner), no por valor.
+const EXCLUDED_VARS := ["_memo", "_memo_depth", "_memo_frame"]
+
 
 static func encode(v: Variant) -> Variant:
 	match typeof(v):
@@ -79,10 +83,19 @@ static func script_vars(obj: Object) -> Array:
 	return names
 
 
-## Volcado codificado de todas las variables de script.
+## Variables que forman el estado observable (sin cachés internos).
+static func state_vars(obj: Object) -> Array:
+	var names: Array = []
+	for name in script_vars(obj):
+		if not (name in EXCLUDED_VARS):
+			names.append(name)
+	return names
+
+
+## Volcado codificado del estado (variables de script sin cachés internos).
 static func dump(obj: Object) -> Dictionary:
 	var out := {}
-	for name in script_vars(obj):
+	for name in state_vars(obj):
 		out[name] = "volatile" if name in VOLATILE_KEYS else encode(obj.get(name))
 	return out
 

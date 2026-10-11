@@ -120,6 +120,9 @@ func run_scenario(scenario_id: String, sc: Dictionary, opts: Dictionary, max_t: 
 	}
 	# update_ui() avanza el reloj de logros (auditoría C2): se mide recién al final.
 	report.perf["update_ui_us"] = d.bench_update_ui()
+	if EconomyManager.get("_diag") is Dictionary:
+		report.perf["economy_calls_per_phase"] = d.diag_report()
+		print("llamadas al pipeline económico por fase: %s" % JSON.stringify(report.perf.economy_calls_per_phase))
 	return report
 
 

@@ -38,6 +38,11 @@ var perf_logic := PackedInt64Array()
 var perf_ui := PackedInt64Array()
 var perf_click := PackedInt64Array()
 
+## Diagnóstico opcional: si EconomyManager expone un dict `_diag` de contadores de llamadas
+## (instrumentación temporal), se acumulan las llamadas hechas dentro de cada fase.
+var diag_calls := {"logic": {}, "ui": {}, "click": {}}
+var diag_counts := {"logic": 0, "ui": 0, "click": 0}
+
 var _fungi: Node = null
 
 
@@ -122,13 +127,17 @@ func step(bot: RefCounted = null) -> void:
 	if is_instance_valid(_fungi):
 		_fungi._process(FRAME_DT)
 	if frame % logic_every == 0:
+		var d0 := _diag_snapshot()
 		var t0 := Time.get_ticks_usec()
 		main._on_logic_tick()
 		perf_logic.append(Time.get_ticks_usec() - t0)
+		_diag_accumulate("logic", d0)
 	if run_ui and frame % ui_every == 0:
+		var d1 := _diag_snapshot()
 		var t1 := Time.get_ticks_usec()
 		main._on_ui_tick()
 		perf_ui.append(Time.get_ticks_usec() - t1)
+		_diag_accumulate("ui", d1)
 	if run_autosave and frame % autosave_every == 0:
 		main._on_autosave_tick()
 
@@ -137,10 +146,38 @@ func step(bot: RefCounted = null) -> void:
 
 ## Click en el reactor: BigClickButton._pressed() → main.on_reactor_click() con su ε por defecto.
 func click() -> void:
+	var d0 := _diag_snapshot()
 	var t0 := Time.get_ticks_usec()
 	main.on_reactor_click()
 	perf_click.append(Time.get_ticks_usec() - t0)
+	_diag_accumulate("click", d0)
 	clicks += 1
+
+
+func _diag_snapshot() -> Dictionary:
+	var counters: Variant = EconomyManager.get("_diag")
+	return (counters as Dictionary).duplicate() if counters is Dictionary else {}
+
+
+func _diag_accumulate(phase: String, before: Dictionary) -> void:
+	if before.is_empty():
+		return
+	diag_counts[phase] += 1
+	var now_counts: Dictionary = EconomyManager.get("_diag")
+	for k in now_counts:
+		diag_calls[phase][k] = int(diag_calls[phase].get(k, 0)) + int(now_counts[k]) - int(before.get(k, 0))
+
+
+## Llamadas promedio por fase: { "logic": {"get_click_power": 4.0, ...}, ... }
+func diag_report() -> Dictionary:
+	var out := {}
+	for phase in diag_calls:
+		var n: int = maxi(1, int(diag_counts[phase]))
+		var per := {}
+		for k in diag_calls[phase]:
+			per[k] = snappedf(float(diag_calls[phase][k]) / n, 0.01)
+		out[phase] = per
+	return out
 
 
 ## Compra de upgrade: mismo camino que las teclas 1-9 y los botones de upgrade.

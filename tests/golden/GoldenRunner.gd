@@ -155,7 +155,24 @@ func _economy_case(base: Dictionary, up_state: Dictionary, runtime_id: String, m
 	_apply_runtime(RUNTIME_PROFILES[runtime_id])
 	_apply_vars(EvoManager, MUTATIONS[mutation_id], "mutación " + mutation_id)
 	_apply_buff_set(buff_set)
-	return StateDump.encode(_economy_outputs())
+	var direct: Variant = StateDump.encode(_economy_outputs())
+	_check_memo_equivalence(direct, "%s|%s|%s" % [runtime_id, mutation_id, str(buff_set.keys())])
+	return direct
+
+
+## Dentro de un bloque memo el pipeline debe devolver exactamente lo mismo que el cálculo directo,
+## también en la segunda pasada (servida desde el caché).
+func _check_memo_equivalence(direct: Variant, label: String) -> void:
+	if not EconomyManager.has_method("begin_memo"):
+		return
+	EconomyManager.begin_memo()
+	var first: Variant = StateDump.encode(_economy_outputs())
+	var cached: Variant = StateDump.encode(_economy_outputs())
+	EconomyManager.end_memo()
+	var ref := JSON.stringify(direct, "", true, true)
+	if JSON.stringify(first, "", true, true) != ref or JSON.stringify(cached, "", true, true) != ref:
+		failures += 1
+		printerr("[Golden] memo ≠ cálculo directo en %s" % label)
 
 
 func _economy_outputs() -> Dictionary:
@@ -265,14 +282,17 @@ func suite_save() -> void:
 	var base := StateDump.capture_autoloads(RESTORE_AUTOLOADS)
 
 	# El esquema no puede referenciar propiedades inexistentes (get/set las ignorarían en silencio).
-	checks += 1
-	var schema_errors := SaveSchema.validate(mock)
-	if schema_errors.is_empty():
-		print("  [OK] SaveSchema.validate()")
-	else:
-		failures += 1
-		for e in schema_errors:
-			print("  [ERROR] SaveSchema: %s" % e)
+	# Se carga dinámicamente para que este runner también funcione sobre código anterior al esquema
+	# (así se graban los goldens con el comportamiento original).
+	if ResourceLoader.exists("res://SaveSchema.gd"):
+		checks += 1
+		var schema_errors: PackedStringArray = load("res://SaveSchema.gd").validate(mock)
+		if schema_errors.is_empty():
+			print("  [OK] SaveSchema.validate()")
+		else:
+			failures += 1
+			for e in schema_errors:
+				print("  [ERROR] SaveSchema: %s" % e)
 
 	# ── build: cada variable con un valor distinto → cualquier campo mal mapeado salta ──
 	var build := {}
@@ -291,8 +311,10 @@ func suite_save() -> void:
 	_add_sections(build, "nan_all", SaveManager.build_save_data(mock))
 	_golden("save_build", build)
 
-	# ── load: cada fixture se aplica sobre un estado "sucio" (variante 7), así la política
-	# de default de cada campo (valor actual en memoria vs. literal) queda en el volcado. ──
+	# ── load: cada fixture se aplica sobre DOS estados "sucios" (variante 7 y la misma con
+	# booleanos invertidos). Así la política de default de cada campo (valor actual en memoria
+	# vs. literal) queda visible en el volcado: para cualquier bool, en uno de los dos estados
+	# el valor sucio difiere del literal false. ──
 	var full_a: Dictionary = fixtures["full_a"]
 	fixtures["empty"] = {}
 	fixtures["empty_sections"] = {"economy": {}, "dynamic_vars": {}, "upgrades": {}, "structural": {},
@@ -308,15 +330,16 @@ func suite_save() -> void:
 
 	var loaded := {}
 	for fid in fixtures:
-		StateDump.restore_autoloads(base)
-		_fill_distinct(7, mock)
-		var data: Dictionary = fixtures[fid].duplicate(true)
-		data = SaveManager._migrate(data)
-		SaveManager.apply_save_data(mock, data)
-		var dumped := StateDump.dump_autoloads(GAME_AUTOLOADS)
-		dumped["MockMain"] = StateDump.dump(mock)
-		for section in dumped:
-			loaded["%s|%s" % [fid, section]] = dumped[section]
+		for dirty in [["dirtyA", false], ["dirtyB", true]]:
+			StateDump.restore_autoloads(base)
+			_fill_distinct(7, mock, bool(dirty[1]))
+			var data: Dictionary = fixtures[fid].duplicate(true)
+			data = SaveManager._migrate(data)
+			SaveManager.apply_save_data(mock, data)
+			var dumped := StateDump.dump_autoloads(GAME_AUTOLOADS)
+			dumped["MockMain"] = StateDump.dump(mock)
+			for section in dumped:
+				loaded["%s@%s|%s" % [fid, dirty[0], section]] = dumped[section]
 	_golden("save_load", loaded)
 
 	# ── realismo: save de una run real simulada (main.tscn real) ──
@@ -342,47 +365,61 @@ func _add_sections(out: Dictionary, prefix: String, data: Dictionary) -> void:
 		out["%s|%s" % [prefix, section]] = StateDump.encode(data[section])
 
 
-func _fill_distinct(variant: int, mock: Node) -> void:
-	var counter := 0
+## Asigna a cada variable primitiva un valor distinto derivado de su NOMBRE (y de la variante).
+## Derivarlo del nombre —y no de un contador— hace que agregar o quitar variables en un manager
+## no altere los valores de las demás: el diff de un golden muestra sólo lo que cambió.
+func _fill_distinct(variant: int, mock: Node, invert_bools: bool = false) -> void:
 	for n in FILL_AUTOLOADS:
 		var node := get_node("/root/" + n)
-		for name in StateDump.script_vars(node):
-			counter += 1
-			var v: Variant = node.get(name)
-			match typeof(v):
+		for name in StateDump.state_vars(node):
+			match typeof(node.get(name)):
 				TYPE_BOOL:
-					node.set(name, (counter + variant) % 2 == 0)
+					node.set(name, _distinct_bool(name, variant, invert_bools))
 				TYPE_INT:
-					node.set(name, 3 + counter * 7 + variant)
+					node.set(name, _distinct_int(name, variant))
 				TYPE_FLOAT:
-					node.set(name, 0.5 + counter * 1.25 + variant * 0.0625)
+					node.set(name, _distinct_float(name, variant))
 				TYPE_STRING:
 					node.set(name, "v%d_%s" % [variant, name])
 	var genome_states := ["dormido", "latente", "activo", "bloqueado"]
-	var i := variant
 	for k in EvoManager.genome.keys():
-		EvoManager.genome[k] = genome_states[i % genome_states.size()]
-		i += 1
-	var j := 0
+		EvoManager.genome[k] = genome_states[_distinct_int("genome." + str(k), variant) % genome_states.size()]
 	for id in UpgradeManager.states:
 		var s: Dictionary = UpgradeManager.states[id]
-		s["level"] = 2 + j + variant
-		s["current_cost"] = 100.5 + j * 13.0 + variant
-		s["current_value"] = 1.5 + j * 0.75 + variant * 0.5
-		s["unlocked"] = (j + variant) % 2 == 0
-		j += 1
+		s["level"] = 2 + _distinct_int(str(id) + ".level", variant) % 60
+		s["current_cost"] = _distinct_float(str(id) + ".cost", variant) * 7.0
+		s["current_value"] = _distinct_float(str(id) + ".value", variant)
+		s["unlocked"] = _distinct_bool(str(id) + ".unlocked", variant, invert_bools)
 	LogManager.lap_events = [
 		{"time": "00:0%d:00" % variant, "event": "lap A v%d" % variant},
 		{"time": "00:0%d:30" % variant, "event": "lap B v%d" % variant},
 	]
-	mock.memory_trigger_count = 11 + variant
-	mock.institutions_unlocked = variant % 2 == 1
+	mock.memory_trigger_count = _distinct_int("memory_trigger_count", variant)
+	mock.institutions_unlocked = _distinct_bool("institutions_unlocked", variant, invert_bools)
+
+
+static func _distinct_hash(name: String, variant: int) -> int:
+	return absi(("%s#%d" % [name, variant]).hash())
+
+
+static func _distinct_int(name: String, variant: int) -> int:
+	return 3 + _distinct_hash(name, variant) % 100000
+
+
+## Múltiplos de 1/32: exactos en binario, sin ruido de formato al serializar.
+static func _distinct_float(name: String, variant: int) -> float:
+	return 0.5 + float(_distinct_hash(name, variant) % 64000) / 32.0
+
+
+static func _distinct_bool(name: String, variant: int, invert: bool) -> bool:
+	var b: bool = (_distinct_hash(name, variant) & 1) == 1
+	return not b if invert else b
 
 
 func _fill_floats(value: float) -> void:
 	for n in FILL_AUTOLOADS:
 		var node := get_node("/root/" + n)
-		for name in StateDump.script_vars(node):
+		for name in StateDump.state_vars(node):
 			if typeof(node.get(name)) == TYPE_FLOAT:
 				node.set(name, value)
 	for id in UpgradeManager.states:
@@ -451,9 +488,14 @@ func suite_trajectory(scenario_id: String, t_max: float) -> void:
 	var dump_frames := int(roundf(60.0 / d.dt()))
 	var max_frames := int(roundf(t_max / d.dt()))
 	out["sample_%08.1f" % 0.0] = StateDump.encode(d.sample())
+	var has_memo: bool = EconomyManager.has_method("begin_memo")
+	var memo_leaks := 0
 	while d.frame < max_frames and not RunManager.run_closed:
 		for i in 400:
 			d.step(bot)
+			# Invariante: entre frames ningún bloque memo puede quedar abierto (cachearía la economía).
+			if has_memo and (int(EconomyManager.get("_memo_depth")) != 0 or not (EconomyManager.get("_memo") as Dictionary).is_empty()):
+				memo_leaks += 1
 			if d.frame % sample_frames == 0:
 				out["sample_%08.1f" % d.now()] = StateDump.encode(d.sample())
 			if d.frame % dump_frames == 0:
@@ -464,6 +506,13 @@ func suite_trajectory(scenario_id: String, t_max: float) -> void:
 	_add_dump(out, "end")
 	out["end|events"] = StateDump.encode({"events": d.events, "purchases": d.purchases,
 		"actions": bot.actions, "clicks": d.clicks})
+	if has_memo:
+		checks += 1
+		if memo_leaks == 0:
+			print("  [OK] invariante memo: ningún bloque abierto entre frames (%d frames)" % d.frame)
+		else:
+			failures += 1
+			print("  [ERROR] invariante memo: %d frames con un bloque memo abierto" % memo_leaks)
 	_golden("trajectory_" + scenario_id, out)
 
 
