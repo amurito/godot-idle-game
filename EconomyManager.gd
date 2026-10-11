@@ -471,6 +471,16 @@ func _compute_active_passive_breakdown() -> Dictionary:
 	}
 
 # ==================== ACTUALIZACIÓN ECONÓMICA ====================
+## PARASITISMO: corrosión irreversible de la infraestructura + drenaje directo de liquidez,
+## ambos escalados por la biomasa.
+func apply_parasitism_drain(dt: float) -> void:
+	if not EvoManager.mutation_parasitism:
+		return
+	var drain_intensity: float = clamp(BiosphereEngine.biomasa / 15.0, 0.4, 3.0)
+	parasitism_corrosion = max(0.0, parasitism_corrosion - 0.002 * drain_intensity * dt)
+	var money_drain: float = BiosphereEngine.biomasa * 0.25 * dt
+	money = max(money - money_drain, 0.0)
+
 func update_economy(delta: float):
 	if is_nan(delta_per_sec) or is_inf(delta_per_sec):
 		delta_per_sec = 0.0

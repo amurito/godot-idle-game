@@ -342,3 +342,55 @@ func update_runtime() -> void:
 
 	if epsilon_debug:
 		print("e breakdown: act=", epsilon_active, " pas=", epsilon_passive, " cmp=", epsilon_complex, " O=", omega)
+
+## Ω definitivo del tick (fase "estructura" del logic tick, después de update_genome).
+## OJO: reemplaza el Ω que calculó update_runtime() — de aquel sólo sobrevive su efecto sobre
+## omega_min (incluido control_omega_offset, que por eso hoy no llega al Ω final).
+## El orden de las capas ES balance; cada capa asume las anteriores:
+##   1. base: 1 / (1 + ε_eff · n_struct/μ)  (μ = capital cognitivo, amortigua la complejidad)
+##   2. techos de ruta: Parasitismo 0.25, Metabolismo Oscuro 0.10
+##   3. overrides de sub-ruta oscura (DESPUÉS del techo de MO, si no quedarían fijos en 0.10):
+##      Necrosis → necrosis_omega, Omega-Cero → omega_cero_omega
+##   4. pisos de legado (sólo fuera de Parasitismo/MO): omega_min, Alostasis 0.60 / Homeorresis 0.55
+func resolve_omega() -> void:
+	# 1. Base
+	var complexity_impact: float = get_effective_structural_n() / max(EconomyManager.cached_mu, 1.0)
+	omega = 1.0 / max(1.0 + epsilon_effective * complexity_impact, 0.0001)
+
+	# 2. Techos de ruta
+	if EvoManager.mutation_parasitism:
+		omega = min(omega, 0.25)
+		omega_min = min(omega_min, 0.25)
+	if EvoManager.mutation_met_oscuro:
+		omega_min = min(omega_min, 0.10)
+		omega = min(omega, 0.10)
+
+	# 3. Overrides de sub-ruta oscura: Ω es el recurso que la ruta consume/rigidiza; el HUD
+	#    tiene que mostrar la progresión real hacia el cierre.
+	if EvoManager.mutation_necrosis:
+		omega = EvoManager.necrosis_omega
+		omega_min = min(omega_min, EvoManager.necrosis_omega)
+	if EvoManager.mutation_omega_cero:
+		omega = EvoManager.omega_cero_omega
+		omega_min = min(omega_min, EvoManager.omega_cero_omega)
+
+	# 4. Pisos de legado
+	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
+		omega = max(omega, omega_min)
+		if EvoManager.mutation_allostasis:
+			omega = max(omega, 0.60)
+		elif LegacyManager.get_buff_value("legado_homeorresis"):
+			omega = max(omega, 0.55)
+
+## Estrés post-Red Micelial: en fase 2 (antes de esporular) ε sube sostenidamente.
+func apply_red_micelial_stress(dt: float) -> void:
+	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2 and not EvoManager.mutation_sporulation:
+		epsilon_runtime += 0.01 * dt
+		epsilon_peak = max(epsilon_peak, epsilon_runtime)
+
+## Cooldown estructural: al expirar registra un nuevo baseline (ancla de ε por producción).
+func tick_structural_cooldown(dt: float) -> void:
+	if structural_cooldown > 0.0:
+		structural_cooldown -= dt
+		if structural_cooldown <= 0.0:
+			register_structural_baseline()

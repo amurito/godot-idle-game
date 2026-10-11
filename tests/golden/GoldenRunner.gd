@@ -108,6 +108,8 @@ func _ready() -> void:
 			await suite_close_run()
 		"actions":
 			await suite_actions()
+		"tick":
+			await suite_tick()
 		"trajectory":
 			await suite_trajectory(str(args.get("scenario", "fresh_hiper")), float(args.get("t", "240")))
 		_:
@@ -524,6 +526,102 @@ func suite_actions() -> void:
 			out["%s|%s" % [case_id, n]] = dumped[n]
 	StateDump.restore_autoloads(base)
 	_golden("actions", out)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SUITE tick — cada rama de main._on_logic_tick (las trayectorias sólo cubren algunas)
+# ═════════════════════════════════════════════════════════════════════════════
+
+## Cada caso: estado previo (vars por autoload, upgrades "late") y luego TICK_SECONDS de frames
+## simulados (incluye _process) sin bot. Las mutaciones reusan MUTATIONS.
+const TICK_SECONDS := 30.0
+const TICK_BASELINE := 5.0
+const TICK_CASES := {
+	"base": {"mut": "none"},
+	"base_no_baseline": {"mut": "none", "no_baseline": true},
+	"base_high_eps": {"mut": "none", "pre": {"StructuralModel": {"epsilon_runtime": 0.65}}},
+	"mc_active": {"mut": "none", "pre": {"RunManager": {"mente_colmena_active": true}}},
+	"mc_sync_gate": {"mut": "red_micelial", "pre": {"EvoManager": {"red_branch_selected": 2},
+		"LegacyManager": {"last_run_ending": "SINGULARIDAD"}, "RunManager": {"mente_colmena_timer": 12.0},
+		"StructuralModel": {"epsilon_runtime": 0.30}}},
+	"red_micelial": {"mut": "red_micelial"},
+	"red_phase2": {"mut": "red_micelial", "pre": {"EvoManager": {"red_micelial_phase": 2}}},
+	"red_colonization": {"mut": "red_colonization"},
+	"symbiosis": {"mut": "symbiosis"},
+	"homeostasis": {"mut": "homeostasis", "pre": {"RunManager": {"homeostasis_mode": true}}},
+	"allostasis": {"mut": "allostasis"},
+	"homeorresis_buff": {"mut": "none", "buffs": {"legado_homeorresis": 1}},
+	# Con Mente Colmena ε sube (~0.4) y Ω cae (~0.3): los pisos 0.60 / 0.55 tienen que actuar.
+	"allostasis_stressed": {"mut": "allostasis", "pre": {"RunManager": {"mente_colmena_active": true}}},
+	"homeorresis_stressed": {"mut": "none", "buffs": {"legado_homeorresis": 1},
+		"pre": {"RunManager": {"mente_colmena_active": true}}},
+	"symbiosis_stressed": {"mut": "symbiosis", "pre": {"RunManager": {"mente_colmena_active": true}}},
+	"hyper": {"mut": "hyper"},
+	"parasitism": {"mut": "parasitism", "pre": {"BiosphereEngine": {"biomasa": 20.0}}},
+	"met_oscuro": {"mut": "hyper_mo"},
+	"mo_autolisis": {"mut": "mo_autolisis"},
+	"mo_necrosis": {"mut": "mo_necrosis"},
+	"mo_omega_cero": {"mut": "mo_omega_cero"},
+	"mo_remision": {"mut": "mo_remision"},
+	"depredador": {"mut": "depredador"},
+	"depredador_progress": {"mut": "none", "pre": {"EvoManager": {"depredador_timer": 5.0}}},
+	"fusion_burst": {"mut": "fusion_burst"},
+	"ayuno": {"mut": "ayuno"},
+	"fractura": {"mut": "hyper", "cosmic": ["fractura_epistemica"]},
+	"cooldown": {"mut": "none", "pre": {"StructuralModel": {"structural_cooldown": 3.0}}},
+}
+
+func suite_tick() -> void:
+	print("── tick ──")
+	var d = SimDriver.new()
+	if not await d.boot(self, {"seed": 13, "platform": "desktop", "ui": false}):
+		failures += 1
+		return
+	_set_upgrade_levels(UPGRADE_PROFILES["late"])
+	var base := StateDump.capture_autoloads(RESTORE_AUTOLOADS)
+	var main_vars := ["mu_peak_run", "delta_peak_run", "_parasitism_status_timer", "_telemetry_sample_timer"]
+	var main_base := {}
+	for v in main_vars:
+		main_base[v] = d.main.get(v)
+	var frames := int(round(TICK_SECONDS / d.FRAME_DT))
+	var out := {}
+	var idx := 0
+	for case_id in TICK_CASES:
+		var c: Dictionary = TICK_CASES[case_id]
+		StateDump.restore_autoloads(base)
+		for v in main_vars:
+			d.main.set(v, main_base[v])
+		_apply_vars(EvoManager, MUTATIONS[str(c.mut)], "%s/mut" % case_id)
+		# Baseline estructural bajo → ε > 0 y Ω < 1: ejercita los clamps/pisos de Ω.
+		StructuralModel.baseline_delta_structural = 0.0 if c.get("no_baseline", false) else TICK_BASELINE
+		var pre: Dictionary = c.get("pre", {})
+		for owner_name in pre:
+			_apply_vars(get_node("/root/" + owner_name), pre[owner_name], "%s/%s" % [case_id, owner_name])
+		var buffs: Dictionary = c.get("buffs", {})
+		for b in buffs:
+			LegacyManager._set_buff_level(str(b), int(buffs[b]))
+		for cid in c.get("cosmic", []):
+			LegacyManager.cosmic_unlocked[str(cid)] = true
+		seed(5000 + idx)
+		idx += 1
+		var laps_before := LogManager.lap_events.size()
+		for _f in frames:
+			d.step()
+			if RunManager.run_closed:
+				break
+		var new_laps: Array = []
+		for i in range(laps_before, LogManager.lap_events.size()):
+			new_laps.append(LogManager.lap_events[i].get("event", ""))
+		out[case_id + "|laps"] = StateDump.encode(new_laps)
+		var mv := {}
+		for v in main_vars:
+			mv[v] = StateDump.encode(d.main.get(v))
+		out[case_id + "|main"] = mv
+		var dumped := StateDump.dump_autoloads(GAME_AUTOLOADS + ["LegacyManager"])
+		for n in dumped:
+			out["%s|%s" % [case_id, n]] = dumped[n]
+	StateDump.restore_autoloads(base)
+	_golden("tick", out)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

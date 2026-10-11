@@ -541,82 +541,41 @@ func _process(delta):
 	EconomyManager.time_since_last_click += delta
 	# _sync_reactor_color() movido a _on_ui_tick — no necesita 60 Hz
 
+## === 5 Hz — toda la lógica de simulación ===
+## El ORDEN de las fases es parte del balance (cada una lee lo que dejaron las anteriores):
+## reordenarlas cambia el juego sin ningún error. La suite golden `tick` cubre cada rama.
 func _on_logic_tick():
-	# === 5 Hz � toda la l�gica de simulaci�n ===
 	var dt := RunManager.LOGIC_TICK
+	_tick_cache_mu()                          # μ cacheado: lo leen economía, Ω y logros
+	RunManager.tick_mente_colmena(dt)         # ráfaga / auto-play / gate de sincronía
+	EvoManager.tick_route_processes(dt)       # Met. Oscuro y sub-rutas, Fusión, Ayuno, Depredador, glitch
+	_tick_economy(dt)                         # persistencia, Δ$/s, telemetría, dinero
+	StructuralModel.update_runtime()          # ε (estrés) desde la economía recién calculada
+	_tick_biosphere(dt)                       # biomasa/hifas/nutrientes → ε efectivo
+	_tick_reactor_display()                   # sólo visual
+	EconomyManager.apply_parasitism_drain(dt)
+	# FRACTURA EPISTÉMICA: antes de update_genome para ganarle al timeout de HIPER
+	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
+		RunManager.check_fractura_epistemica(dt)
+		if RunManager.run_closed: return
+	EvoManager.update_genome()
+	StructuralModel.apply_red_micelial_stress(dt)
+	StructuralModel.resolve_omega()           # Ω final: base → techos → overrides → pisos
+	_tick_route_checks(dt)                    # shocks, cap NG, RouteManager, finales de ruta
+	StructuralModel.tick_structural_cooldown(dt)
+	check_institution_unlock()
+	RunManager.check_sporulation_trigger(dt)
+	# Logros — en el tick lógico (exactamente 5 Hz en cualquier plataforma): check_tick suma
+	# LOGIC_TICK a los timers de logros "sostenidos", así 60 s de logro = 60 s reales.
+	check_achievements()
 
-	# Cache mu (evita 500+ calls por segundo a get_mu_structural_factor)
+func _tick_cache_mu() -> void:
+	# Evita 500+ calls por segundo a get_mu_structural_factor
 	var _mu := StructuralModel.get_mu_structural_factor()
 	EconomyManager.cached_mu = _mu if not (is_nan(_mu) or is_inf(_mu) or _mu <= 0.0) else 1.0
 	mu_peak_run = max(mu_peak_run, EconomyManager.cached_mu)
 
-	# NG+ Mente Colmena (Juego autom�tico por IA fúngica)
-	# Sync estado con el toggle del Banco Genético (solo cuando cambia)
-	RunManager.tick_mc_burst(dt)  # IA = ráfaga activable con cooldown (no permanente)
-	if RunManager.mente_colmena_active:
-		# Auto-click: simula 10 clicks por segundo
-		var sim_power = EconomyManager.get_click_power() * 10.0 * dt
-		EconomyManager.money += sim_power
-		EconomyManager.total_money_generated += sim_power
-		StructuralModel.epsilon_runtime += 0.008 * 10.0 * dt
-		if is_instance_valid(UIManager.big_click_button):
-			UIManager.big_click_button.set_active_delta(sim_power)
-		RunManager.tick_auto_buy(dt)
-	elif LegacyManager.last_run_ending == "SINGULARIDAD" and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		var ap = EconomyManager.get_active_passive_breakdown()
-		var tot = ap.activo + ap.pasivo
-		if tot > 0:
-			var ratio = ap.activo / tot
-			# Si el estrés supera 0.50, rompe la sincronizaci�n
-			var stress_too_high = StructuralModel.epsilon_runtime > 0.50
-			var eps_ok := StructuralModel.epsilon_runtime >= Balance.MC_GATE_EPS_LO and StructuralModel.epsilon_runtime <= Balance.MC_GATE_EPS_HI
-			var flow_ok := EconomyManager.get_delta_total() >= Balance.MC_GATE_DELTA_MIN
-			if abs(ratio - 0.5) <= Balance.MC_GATE_RATIO_TOL and eps_ok and flow_ok:
-				var was_zero := RunManager.mente_colmena_timer == 0.0
-				RunManager.mente_colmena_timer += dt
-				if was_zero:
-					add_lap(tr("LAP_MC_SINCRONIA") % Balance.MC_GATE_HOLD)
-				if RunManager.mente_colmena_timer >= Balance.MC_GATE_HOLD:
-					RunManager.activate_mente_colmena()
-				else:
-					var pct := int(RunManager.mente_colmena_timer / Balance.MC_GATE_HOLD * 100.0)
-					var prev_pct := int((RunManager.mente_colmena_timer - dt) / Balance.MC_GATE_HOLD * 100.0)
-					if int(pct / 25.0) > int(prev_pct / 25.0): # lap cada 25%
-						add_lap(tr("LAP_MC_SYNC_PCT") % [pct, RunManager.mente_colmena_timer, Balance.MC_GATE_HOLD])
-					show_system_toast("?? MENTE COLMENA — %d%% (%.0f/%.0fs) — ratio %.1f%%/%.1f%%" % [pct, RunManager.mente_colmena_timer, Balance.MC_GATE_HOLD, ap.activo, ap.pasivo])
-			else:
-				if RunManager.mente_colmena_timer > 0.0:
-					if stress_too_high:
-						add_lap(tr("LAP_MC_BROKEN_STRESS") % StructuralModel.epsilon_runtime)
-					else:
-						add_lap(tr("LAP_MC_BROKEN_RATIO") % [ap.activo, ap.pasivo])
-				RunManager.mente_colmena_timer = 0.0
-
-	# NG++ Metabolismo Oscuro (Post-Depredador) — congela el devorar, metaboliza biomasa
-	if EvoManager.mutation_met_oscuro:
-		EvoManager.process_met_oscuro(dt)
-		if EvoManager.mutation_autolisis:
-			EvoManager.process_autolisis(dt)
-		if EvoManager.mutation_necrosis:
-			EvoManager.process_necrosis(dt)
-		if EvoManager.mutation_omega_cero:
-			EvoManager.process_omega_cero(dt)
-		if EvoManager.mutation_remision:
-			EvoManager.process_remision(dt)
-	# TRANSMUTACIÓN Fusión Catabólica (ráfaga Metabolismo Híbrido + cooldown)
-	elif EvoManager.mutation_fusion_catabolica:
-		EvoManager.process_fusion(dt)
-	# TRANSMUTACIÓN Ayuno Primordial (drain B + acumular Silencio + burst)
-	elif EvoManager.mutation_ayuno_primordial:
-		EvoManager.process_ayuno(dt)
-	# NG+ Depredador de Realidades (Glitch Survival)
-	elif EvoManager.mutation_depredador:
-		EvoManager.process_depredador(dt)
-	elif EvoManager.depredador_timer > 0.0 and EvoManager.depredador_timer < 30.0:
-		EvoManager.process_depredador_progress(dt)
-	EvoManager.process_glitch(dt)
-
-	# 1) Econom�a base
+func _tick_economy(dt: float) -> void:
 	StructuralModel.apply_dynamic_persistence(dt)
 	var _dps := EconomyManager.get_passive_total()
 	EconomyManager.delta_per_sec = _dps if not (is_nan(_dps) or is_inf(_dps)) else 0.0
@@ -628,15 +587,11 @@ func _on_logic_tick():
 		TelemetryManager.sample_metrics(self)
 	update_economy(dt)
 
-	# 2) Estrés del sistema
-	StructuralModel.update_runtime()
-
-	# 3) Bi�sfera y nutrientes
-	# Pasamos solo el ingreso pasivo (no total) para que hifas no escale con clicks ni legados activos
-	var bio_passive_income := EconomyManager.get_passive_total()
+func _tick_biosphere(dt: float) -> void:
+	# Sólo el ingreso pasivo (no total): hifas no escala con clicks ni legados activos
 	StructuralModel.epsilon_effective = BiosphereEngine.process_tick(
 		dt,
-		bio_passive_income,
+		EconomyManager.get_passive_total(),
 		StructuralModel.epsilon_runtime,
 		EvoManager.mutation_hyperassimilation,
 		EvoManager.mutation_homeostasis,
@@ -647,90 +602,29 @@ func _on_logic_tick():
 		EvoManager.mutation_remision
 	)
 
-	# 4) Actualizar valor del reactor
+func _tick_reactor_display() -> void:
+	if not is_instance_valid(UIManager.big_click_button):
+		return
 	var power := EconomyManager.get_click_power()
-	if is_instance_valid(UIManager.big_click_button):
-		# Sincronizar tamaño del reactor 3D con el power actual (sin pulso de click)
-		if _use_3d_reactor and is_instance_valid(reactor_3d):
-			reactor_3d.sync_power(power)
-		# Label del modo 3D — escala fuente con el poder (8px→26px de 1→1000+)
-		if _use_3d_reactor and is_instance_valid(_3d_power_label):
-			var sz := int(clamp(log(1.0 + power) * 3.0 + 8.0, 8.0, 26.0))
-			_3d_power_label.add_theme_font_size_override("font_size", sz)
-			if RunManager.mente_colmena_active:
-				_3d_power_label.text = "AUTO\n+%d" % int(power)
-			else:
-				_3d_power_label.text = "+%d" % int(power)
-		elif not _use_3d_reactor and is_instance_valid(reactor_visual):
-			reactor_visual.set_display_delta(power)
+	# Sincronizar tamaño del reactor 3D con el power actual (sin pulso de click)
+	if _use_3d_reactor and is_instance_valid(reactor_3d):
+		reactor_3d.sync_power(power)
+	# Label del modo 3D — escala fuente con el poder (8px→26px de 1→1000+)
+	if _use_3d_reactor and is_instance_valid(_3d_power_label):
+		var sz := int(clamp(log(1.0 + power) * 3.0 + 8.0, 8.0, 26.0))
+		_3d_power_label.add_theme_font_size_override("font_size", sz)
+		if RunManager.mente_colmena_active:
+			_3d_power_label.text = "AUTO\n+%d" % int(power)
+		else:
+			_3d_power_label.text = "+%d" % int(power)
+	elif not _use_3d_reactor and is_instance_valid(reactor_visual):
+		reactor_visual.set_display_delta(power)
 
-	# 5) Parasitismo: drenaje masivo de ingresos (Corrosi�n Estructural)
-	if EvoManager.mutation_parasitism:
-		var drain_intensity = clamp(BiosphereEngine.biomasa / 15.0, 0.4, 3.0)
-		# Corrosi�n irreversible de la infraestructura
-		EconomyManager.parasitism_corrosion = max(0.0, EconomyManager.parasitism_corrosion - 0.002 * drain_intensity * dt)
-		
-		# Drenaje de liquidez directa
-		var money_drain = BiosphereEngine.biomasa * 0.25 * dt
-		EconomyManager.money = max(EconomyManager.money - money_drain, 0.0)
-
-	# FRACTURA EPISTÉMICA: interceptar antes de update_genome para ganarle al timeout de HIPER
-	if LegacyManager.has_cosmic_buff("fractura_epistemica"):
-		RunManager.check_fractura_epistemica(dt)
-		if RunManager.run_closed: return
-
-	# 6) Genoma
-	EvoManager.update_genome()
-
-	# 7) Estr�s post-red micelial
-	if EvoManager.mutation_red_micelial and EvoManager.red_micelial_phase == 2 and not EvoManager.mutation_sporulation:
-		StructuralModel.epsilon_runtime += 0.01 * dt
-		StructuralModel.epsilon_peak = max(StructuralModel.epsilon_peak, StructuralModel.epsilon_runtime)
-		
-	# 8) Actualizar Omega (Flexibilidad)
-	# Buff: El capital cognitivo (EconomyManager.cached_mu) ahora ayuda a manejar la complejidad (n_struct)
-	var complexity_impact: float = StructuralModel.get_effective_structural_n() / max(EconomyManager.cached_mu, 1.0)
-	StructuralModel.omega = 1.0 / max(1.0 + StructuralModel.epsilon_effective * complexity_impact, 0.0001)
-
-	# PARASITISMO: Techo duro de O 0.25 � aplicado aqu� para no ser pisado por el c�lculo de arriba
-	if EvoManager.mutation_parasitism:
-		StructuralModel.omega = min(StructuralModel.omega, 0.25)
-		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.25)
-
-	# METABOLISMO OSCURO: Techo duro de O 0.10 (fragilidad extrema � debe ir �ltimo)
-	if EvoManager.mutation_met_oscuro:
-		StructuralModel.omega_min = min(StructuralModel.omega_min, 0.10)
-		StructuralModel.omega = min(StructuralModel.omega, 0.10)
-
-	# NECROSIS CONTROLADA: Ω es combustible — sigue a necrosis_omega, que baja del 0.10
-	# hacia el floor con cada Agente desplegado. Debe ir DESPUÉS del clamp de MO (que lo
-	# fijaría a 0.10 permanente) para que el HUD muestre la progresión real hacia el cierre.
-	if EvoManager.mutation_necrosis:
-		StructuralModel.omega = EvoManager.necrosis_omega
-		StructuralModel.omega_min = min(StructuralModel.omega_min, EvoManager.necrosis_omega)
-
-	# PROTOCOLO OMEGA-CERO: Ω rigidiza con cada devour (mismo motivo que necrosis: tras el clamp de MO).
-	if EvoManager.mutation_omega_cero:
-		StructuralModel.omega = EvoManager.omega_cero_omega
-		StructuralModel.omega_min = min(StructuralModel.omega_min, EvoManager.omega_cero_omega)
-
-	# FLOORS DE LEGADO � re-aplicados aqu� porque el c�lculo de omega con e_effective
-	# (paso 8) sobreescribe los floors aplicados en StructuralModel.update_runtime()
-	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
-		StructuralModel.omega = max(StructuralModel.omega, StructuralModel.omega_min)
-		if EvoManager.mutation_allostasis:
-			StructuralModel.omega = max(StructuralModel.omega, 0.60)
-		elif LegacyManager.get_buff_value("legado_homeorresis"):
-			StructuralModel.omega = max(StructuralModel.omega, 0.55)
-
-	# --- SHOCK TRACKING --- (delegado a RunManager)
+func _tick_route_checks(dt: float) -> void:
 	RunManager.check_shock_tracking()
 	RunManager.check_ng_cap()
-
-	# --- TICK DE RUTA POST-TRASCENDENCIA ---
-	RouteManager.tick(dt)
-
-	# 8) Decisiones evolutivas (v0.8.8 - Centralizado en EvoManager)
+	RouteManager.tick(dt)  # tick de ruta post-trascendencia
+	# Decisiones evolutivas: timers de cierre de cada ruta
 	if EvoManager.mutation_homeostasis:
 		RunManager.check_homeostasis_final(dt)
 	if EvoManager.mutation_allostasis:
@@ -744,7 +638,7 @@ func _on_logic_tick():
 		EvoManager.process_colonizacion(dt)  # Retracciones de la frontera (anti-AFK)
 		EvoManager.update_primordio(self)  # Timer del ciclo biológico
 		EvoManager.process_panspermia(dt)  # Disipa el calor del lanzamiento (Fase 3)
-	# homeostasis_mode genera shocks peri�dicos � NO aplica durante SIMBIOSIS
+	# homeostasis_mode genera shocks periódicos — NO aplica durante SIMBIOSIS
 	if RunManager.homeostasis_mode and not EvoManager.mutation_symbiosis:
 		RunManager.update_homeostasis_mode(dt)
 	if RunManager.post_homeostasis:
@@ -755,26 +649,7 @@ func _on_logic_tick():
 		_parasitism_status_timer += dt
 		if _parasitism_status_timer >= PARASITISM_STATUS_INTERVAL:
 			_parasitism_status_timer = 0.0
-			var bio := BiosphereEngine.biomasa
-			var omg := StructuralModel.omega
-			var eps := StructuralModel.epsilon_effective
-			var money_now := EconomyManager.money
-			add_lap(tr("LAP_PARASITISMO") % [bio, omg, eps, money_now])
-
-	# 9) Cooldown estructural
-	if StructuralModel.structural_cooldown > 0.0:
-		StructuralModel.structural_cooldown -= dt
-		if StructuralModel.structural_cooldown <= 0.0:
-			StructuralModel.register_structural_baseline()
-
-	# 10) Instituciones y esporulación
-	check_institution_unlock()
-	RunManager.check_sporulation_trigger(dt)
-
-	# 11) Logros — en el tick lógico (exactamente 5 Hz en cualquier plataforma): check_tick suma
-	# LOGIC_TICK a los timers de logros "sostenidos", así 60 s de logro = 60 s reales.
-	# Antes corría dentro de update_ui() (10 Hz desktop, 4 Hz web y en cada click) → 2–4× más rápido.
-	check_achievements()
+			add_lap(tr("LAP_PARASITISMO") % [BiosphereEngine.biomasa, StructuralModel.omega, StructuralModel.epsilon_effective, EconomyManager.money])
 
 func _on_ui_tick():
 	# === 4/10 Hz — actualizar labels y botones ===

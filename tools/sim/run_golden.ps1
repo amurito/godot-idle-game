@@ -22,7 +22,7 @@
 param(
     [ValidateSet("record", "check")]
     [string]$Mode = "check",
-    [string[]]$Suites = @("economy", "save", "close_run", "actions", "trajectory"),
+    [string[]]$Suites = @("economy", "save", "close_run", "actions", "tick", "trajectory"),
     # Rutas que se recorren dentro de la ventana: Hiper, trampa de Masa Critica (ejercita
     # close_run), Ayuno (incluye Parasitismo hibrido) y Fusion Catabolica.
     [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player"),

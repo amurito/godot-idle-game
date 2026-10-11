@@ -691,6 +691,54 @@ func tick_mc_burst(dt: float) -> void:
 	elif mc_cooldown_timer > 0.0:
 		mc_cooldown_timer = max(0.0, mc_cooldown_timer - dt)
 
+## Fase "Mente Colmena" del logic tick: ráfaga/cooldown, auto-play mientras está activa, y si no,
+## el gate de sincronía (sólo tras SINGULARIDAD con rama Simbiosis).
+func tick_mente_colmena(dt: float) -> void:
+	tick_mc_burst(dt)  # IA = ráfaga activable con cooldown (no permanente)
+	if mente_colmena_active:
+		# Auto-click: simula 10 clicks por segundo
+		var sim_power: float = EconomyManager.get_click_power() * 10.0 * dt
+		EconomyManager.money += sim_power
+		EconomyManager.total_money_generated += sim_power
+		StructuralModel.epsilon_runtime += 0.008 * 10.0 * dt
+		if is_instance_valid(UIManager.big_click_button):
+			UIManager.big_click_button.set_active_delta(sim_power)
+		tick_auto_buy(dt)
+	elif LegacyManager.last_run_ending == "SINGULARIDAD" and EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
+		_tick_mente_colmena_gate(dt)
+
+## Sincronía: ratio activo/pasivo ≈ 50/50 con ε en banda y flujo mínimo durante MC_GATE_HOLD s.
+func _tick_mente_colmena_gate(dt: float) -> void:
+	var ap: Dictionary = EconomyManager.get_active_passive_breakdown()
+	var tot: float = ap.activo + ap.pasivo
+	if tot <= 0:
+		return
+	var ratio: float = ap.activo / tot
+	# Si el estrés supera 0.50, rompe la sincronización
+	var stress_too_high: bool = StructuralModel.epsilon_runtime > 0.50
+	var eps_ok := StructuralModel.epsilon_runtime >= Balance.MC_GATE_EPS_LO and StructuralModel.epsilon_runtime <= Balance.MC_GATE_EPS_HI
+	var flow_ok := EconomyManager.get_delta_total() >= Balance.MC_GATE_DELTA_MIN
+	if abs(ratio - 0.5) <= Balance.MC_GATE_RATIO_TOL and eps_ok and flow_ok:
+		var was_zero := mente_colmena_timer == 0.0
+		mente_colmena_timer += dt
+		if was_zero:
+			LogManager.add(tr("LAP_MC_SINCRONIA") % Balance.MC_GATE_HOLD)
+		if mente_colmena_timer >= Balance.MC_GATE_HOLD:
+			activate_mente_colmena()
+		else:
+			var pct := int(mente_colmena_timer / Balance.MC_GATE_HOLD * 100.0)
+			var prev_pct := int((mente_colmena_timer - dt) / Balance.MC_GATE_HOLD * 100.0)
+			if int(pct / 25.0) > int(prev_pct / 25.0): # lap cada 25%
+				LogManager.add(tr("LAP_MC_SYNC_PCT") % [pct, mente_colmena_timer, Balance.MC_GATE_HOLD])
+			UIManager.show_toast("🧠 MENTE COLMENA — %d%% (%.0f/%.0fs) — ratio %.1f%%/%.1f%%" % [pct, mente_colmena_timer, Balance.MC_GATE_HOLD, ap.activo, ap.pasivo])
+	else:
+		if mente_colmena_timer > 0.0:
+			if stress_too_high:
+				LogManager.add(tr("LAP_MC_BROKEN_STRESS") % StructuralModel.epsilon_runtime)
+			else:
+				LogManager.add(tr("LAP_MC_BROKEN_RATIO") % [ap.activo, ap.pasivo])
+		mente_colmena_timer = 0.0
+
 func tick_auto_buy(dt: float) -> void:
 	_mente_colmena_buy_timer += dt
 	if _mente_colmena_buy_timer < Balance.MENTE_COLMENA_BUY_INTERVAL:

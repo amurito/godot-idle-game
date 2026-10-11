@@ -324,6 +324,30 @@ func is_allostasis_ready() -> bool:
 	return ok_dist and ok_resil and ok_omega and ok_delta and ok_acc
 
 
+## Fase "procesos de ruta" del logic tick: a lo sumo una familia activa por tick (el elif es la
+## precedencia: Met. Oscuro y sus sub-rutas > Fusión > Ayuno > Depredador > progreso Depredador).
+## El glitch corre siempre (se auto-gatea).
+func tick_route_processes(dt: float) -> void:
+	if mutation_met_oscuro:
+		process_met_oscuro(dt)
+		if mutation_autolisis:
+			process_autolisis(dt)
+		if mutation_necrosis:
+			process_necrosis(dt)
+		if mutation_omega_cero:
+			process_omega_cero(dt)
+		if mutation_remision:
+			process_remision(dt)
+	elif mutation_fusion_catabolica:
+		process_fusion(dt)  # ráfaga Metabolismo Híbrido + cooldown
+	elif mutation_ayuno_primordial:
+		process_ayuno(dt)  # drain B + acumular Silencio + burst
+	elif mutation_depredador:
+		process_depredador(dt)  # Glitch Survival
+	elif depredador_timer > 0.0 and depredador_timer < 30.0:
+		process_depredador_progress(dt)
+	process_glitch(dt)
+
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el
 ## bonus de entrada. Antes vivía en main._trigger_allostasis().
 func trigger_allostasis() -> void:

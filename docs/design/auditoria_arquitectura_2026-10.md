@@ -329,7 +329,9 @@ corrigió en este trabajo: o cambian comportamiento, o son decisiones de diseño
 | 11 | UI: 8 RichTextLabels de la ruta caliente sólo se re-escriben si cambió el BBCode (`UIManager.set_rich_text`) → tick de UI 2.2 → 1.75 ms | ✅ `af3776c` |
 | 12 | **C8** bono NG+ de `close_run` como tabla de reglas (−95 líneas de `match`); nueva suite golden `close_run` (29 rutas × 3 perfiles) | ✅ `e95db58` + `c6dd4da` |
 | 13 | **C3** reglas fuera de los handlers de UI: `EvoManager.trigger_allostasis()`, `EvoManager.select_red_branch()`, `RunManager.resolve_sporulation_final()`; nueva suite golden `actions` (11 casos) | ✅ `788c2ba` + este commit |
-| — | Pendientes de la auditoría: **C7** tick en fases nombradas, **C5** tabla declarativa de buffs económicos, **C6** estado de rutas en EvoManager (51 flags) | pendiente |
+| 14 | **C7** `_on_logic_tick` de 235 → 25 líneas: secuencia de fases nombradas; Ω en `StructuralModel.resolve_omega()` con las 4 capas documentadas (base → techos → overrides oscuros → pisos); Mente Colmena → `RunManager.tick_mente_colmena()`; procesos de ruta → `EvoManager.tick_route_processes()`; drenaje → `EconomyManager.apply_parasitism_drain()`. Nueva suite golden `tick` (28 casos, una por rama; verificada con mutación: reordenar fases → 153 diffs) | ✅ |
+| — | Hallazgo C7: `update_runtime()` calcula Ω y `resolve_omega()` lo reemplaza; sólo sobrevive su efecto en `omega_min`. Consecuencia: `control_omega_offset` (buff NG+ Control de Ω) no llega al Ω final | **decisión del autor** |
+| — | Pendientes de la auditoría: **C5** tabla declarativa de buffs económicos, **C6** estado de rutas en EvoManager (51 flags) | pendiente |
 
 ### Resultado de C9 (mismo escenario, desktop, 6 cps)
 
