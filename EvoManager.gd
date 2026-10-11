@@ -324,6 +324,26 @@ func is_allostasis_ready() -> bool:
 	return ok_dist and ok_resil and ok_omega and ok_delta and ok_acc
 
 
+## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el
+## bonus de entrada. Antes vivía en main._trigger_allostasis().
+func trigger_allostasis() -> void:
+	activate_mutation("allostasis")
+	RunManager.homeostasis_mode = false  # salimos de homeostasis pura
+	EconomyManager.money += 50000.0
+	StructuralModel.epsilon_runtime *= 0.5  # reset de estrés para que pueda respirar
+	LogManager.add(tr("LAP_ERA_ALOSTATICA"))
+
+## Elección de sub-rama de Red Micelial. Antes vivía en main._on_branch_selected().
+##   COLONIZACIÓN: trabajo manual ×1.5 (mutation_auto_factor) · SIMBIOSIS: piso de Ω 0.50
+func select_red_branch(branch: int) -> void:
+	red_branch_selected = branch
+	if branch == RedBranch.COLONIZATION:
+		LogManager.add(tr("LOG_RAMA_COLONIZACION"))
+		EconomyManager.mutation_auto_factor *= 1.5
+	elif branch == RedBranch.SYMBIOSIS:
+		LogManager.add(tr("LOG_RAMA_SIMBIOSIS"))
+		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
+
 func activate_mutation(id: String) -> void:
 	match id:
 		"hiperasimilacion": activate_hyperassimilation()

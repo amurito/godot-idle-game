@@ -932,14 +932,7 @@ func _on_btn_colonization_pressed() -> void:
 	update_ui()
 
 func _trigger_allostasis() -> void:
-	EvoManager.activate_mutation("allostasis")
-	RunManager.homeostasis_mode = false # Salimos de homeostasis pura
-	
-	# Bonus de entrada
-	EconomyManager.money += 50000.0
-	StructuralModel.epsilon_runtime *= 0.5 # Reset de estrés para que pueda respirar
-	
-	add_lap(tr("LAP_ERA_ALOSTATICA"))
+	EvoManager.trigger_allostasis()  # regla de juego: EvoManager
 	update_ui()
 
 func _on_btn_symbiosis_pressed() -> void:
@@ -956,21 +949,13 @@ func _on_btn_symbiosis_pressed() -> void:
 	update_ui()
 
 func _on_branch_selected(branch: int):
-	EvoManager.red_branch_selected = branch
 	if is_instance_valid(dimmer):
 		dimmer.visible = false
 		dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if is_instance_valid(evo_choice_panel):
 		evo_choice_panel.visible = false
 		evo_choice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	if branch == EvoManager.RedBranch.COLONIZATION:
-		LogManager.add(tr("LOG_RAMA_COLONIZACION"))
-		EconomyManager.mutation_auto_factor *= 1.5
-	elif branch == EvoManager.RedBranch.SYMBIOSIS:
-		LogManager.add(tr("LOG_RAMA_SIMBIOSIS"))
-		StructuralModel.omega_min = max(StructuralModel.omega_min, 0.50)
-		
+	EvoManager.select_red_branch(branch)  # regla de juego: EvoManager
 	_sync_reactor_color()
 	update_ui()
 
@@ -1005,38 +990,11 @@ func _on_primordio_button_pressed() -> void:
 		LogManager.add(tr("LOG_PRIMORDIO_NA"))
 
 func _on_sporulation_final_pressed() -> void:
-	if RunManager.run_closed: return
-	
-	if EvoManager.nucleo_conciencia:
-		# FINAL: SINGULARIDAD MECÁNICA
-		var bonus_efficiency: float = clamp(1.0 - StructuralModel.epsilon_runtime, 0.0, 1.0) * 5.0
-		var pl := 6 + int(bonus_efficiency)
-		
-		LegacyManager.add_pl(pl)
-		LogManager.add(tr("LOG_PL_SINGULARIDAD") % [pl, pl - 6])  # split 6 base + bonus por estabilidad ε
-		show_system_toast(tr("TOAST_SINGULARIDAD_PL") % pl)
-		RunManager.close_run("SINGULARIDAD", tr("CLOSE_SINGULARIDAD"))
-		
-	elif EvoManager.seta_formada and EvoManager.is_panspermia_window():
-		# FINAL SECRETO: PANSPERMIA NEGRA — secuencia de lanzamiento (Fase 3)
-		if EvoManager.panspermia_pulse():
-			# Velocidad de escape alcanzada → lanzamiento exitoso.
-			if not LegacyManager.get_buff_value("semilla_cosmica"):
-				LegacyManager.grant_buff("semilla_cosmica")
-				show_system_toast(tr("TOAST_SEMILLA_COSMICA"))
-			# El PL (+10) lo otorga y loguea close_run vía Balance.PL_REWARDS (consistencia lore/log).
-			RunManager.close_run("PANSPERMIA NEGRA", tr("CLOSE_PANSPERMIA"))
-		else:
-			update_ui()  # refresca el contador de eyección del botón
+	# Las reglas de los tres finales (Singularidad, Panspermia Negra, Esporulación) viven en
+	# RunManager; acá sólo se refresca la UI cuando la run sigue abierta (pulso de Panspermia).
+	if RunManager.resolve_sporulation_final():
+		update_ui()  # refresca el contador de eyección del botón
 
-	elif EvoManager.seta_formada:
-		# FINAL: ESPORULACIÓN BIOLÓGICA
-		var esporas := BiosphereEngine.trigger_sporulation()
-		if esporas > 1.0: # Umbral mínimo bajado para asegurar PL
-			LegacyManager.add_spores(esporas)
-
-		RunManager.close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
-		
 # ESTRUCTURALES v0.7.3
 
 func _input(event):

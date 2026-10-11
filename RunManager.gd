@@ -424,6 +424,38 @@ func check_parasitism_final(_delta: float):
 	if EvoManager.mutation_ayuno_primordial:
 		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_AYUNO"))
 
+## Botón de final de la rama verde (Red Micelial). Antes vivía en main._on_sporulation_final_pressed().
+##   · Núcleo de conciencia → SINGULARIDAD: PL = 6 + bonus por estabilidad (ε bajo, hasta +5)
+##   · Seta + ventana de Panspermia → un pulso de eyección; si alcanza la velocidad de escape,
+##     PANSPERMIA NEGRA (+ Semilla Cósmica la primera vez)
+##   · Seta → ESPORULACIÓN (las esporas pasan al banco)
+## Devuelve true si la run sigue abierta y la UI debe refrescarse (pulso sin lanzamiento).
+func resolve_sporulation_final() -> bool:
+	if run_closed:
+		return false
+	if EvoManager.nucleo_conciencia:
+		var bonus_efficiency: float = clamp(1.0 - StructuralModel.epsilon_runtime, 0.0, 1.0) * 5.0
+		var pl := 6 + int(bonus_efficiency)
+		LegacyManager.add_pl(pl)
+		LogManager.add(tr("LOG_PL_SINGULARIDAD") % [pl, pl - 6])  # 6 base + bonus por estabilidad ε
+		UIManager.show_toast(tr("TOAST_SINGULARIDAD_PL") % pl)
+		close_run("SINGULARIDAD", tr("CLOSE_SINGULARIDAD"))
+	elif EvoManager.seta_formada and EvoManager.is_panspermia_window():
+		if not EvoManager.panspermia_pulse():
+			return true
+		# Velocidad de escape alcanzada → lanzamiento exitoso.
+		if not LegacyManager.get_buff_value("semilla_cosmica"):
+			LegacyManager.grant_buff("semilla_cosmica")
+			UIManager.show_toast(tr("TOAST_SEMILLA_COSMICA"))
+		# El PL (+10) lo otorga close_run vía Balance.PL_REWARDS.
+		close_run("PANSPERMIA NEGRA", tr("CLOSE_PANSPERMIA"))
+	elif EvoManager.seta_formada:
+		var esporas := BiosphereEngine.trigger_sporulation()
+		if esporas > 1.0:
+			LegacyManager.add_spores(esporas)
+		close_run("ESPORULACIÓN", tr("CLOSE_ESPORULACION"))
+	return false
+
 func check_sporulation_trigger(_delta: float):
 	if not RouteManager.allows_bifurcation() or run_closed or EvoManager.mutation_sporulation:
 		return

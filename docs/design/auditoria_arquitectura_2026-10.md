@@ -325,7 +325,11 @@ corrigió en este trabajo: o cambian comportamiento, o son decisiones de diseño
 | 8 | Simulador visual + lanzador con ventana (`tools/sim/lanzador.cmd`) | ✅ `c49a59c` |
 | 9 | **C9** UI: `UpgradeButton` re-aplicaba StyleBoxes en cada refresco (75% de `update_ui`); click sin `update_ui()` completo | ✅ ver abajo |
 | — | **B7 (nuevo)** `UpgradeButton` muestra/habilita con `state.current_cost` crudo, la compra usa `UpgradeManager.cost()` con descuentos → botón deshabilitado aunque alcance | requiere decisión |
-| — | Siguientes de UI: `update_mutation_center_panel` 0.5 ms, `update_core_labels` 0.4, `update_lab_metrics` 0.35 (re-construyen texto aunque no cambie) | pendiente |
+| 10 | **B7** UpgradeButton usa `UpgradeManager.cost()` (descuentos) para precio y habilitación | ✅ `9b05348` |
+| 11 | UI: 8 RichTextLabels de la ruta caliente sólo se re-escriben si cambió el BBCode (`UIManager.set_rich_text`) → tick de UI 2.2 → 1.75 ms | ✅ `af3776c` |
+| 12 | **C8** bono NG+ de `close_run` como tabla de reglas (−95 líneas de `match`); nueva suite golden `close_run` (29 rutas × 3 perfiles) | ✅ `e95db58` + `c6dd4da` |
+| 13 | **C3** reglas fuera de los handlers de UI: `EvoManager.trigger_allostasis()`, `EvoManager.select_red_branch()`, `RunManager.resolve_sporulation_final()`; nueva suite golden `actions` (11 casos) | ✅ `788c2ba` + este commit |
+| — | Pendientes de la auditoría: **C7** tick en fases nombradas, **C5** tabla declarativa de buffs económicos, **C6** estado de rutas en EvoManager (51 flags) | pendiente |
 
 ### Resultado de C9 (mismo escenario, desktop, 6 cps)
 
