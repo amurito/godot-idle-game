@@ -771,6 +771,11 @@ func _on_logic_tick():
 	check_institution_unlock()
 	RunManager.check_sporulation_trigger(dt)
 
+	# 11) Logros — en el tick lógico (exactamente 5 Hz en cualquier plataforma): check_tick suma
+	# LOGIC_TICK a los timers de logros "sostenidos", así 60 s de logro = 60 s reales.
+	# Antes corría dentro de update_ui() (10 Hz desktop, 4 Hz web y en cada click) → 2–4× más rápido.
+	check_achievements()
+
 func _on_ui_tick():
 	# === 4/10 Hz — actualizar labels y botones ===
 	_sync_reactor_color()  # movido desde _process: no necesita 60 Hz
@@ -1331,7 +1336,6 @@ func update_ui():
 	UIManager.update_fungal_cycle_bar() # Barra de Micelio (Ciclo Biológico)
 
 	check_dominance_transition()
-	check_achievements()
 	update_achievements_label()
 	UIManager.update_core_labels()
 	UIManager.update_buttons()

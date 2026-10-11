@@ -504,6 +504,14 @@ func check_parasitism_final(_delta: float):
 	# Opción C: Masa crítica — crecimiento descontrolado
 	if BiosphereEngine.biomasa >= 25.0:
 		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_MASA"))
+		return
+
+	# Opción D: La Trampa del Vacío — el parásito entró durante AYUNO PRIMORDIAL (romper el ayuno
+	# tras >120 s sin clickear). El drain de Ayuno mantiene la biomasa en ~0, así que A/B/C nunca
+	# se cumplirían y la run quedaba en limbo con ambas mutaciones activas: el parásito devora el
+	# ayuno y cierra la run (desbloquea el logro trampa_del_vacio en on_run_closed).
+	if EvoManager.mutation_ayuno_primordial:
+		close_run("PARASITISMO", tr("CLOSE_PARASITISMO_AYUNO"))
 
 func check_sporulation_trigger(_delta: float):
 	if not RouteManager.allows_bifurcation() or run_closed or EvoManager.mutation_sporulation:

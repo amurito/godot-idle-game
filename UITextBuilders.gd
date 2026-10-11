@@ -1228,6 +1228,11 @@ static func build_ayuno_primordial_panel_text() -> String:
 	else:
 		t += "\n[Romper el ayuno ahora daría ×%.2f por %.0fs]\n" % [
 			1.0 + s / Balance.AYUNO_BURST_DIVISOR, Balance.AYUNO_BURST_DURATION]
+		# La Trampa del Vacío: Q tras >120 s sin clickear invita a Parasitismo (cierra la run).
+		var idle_s: float = EconomyManager.time_since_last_click
+		if idle_s > 100.0:
+			var warn: String = TranslationServer.translate("AYUNO_PARASITE_WARNING") % int(idle_s)
+			t += "[color=#ff6644]" + warn + "[/color]\n"
 	if EvoManager.ayuno_ascesis_level > 0:
 		t += "ASCESIS nv.%d (S_rate +%.0f%%)\n" % [EvoManager.ayuno_ascesis_level, EvoManager.ayuno_ascesis_level * Balance.AYUNO_ASCESIS_RATE_BONUS * 100.0]
 

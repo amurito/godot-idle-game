@@ -66,7 +66,11 @@ static func update_hiperasimilacion(ctx: Dictionary) -> void:
 		EvoManager._set_genome_state("hiperasimilacion", "dormido")
 
 
-## PARASITISMO (Degeneración): inactividad prolongada o estancamiento.
+## PARASITISMO (Degeneración). Tres disparadores:
+##   · inactividad: >120 s sin clickear con biomasa > 3
+##   · Masa Crítica: biomasa > 6, ε > 0.35, sin Contabilidad y run > 420 s
+##   · estancamiento: run > 1800 s con biomasa > 5 (salvo tras HOMEOSTASIS)
+## Bloqueado por Homeostasis, Simbiosis, Hiperasimilación, Red Micelial y Fusión Catabólica.
 ## NO requiere ε alto porque dejar de clickear ya colapsa ε por diseño.
 static func update_parasitismo(ctx: Dictionary) -> void:
 	var inactivity_trigger: bool = EconomyManager.time_since_last_click > 120.0 and ctx.biomasa > 3.0
@@ -85,7 +89,10 @@ static func update_parasitismo(ctx: Dictionary) -> void:
 
 	if EvoManager.mutation_parasitism:
 		EvoManager._set_genome_state("parasitismo", "activo")
-	elif EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial:
+	# FUSIÓN CATABÓLICA hereda el bloqueo de Hiperasimilación (la reemplaza y apaga su flag): sin
+	# esto la Masa Crítica (420 s) o el estancamiento (1800 s) cerraban la run antes de que el
+	# sello fuera alcanzable. AYUNO NO lo hereda a propósito: el parásito es su trampa.
+	elif EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial or EvoManager.mutation_fusion_catabolica:
 		EvoManager._set_genome_state("parasitismo", "bloqueado")
 	elif (ctx.biomasa > 6.0 and ctx.epsilon > 0.35 and ctx.accounting == 0 and ctx.run_time > 420.0) \
 			or inactivity_trigger or stagnation_trigger:
