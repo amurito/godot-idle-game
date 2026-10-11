@@ -106,6 +106,8 @@ func _ready() -> void:
 			await suite_save()
 		"close_run":
 			await suite_close_run()
+		"actions":
+			await suite_actions()
 		"trajectory":
 			await suite_trajectory(str(args.get("scenario", "fresh_hiper")), float(args.get("t", "240")))
 		_:
@@ -465,6 +467,63 @@ func _drop_alternate_keys(data: Dictionary) -> Dictionary:
 				kept[keys[idx]] = value[keys[idx]]
 		out[section] = kept
 	return out
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SUITE actions — handlers de botones con reglas de juego (main.gd)
+# ═════════════════════════════════════════════════════════════════════════════
+
+## Cada caso: estado previo (vars por autoload) + handler de main a disparar (+ argumento).
+const ACTION_CASES := {
+	"allostasis": {"pre": {"EvoManager": {"mutation_homeostasis": true}, "RunManager": {"homeostasis_mode": true},
+		"EconomyManager": {"money": 1234.5}, "StructuralModel": {"epsilon_runtime": 0.42}},
+		"call": "_trigger_allostasis"},
+	"btn_homeostasis_tier1": {"pre": {}, "call": "_on_btn_homeostasis_pressed"},
+	"btn_symbiosis_tier1": {"pre": {}, "call": "_on_btn_symbiosis_pressed"},
+	"btn_colonization_tier1": {"pre": {}, "call": "_on_btn_colonization_pressed"},
+	"branch_colonization": {"pre": {"EvoManager": {"mutation_red_micelial": true}}, "call": "_on_branch_selected", "arg": 1},
+	"branch_symbiosis": {"pre": {"EvoManager": {"mutation_red_micelial": true}, "StructuralModel": {"omega_min": 0.2}},
+		"call": "_on_branch_selected", "arg": 2},
+	"btn_colonization_tier2": {"pre": {"EvoManager": {"mutation_red_micelial": true}}, "call": "_on_btn_colonization_pressed"},
+	"spor_singularity": {"pre": {"EvoManager": {"mutation_red_micelial": true, "nucleo_conciencia": true},
+		"StructuralModel": {"epsilon_runtime": 0.31}}, "call": "_on_sporulation_final_pressed"},
+	"spor_panspermia_pulse": {"pre": {"EvoManager": {"mutation_red_micelial": true, "red_branch_selected": 1,
+		"seta_formada": true, "panspermia_charge": 0.0}, "EconomyManager": {"money": 1000000000.0},
+		"LegacyManager": {"last_run_ending": "ESPORULACIÓN"}}, "call": "_on_sporulation_final_pressed"},
+	"spor_panspermia_launch": {"pre": {"EvoManager": {"mutation_red_micelial": true, "red_branch_selected": 1,
+		"seta_formada": true, "panspermia_charge": 100000.0}, "EconomyManager": {"money": 1000000000.0},
+		"LegacyManager": {"last_run_ending": "ESPORULACIÓN"}}, "call": "_on_sporulation_final_pressed"},
+	"spor_sporulation": {"pre": {"EvoManager": {"mutation_red_micelial": true, "seta_formada": true},
+		"BiosphereEngine": {"biomasa": 30.0}}, "call": "_on_sporulation_final_pressed"},
+}
+
+func suite_actions() -> void:
+	print("── actions ──")
+	var d = SimDriver.new()
+	if not await d.boot(self, {"seed": 11, "platform": "desktop", "ui": true}):
+		failures += 1
+		return
+	var base := StateDump.capture_autoloads(RESTORE_AUTOLOADS)
+	var out := {}
+	for case_id in ACTION_CASES:
+		var c: Dictionary = ACTION_CASES[case_id]
+		StateDump.restore_autoloads(base)
+		for owner_name in c.pre:
+			_apply_vars(get_node("/root/" + owner_name), c.pre[owner_name], "%s/%s" % [case_id, owner_name])
+		var laps_before := LogManager.lap_events.size()
+		if c.has("arg"):
+			d.main.call(str(c.call), c.arg)
+		else:
+			d.main.call(str(c.call))
+		var new_laps: Array = []
+		for i in range(laps_before, LogManager.lap_events.size()):
+			new_laps.append(LogManager.lap_events[i].get("event", ""))
+		out[case_id + "|laps"] = StateDump.encode(new_laps)
+		var dumped := StateDump.dump_autoloads(GAME_AUTOLOADS + ["LegacyManager"])
+		for n in dumped:
+			out["%s|%s" % [case_id, n]] = dumped[n]
+	StateDump.restore_autoloads(base)
+	_golden("actions", out)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
