@@ -34,6 +34,8 @@ param(
     [string]$SandboxRoot = "",
     [switch]$KeepUserData,
     [switch]$SkipImport,
+    # Abre la ventana del juego (sin --headless). Para mirar simulaciones, no para goldens.
+    [switch]$Visual,
     [int]$TimeoutSec = 3600
 )
 
@@ -130,7 +132,8 @@ if (-not $SkipImport) {
 
 # --- 5. Escena -------------------------------------------------------------
 $sw = [Diagnostics.Stopwatch]::StartNew()
-$godotArgs = @("--headless", "--path", $SandboxProject, $Scene)
+$godotArgs = @("--path", $SandboxProject, $Scene)
+if (-not $Visual) { $godotArgs = @("--headless") + $godotArgs }
 if ($SceneArgs.Count -gt 0) { $godotArgs += @("--") + $SceneArgs }
 $exit = Invoke-Godot $godotArgs "scene" $TimeoutSec
 $elapsed = $sw.Elapsed.TotalSeconds

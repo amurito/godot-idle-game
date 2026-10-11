@@ -12,7 +12,14 @@ extends Node
 ##   --ui=true|false       ejecutar el UI tick (false = sólo lógica, más rápido)
 ##   --max_t=<s>           override del máximo de segundos simulados
 ##   --out=<ruta.json>     reporte completo (muestras, eventos, rendimiento)
+##   --visual              ventana con el juego real + panel de seguimiento (sin --headless)
+##   --speed=<x>           modo visual: segundos de juego por segundo real (default 5)
+##   --autoquit            modo visual: cerrar la ventana al terminar (sin esperar Esc)
+##   --screenshot=<ruta.png>  modo visual: guarda una captura de la ventana al terminar
 ##   --list                lista los escenarios y sale
+##
+## Modo visual — teclas: + / - velocidad · Espacio pausa · Esc salir.
+## No es determinista (los visuales consumen RNG global): sirve para mirar, no para goldens.
 
 const SimGuard := preload("res://tests/sim/SimGuard.gd")
 const SimDriver := preload("res://tests/sim/SimDriver.gd")
@@ -20,6 +27,18 @@ const BotPolicy := preload("res://tests/sim/BotPolicy.gd")
 const Scenarios := preload("res://tests/sim/Scenarios.gd")
 
 const FRAMES_PER_REAL_FRAME := 400   # 20 s simulados por frame real: deja correr call_deferred
+const MAX_FRAMES_PER_REAL_FRAME_VISUAL := 2000
+
+# Estado del modo visual
+var visual := false
+var speed := 5.0
+var paused := false
+var _quit_requested := false
+var _hud: RichTextLabel = null
+var _scenario_id := ""
+var _scenario_desc := ""
+var _last_d: RefCounted = null
+var _last_bot: RefCounted = null
 
 
 func _ready() -> void:
@@ -40,11 +59,18 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	var sc: Dictionary = Scenarios.ALL[scenario_id]
+	_scenario_id = scenario_id
+	_scenario_desc = str(sc.get("desc", ""))
 	var opts := {
 		"seed": int(args.get("seed", "1337")),
 		"platform": str(args.get("platform", "desktop")),
 		"ui": SimGuard.arg_bool(args, "ui", true),
+		"visual": SimGuard.arg_bool(args, "visual", false),
 	}
+	visual = opts.visual
+	speed = maxf(0.1, float(args.get("speed", "5")))
+	if visual:
+		_build_hud()
 	var max_t: float = float(args.get("max_t", str(sc.get("max_t", 1800.0))))
 	var sample_every: float = float(sc.get("sample_every", 10.0))
 
@@ -53,6 +79,17 @@ func _ready() -> void:
 	if args.has("out"):
 		if SimGuard.write_text(str(args["out"]), SimGuard.to_canonical_json(report)):
 			print("[BotSimulator] reporte → %s" % args["out"])
+	if visual and args.has("screenshot"):
+		_render_hud(null, null, report)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		get_viewport().get_texture().get_image().save_png(str(args["screenshot"]))
+		print("[BotSimulator] captura → %s" % args["screenshot"])
+	if visual and not SimGuard.arg_bool(args, "autoquit", false):
+		paused = true
+		_render_hud(null, null, report)
+		while not _quit_requested:
+			await get_tree().process_frame
 	get_tree().quit(0)
 
 
@@ -71,13 +108,22 @@ func run_scenario(scenario_id: String, sc: Dictionary, opts: Dictionary, max_t: 
 	var max_frames := int(ceil(max_t / d.dt()))
 	var wall_start := Time.get_ticks_msec()
 
-	while d.frame < max_frames and not RunManager.run_closed:
-		for i in FRAMES_PER_REAL_FRAME:
+	var budget := 0.0
+	while d.frame < max_frames and not RunManager.run_closed and not _quit_requested:
+		var n := FRAMES_PER_REAL_FRAME
+		if visual:
+			# Ritmo controlado: `speed` segundos de juego por segundo real.
+			budget += 0.0 if paused else get_process_delta_time() * speed / d.dt()
+			n = mini(int(budget), MAX_FRAMES_PER_REAL_FRAME_VISUAL)
+			budget -= n
+		for i in n:
 			d.step(bot)
 			if d.frame % sample_frames == 0:
 				samples.append(d.sample())
 			if RunManager.run_closed or d.frame >= max_frames:
 				break
+		if visual:
+			_render_hud(d, bot, {})
 		await get_tree().process_frame
 	samples.append(d.sample())
 	var wall_s := (Time.get_ticks_msec() - wall_start) / 1000.0
@@ -195,3 +241,134 @@ func _fmt_perf(s: Dictionary) -> String:
 	if int(s.get("n", 0)) == 0:
 		return "—"
 	return "n=%d mean %.0f µs | p50 %d | p95 %d | max %d µs | total %.0f ms" % [s.n, s.mean_us, s.p50_us, s.p95_us, s.max_us, s.total_ms]
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  Modo visual — panel de seguimiento y controles
+# ═════════════════════════════════════════════════════════════════════════════
+
+func _input(event: InputEvent) -> void:
+	if not visual:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		match (event as InputEventKey).keycode:
+			KEY_EQUAL, KEY_PLUS, KEY_KP_ADD:
+				speed = minf(speed * 2.0, 512.0)
+			KEY_MINUS, KEY_KP_SUBTRACT:
+				speed = maxf(speed / 2.0, 0.25)
+			KEY_SPACE:
+				paused = not paused
+			KEY_ESCAPE:
+				_quit_requested = true
+			_:
+				return
+		get_viewport().set_input_as_handled()
+
+
+func _build_hud() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 128  # máxima: por encima de popups del tutorial y toasts del juego
+	add_child(layer)
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.03, 0.05, 0.06, 0.9)
+	sb.border_color = Color(0.35, 0.85, 0.55)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(12)
+	panel.add_theme_stylebox_override("panel", sb)
+	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -452.0
+	panel.offset_right = -12.0
+	panel.offset_top = 12.0
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud = RichTextLabel.new()
+	_hud.bbcode_enabled = true
+	_hud.fit_content = true
+	_hud.scroll_active = false
+	_hud.custom_minimum_size = Vector2(420, 0)
+	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud.add_theme_font_size_override("normal_font_size", 14)
+	_hud.add_theme_font_size_override("bold_font_size", 15)
+	panel.add_child(_hud)
+	layer.add_child(panel)
+
+
+func _render_hud(d: RefCounted, bot: RefCounted, report: Dictionary) -> void:
+	if _hud == null:
+		return
+	if d != null:
+		_last_d = d
+		_last_bot = bot
+	var t := "[b][color=#7dffb0]SIMULADOR · %s[/color][/b]
+" % _scenario_id
+	t += "[color=#9aa]%s[/color]
+
+" % _scenario_desc
+	var state := "[color=#ffcc55]PAUSA[/color]" if paused else "×%s" % _fmt_speed(speed)
+	t += "[b]t = %s[/b]   %s
+" % [_fmt_time(RunManager.run_time), state]
+	t += "$ %s   Δ$/s %s
+" % [_fmt_num(EconomyManager.money), _fmt_num(EconomyManager.get_delta_total())]
+	t += "ε %.2f   Ω %.2f   bio %.1f   hifas %.1f
+" % [StructuralModel.epsilon_runtime, StructuralModel.omega, BiosphereEngine.biomasa, BiosphereEngine.hifas]
+	if _last_d != null:
+		t += "clicks %d   compras %d   reloj logros %.2f×
+" % [_last_d.clicks, _last_d.purchases.size(), AchievementManager._run_time / maxf(RunManager.run_time, 0.001)]
+		t += "
+[b]Eventos[/b]
+"
+		var evs: Array = _last_d.events.slice(maxi(0, _last_d.events.size() - 6))
+		if evs.is_empty():
+			t += "[color=#777]—[/color]
+"
+		for e in evs:
+			var col := "#ff88cc" if e.type == "mutation" else "#ffd866"
+			t += "[color=%s]%s  %s[/color]
+" % [col, _fmt_time(e.t), ("🧬 " if e.type == "mutation" else "🏆 ") + str(e.id)]
+	if _last_bot != null:
+		var acts: Array = _last_bot.actions.slice(maxi(0, _last_bot.actions.size() - 4))
+		if not acts.is_empty():
+			t += "
+[b]Acciones del bot[/b]
+"
+			for a in acts:
+				t += "[color=#88ccff]%s  %s[/color]
+" % [_fmt_time(a.t), a.action]
+	if not report.is_empty() and report.has("outcome"):
+		var o: Dictionary = report.outcome
+		t += "
+[b][color=#7dffb0]RUN TERMINADA[/color][/b]
+"
+		if o.run_closed:
+			t += "Final: [b]%s[/b] a %s   PL +%d
+" % [o.final_route, _fmt_time(o.t_end), o.pl_gained]
+		else:
+			t += "Run abierta al límite (%s)
+" % _fmt_time(o.t_end)
+		t += "[color=#9aa]Esc para salir[/color]
+"
+	else:
+		t += "
+[color=#667]+ / - velocidad · Espacio pausa · Esc salir[/color]"
+	_hud.text = EmojiToRichText.rich(t)
+
+
+static func _fmt_time(seconds: float) -> String:
+	var s := int(seconds)
+	return "%02d:%02d" % [s / 60, s % 60]
+
+
+static func _fmt_speed(x: float) -> String:
+	return ("%.0f" % x) if x >= 1.0 else ("%.2f" % x)
+
+
+static func _fmt_num(x: float) -> String:
+	var a := absf(x)
+	if a >= 1e9:
+		return "%.2fB" % (x / 1e9)
+	if a >= 1e6:
+		return "%.2fM" % (x / 1e6)
+	if a >= 1e3:
+		return "%.1fK" % (x / 1e3)
+	return "%.1f" % x

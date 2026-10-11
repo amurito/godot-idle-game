@@ -79,8 +79,25 @@ func boot(host: Node, opts: Dictionary) -> bool:
 	if not _derive_cadence():
 		return false
 	_fungi = main.fungi_ui if is_instance_valid(main.fungi_ui) else null
+	if bool(opts.get("visual", false)):
+		_enable_visual_mode()
 	_connect_events()
 	return true
+
+
+## Modo visual: el reloj de juego lo sigue avanzando step(), pero el resto del árbol de main
+## (animaciones, tweens, toasts, reactor) vuelve a procesar para poder mirar la run.
+## No es determinista (los visuales consumen RNG global): sólo para observar, nunca para goldens.
+func _enable_visual_mode() -> void:
+	for timer_name in ["_logic_timer", "_ui_timer", "_autosave_timer"]:
+		var t: Variant = main.get(timer_name)
+		if t is Timer:
+			(t as Timer).stop()
+	main.process_mode = Node.PROCESS_MODE_INHERIT
+	main.set_process(false)        # su _process suma delta REAL a run_time: lo maneja step()
+	main.set_process_input(false)  # las teclas las maneja el simulador (velocidad/pausa)
+	if is_instance_valid(_fungi):
+		_fungi.set_process(false)  # step() llama a su _process con el delta simulado
 
 
 func _derive_cadence() -> bool:
