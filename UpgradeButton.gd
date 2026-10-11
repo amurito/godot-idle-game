@@ -109,9 +109,14 @@ func update_appearance(current_money: float) -> void:
 	else:
 		gain_str = "+%.0f%s" % [def.gain, _unit]
 
-	var cost :float= state.current_cost
+	# Precio que REALMENTE se cobra (UpgradeManager.cost aplica nutrientes, memoria estructural,
+	# presión rentable, memoria_recurso…). Antes se mostraba state.current_cost crudo: el botón
+	# podía verse deshabilitado aunque la compra con descuento alcanzara.
+	var cost: float = UpgradeManager.cost(upgrade_id)
 	var cost_str: String
-	if cost >= 1_000_000_000.0:
+	if cost <= 0.0:
+		cost_str = tr("GAME_BTN_FREE")
+	elif cost >= 1_000_000_000.0:
 		cost_str = "$%.2fB" % (cost / 1_000_000_000.0)
 	elif cost >= 1_000_000.0:
 		cost_str = "$%.2fM" % (cost / 1_000_000.0)
