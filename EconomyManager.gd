@@ -97,97 +97,8 @@ func _compute_click_power() -> float:
 		cached_mu
 	)
 
-	# LEGADO: Sincronía Total (Beta afecta al click)
-	if LegacyManager.get_buff_value("sincronia_total"):
-		power *= BiosphereEngine.get_biomass_beta()
-
-	# Buffs de Mutación (Rutas)
-	if EvoManager.mutation_symbiosis:
-		power *= 2.5
-	if EvoManager.mutation_red_micelial:
-		power *= 0.5
-	# Hiperasimilación: el ×10 deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
-	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
-		power *= 10.0 # RUSH DE CLICK EXTREMO
-	# FUSIÓN CATABÓLICA (transmutación): click ×5 estable + ráfaga Metabolismo Híbrido ×2
-	if EvoManager.mutation_fusion_catabolica:
-		power *= Balance.FUSION_CLICK_MULT * EvoManager.fusion_burst_mult()
-
-	# HOMEOSTASIS: Orden Administrativo — +50% solo mientras ε está en banda (0.03–0.30)
-	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
-		power *= 1.5
-
-	# MET.OSCURO: energía alternativa ×3; ×5 durante Autofagia Necrótica o Protocolo Omega-Cero
-	# (ambas reabren las compras → el click junta $ para recomprar y realimentar el loop de devour)
-	if EvoManager.mutation_met_oscuro:
-		var loop_route: bool = EvoManager.mutation_autolisis or EvoManager.mutation_omega_cero
-		power *= Balance.AUTOLISIS_CLICK_MULT if loop_route else 3.0
-
-	# NECROSIS CONTROLADA: multiplicador necrótico (cuanto más bajo Ω, más produce)
-	if EvoManager.mutation_necrosis:
-		power *= EvoManager.necrosis_mult()
-
-	# APOPTOSIS HEREDADA (NG+): income escala suavemente con Ω bajo en runs futuras
-	if LegacyManager.get_buff_value("apoptosis_heredada") and StructuralModel.omega < 0.30:
-		power *= clampf(1.0 + (0.30 - StructuralModel.omega) * 1.67, 1.0, 1.5)
-
-	# PLASTICIDAD TERMINAL (cross HOMEORHESIS→NECROSIS): premia ambos extremos de Ω
-	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
-		power *= 1.5
-
-	# SÍNTESIS VITAL (cross OMEGA-CERO↔REMISIÓN): fragilidad + abundancia simultáneas
-	if LegacyManager.get_buff_value("sintesis_vital") and StructuralModel.omega < 0.20 and BiosphereEngine.biomasa >= 80.0:
-		power *= 2.0
-
-	if LegacyManager.get_buff_value("aura_dorada"):
-		power *= 2.5 # Aura Dorada — click ×2.5 (especializado, no afecta pasivo)
-
-	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% por trascendencia acumulada
-	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
-		power *= (1.0 + LegacyManager.trascendencia_count * 0.05)
-
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		power *= 2.0 # Semilla Cósmica (Bonus permanente)
-
-	# METABOLISMO GLITCH: El parásito extrae más cuando el sistema está estresado
-	if LegacyManager.get_buff_value("metabolismo_glitch") and StructuralModel.epsilon_runtime > 0.40:
-		power *= 1.50
-
-	# ENTROPÍA DOMESTICADA (COLAPSO CONTROLADO): la zona roja (ε>0.65) deja de penalizar y escala
-	var entropia_k: float = LegacyManager.get_effect_value("entropia_domesticada_mult")
-	if entropia_k > 0.0 and StructuralModel.epsilon_runtime > 0.65:
-		var ent_mult: float = clampf(1.0 + (StructuralModel.epsilon_runtime - 0.65) * entropia_k, 1.0, 2.0)
-		power *= ent_mult
-
-	# Corrosión Parasitaria (Converge a 0)
-	if EvoManager.mutation_parasitism:
-		power *= parasitism_corrosion
-
-	# RESONANCIA SIMBIONTE: click escala con biomasa actual (×1 + biomasa×0.05, cap ×2.5)
-	if LegacyManager.get_buff_value("resonancia_simbionte"):
-		power *= min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
-
-	# SIMBIOSIS AGRESIVA: ×1.15 si se completaron SIMBIOSIS y PARASITISMO
-	if LegacyManager.get_buff_value("simbiosis_agresiva"):
-		if LegacyManager.endings_achieved.get("SIMBIOSIS", false) and \
-		   LegacyManager.endings_achieved.get("PARASITISMO", false):
-			power *= 1.15
-
-	# ECO PRIMORDIAL: +10% a todos los ingresos
-	var eco_primordial_mult: float = LegacyManager.get_effect_value("all_income_mult")
-	if eco_primordial_mult > 0.0:
-		power *= (1.0 + eco_primordial_mult)
-
-	# RESONANCIA COGNITIVA: +5% click por nivel cognitivo activo
-	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
-	if cog_mult > 0.0:
-		var acc_lvl: int = UpgradeManager.level("accounting")
-		if acc_lvl > 0:
-			power *= (1.0 + acc_lvl * cog_mult)
-
-	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción a cambio de buffs cósmicos
-	if RouteManager.is_active("vacio"):
-		power *= RouteManager.production_mult()
+	# Rutas, legados y buffs cósmicos: tabla declarativa (IncomeModifiers.CLICK_ORDER)
+	power = IncomeModifiers.apply("click", power)
 
 	# PROTOCOLO OMEGA-CERO: Φ acumulada amplifica el click durante la run (aditivo, escala con síntesis).
 	if EvoManager.mutation_omega_cero:
@@ -260,126 +171,15 @@ func _compute_passive_total() -> float:
 	if LegacyManager.get_buff_value("redireccion_energia"):
 		total += get_click_power() * 0.10
 
-	# Buffs de Mutación (Rutas)
-	if EvoManager.mutation_symbiosis:
-		total *= 0.5
-	if EvoManager.mutation_red_micelial:
-		total *= 2.5
-	# Hiperasimilación: el nerf de pasivo deja de aplicar bajo MET.OSCURO (MO reemplaza la economía)
-	if EvoManager.mutation_hyperassimilation and not EvoManager.mutation_met_oscuro:
-		total *= 0.25 # Sacrifica el pasivo por el núcleo
-	# FUSIÓN CATABÓLICA (transmutación): pasivo ×5 estable + ráfaga Metabolismo Híbrido ×2
-	if EvoManager.mutation_fusion_catabolica:
-		total *= Balance.FUSION_PASSIVE_MULT * EvoManager.fusion_burst_mult()
-	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
-	if EvoManager.mutation_ayuno_primordial:
-		total *= EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult()
-	# LEGADO PRIMICIA DEL VACÍO: pasivo ×3.0→×1.0 linealmente en los primeros 10 min de run
-	if LegacyManager.get_buff_value("legado_primicia_del_vacio") and RunManager.run_time < Balance.AYUNO_LEGACY_DURATION:
-		var t: float = clampf(RunManager.run_time / Balance.AYUNO_LEGACY_DURATION, 0.0, 1.0)
-		total *= lerpf(Balance.AYUNO_LEGACY_MULT_START, 1.0, t)
-	if EvoManager.mutation_homeostasis and RunManager.get_en_banda_homeostatica():
-		total *= 1.5 # Orden Administrativa (+50% — solo activo mientras ε en banda 0.03–0.30)
-	if EvoManager.mutation_parasitism:
-		total *= 1.2 # Crecimiento Parásito inicial
-		total *= parasitism_corrosion # Pero la corrosión lo mata con el tiempo
-
-	# MET.OSCURO: pasivo anulado; Autólisis lo restaura ×2; Necrosis lo restaura ×1
-	# (el desmantelamiento controlado libera energía estructural acumulada)
-	if EvoManager.mutation_met_oscuro:
-		if EvoManager.mutation_autolisis:
-			total *= Balance.AUTOLISIS_PASSIVE_MULT
-		elif EvoManager.mutation_necrosis:
-			pass  # pasivo normal durante necrosis (×1.0 — el desmantelamiento lo libera)
-		elif EvoManager.mutation_omega_cero:
-			pass  # pasivo normal durante la síntesis (×1.0 — sostiene las recompras del loop)
-		else:
-			total = 0.0
-
-	# aura_dorada ya NO afecta pasivo (rework — solo click ×2.5)
-
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		total *= 2.0 # Semilla Cósmica (Bonus permanente)
-
-	if LegacyManager.get_buff_value("semilla_cosmica_oscura"):
-		total *= Balance.SEMILLA_OSCURA_PASIVO_MULT # Semilla Cósmica Oscura (cruce Esclerocio→Panspermia)
-
-	if LegacyManager.get_buff_value("mente_colmena"):
-		total *= 3.0 # IA Automática (Bonus permanente)
-
-	# METABOLISMO GLITCH: El parásito prospera en el caos — +80% pasivo cuando ε > 0.40
-	if LegacyManager.get_buff_value("metabolismo_glitch"):
-		if StructuralModel.epsilon_runtime > 0.40:
-			total *= 1.80
-
-	# ENTROPÍA DOMESTICADA (COLAPSO CONTROLADO): la zona roja (ε>0.65) deja de penalizar y escala
-	var entropia_k: float = LegacyManager.get_effect_value("entropia_domesticada_mult")
-	if entropia_k > 0.0 and StructuralModel.epsilon_runtime > 0.65:
-		var ent_mult: float = clampf(1.0 + (StructuralModel.epsilon_runtime - 0.65) * entropia_k, 1.0, 2.0)
-		total *= ent_mult
-
-	# CONVERGENCIA CÍCLICA (Banco Cósmico T2): +5% pasivo por trascendencia acumulada
-	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
-		total *= (1.0 + LegacyManager.trascendencia_count * 0.05)
-
-	# APOPTOSIS HEREDADA (NG+): pasivo escala suavemente con Ω bajo
-	if LegacyManager.get_buff_value("apoptosis_heredada") and StructuralModel.omega < 0.30:
-		total *= clampf(1.0 + (0.30 - StructuralModel.omega) * 1.67, 1.0, 1.5)
-
-	# PLASTICIDAD TERMINAL (cross): premia ambos extremos de Ω
-	if LegacyManager.get_buff_value("plasticidad_terminal") and (StructuralModel.omega > 0.55 or StructuralModel.omega < 0.10):
-		total *= 1.5
-
-	# SÍNTESIS VITAL (cross OMEGA-CERO↔REMISIÓN): fragilidad + abundancia simultáneas
-	if LegacyManager.get_buff_value("sintesis_vital") and StructuralModel.omega < 0.20 and BiosphereEngine.biomasa >= 80.0:
-		total *= 2.0
-
-	# CONTROL DE Ω: offset positivo → eficiencia de producción (max +30% a offset máx)
-	if LegacyManager.get_buff_value("control_omega") and StructuralModel.control_omega_offset > 0.0:
-		total *= (1.0 + StructuralModel.control_omega_offset * 2.0)
-
-	# Mult por Rama Evolutiva (Nodos Finales DLC)
-	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		total *= 2.5
-	elif EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
-		pass
-
-	# GLITCH PERSISTENTE: +15% pasivo cuando se juega en ruta Singularidad/Mente Colmena
-	if LegacyManager.get_buff_value("glitch_persistente"):
-		if EvoManager.mutation_red_micelial or EvoManager.nucleo_conciencia:
-			total *= 1.15
-
-	# SIMBIOSIS AGRESIVA: ×1.15 pasivo si ambas rutas completadas
-	if LegacyManager.get_buff_value("simbiosis_agresiva"):
-		if LegacyManager.endings_achieved.get("SIMBIOSIS", false) and \
-		   LegacyManager.endings_achieved.get("PARASITISMO", false):
-			total *= 1.15
-
-	# ECO PRIMORDIAL: +10% a todos los ingresos (pasivo)
-	var eco_primordial_mult: float = LegacyManager.get_effect_value("all_income_mult")
-	if eco_primordial_mult > 0.0:
-		total *= (1.0 + eco_primordial_mult)
-
-	# RESONANCIA COGNITIVA: +5% pasivo por nivel cognitivo activo
-	var cog_mult: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
-	if cog_mult > 0.0:
-		var acc_lvl: int = UpgradeManager.level("accounting")
-		if acc_lvl > 0:
-			total *= (1.0 + acc_lvl * cog_mult)
-
-	# VACÍO HAMBRIENTO (Post-Trascendencia): ×100 producción
-	if RouteManager.is_active("vacio"):
-		total *= RouteManager.production_mult()
+	# Rutas, legados y buffs cósmicos: tabla declarativa (IncomeModifiers.PASSIVE_ORDER)
+	total = IncomeModifiers.apply("passive", total)
 
 	# MEMORIA SINÁPTICA (NG+ de PROTOCOLO OMEGA-CERO): término pasivo aditivo exp(k·(1−Ω))−1,
 	# acotado. Inerte en runs normales (Ω alto → ≈0), explosivo en el árbol oscuro (Ω→0).
 	# Aditivo y al final: NO se multiplica por mults de ruta (evita el exploit de VACÍO ×100).
 	# La intensidad (k) escala con el Núcleo Φ logrado al sellar el protocolo (kernel persistido).
 	if LegacyManager.get_buff_value("memoria_sinaptica"):
-		var kernel: float = clampf(LegacyManager.omega_cero_kernel_max, 1.0, Balance.OMEGA_CERO_KERNEL_CAP)
-		var k_eff: float = Balance.OMEGA_CERO_BUFF_K_BASE * kernel
-		var p_omega: float = min(exp(k_eff * (1.0 - StructuralModel.omega)) - 1.0, Balance.OMEGA_CERO_BUFF_CAP)
-		total += p_omega
+		total += _compute_memoria_sinaptica_additive()
 
 	return total
 

@@ -963,50 +963,24 @@ func update_legacy_indicators() -> void:
 		chip.mouse_exited.connect(func(): _clear_header_tip())
 		ind.add_child(chip)
 
+	# click× / pas×: multiplicadores de legado y banco cósmico ACTIVOS ahora mismo, leídos de la
+	# misma tabla que usa la economía (IncomeModifiers) → el chip no puede desincronizarse.
 	var click_mult := 1.0
 	var click_tip := "Click legado:"
 	if LegacyManager.get_buff_value("impulso_manual"):
-		click_mult *= 2.0;   click_tip += "\n• Impulso Manual ×2.0"
-	if LegacyManager.get_buff_value("resonancia_simbionte"):
-		var rs_mult: float = min(1.0 + BiosphereEngine.biomasa * 0.05, 2.5)
-		click_mult *= rs_mult
-		click_tip += "\n• Resonancia Simbionte ×%.2f (bio=%.1f)" % [rs_mult, BiosphereEngine.biomasa]
-	if LegacyManager.get_buff_value("aura_dorada"):
-		click_mult *= 2.5;   click_tip += "\n• Aura Dorada ×2.5 (solo click)"
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		click_mult *= 2.0;   click_tip += "\n• Semilla Cósmica ×2.0"
-	var eco := LegacyManager.get_effect_value("all_income_mult")
-	if eco > 0.0:
-		click_mult *= (1.0 + eco)
-		click_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
-	if LegacyManager.has_cosmic_buff("convergencia_ciclica") and LegacyManager.trascendencia_count > 0:
-		var cc := 1.0 + LegacyManager.trascendencia_count * 0.05
-		click_mult *= cc
-		click_tip += "\n• Convergencia Cíclica ×%.2f (T=%d)" % [cc, LegacyManager.trascendencia_count]
-	if LegacyManager.get_buff_value("metabolismo_glitch"):
-		click_tip += "\n• Metabolismo Oscuro ×1.5 (si ε>0.40)*"
-	var cog_mult_val: float = LegacyManager.get_effect_value("cognitivo_income_mult_per_level")
-	if cog_mult_val > 0.0:
-		click_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
+		click_mult *= 2.0;   click_tip += "
+• Impulso Manual ×2.0"
+	for m in IncomeModifiers.active("click", ["legacy", "cosmic"]):
+		click_mult *= m.factor
+		click_tip += "
+• %s ×%.2f" % [m.name, m.factor]
 
 	var pasivo_mult := 1.0
 	var pas_tip := "Pasivo legado:"
-	if LegacyManager.get_buff_value("semilla_cosmica"):
-		pasivo_mult *= 2.0;  pas_tip += "\n• Semilla Cósmica ×2.0"
-	if LegacyManager.get_buff_value("semilla_cosmica_oscura"):
-		pasivo_mult *= Balance.SEMILLA_OSCURA_PASIVO_MULT
-		pas_tip += "\n• Semilla Cósmica Oscura ×%.1f" % Balance.SEMILLA_OSCURA_PASIVO_MULT
-	if LegacyManager.get_buff_value("mente_colmena"):
-		pasivo_mult *= 3.0;  pas_tip += "\n• Mente Colmena ×3.0"
-	if eco > 0.0:
-		pasivo_mult *= (1.0 + eco)
-		pas_tip += "\n• Eco Primordial ×%.2f" % (1.0 + eco)
-	if LegacyManager.get_buff_value("metabolismo_glitch"):
-		pas_tip += "\n• Metabolismo Oscuro ×1.8 (si e>0.40)*"
-	if LegacyManager.get_buff_value("glitch_persistente"):
-		pas_tip += "\n• Glitch Persistente ×1.15 (red micelial)*"
-	if cog_mult_val > 0.0:
-		pas_tip += "\n• Resonancia Cognitiva +5%/nv.cog*"
+	for m in IncomeModifiers.active("passive", ["legacy", "cosmic"]):
+		pasivo_mult *= m.factor
+		pas_tip += "
+• %s ×%.2f" % [m.name, m.factor]
 
 	var omega_min := 0.0
 	var omega_tip := "O garantizado:"

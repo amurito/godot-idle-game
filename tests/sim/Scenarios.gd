@@ -81,6 +81,16 @@ const ALL := {
 			"fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
 		"max_t": 2400.0, "sample_every": 10.0,
 	},
+	"ng_legacy_showcase": {
+		"desc": "T5 con varios legados de ingreso + Convergencia Cíclica: para mirar los chips click×/pas× del header (modo visual).",
+		"legacy": {"trascendencia_count": 5, "last_run_ending": "SIMBIOSIS",
+			"endings": ["SIMBIOSIS", "PARASITISMO", "HOMEOSTASIS"],
+			"buffs": {"impulso_manual": 1, "aura_dorada": 1, "semilla_cosmica": 1, "mente_colmena": 1,
+				"simbiosis_agresiva": 1, "resonancia_simbionte": 1, "metabolismo_glitch": 1},
+			"cosmic": ["convergencia_ciclica"]},
+		"bot": {"click_cps": 5.0, "buy": "cheapest", "avoid": ["accounting"]},
+		"max_t": 120.0, "sample_every": 10.0,
+	},
 	"ng_fusion_smart": {
 		"desc": "T3 + FUSIÓN: como ng_fusion_player, pero compra Contabilidad apenas activa Fusión para esquivar la Masa Crítica (420 s). ¿Es sellable?",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
