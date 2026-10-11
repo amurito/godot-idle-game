@@ -318,8 +318,26 @@ corrigió en este trabajo: o cambian comportamiento, o son decisiones de diseño
 | 1 | Golden tests (economy 2340 · save 27+144+9 · 4 trayectorias de 450 s), deterministas bit a bit | ✅ `938252f` + `791261e` |
 | 2 | Save declarativo (`SaveSchema`) | ✅ `d69cdb7` — SaveManager 664 → 405 líneas, `validate()` |
 | 3 | Memoización económica | ✅ `3638ce2` — −7% UI/click (medido) |
-| — | **Siguiente recomendado: C9 (vista)** — dirty-checking de labels, sacar `update_ui()` del camino del click, `fungi_ui` sin refresco por frame. Es donde está el ~90% del costo medido. | pendiente |
-| — | B1/B2 y D1–D3 | requieren decisión del autor |
+| 4 | **C2 / B1** reloj de logros: `check_achievements()` al tick lógico (5 Hz exactos) → 1.00× en desktop y web | ✅ `074c7c7` |
+| 5 | **B2** 26 floats del save con `_sf()` (no 16: 10 más fuera de `evolution`) | ✅ `074c7c7` |
+| 6 | **D2** Trampa del Vacío: Parasitismo durante Ayuno cierra la run (fin del limbo, logro alcanzable) + aviso a los 100 s | ✅ `074c7c7` |
+| 7 | **D3** Fusión hereda el bloqueo de Parasitismo de Hiperasimilación | ✅ `074c7c7` (sello aún exigente: balance) |
+| 8 | Simulador visual + lanzador con ventana (`tools/sim/lanzador.cmd`) | ✅ `c49a59c` |
+| 9 | **C9** UI: `UpgradeButton` re-aplicaba StyleBoxes en cada refresco (75% de `update_ui`); click sin `update_ui()` completo | ✅ ver abajo |
+| — | **B7 (nuevo)** `UpgradeButton` muestra/habilita con `state.current_cost` crudo, la compra usa `UpgradeManager.cost()` con descuentos → botón deshabilitado aunque alcance | requiere decisión |
+| — | Siguientes de UI: `update_mutation_center_panel` 0.5 ms, `update_core_labels` 0.4, `update_lab_metrics` 0.35 (re-construyen texto aunque no cambie) | pendiente |
+
+### Resultado de C9 (mismo escenario, desktop, 6 cps)
+
+| | Antes del sprint | Después |
+|---|---|---|
+| `update_buttons()` | 4.74 ms | 0.27 ms |
+| Tick de UI | 8.9 ms | 2.2 ms |
+| Click | 8.4 ms | 0.22 ms |
+| Tick lógico | 0.6 ms | 1.2 ms (ahora incluye logros, 5 Hz en vez de 10+) |
+| **CPU por segundo de juego** | **~142 ms** | **~29 ms (−80%)** |
+
+Goldens idénticos (el estado de juego no cambió). El simulador corre 31× tiempo real (antes 8×).
 
 ### Cómo correr la red
 

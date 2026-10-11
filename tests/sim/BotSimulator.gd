@@ -166,6 +166,14 @@ func run_scenario(scenario_id: String, sc: Dictionary, opts: Dictionary, max_t: 
 	}
 	# update_ui() avanza el reloj de logros (auditoría C2): se mide recién al final.
 	report.perf["update_ui_us"] = d.bench_update_ui()
+	var parts: Dictionary = d.bench_ui_breakdown()
+	report.perf["ui_breakdown_us"] = parts
+	var ordered := parts.keys()
+	ordered.sort_custom(func(a, b) -> bool: return parts[a] > parts[b])
+	var lines: Array = []
+	for k in ordered:
+		lines.append("%s %.0f" % [k, parts[k]])
+	print("desglose UI (µs): " + " | ".join(lines))
 	if EconomyManager.get("_diag") is Dictionary:
 		report.perf["economy_calls_per_phase"] = d.diag_report()
 		print("llamadas al pipeline económico por fase: %s" % JSON.stringify(report.perf.economy_calls_per_phase))

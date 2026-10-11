@@ -98,6 +98,7 @@ func _enable_visual_mode() -> void:
 	main.set_process_input(false)  # las teclas las maneja el simulador (velocidad/pausa)
 	if is_instance_valid(_fungi):
 		_fungi.set_process(false)  # step() llama a su _process con el delta simulado
+	TutorialManager.skip_tutorial()  # el modal de bienvenida oscurecería toda la pantalla
 
 
 func _derive_cadence() -> bool:
@@ -251,6 +252,40 @@ func bench_economy(iterations: int = 300) -> Dictionary:
 		for i in iterations:
 			fn.call()
 		out[label + "_us"] = snappedf(float(Time.get_ticks_usec() - t0) / iterations, 0.01)
+	return out
+
+
+## Desglose del costo de cada parte de un tick de UI (µs por llamada), en el estado actual.
+## Cada parte se mide dentro de un bloque memo, igual que dentro de update_ui(). Muta estado
+## de vista/log: llamar sólo cuando la simulación ya terminó.
+func bench_ui_breakdown(iterations: int = 20) -> Dictionary:
+	var parts := {
+		"update_epsilon_sticky": func() -> void: main.update_epsilon_sticky(),
+		"update_bifurcation_panel": func() -> void: UIManager.update_bifurcation_panel(),
+		"update_fungal_cycle_bar": func() -> void: UIManager.update_fungal_cycle_bar(),
+		"check_dominance_transition": func() -> void: main.check_dominance_transition(),
+		"update_achievements_label": func() -> void: main.update_achievements_label(),
+		"update_core_labels": func() -> void: UIManager.update_core_labels(),
+		"update_buttons": func() -> void: UIManager.update_buttons(),
+		"update_header_money": func() -> void: UIManager.update_header_money(EconomyManager.money, EconomyManager.get_contribution_breakdown().total),
+		"update_header_metrics": func() -> void: UIManager.update_header_metrics(StructuralModel.epsilon_runtime, StructuralModel.omega, BiosphereEngine.biomasa, 20.0, BiosphereEngine.hifas, BiosphereEngine.nutrientes),
+		"update_mutation_center_panel": func() -> void: UIManager.update_mutation_center_panel(main),
+		"institution_panel_text": func() -> void: UIManager.build_institution_panel_text(main),
+		"update_lab_metrics": func() -> void: UIManager.update_lab_metrics(),
+		"update_log_label": func() -> void: LogManager.update_log_label(),
+		"update_ng_plus_buttons": func() -> void: UIManager.update_ng_plus_buttons(),
+		"update_structural_metrics": func() -> void: UIManager.update_structural_metrics(StructuralModel.epsilon_runtime, StructuralModel.omega, StructuralModel.persistence_dynamic, UpgradeManager.level("accounting")),
+		"_sync_reactor_color": func() -> void: main._sync_reactor_color(),
+	}
+	var out := {}
+	for label in parts:
+		var fn: Callable = parts[label]
+		var t0 := Time.get_ticks_usec()
+		for i in iterations:
+			EconomyManager.begin_memo()
+			fn.call()
+			EconomyManager.end_memo()
+		out[label] = snappedf(float(Time.get_ticks_usec() - t0) / iterations, 0.1)
 	return out
 
 

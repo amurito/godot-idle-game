@@ -38,7 +38,6 @@ var _colapso_controlado_btn: Button = null
 var _logic_timer: Timer
 var _ui_timer: Timer
 var _autosave_timer: Timer
-var _last_ui_tick_ms: int = 0  # debounce: evita update_ui() doble en click + tick simultáneos
 const UI_TICK := 0.1                  # 10 Hz — labels & buttons (desktop)
 const UI_TICK_WEB := 0.25             # 4 Hz  — web: reduce callUserCallback overhead
 const AUTOSAVE_INTERVAL := 30.0
@@ -420,10 +419,12 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	if _use_3d_reactor and is_instance_valid(reactor_3d):
 		reactor_3d.set_active_delta(power)
 
-	# Web: debounce — evita update_ui() doble si el tick acaba de correr (<80ms)
-	var ms_since_tick := Time.get_ticks_msec() - _last_ui_tick_ms
-	if not OS.has_feature("web") or ms_since_tick > 80:
-		update_ui()
+	# Refresco liviano: un click sólo necesita reflejar el dinero y registrar si cambió el término
+	# dominante (escribe en el log, por eso se mantiene acá). El resto de la UI se pone al día en el
+	# próximo tick de UI (≤100 ms desktop / ≤250 ms web). Antes cada click corría un update_ui()
+	# completo (~2–8 ms), en desktop sin debounce.
+	check_dominance_transition()
+	UIManager.update_header_money(EconomyManager.money, EconomyManager.get_contribution_breakdown().total)
 	
 func register_reactor(rv: Node):
 	reactor_visual = rv
@@ -779,7 +780,6 @@ func _on_logic_tick():
 func _on_ui_tick():
 	# === 4/10 Hz — actualizar labels y botones ===
 	_sync_reactor_color()  # movido desde _process: no necesita 60 Hz
-	_last_ui_tick_ms = Time.get_ticks_msec()
 	if is_instance_valid(_debug_panel) and _debug_panel.visible:
 		_debug_panel.refresh_info()
 	update_ui()

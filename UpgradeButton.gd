@@ -11,6 +11,11 @@ const HOTKEY_MAP := {
 	"specialization": 7, "cognitive": 8, "accounting": 9
 }
 
+## Clave del último set de estilos aplicado. Crear StyleBoxes y llamar add_theme_stylebox_override
+## invalida el tema del botón (recalcula tamaño mínimo y redibuja): hacerlo en cada refresco de UI
+## costaba ~75% de update_ui(). Se re-aplica sólo cuando la clave cambia; el resultado es idéntico.
+var _style_key := ""
+
 func _ready() -> void:
 	add_to_group("upgrade_buttons")
 
@@ -136,6 +141,14 @@ func update_appearance(current_money: float) -> void:
 
 ## Aplica estilos visuales basados en si el upgrade es asequible
 func _apply_affordability_style(can_afford: bool) -> void:
+	var key: String
+	if AccessibilityManager.high_contrast:
+		key = "hc_afford" if can_afford else "hc_poor"
+	else:
+		key = ("afford_" + AccessibilityManager.cok().to_html()) if can_afford else "poor"
+	if key == _style_key:
+		return
+	_style_key = key
 	if AccessibilityManager.high_contrast:
 		_apply_affordability_style_hc(can_afford)
 		return
@@ -204,6 +217,9 @@ func _apply_affordability_style_hc(can_afford: bool) -> void:
 
 ## Estilo para upgrade one-shot ya adquirido
 func _apply_acquired_style() -> void:
+	if _style_key == "acquired":
+		return
+	_style_key = "acquired"
 	var s := StyleBoxFlat.new()
 	s.bg_color = Color(0.05, 0.07, 0.05, 0.5)
 	s.set_border_width_all(1)
