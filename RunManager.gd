@@ -141,101 +141,12 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 		var ng_bonus := 0
 		var ng_formula := ""
 		var cap: int = int(Balance.NG_CAPS.get(route, 0))
-		var _rs: Dictionary = RouteManager.get_extra_state()
-		match route:
-			# ── Tier 1 ──
-			"HOMEOSTASIS":
-				var raw := int(floor(resilience_score / 50.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "resiliencia %.0f / 50 = %d (cap %d)" % [resilience_score, ng_bonus, cap]
-			"SIMBIOSIS":
-				var raw := int(floor(run_time / 300.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "run_time %.0fs / 300 = %d (cap %d)" % [run_time, ng_bonus, cap]
-			"HIPERASIMILACION", "HIPERASIMILACIÓN":
-				var raw := int(floor(StructuralModel.epsilon_peak * 5.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "ε_peak %.2f × 5 = %d (cap %d)" % [StructuralModel.epsilon_peak, ng_bonus, cap]
-			"PARASITISMO":
-				var raw := int(floor(BiosphereEngine.biomasa / 8.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "biomasa %.1f / 8 = %d (cap %d)" % [BiosphereEngine.biomasa, ng_bonus, cap]
-			# ── Red micelial ──
-			"ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL":
-				var raw := int(floor(BiosphereEngine.micelio / 20.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
-			# ── Tier 2 ──
-			"ALLOSTASIS":
-				ng_bonus = min(disturbances_survived, cap)
-				ng_formula = "perturbaciones %d (cap %d)" % [disturbances_survived, cap]
-			"HOMEORHESIS":
-				var raw := int(floor(omega_min_peak * 10.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "omega_min_peak %.2f × 10 = %d (cap %d)" % [omega_min_peak, ng_bonus, cap]
-			"MUTACION_FINAL", "METABOLISMO OSCURO":
-				var raw := EvoManager.met_oscuro_devoured_count * 2
-				ng_bonus = min(raw, cap)
-				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
-			"PROTOCOLO OMEGA-CERO":
-				var raw := int(EvoManager.omega_cero_phi / 50.0)
-				ng_bonus = min(raw, cap)
-				ng_formula = "phi %.0f / 50 = %d (cap %d)" % [EvoManager.omega_cero_phi, ng_bonus, cap]
-			"REMISIÓN METABÓLICA":
-				var raw := int(BiosphereEngine.biomasa / Balance.REMISION_PL_DIVISOR)
-				ng_bonus = min(raw, cap)
-				ng_formula = "biomasa %.0f / %.0f = %d (cap %d)" % [BiosphereEngine.biomasa, Balance.REMISION_PL_DIVISOR, ng_bonus, cap]
-			"ESCLEROCIO OSCURO":
-				var raw := int(floor(EvoManager.met_oscuro_devoured_count / 8.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "devoured %d / 8 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
-			"AUTOFAGIA NECRÓTICA":
-				var raw := int(floor(EvoManager.autolisis_devour_count / 3.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "autolisis_devoured %d / 3 = %d (cap %d)" % [EvoManager.autolisis_devour_count, ng_bonus, cap]
-			"NECROSIS CONTROLADA":
-				var raw := int(floor(EvoManager.necrosis_agent_count / 2.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "agentes %d / 2 = %d (cap %d)" % [EvoManager.necrosis_agent_count, ng_bonus, cap]
-			"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL":
-				var rotaciones: int = int(_rs.get("total_rotations", 0))
-				var raw := int(floor(rotaciones / 2.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "rotaciones %d / 2 = %d (cap %d)" % [rotaciones, ng_bonus, cap]
-			"DOMADOR DEL CAOS":
-				var pico: float = _rs.get("peak_money", 0.0)
-				var raw := int(floor(pico / 500_000.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "dinero_pico $%.1fM / 500K = %d (cap %d)" % [pico / 1_000_000.0, ng_bonus, cap]
-			"ASCESIS_PROFUNDA":
-				var raw := int(floor(omega_min_peak * 10.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "omega_min_peak %.2f × 10 = %d (cap %d)" % [omega_min_peak, ng_bonus, cap]
-			# ── Tier 3 (late-game) ──
-			"MENTE COLMENA DISTRIBUIDA":
-				var raw := int(floor(run_time / 600.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "run_time %.0fs / 600 = %d (cap %d)" % [run_time, ng_bonus, cap]
-			"DEPREDADOR DE REALIDADES":
-				var raw := EvoManager.met_oscuro_devoured_count
-				ng_bonus = min(raw, cap)
-				ng_formula = "devoured %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, cap]
-			"COLAPSO DEPREDATORIO":
-				var raw := EvoManager.met_oscuro_devoured_count * 2
-				ng_bonus = min(raw, cap)
-				ng_formula = "devoured %d × 2 = %d (cap %d)" % [EvoManager.met_oscuro_devoured_count, ng_bonus, cap]
-			"PANSPERMIA NEGRA":
-				var raw := int(floor(BiosphereEngine.micelio / 20.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "micelio %.1f / 20 = %d (cap %d)" % [BiosphereEngine.micelio, ng_bonus, cap]
-			"FUSIÓN CATABÓLICA":
-				var raw := int(floor(EconomyManager.total_money_generated / 10_000_000.0))
-				ng_bonus = min(raw, cap)
-				ng_formula = "generado $%.1fM / $10M = %d (cap %d)" % [EconomyManager.total_money_generated / 1_000_000.0, ng_bonus, cap]
-			"AYUNO PRIMORDIAL":
-				var raw := int(floor(EvoManager.ayuno_silencio_peak / Balance.AYUNO_NG_PEAK_DIV))
-				ng_bonus = min(raw, cap)
-				ng_formula = "S_peak %.1f / %.0f = %d (cap %d)" % [EvoManager.ayuno_silencio_peak, Balance.AYUNO_NG_PEAK_DIV, ng_bonus, cap]
+		var rule: Dictionary = ng_bonus_rule(route)
+		if not rule.is_empty():
+			var value: Variant = (rule.value as Callable).call()
+			ng_bonus = mini(_ng_raw(rule, value), cap)
+			var shown: Variant = (rule.show as Callable).call(value) if rule.has("show") else value
+			ng_formula = str(rule.log).format({"v": str(rule.vfmt) % shown, "b": ng_bonus, "c": cap})
 		if ng_bonus > 0:
 			LegacyManager.add_pl(ng_bonus)
 			_total_pl += ng_bonus
@@ -882,3 +793,91 @@ func check_ng_cap() -> void:
 		_ng_cap_notified = true
 		UIManager.show_toast(tr("TOAST_NG_CAP") % [info.bonus, info.cap, route])
 		LogManager.add(tr("LOG_NG_CAP") % [info.bonus, route])
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  Bono NG+ por ruta (datos)
+# ═════════════════════════════════════════════════════════════════════════════
+# Al cerrar con trascendencia ≥ 1: bono = min(raw, Balance.NG_CAPS[ruta]), donde raw sale de
+# una métrica de la run. Cada regla:
+#   value  Callable → valor de la métrica
+#   op     "div" int(floor(v/k)) · "div_trunc" int(v/k) · "mul" int(floor(v*k)) · "id" int(v)
+#   k      constante de la operación
+#   vfmt   formato del valor en el log; show (opcional) transforma el valor antes de mostrarlo
+#   log    plantilla del log: {v} valor formateado, {b} bono, {c} cap
+# Agregar una ruta = agregar una entrada (y su cap en Balance.NG_CAPS).
+var _ng_rules: Dictionary = {}
+
+func ng_bonus_rule(route: String) -> Dictionary:
+	if _ng_rules.is_empty():
+		_ng_rules = _build_ng_rules()
+	return _ng_rules.get(route, {})
+
+func _ng_raw(rule: Dictionary, v: Variant) -> int:
+	match str(rule.op):
+		"div": return int(floor(v / rule.k))
+		"div_trunc": return int(v / rule.k)
+		"mul": return int(floor(v * rule.k))
+		_: return int(v)
+
+func _build_ng_rules() -> Dictionary:
+	var money_m := func(v: float) -> float: return v / 1_000_000.0
+	var defs := {
+		# ── Tier 1 ──
+		"HOMEOSTASIS": {"value": func() -> Variant: return resilience_score, "op": "div", "k": 50.0,
+			"vfmt": "%.0f", "log": "resiliencia {v} / 50 = {b} (cap {c})"},
+		"SIMBIOSIS": {"value": func() -> Variant: return run_time, "op": "div", "k": 300.0,
+			"vfmt": "%.0f", "log": "run_time {v}s / 300 = {b} (cap {c})"},
+		"HIPERASIMILACION": {"value": func() -> Variant: return StructuralModel.epsilon_peak, "op": "mul", "k": 5.0,
+			"vfmt": "%.2f", "log": "ε_peak {v} × 5 = {b} (cap {c})"},
+		"PARASITISMO": {"value": func() -> Variant: return BiosphereEngine.biomasa, "op": "div", "k": 8.0,
+			"vfmt": "%.1f", "log": "biomasa {v} / 8 = {b} (cap {c})"},
+		# ── Red micelial ──
+		"ESPORULACION": {"value": func() -> Variant: return BiosphereEngine.micelio, "op": "div", "k": 20.0,
+			"vfmt": "%.1f", "log": "micelio {v} / 20 = {b} (cap {c})"},
+		# ── Tier 2 ──
+		"ALLOSTASIS": {"value": func() -> Variant: return disturbances_survived, "op": "id", "k": 1.0,
+			"vfmt": "%d", "log": "perturbaciones {v} (cap {c})"},
+		"HOMEORHESIS": {"value": func() -> Variant: return omega_min_peak, "op": "mul", "k": 10.0,
+			"vfmt": "%.2f", "log": "omega_min_peak {v} × 10 = {b} (cap {c})"},
+		"METABOLISMO OSCURO": {"value": func() -> Variant: return EvoManager.met_oscuro_devoured_count, "op": "mul", "k": 2,
+			"vfmt": "%d", "log": "devoured {v} × 2 = {b} (cap {c})"},
+		"PROTOCOLO OMEGA-CERO": {"value": func() -> Variant: return EvoManager.omega_cero_phi, "op": "div_trunc", "k": 50.0,
+			"vfmt": "%.0f", "log": "phi {v} / 50 = {b} (cap {c})"},
+		"REMISIÓN METABÓLICA": {"value": func() -> Variant: return BiosphereEngine.biomasa, "op": "div_trunc", "k": Balance.REMISION_PL_DIVISOR,
+			"vfmt": "%.0f", "log": "biomasa {v} / " + ("%.0f" % Balance.REMISION_PL_DIVISOR) + " = {b} (cap {c})"},
+		"ESCLEROCIO OSCURO": {"value": func() -> Variant: return EvoManager.met_oscuro_devoured_count, "op": "div", "k": 8.0,
+			"vfmt": "%d", "log": "devoured {v} / 8 = {b} (cap {c})"},
+		"AUTOFAGIA NECRÓTICA": {"value": func() -> Variant: return EvoManager.autolisis_devour_count, "op": "div", "k": 3.0,
+			"vfmt": "%d", "log": "autolisis_devoured {v} / 3 = {b} (cap {c})"},
+		"NECROSIS CONTROLADA": {"value": func() -> Variant: return EvoManager.necrosis_agent_count, "op": "div", "k": 2.0,
+			"vfmt": "%d", "log": "agentes {v} / 2 = {b} (cap {c})"},
+		"POLIMORFÍA TOTAL": {"value": func() -> Variant: return int(RouteManager.get_extra_state().get("total_rotations", 0)), "op": "div", "k": 2.0,
+			"vfmt": "%d", "log": "rotaciones {v} / 2 = {b} (cap {c})"},
+		"DOMADOR DEL CAOS": {"value": func() -> Variant: return RouteManager.get_extra_state().get("peak_money", 0.0), "op": "div", "k": 500_000.0,
+			"vfmt": "%.1f", "show": money_m, "log": "dinero_pico ${v}M / 500K = {b} (cap {c})"},
+		"ASCESIS_PROFUNDA": {"value": func() -> Variant: return omega_min_peak, "op": "mul", "k": 10.0,
+			"vfmt": "%.2f", "log": "omega_min_peak {v} × 10 = {b} (cap {c})"},
+		# ── Tier 3 (late-game) ──
+		"MENTE COLMENA DISTRIBUIDA": {"value": func() -> Variant: return run_time, "op": "div", "k": 600.0,
+			"vfmt": "%.0f", "log": "run_time {v}s / 600 = {b} (cap {c})"},
+		"DEPREDADOR DE REALIDADES": {"value": func() -> Variant: return EvoManager.met_oscuro_devoured_count, "op": "id", "k": 1.0,
+			"vfmt": "%d", "log": "devoured {v} (cap {c})"},
+		"COLAPSO DEPREDATORIO": {"value": func() -> Variant: return EvoManager.met_oscuro_devoured_count, "op": "mul", "k": 2,
+			"vfmt": "%d", "log": "devoured {v} × 2 = {b} (cap {c})"},
+		"PANSPERMIA NEGRA": {"value": func() -> Variant: return BiosphereEngine.micelio, "op": "div", "k": 20.0,
+			"vfmt": "%.1f", "log": "micelio {v} / 20 = {b} (cap {c})"},
+		"FUSIÓN CATABÓLICA": {"value": func() -> Variant: return EconomyManager.total_money_generated, "op": "div", "k": 10_000_000.0,
+			"vfmt": "%.1f", "show": money_m, "log": "generado ${v}M / $10M = {b} (cap {c})"},
+		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
+			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
+	}
+	# Alias históricos (con/sin tilde, nombres viejos) → misma regla.
+	var aliases := {
+		"HIPERASIMILACIÓN": "HIPERASIMILACION",
+		"ESPORULACIÓN": "ESPORULACION", "ESPORULACION TOTAL": "ESPORULACION",
+		"MUTACION_FINAL": "METABOLISMO OSCURO",
+		"POLIMORFIA TOTAL": "POLIMORFÍA TOTAL",
+	}
+	for alias in aliases:
+		defs[alias] = defs[aliases[alias]]
+	return defs
