@@ -142,7 +142,8 @@ handler de UI. No son testeables sin instanciar la escena completa.
 - `get_passive_multiplier()` (:352) reconstruye el multiplicador **dividiendo** el total por la base:
   recomputa el pipeline completo sólo para des-aplicarlo.
 
-*Costo real: ver Mediciones.* En CPU desktop puede ser irrelevante; el riesgo concreto es web export.
+*Medido:* ~12% del costo de un refresco de UI y ~40% de un tick lógico de 0.6 ms. Era menos crítico
+de lo que suponía la auditoría de junio; memoizado en `3638ce2` (−7% UI/click). Ver Mediciones.
 
 ### 🟠 C5 — Duplicación buff → multiplicador entre click y pasivo
 
@@ -169,14 +170,14 @@ Reordenar bloques cambia el balance sin ningún error.
 RunManager.gd:145-260. Cada ruta declara implícitamente `{métrica, divisor, cap}` en código.
 Es data disfrazada de lógica.
 
-### 🟡 C9 — Rendimiento de UI
+### 🔴 C9 — Rendimiento de UI (el cuello de botella real, medido)
 
 - Desktop: cada click dispara un `update_ui()` completo (main.gd:426).
 - `fungi_ui._process` llama a su `update_ui()` **en cada frame** una vez desbloqueadas las hifas.
 - `update_ui()` reconstruye strings BBCode grandes (`UITextBuilders`) y hace `clear()` +
   `append_text()` en RichTextLabels aunque el contenido no haya cambiado.
 
-*Costo real: ver Mediciones.*
+*Medido:* tick de UI 7.3–8.3 ms (13× el tick lógico) y 7 ms por click; ~90% fuera de la economía.
 
 ### 🟡 C10 — Red de tests mínima y no aislada
 
@@ -233,4 +234,99 @@ Seguridad por construcción, no por cuidado:
 
 ## Mediciones
 
-*Pendiente — se completa con la primera corrida del simulador.*
+Simulador de bots headless (`tests/sim/`), Godot 4.5.1, desktop, sin render (dummy). Los números
+absolutos subestiman el costo real (falta el render y, en web, el overhead de wasm/JS); las
+proporciones entre fases son lo relevante.
+
+### Costo por fase
+
+| Fase | Frecuencia | Costo medio | Notas |
+|---|---|---|---|
+| Tick lógico (`_on_logic_tick`) | 5 Hz | **0.5–0.7 ms** | toda la simulación del juego |
+| Tick de UI (`_on_ui_tick`) | 10 Hz desktop / 4 Hz web | **7.3–8.3 ms** | ~13× el tick lógico |
+| Click (`on_reactor_click`) | por click | **6.9–7.9 ms** | dispara un `update_ui()` completo en desktop |
+| `update_ui()` aislado | — | 6–7 ms | |
+
+**Conclusión: el cuello de botella es la vista (C9), no la economía (C4).** Clickeando a 6 cps en
+desktop, la UI consume ~120 ms por segundo de CPU sólo en refrescos, sin contar el render.
+
+### Llamadas al pipeline económico por fase (instrumentación temporal)
+
+| Fase | `get_click_power` | `get_passive_total` | auto / trueque | breakdowns | % estimado de la fase |
+|---|---|---|---|---|---|
+| Tick de UI | 10 | 8 | ~20 c/u | 10 | ~12% |
+| Click | 10 | 7 | ~17 c/u | 8 | ~12% |
+| Tick lógico | 3.6 | 4.6 | 4.6 | 2 | ~40% de 0.6 ms |
+
+Costo unitario: `get_click_power` 19 µs · `get_passive_total` 34 µs ·
+`get_contribution_breakdown` 88 µs · `get_effect_value` 0.9 µs (no es el problema).
+
+### Memoización (C4) — A/B limpio
+
+Mismo harness, escenario `fresh_buy_all` 300 s, dos corridas por lado:
+
+| | Sin memo | Con memo | Δ |
+|---|---|---|---|
+| Tick de UI | 7.83 ms | 7.29 ms | −6.9% |
+| Click | 7.46 ms | 6.90 ms | −7.5% |
+| Tick lógico | 0.60 ms | 0.62 ms | +4% |
+
+Ganancia real pero modesta. El ~90% restante del costo de UI está en construir strings BBCode y
+re-renderizar RichTextLabels aunque el contenido no cambie.
+
+### Reloj de logros (C2) — confirmado
+
+`AchievementManager._run_time / RunManager.run_time` medido: **3.24–3.45×** con un bot que clickea
+6–7 cps en desktop, **2.14–2.45×** con clickeo liviano. El modelo predice
+10 Hz × 0.2 + clicks/s × 0.2 + compras × 0.2 ≈ 3.27× para 6 cps: coincide.
+
+---
+
+## Hallazgos del simulador y los goldens
+
+Todo lo siguiente surgió de ejecutar el juego real con bots o de caracterizar el save. Ninguno se
+corrigió en este trabajo: o cambian comportamiento, o son decisiones de diseño.
+
+### Bugs
+
+| # | Hallazgo | Evidencia | Severidad |
+|---|---|---|---|
+| B1 | Reloj de logros 2–4× más rápido según plataforma y ritmo de click (C2) | medición arriba | alta (logros "sostenidos" triviales) |
+| B2 | **16 floats se guardan sin `_sf()`** (NaN persiste): `autolisis_devour_timer`, `colonizacion_pert_timer`, `colonizacion_phase_time`, `depredador_inestabilidad`, `depredador_timer`, `met_oscuro_timer`, `micelio`, `necromasa`, … | golden `save_build`, variante `nan_all` | media (el incidente NaN de v1.0.2.0 sigue siendo posible) |
+| B3 | Click real usa ε = 0.015; `main._on_BigClickButton_pressed()` (ε = 0.008) es código muerto | `big_click_button.gd:_pressed()` | baja (confusión al balancear) |
+| B4 | `main.tscn` conecta `BigClickButton.pressed → _on_pressed`, método inexistente en `big_click_button.gd` | `main.tscn:1009` | baja — probable error de motor por click, **no verificado en runtime** |
+| B5 | Tras cargar un save, `UpgradeManager.states[id].level` queda como `float` (JSON) | golden `save_load` (tipos) | baja (inocuo hoy) |
+| B6 | `tests/TestRunner.gd` escribía sobre los datos reales del jugador y su mock no tenía `reset_local_state()` | corrida en sandbox | **corregido** (mock) + ahora corre en sandbox |
+
+### Diseño (decisiones del autor)
+
+| # | Hallazgo | Evidencia |
+|---|---|---|
+| D1 | **Tercer disparador de Parasitismo no documentado ("Masa Crítica")**: biomasa > 6, ε > 0.35, sin Contabilidad y run > 420 s → Parasitismo a los 7 min exactos. Quien busca Hiperasimilación tiene una ventana dura de 7 minutos. El docstring de `update_parasitismo` sólo menciona inactividad y estancamiento. | `GenomeEvaluator.gd:90`; escenarios `fresh_buy_all` y otros cierran a t = 420.x s |
+| D2 | **AYUNO + Parasitismo = run en limbo.** Romper el ayuno (Q, +5 biomasa) tras >120 s sin clickear activa Parasitismo (Q no cuenta como click), pero el drain de Ayuno mantiene la biomasa en ~0 y Parasitismo sólo cierra con biomasa ≥ 15–25 → la run queda con ambas mutaciones activas indefinidamente. **"La Trampa del Vacío" es inalcanzable** (exige *cerrar* en Parasitismo). | `ng_ayuno_player`: Parasitismo a t = 231 s, run abierta a t = 1800 s; `ng_ayuno_lazy`: biomasa máx 0.11 en 28 min |
+| D3 | **Fusión Catabólica muere a los 420 s**: FC apaga `mutation_hyperassimilation`, que era lo que bloqueaba Parasitismo → la Masa Crítica cierra la run mucho antes de que el sello ($100M + 150 upgrades estructurales + 3 ráfagas) sea alcanzable. Comprando Contabilidad tras activar FC se esquiva (jugada no comunicada), pero el bot llega a $132M y lo mata el estancamiento a los 1800 s antes de los 150 upgrades. | `ng_fusion_player` (t = 420.8 s), `ng_fusion_smart` (t = 1801 s) |
+| D4 | AYUNO ya **no** "se logra solo": sin 5 ciclos de Q no se sella (el bot pasivo dura 30 min sin cerrar). El cambio de junio funcionó. | `ng_ayuno_lazy` |
+| D5 | Red Micelial exige pasivo > activo; un jugador clickeando 0.3 cps sigue en 55–72% activo y lo cierra el estancamiento a los 30 min. | `fresh_red_micelial` |
+
+---
+
+## Estado del plan (2026-10-11)
+
+| # | Paso | Estado |
+|---|---|---|
+| 0 | Harness aislado + simulador | ✅ `938252f` |
+| 1 | Golden tests (economy 2340 · save 27+144+9 · 4 trayectorias de 450 s), deterministas bit a bit | ✅ `938252f` + `791261e` |
+| 2 | Save declarativo (`SaveSchema`) | ✅ `d69cdb7` — SaveManager 664 → 405 líneas, `validate()` |
+| 3 | Memoización económica | ✅ `3638ce2` — −7% UI/click (medido) |
+| — | **Siguiente recomendado: C9 (vista)** — dirty-checking de labels, sacar `update_ui()` del camino del click, `fungi_ui` sin refresco por frame. Es donde está el ~90% del costo medido. | pendiente |
+| — | B1/B2 y D1–D3 | requieren decisión del autor |
+
+### Cómo correr la red
+
+```powershell
+.\tools\sim\run_golden.ps1                 # check completo (~7 min)
+.\tools\sim\run_golden.ps1 -Suites save    # una suite
+.\tools\sim\run_scenarios.ps1              # todos los escenarios del simulador + reportes
+```
+Los goldens sólo se re-graban (`-Mode record`) cuando el cambio de comportamiento es **intencional**,
+y siempre revisando el diff.
