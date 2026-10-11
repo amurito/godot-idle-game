@@ -104,6 +104,8 @@ func _ready() -> void:
 			suite_economy()
 		"save":
 			await suite_save()
+		"close_run":
+			await suite_close_run()
 		"trajectory":
 			await suite_trajectory(str(args.get("scenario", "fresh_hiper")), float(args.get("t", "240")))
 		_:
@@ -463,6 +465,82 @@ func _drop_alternate_keys(data: Dictionary) -> Dictionary:
 				kept[keys[idx]] = value[keys[idx]]
 		out[section] = kept
 	return out
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SUITE close_run
+# ═════════════════════════════════════════════════════════════════════════════
+
+## Todas las rutas que close_run reconoce (incluidos alias con/sin tilde) + una inexistente.
+const CLOSE_ROUTES := ["HOMEOSTASIS", "SIMBIOSIS", "HIPERASIMILACION", "HIPERASIMILACIÓN",
+	"PARASITISMO", "ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL", "ALLOSTASIS",
+	"HOMEORHESIS", "MUTACION_FINAL", "METABOLISMO OSCURO", "PROTOCOLO OMEGA-CERO",
+	"REMISIÓN METABÓLICA", "ESCLEROCIO OSCURO", "AUTOFAGIA NECRÓTICA", "NECROSIS CONTROLADA",
+	"POLIMORFÍA TOTAL", "POLIMORFIA TOTAL", "DOMADOR DEL CAOS", "ASCESIS_PROFUNDA",
+	"MENTE COLMENA DISTRIBUIDA", "DEPREDADOR DE REALIDADES", "COLAPSO DEPREDATORIO",
+	"PANSPERMIA NEGRA", "FUSIÓN CATABÓLICA", "AYUNO PRIMORDIAL", "SINGULARIDAD", "RUTA_INEXISTENTE"]
+
+## Métricas que alimentan el bono NG+. "high" fuerza los caps; "t0" no tiene trascendencias.
+const CLOSE_PROFILES := {
+	"low": {"t": 3, "resilience": 130.0, "run_time": 700.0, "eps_peak": 0.93, "bio": 21.5,
+		"micelio": 45.0, "disturbances": 2, "omega_min_peak": 0.37, "mo_devoured": 3, "phi": 140.0,
+		"autolisis": 7, "agents": 5, "rotations": 5, "peak_money": 1300000.0,
+		"total_money": 32000000.0, "silencio_peak": 130.0},
+	"high": {"t": 5, "resilience": 9000.0, "run_time": 99000.0, "eps_peak": 9.5, "bio": 900.0,
+		"micelio": 900.0, "disturbances": 90, "omega_min_peak": 9.0, "mo_devoured": 90, "phi": 9000.0,
+		"autolisis": 90, "agents": 90, "rotations": 90, "peak_money": 900000000.0,
+		"total_money": 9000000000.0, "silencio_peak": 9000.0},
+	"t0": {"t": 0, "resilience": 130.0, "run_time": 700.0, "eps_peak": 0.93, "bio": 21.5,
+		"micelio": 45.0, "disturbances": 2, "omega_min_peak": 0.37, "mo_devoured": 3, "phi": 140.0,
+		"autolisis": 7, "agents": 5, "rotations": 5, "peak_money": 1300000.0,
+		"total_money": 32000000.0, "silencio_peak": 130.0},
+}
+
+func suite_close_run() -> void:
+	print("── close_run ──")
+	var d = SimDriver.new()
+	if not await d.boot(self, {"seed": 5, "platform": "desktop", "ui": true}):
+		failures += 1
+		return
+	var base := StateDump.capture_autoloads(RESTORE_AUTOLOADS)
+	var out := {}
+	for prof in CLOSE_PROFILES:
+		for route in CLOSE_ROUTES:
+			StateDump.restore_autoloads(base)
+			_apply_close_profile(CLOSE_PROFILES[prof], str(route))
+			var pl_before := LegacyManager.legacy_points
+			var laps_before := LogManager.lap_events.size()
+			RunManager.close_run(str(route), "golden")
+			var new_laps: Array = []
+			for i in range(laps_before, LogManager.lap_events.size()):
+				new_laps.append(LogManager.lap_events[i].get("event", ""))
+			var key := "%s|%s" % [prof, route]
+			out[key + "|result"] = StateDump.encode({"pl_delta": LegacyManager.legacy_points - pl_before,
+				"final_route": RunManager.final_route, "laps": new_laps})
+			out[key + "|legacy"] = StateDump.dump(LegacyManager)
+	StateDump.restore_autoloads(base)
+	_golden("close_run", out)
+
+
+func _apply_close_profile(m: Dictionary, route: String) -> void:
+	LegacyManager.trascendencia_count = int(m.t)
+	RunManager.resilience_score = m.resilience
+	RunManager.run_time = m.run_time
+	RunManager.disturbances_survived = int(m.disturbances)
+	RunManager.omega_min_peak = m.omega_min_peak
+	StructuralModel.epsilon_peak = m.eps_peak
+	BiosphereEngine.biomasa = m.bio
+	BiosphereEngine.micelio = m.micelio
+	EvoManager.met_oscuro_devoured_count = int(m.mo_devoured)
+	EvoManager.omega_cero_phi = m.phi
+	EvoManager.autolisis_devour_count = int(m.autolisis)
+	EvoManager.necrosis_agent_count = int(m.agents)
+	EvoManager.ayuno_silencio_peak = m.silencio_peak
+	EconomyManager.total_money_generated = m.total_money
+	if route in ["POLIMORFÍA TOTAL", "POLIMORFIA TOTAL", "DOMADOR DEL CAOS"]:
+		RouteManager.activate("carnaval")
+		RouteManager._active_route.total_rotations = int(m.rotations)
+		RouteManager._active_route.peak_money = m.peak_money
 
 
 # ═════════════════════════════════════════════════════════════════════════════
