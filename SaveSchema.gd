@@ -87,6 +87,8 @@ static func _define() -> Array:
 			_f("baseline_delta_structural", StructuralModel, {"save_sf": 0.0, "load_sf": [0.0, -INF]}),
 			_f("omega", StructuralModel, {"save_sf": 1.0, "load_sf": [1.0, -INF]}),
 			_f("omega_min", StructuralModel, {"save_sf": 0.0, "load_sf": [0.0, -INF]}),
+			# Empuje manual de Control de Ω acumulado en la run (antes se perdía al recargar).
+			_f("control_omega_offset", StructuralModel, {"default": 0.0, "save_sf": 0.0, "load_sf": [0.0, -INF]}),
 			_f("institution_accounting_unlocked", StructuralModel),
 			_f("institutions_unlocked", MAIN),
 		]},

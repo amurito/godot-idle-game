@@ -124,10 +124,35 @@ function Invoke-Godot([string[]]$GodotArgs, [string]$LogName, [int]$Timeout) {
 }
 
 # --- 4. Import (registra class_name nuevos + importa assets) ---------------
-if (-not $SkipImport) {
+# -SkipImport es solo un pedido: si desde el ultimo import cambio la lista de archivos o alguna
+# declaracion class_name, se importa igual. Sin esto, una clase global nueva (p.ej. un script
+# con class_name agregado) no existe en el sandbox y la escena queda colgada sin compilar.
+$sigFile = Join-Path $SandboxRoot "import.sig"
+$projLen = $SandboxProject.TrimEnd('\').Length + 1
+$files = Get-ChildItem -Path $SandboxProject -Recurse -File |
+    Where-Object { $_.FullName -notmatch '\\\.godot\\' } |
+    ForEach-Object { $_.FullName.Substring($projLen) } | Sort-Object
+$classes = Get-ChildItem -Path $SandboxProject -Recurse -Filter *.gd -File |
+    Where-Object { $_.FullName -notmatch '\\\.godot\\' } |
+    Select-String -Pattern '^class_name\s+\w+' |
+    ForEach-Object { $_.Path.Substring($projLen) + ":" + $_.Line.Trim() } | Sort-Object
+$sigText = (@($files) + @($classes)) -join "`n"
+$sha = [System.Security.Cryptography.SHA256]::Create()
+$sig = [BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($sigText)))
+$needImport = -not $SkipImport
+if ($SkipImport) {
+    $prev = ""
+    if (Test-Path $sigFile) { $prev = (Get-Content $sigFile -Raw).Trim() }
+    if ($prev -ne $sig) {
+        Write-Host "[sandbox] archivos o class_name cambiaron desde el ultimo import: se importa igual"
+        $needImport = $true
+    }
+}
+if ($needImport) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $code = Invoke-Godot @("--headless", "--path", $SandboxProject, "--import") "import" 900
     Write-Host ("[sandbox] import listo en {0:N1}s (exit {1})" -f $sw.Elapsed.TotalSeconds, $code)
+    if ($code -eq 0) { Set-Content -Path $sigFile -Value $sig -Encoding ASCII }
 }
 
 # --- 5. Escena -------------------------------------------------------------
