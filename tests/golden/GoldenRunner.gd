@@ -300,6 +300,27 @@ func suite_save() -> void:
 			for e in schema_errors:
 				print("  [ERROR] SaveSchema: %s" % e)
 
+	# EvoManager.reset() desde un estado sucio == instancia recién creada (valores de declaración).
+	if EvoManager.has_method("_deep_copy"):
+		checks += 1
+		StateDump.restore_autoloads(base)
+		_fill_distinct(1, mock)
+		EvoManager.reset()
+		var fresh: Node = load("res://EvoManager.gd").new()
+		var want := StateDump.dump(fresh)
+		fresh.free()
+		var got := StateDump.dump(EvoManager)
+		for k in EvoManager.RESET_KEEP:  # sobreviven al reset a propósito
+			want.erase(k)
+			got.erase(k)
+		var d := StateDump.diff(want, got)
+		if d.is_empty():
+			print("  [OK] EvoManager.reset() == valores de declaración")
+		else:
+			failures += 1
+			print("  [DIFF] EvoManager.reset(): %s" % str(d))
+		StateDump.restore_autoloads(base)
+
 	# ── build: cada variable con un valor distinto → cualquier campo mal mapeado salta ──
 	var build := {}
 	var fixtures := {}

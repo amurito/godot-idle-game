@@ -270,6 +270,7 @@ static func _owner(f: Dictionary, main: Node) -> Object:
 ## claves duplicadas dentro de una sección. Los campos de MAIN sólo se validan si se pasa main.
 static func validate(main: Object = null) -> PackedStringArray:
 	var errors := PackedStringArray()
+	var saved_props := {}  # owner → { prop: true }
 	for sec in sections():
 		if sec.has("save") != sec.has("load"):
 			errors.append("sección '%s': 'save' y 'load' deben definirse juntos" % sec.name)
@@ -286,6 +287,26 @@ static func validate(main: Object = null) -> PackedStringArray:
 			var target: Object = main if is_main else f.owner
 			if not _has_property(target, f.prop):
 				errors.append("sección '%s': '%s' no existe en %s" % [sec.name, f.prop, MAIN if is_main else str(target.name)])
+			if not is_main:
+				var props: Dictionary = saved_props.get(target, {})
+				props[f.prop] = true
+				saved_props[target] = props
+	# Owners que declaran TRANSIENT_VARS: cada variable de script debe persistir o estar
+	# declarada transitoria (evita "agregué un campo de ruta y no se guarda").
+	for owner in saved_props:
+		var consts: Dictionary = owner.get_script().get_script_constant_map()
+		if not consts.has("TRANSIENT_VARS"):
+			continue
+		var transient: Array = consts.TRANSIENT_VARS
+		for p in owner.get_property_list():
+			if not (int(p.usage) & PROPERTY_USAGE_SCRIPT_VARIABLE) or str(p.name).begins_with("_reset"):
+				continue
+			var n := str(p.name)
+			var saved: bool = saved_props[owner].has(n)
+			if not saved and not (n in transient):
+				errors.append("%s.%s no está en SaveSchema ni en TRANSIENT_VARS" % [owner.name, n])
+			elif saved and n in transient:
+				errors.append("%s.%s está en SaveSchema y en TRANSIENT_VARS" % [owner.name, n])
 	return errors
 
 

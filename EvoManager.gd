@@ -27,10 +27,10 @@ var genome := {
 	"simbiosis": "dormido",
 	"homeostasis": "dormido",
 	"trascendencia": "dormido",
-	"allostasis": "dormido",
-	"homeorhesis": "dormido",
 	"depredador": "dormido",
-	"met_oscuro": "dormido"
+	"met_oscuro": "dormido",
+	"allostasis": "dormido",
+	"homeorhesis": "dormido"
 }
 
 var mutation_hyperassimilation := false
@@ -132,7 +132,7 @@ var autofagia_burst_cooldown: float = 0.0  # Digestión Masiva: cooldown restant
 
 # === NECROSIS CONTROLADA (sub-ruta de Met. Oscuro, doble economía Ν) ===
 var mutation_necrosis := false
-var necrosis_omega: float = 0.10     # Ω controlado por la ruta (override del clamp de MO)
+var necrosis_omega: float = Balance.NECROSIS_OMEGA_START     # Ω controlado por la ruta (override del clamp de MO)
 var necromasa: float = 0.0           # moneda Ν acumulada (atada al flujo real)
 var necrosis_agent_count: int = 0    # Agentes Necróticos comprados
 var necrosis_active_time: float = 0.0  # s con necrosis activa (para logro de velocidad)
@@ -146,13 +146,13 @@ var mutation_omega_cero := false
 var omega_cero_phi: float = 0.0          # Φ acumulada (recurso de cierre, amplificada por Ω bajo)
 var omega_cero_devour_count: int = 0     # devours realizados en la síntesis
 var omega_cero_devour_timer: float = 0.0 # acumulador del loop de devour
-var omega_cero_omega: float = 0.10       # Ω controlado por la ruta (override del clamp de MO)
+var omega_cero_omega: float = Balance.OMEGA_CERO_OMEGA_START       # Ω controlado por la ruta (override del clamp de MO)
 var omega_cero_kernel: float = 0.0       # Núcleo Φ fijado al cerrar (phi/target) → intensidad del buff NG+
 var _omega_cero_starve_ticks: int = 0    # ticks consecutivos sin material (inanición de síntesis)
 
 # === REMISIÓN METABÓLICA (última post-MO — sanación / floración) ===
 var mutation_remision := false           # ruta activa
-var remision_omega: float = 0.30         # Ω controlado por la ruta (override del clamp de MO)
+var remision_omega: float = Balance.REMISION_OMEGA_START         # Ω controlado por la ruta (override del clamp de MO)
 var remision_theta: float = 0.0          # s continuos dentro de banda (recurso de cierre "Salud")
 var remision_band_timer: float = 0.0     # reloj del desplazamiento senoidal del centro de banda
 var remision_sealable: bool = false      # true una vez Θ alcanzó el target (no se revierte salvo involución)
@@ -162,6 +162,26 @@ var control_omega_last_ms: int = 0       # timestamp del último pulso de Contro
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
+## ── Clasificación del estado ────────────────────────────────────────────────
+## Toda variable de EvoManager está en SaveSchema o en TRANSIENT_VARS (SaveSchema.validate lo
+## verifica): agregar una variable de ruta sin decidir si persiste es un error, no un olvido.
+## Transitorias = se recalculan solas o son efímeras dentro de la sesión (timers de status,
+## countdowns de log, acumuladores sub-tick). Si una de estas debería sobrevivir a un reload,
+## pasala a SaveSchema.
+const TRANSIENT_VARS := [
+	"nucleo_conciencia", "primordio_integrity", "primordio_pert_timer", "primordio_regar_cd",
+	"allostasis_timer", "homeorhesis_timer",
+	"_depredador_active_tick", "_depredador_status_timer", "_depredador_countdown_last",
+	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
+	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
+	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks",
+	"control_omega_last_ms", "_glitch_was_active",
+]
+## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
+const RESET_KEEP := ["control_omega_last_ms"]
+## Valores de declaración de cada variable (ver reset()). Caché interno: no es estado de juego.
+var _reset_defaults: Dictionary = {}
+
 ## Guarda inmediatamente tras una activación irreversible importante.
 ## Previene el bug: autosave captura MO activo sin subruta activa + money>1M
 ## → reload cierra la run como METABOLISMO OSCURO en el primer tick.
@@ -170,108 +190,22 @@ func _save_after_mutation() -> void:
 	if is_instance_valid(main):
 		SaveManager.save_game(main)
 
+## Vuelve todo el estado de la run a los valores de su DECLARACIÓN (capturados en _init), salvo
+## RESET_KEEP. Una variable nueva queda cubierta sólo con declararla: antes había que repetirla
+## a mano acá (~90 líneas) y olvidarse una dejaba estado de la run anterior colgado.
 func reset() -> void:
-	genome = {
-		"hiperasimilacion": "dormido",
-		"parasitismo": "dormido",
-		"red_micelial": "dormido",
-		"esporulacion": "dormido",
-		"simbiosis": "dormido",
-		"homeostasis": "dormido",
-		"trascendencia": "dormido",
-		"depredador": "dormido",
-		"met_oscuro": "dormido",
-		"allostasis": "dormido",
-		"homeorhesis": "dormido"
-}
-	mutation_hyperassimilation = false
-	mutation_fusion_catabolica = false
-	fusion_burst_timer = 0.0
-	fusion_burst_cooldown = 0.0
-	fusion_burst_count = 0
-	fusion_cd_level = 0
-	mutation_ayuno_primordial = false
-	ayuno_silencio = 0.0
-	ayuno_silencio_peak = 0.0
-	ayuno_silencio_total = 0.0
-	ayuno_longest_streak = 0.0
-	ayuno_cycles = 0
-	ayuno_streak_timer = 0.0
-	ayuno_burst_active = false
-	ayuno_burst_timer = 0.0
-	ayuno_ascesis_level = 0
-	_ayuno_burst_saved_mult = 1.0
-	mutation_symbiosis = false
-	mutation_homeostasis = false
-	mutation_red_micelial = false
-	mutation_sporulation = false
-	mutation_parasitism = false
-	mutation_allostasis = false
-	mutation_homeorhesis = false
-	mutation_depredador = false
-	mutation_met_oscuro = false
-	met_oscuro_timer = 0.0
-	met_oscuro_devoured_count = 0
-	red_micelial_phase = 0
-	red_branch_selected = RedBranch.NONE
-	primordio_active = false
-	primordio_timer = 0.0
-	primordio_abort_count = 0
-	seta_formada = false
-	nucleo_conciencia = false
-	primordio_integrity = 100.0
-	primordio_pert_timer = 0.0
-	primordio_regar_cd = 0.0
-	panspermia_charge = 0.0
-	panspermia_heat = 0.0
-	panspermia_misfires = 0
-	nucleo_sync = 0.0
-	nucleo_temp = 0.0
-	colonizacion_pert_timer = 0.0
-	colonizacion_phase_time = 0.0
-	allostasis_timer = 0.0
-	homeorhesis_timer = 0.0
-	depredador_timer = 0.0
-	depredador_inestabilidad = 0.0
-	depredador_timer_buys = 0
-	_depredador_active_tick = 0.0
-	_depredador_status_timer = 0.0
-	_depredador_countdown_last = -1
-	_met_oscuro_countdown_last = -1
-	_parasitismo_countdown_last = -1
-	_hyper_active_timer = 0.0
-	_met_oscuro_income_accum = 0.0
-	_met_oscuro_status_timer = 0.0
-	_met_oscuro_active_time = 0.0
-	mutation_autolisis = false
-	autolisis_devour_count = 0
-	autolisis_devour_timer = 0.0
-	autofagia_speed_level = 0
-	autofagia_double_level = 0
-	autofagia_burst_cooldown = 0.0
-	mutation_necrosis = false
-	necrosis_omega = Balance.NECROSIS_OMEGA_START
-	necromasa = 0.0
-	necrosis_agent_count = 0
-	necrosis_active_time = 0.0
-	necrosis_toxicidad = 0.0
-	necrosis_tox_maxed = false
-	necrosis_overdose = false
-	necrosis_catalyst_level = 0
-	mutation_omega_cero = false
-	omega_cero_phi = 0.0
-	omega_cero_devour_count = 0
-	omega_cero_devour_timer = 0.0
-	omega_cero_omega = Balance.OMEGA_CERO_OMEGA_START
-	omega_cero_kernel = 0.0
-	_omega_cero_starve_ticks = 0
-	mutation_remision = false
-	remision_omega = Balance.REMISION_OMEGA_START
-	remision_theta = 0.0
-	remision_band_timer = 0.0
-	remision_sealable = false
-	remision_locked_run = false
-	_glitch_was_active = false
+	for k in _reset_defaults:
+		set(k, _deep_copy(_reset_defaults[k]))
+
+func _init() -> void:
+	for p in get_property_list():
+		if int(p.usage) & PROPERTY_USAGE_SCRIPT_VARIABLE and not (p.name in RESET_KEEP) and p.name != "_reset_defaults":
+			_reset_defaults[p.name] = _deep_copy(get(p.name))
+
+static func _deep_copy(v: Variant) -> Variant:
+	if typeof(v) == TYPE_DICTIONARY or typeof(v) == TYPE_ARRAY:
+		return v.duplicate(true)
+	return v
 
 func update_genome():
 	if RunManager.run_closed:
