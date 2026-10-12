@@ -34,11 +34,11 @@ jobs:
       # SHA512 oficial (SHA512-SUMS.txt del release) de Godot_v4.5.1-stable_win64.exe.zip
       GODOT_ZIP_SHA512: ab84df90ead5a888530faaabe744a27678ef7635068883900174fae37f7fc6178d033b551d88963c7dc2466580915a582bbc79aca97c19085900655761f56a27
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache de Godot
         id: cache-godot
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}\godot
           key: godot-${{ env.GODOT_VERSION }}-win64
@@ -84,7 +84,7 @@ jobs:
 
       - name: Subir logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sandbox-logs
           path: sandbox-logs
