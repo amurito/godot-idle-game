@@ -1220,6 +1220,8 @@ func get_reactor_color() -> Color:
 				return Color(0.45, 0.30, 0.01)  # ámbar oscuro: oro metabolico, distinto del teal de Homeostasis
 			"AYUNO PRIMORDIAL":
 				return Color(0.55, 0.62, 0.70)  # plateado frío: el silencio grabado en el genoma
+			"CAOS ORQUESTADO":
+				return Color(0.42, 0.08, 0.34)  # magenta profundo: el caos dirigido, en reposo
 		return Color(0.3, 0.3, 0.32)  # fallback genérico para cualquier ruta no listada
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)

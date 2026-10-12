@@ -43,6 +43,14 @@ const ALL := {
 			"mutation": "homeostasis"},
 		"max_t": 2400.0, "sample_every": 10.0,
 	},
+	"fresh_simbiosis": {
+		"desc": "T0, activo: ahorra para Contabilidad, clickea 4 cps y elige Simbiosis. ¿Cuánto vive Simbiosis antes de cerrar?",
+		"legacy": {},
+		"bot": {"click_cps": 4.0, "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"mutation": "simbiosis"},
+		"max_t": 2400.0, "sample_every": 10.0,
+	},
 	"fresh_red_micelial": {
 		"desc": "T0, pasivo: ahorra para Contabilidad, clickea poco, elige Red Micelial y rama Colonización.",
 		"legacy": {},
