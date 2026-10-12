@@ -24,6 +24,8 @@ Una versión que se pueda contar en una línea: *"el hongo aprende a sanar desde
 ruta de REDENCIÓN — más todo lo que se hizo mientras el juego estaba quieto.
 
 ### Fase A — Auditoría de gameplay (antes de diseñar contenido nuevo)
+> **Estado (2026-10-12):** A1 hecha. A2/A3 (perfiles de bot por final) **en pausa** a pedido del autor: antes se revisan los conceptos de transmutación / Sombra / Redención (pueden cambiar cómo se entra a varias rutas, y con eso los perfiles). Matriz y plan en [`auditoria_gameplay_2026-10.md`](../design/auditoria_gameplay_2026-10.md).
+
 Objetivo: que cada final y cada logro sea **alcanzable jugando** (no vía DebugPanel) y que el
 simulador sepa llegar a cada ruta por su **camino más rápido**.
 
