@@ -162,6 +162,14 @@ func run_scenario(scenario_id: String, sc: Dictionary, opts: Dictionary, max_t: 
 			"economy_us_per_call": d.bench_economy(),
 			"wall_seconds": wall_s,
 			"sim_speed_x": d.now() / maxf(wall_s, 0.001),
+			"memory": {
+				"static_mb": Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0,
+				"static_max_mb": Performance.get_monitor(Performance.MEMORY_STATIC_MAX) / 1048576.0,
+				"objects": Performance.get_monitor(Performance.OBJECT_COUNT),
+				"nodes": Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
+				"resources": Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT),
+				"orphan_nodes": Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT),
+			},
 		},
 	}
 	# update_ui() avanza el reloj de logros (auditoría C2): se mide recién al final.

@@ -34,19 +34,28 @@ const PASSIVE_ORDER := [
 ## Fuente de cada fila: "route" (mutación/rama de la run), "legacy" (banco de legado),
 ## "cosmic" (banco cósmico), "post" (ruta post-trascendencia).
 static var _rows: Dictionary = {}
+## Callables precompilados por canal, en orden: apply() es ruta caliente (decenas de llamadas
+## por tick) y así evita dos búsquedas en diccionario por fila.
+static var _click_fns: Array[Callable] = []
+static var _passive_fns: Array[Callable] = []
 
 
 static func rows() -> Dictionary:
 	if _rows.is_empty():
 		_rows = _build()
+		for id in CLICK_ORDER:
+			_click_fns.append(_rows[id].click)
+		for id in PASSIVE_ORDER:
+			_passive_fns.append(_rows[id].passive)
 	return _rows
 
 
 ## Aplica en orden los modificadores del canal ("click" | "passive") sobre x.
 static func apply(channel: String, x: float) -> float:
-	var r := rows()
-	for id in (CLICK_ORDER if channel == "click" else PASSIVE_ORDER):
-		var f: float = r[id][channel].call()
+	if _rows.is_empty():
+		rows()
+	for fn in (_click_fns if channel == "click" else _passive_fns):
+		var f: float = fn.call()
 		if f == 1.0:
 			continue
 		if f == 0.0:
@@ -77,8 +86,10 @@ static func _row(name: String, source: String, click: Callable, passive: Callabl
 		"click": click if click.is_valid() else one, "passive": passive if passive.is_valid() else one}
 
 
+## Fast-path: en una run típica casi ningún legado está comprado; buffs.has() descarta sin
+## pagar la llamada a get_buff_value (mismo resultado: sin entrada → false).
 static func _buff(id: String) -> bool:
-	return LegacyManager.get_buff_value(id)
+	return LegacyManager.buffs.has(id) and LegacyManager.get_buff_value(id)
 
 
 static func _build() -> Dictionary:

@@ -277,14 +277,26 @@ func bench_ui_breakdown(iterations: int = 20) -> Dictionary:
 		"update_structural_metrics": func() -> void: UIManager.update_structural_metrics(StructuralModel.epsilon_runtime, StructuralModel.omega, StructuralModel.persistence_dynamic, UpgradeManager.level("accounting")),
 		"_sync_reactor_color": func() -> void: main._sync_reactor_color(),
 	}
+	# Funciona también sobre código anterior (comparativas antes/después): sin memo si no existe,
+	# y cada parte sólo si su método existe en esa versión.
+	var owners := {"update_epsilon_sticky": main, "check_dominance_transition": main,
+		"update_achievements_label": main, "_sync_reactor_color": main, "update_log_label": LogManager,
+		"institution_panel_text": UIManager}
+	var methods := {"institution_panel_text": "build_institution_panel_text"}
+	var has_memo := EconomyManager.has_method("begin_memo")
 	var out := {}
 	for label in parts:
+		var owner: Object = owners.get(label, UIManager)
+		if not owner.has_method(methods.get(label, label)):
+			continue
 		var fn: Callable = parts[label]
 		var t0 := Time.get_ticks_usec()
 		for i in iterations:
-			EconomyManager.begin_memo()
+			if has_memo:
+				EconomyManager.begin_memo()
 			fn.call()
-			EconomyManager.end_memo()
+			if has_memo:
+				EconomyManager.end_memo()
 		out[label] = snappedf(float(Time.get_ticks_usec() - t0) / iterations, 0.1)
 	return out
 

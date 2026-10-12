@@ -465,7 +465,10 @@ func _migrate_retroactive_endings() -> void:
 
 ## Retrocompat: devuelve true si el buff tiene level >= 1 Y está activado
 func get_buff_value(id: String) -> bool:
-	if get_buff_level(id) <= 0:
+	# get_buff_level inline: es ruta caliente (pipeline económico) y la llamada anidada
+	# costaba más que las dos lecturas de diccionario.
+	var entry: Variant = buffs.get(id)
+	if entry == null or int(entry.get("level", 0)) <= 0:
 		return false
 	# Respeta el toggle manual: false en buff_enabled = desactivado explícitamente
 	return buff_enabled.get(id, true)
