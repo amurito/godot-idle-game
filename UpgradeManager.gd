@@ -96,7 +96,17 @@ func can_buy(id: String, money: float) -> bool:
 	# Usa cost() que aplica todos los descuentos (memoria_recurso, memoria_estructural, presión_rentable)
 	var real_cost := cost(id)
 
-	return money >= real_cost and s.unlocked
+	return money >= real_cost and s.unlocked and conditional_unlock_ok(id)
+
+## Condiciones de desbloqueo además de unlock_requires. Regla de juego: se evalúa acá (compra) y
+## no sólo en la UI — antes vivía en main._sync_reactor_color(), que corre en el tick de UI: entre
+## la compra de trueque_net y el siguiente refresco (100-250 ms) se podía comprar sin cumplirla,
+## y sin UI (simulador headless) no se aplicaba nunca.
+func conditional_unlock_ok(id: String) -> bool:
+	if id == "trueque_allo":
+		# Escalado Alostático: sólo si la run anterior terminó en Homeostasis o Alostasis.
+		return LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS"
+	return true
 
 ## Compra la mejora. Devuelve true si fue exitosa.
 ## Pasar money ANTES de restar el costo.
@@ -201,7 +211,7 @@ func level(id: String) -> int:
 
 ## ¿Está desbloqueado?
 func is_unlocked(id: String) -> bool:
-	return states.get(id, {}).get("unlocked", false)
+	return states.get(id, {}).get("unlocked", false) and conditional_unlock_ok(id)
 
 # =====================================================
 #  SAVE / LOAD

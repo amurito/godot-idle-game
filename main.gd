@@ -1145,12 +1145,11 @@ func on_institutions_unlocked():
 # =====================================================
 # UI HELPERS � v0.8
 func _sync_reactor_color() -> void:
-	# Especial: Bloqueo de Escalado Alostático si no viene de Homeostasis
+	# Visibilidad del botón de Escalado Alostático. La regla en sí (puede comprarse o no) vive en
+	# UpgradeManager.conditional_unlock_ok(); acá sólo se refleja en el flag que lee el botón.
 	if UpgradeManager.states.has("trueque_allo"):
 		var ready_to_show = UpgradeManager.level("trueque_net") > 0
-		var came_from_success = LegacyManager.last_run_ending == "HOMEOSTASIS" or LegacyManager.last_run_ending == "ALLOSTASIS"
-
-		if ready_to_show and came_from_success:
+		if ready_to_show and UpgradeManager.conditional_unlock_ok("trueque_allo"):
 			UpgradeManager.states["trueque_allo"].unlocked = true
 		else:
 			UpgradeManager.states["trueque_allo"].unlocked = false

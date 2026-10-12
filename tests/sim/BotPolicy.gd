@@ -23,6 +23,8 @@ extends RefCounted
 ##   unavoid_on: {id: mutation}    deja de evitar `id` cuando EvoManager.mutation_<mutation> es true
 ##   max_passive_pct: float        no compra upgrades pasivos si el % pasivo ya lo supera
 ##                                 (perfil "busco Hiperasimilación": exige >80% activo)
+##   uncap_passive_on: mutation    ignora max_passive_pct cuando EvoManager.mutation_<mutation> es true
+##   buy_ids_on: {mutation: [ids]} reemplaza buy_ids mientras EvoManager.mutation_<mutation> es true
 ##   max_buys_per_decision: int
 ##   decision_interval: s          cada cuánto decide compras/botones (default 0.5)
 ##   mutation: "none" | "homeostasis" | "simbiosis" | "red_micelial"
@@ -90,7 +92,14 @@ func _buy(d: RefCounted) -> void:
 		return
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
+	var ids_on: Dictionary = cfg.get("buy_ids_on", {})
+	for mut in ids_on:
+		if bool(EvoManager.get("mutation_" + str(mut))):
+			ids = ids_on[mut]
 	var max_passive: float = float(cfg.get("max_passive_pct", 100.0))
+	var uncap: String = str(cfg.get("uncap_passive_on", ""))
+	if uncap != "" and bool(EvoManager.get("mutation_" + uncap)):
+		max_passive = 100.0
 
 	# Prioridades: se compran apenas alcanzan; opcionalmente se ahorra para ellas.
 	for id in cfg.get("priority", []):
