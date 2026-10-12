@@ -51,6 +51,10 @@ var _ayuno_burst_btn: Button = null      # [Q] ROMPER EL AYUNO — burst basado 
 var _ayuno_ascesis_btn: Button = null    # [W] ASCESIS — mejora la tasa de S
 var _ayuno_seal_btn: Button = null       # Sello del final AYUNO PRIMORDIAL
 var _simbiosis_seal_btn: Button = null
+var _caos_collapse_btn: Button = null    # [Q] Colapso Dirigido (Caos Orquestado)
+var _caos_cd_btn: Button = null          # [W] cooldown del Colapso
+var _caos_seal_btn: Button = null        # Sello CAOS ORQUESTADO
+var _batuta_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
 var _transmut_dialog: ConfirmationDialog = null
@@ -156,6 +160,13 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
+	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn]:
+		if is_instance_valid(b):
+			b.queue_free()
+	_caos_collapse_btn = null
+	_caos_cd_btn = null
+	_caos_seal_btn = null
+	_batuta_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -188,6 +199,96 @@ func update_ng_plus_buttons() -> void:
 	_update_simbiosis_seal_button()
 	_update_run_buffs_button()
 	_update_transmut_button()
+	_update_caos_buttons()
+	_update_batuta_button()
+
+# ── CAOS ORQUESTADO: [Q] Colapso Dirigido · [W] cooldown · sello ──────────────
+func _make_rp_button(color: Color, min_h: float, cb: Callable, index: int) -> Button:
+	var b := Button.new()
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+	b.add_theme_color_override("font_color", color)
+	b.custom_minimum_size = Vector2(0, min_h)
+	b.pressed.connect(cb)
+	var panel := _right_panel()
+	if panel:
+		panel.add_child(b)
+		panel.move_child(b, index)
+	return b
+
+func _update_caos_buttons() -> void:
+	var active: bool = EvoManager.mutation_caos_orquestado and not RunManager.run_closed
+	if not active:
+		for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	if not is_instance_valid(_caos_collapse_btn):
+		_caos_collapse_btn = _make_rp_button(Color(0.85, 0.55, 1.0), 50, _on_caos_collapse_pressed, 0)
+	if EvoManager.caos_burst_timer > 0.0:
+		_caos_collapse_btn.text = TranslationServer.translate("BTN_CAOS_ACTIVE") % [EvoManager.caos_burst_saved_mult, EvoManager.caos_burst_timer]
+		_caos_collapse_btn.disabled = true
+	elif EvoManager.caos_cooldown > 0.0:
+		_caos_collapse_btn.text = TranslationServer.translate("BTN_CAOS_COOLDOWN") % EvoManager.caos_cooldown
+		_caos_collapse_btn.disabled = true
+	else:
+		_caos_collapse_btn.text = TranslationServer.translate("BTN_CAOS_READY") % [StructuralModel.epsilon_runtime,
+			1.0 + Balance.CAOS_COLLAPSE_K * maxf(StructuralModel.epsilon_runtime, 0.0)]
+		_caos_collapse_btn.disabled = false
+	_caos_collapse_btn.text = EmojiToRichText.strip(_caos_collapse_btn.text)
+	_caos_collapse_btn.visible = true
+
+	if not is_instance_valid(_caos_cd_btn):
+		_caos_cd_btn = _make_rp_button(Color(0.97, 0.82, 0.3), 46, _on_caos_cd_pressed, 1)
+	if CaosOrquestadoLogic.cd_maxed():
+		_caos_cd_btn.text = TranslationServer.translate("BTN_CAOS_CD_MAXED") % Balance.CAOS_CD_FLOOR
+		_caos_cd_btn.disabled = true
+	else:
+		var next_cd: float = maxf(Balance.CAOS_CD_FLOOR, Balance.CAOS_COLLAPSE_COOLDOWN * pow(1.0 - Balance.CAOS_CD_REDUCE_PCT, EvoManager.caos_cd_level + 1))
+		_caos_cd_btn.text = TranslationServer.translate("BTN_CAOS_CD") % [CaosOrquestadoLogic.effective_cooldown(), next_cd,
+			1.0 + Balance.CAOS_CD_CHARGE_BONUS * (EvoManager.caos_cd_level + 1), UITextBuilders.format_compact(CaosOrquestadoLogic.cd_cost())]
+		_caos_cd_btn.disabled = not CaosOrquestadoLogic.can_buy_cd()
+	_caos_cd_btn.text = EmojiToRichText.strip(_caos_cd_btn.text)
+	_caos_cd_btn.visible = true
+
+	if CaosOrquestadoLogic.seal_ready():
+		if not is_instance_valid(_caos_seal_btn):
+			_caos_seal_btn = _make_rp_button(Color(0.8, 0.6, 1.0), 70, _on_caos_seal_pressed, 0)
+		_caos_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_CAOS_SEAL") % int(Balance.PL_REWARDS.get("CAOS ORQUESTADO", 9)))
+		_caos_seal_btn.visible = true
+	elif is_instance_valid(_caos_seal_btn):
+		_caos_seal_btn.visible = false
+
+func _on_caos_collapse_pressed() -> void:
+	CaosOrquestadoLogic.collapse()
+	_update_caos_buttons()
+
+func _on_caos_cd_pressed() -> void:
+	CaosOrquestadoLogic.buy_cd()
+	_update_caos_buttons()
+
+func _on_caos_seal_pressed() -> void:
+	if RunManager.run_closed or not CaosOrquestadoLogic.seal_ready():
+		return
+	if is_instance_valid(_caos_seal_btn):
+		_caos_seal_btn.visible = false
+	RunManager.close_run("CAOS ORQUESTADO", TranslationServer.translate("CLOSE_CAOS"))
+
+## Legado Batuta (cualquier run): botón discreto mientras haya ε para silenciar.
+func _update_batuta_button() -> void:
+	if not CaosOrquestadoLogic.batuta_available():
+		if is_instance_valid(_batuta_btn):
+			_batuta_btn.visible = false
+		return
+	if not is_instance_valid(_batuta_btn):
+		var panel := _right_panel()
+		_batuta_btn = _make_rp_button(Color(0.75, 0.7, 1.0), 36, _on_batuta_pressed, panel.get_child_count() if panel else 0)
+	_batuta_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_BATUTA") % StructuralModel.epsilon_runtime)
+	_batuta_btn.visible = true
+
+func _on_batuta_pressed() -> void:
+	CaosOrquestadoLogic.use_batuta()
+	_update_batuta_button()
 
 # ── INVOLUCIÓN: botón de reversión [T] ──────────────────────────────────────────
 ## Flotante (arriba al centro) y parpadeante mientras dura una aparición de la agenda de
@@ -251,6 +352,8 @@ func open_transmut_dialog() -> void:
 	_transmut_dialog.popup_centered()
 
 func _on_transmut_confirmed() -> void:
+	if is_instance_valid(_transmut_dialog):
+		_transmut_dialog.hide()
 	if TransmutationLogic.revert(_transmut_dialog_id, false):
 		if is_instance_valid(_transmut_btn):
 			_transmut_btn.visible = false

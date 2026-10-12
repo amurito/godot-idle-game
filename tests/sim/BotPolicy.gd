@@ -31,6 +31,9 @@ extends RefCounted
 ##   branch: "none" | "colonization" | "symbiosis"      (sub-rama de Red Micelial)
 ##   allostasis: bool
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
+##   cps_when: {mutation: cps}     ritmo de clicks mientras EvoManager.mutation_<mutation> es true
+##   caos_collapse_at: float       dispara [Q] Colapso Dirigido cuando ε ≥ esto (-1 = nunca)
+##   caos_cd / caos_seal: bool     compra [W] cuando alcanza / sella apenas puede
 ##   fusion_bursts / fusion_cd / fusion_seal: bool
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
@@ -79,6 +82,10 @@ func _current_cps() -> float:
 	for m in cfg.get("stop_click_when", []):
 		if bool(EvoManager.get("mutation_" + str(m))):
 			return 0.0
+	var cps_when: Dictionary = cfg.get("cps_when", {})
+	for m in cps_when:
+		if bool(EvoManager.get("mutation_" + str(m))):
+			return float(cps_when[m])
 	if cfg.has("click_schedule"):
 		var cps := 0.0
 		for entry in cfg.click_schedule:
@@ -203,6 +210,18 @@ func _route_keys(_d: RefCounted) -> void:
 		UIManager._ng_buttons._on_transmut_confirmed()
 		if TransmutationLogic.candidate() != tid:
 			_after_key("key:T transmute:" + tid)
+	if EvoManager.mutation_caos_orquestado:
+		var at: float = float(cfg.get("caos_collapse_at", -1.0))
+		if at >= 0.0 and StructuralModel.epsilon_runtime >= at and CaosOrquestadoLogic.can_collapse():
+			var eps_now: float = StructuralModel.epsilon_runtime
+			CaosOrquestadoLogic.collapse()
+			_after_key("key:Q caos_collapse eps=%.2f" % eps_now)
+		if cfg.get("caos_cd", false) and CaosOrquestadoLogic.can_buy_cd():
+			CaosOrquestadoLogic.buy_cd()
+			_after_key("key:W caos_cd")
+		if cfg.get("caos_seal", false) and CaosOrquestadoLogic.seal_ready():
+			UIManager._ng_buttons._on_caos_seal_pressed()
+			_log("seal:caos")
 	if EvoManager.mutation_fusion_catabolica:
 		var burst_limit: int = int(cfg.get("fusion_burst_limit", 1 << 30))
 		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_count < burst_limit \

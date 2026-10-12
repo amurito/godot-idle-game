@@ -489,6 +489,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
 		"effect": {"type": "all_income_mult", "value": 0.25},
 	},
+	# TRANSMUTACIÓN de Homeostasis (A → A+). Llave sin toggle: con Homeostasis activa aparece [T].
+	"transmut_caos": {
+		"name": "Transmutación: Caos Orquestado",
+		"flavor": "El equilibrio perfecto era una jaula. El hongo aprende a dirigir el caos en vez de temerle.",
+		"cat": "transmutaciones", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "HOMEOSTASIS"},
+		"effect": {"type": "transmut_caos_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Caos Orquestado: una herramienta, no un multiplicador.
+	"legado_batuta": {
+		"name": "Legado: Batuta",
+		"flavor": "Quien dirigió el caos conserva la batuta: una vez por run, silencia la orquesta (ε → 0).",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "CAOS ORQUESTADO"},
+		"unlock": {"type": "route_closed", "route": "CAOS ORQUESTADO"},
+		"effect": {"type": "batuta_active", "value": 1.0},
+	},
 	# SOMBRA de Hiperasimilación: abandona el consumo por completo. LLAVE permanente, sin toggle:
 	# se entra por DISPARADOR ESPEJO — dejar de clickear con pasivo propio y ε bajo
 	# (GenomeEvaluator.update_ayuno_espejo). No compite con Fusión: una se toma teniendo Hiper.

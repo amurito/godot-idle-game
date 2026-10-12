@@ -562,6 +562,19 @@ const DEFS := {
 		"trigger": "event", "event_name": "run_closed",
 		"conditions": [{"key": "route", "op": "==", "value": "FUSIÓN CATABÓLICA"}],
 	},
+	"ruta_caos_orquestado": {
+		"name": "Director de Orquesta",
+		"desc": "El organismo dejó de temerle al caos y aprendió a dirigirlo.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "CAOS ORQUESTADO"}],
+	},
+	"sinfonia_del_caos": {
+		"name": "Sinfonía del Caos",
+		"desc": "Sellar Caos Orquestado cobrando TODOS los Colapsos Dirigidos con ε ≥ 1.5.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "sinfonia_del_caos",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

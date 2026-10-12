@@ -551,7 +551,14 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if not is_instance_valid(genome_summary_label):
 			return
 	var t: String
-	if EvoManager.mutation_fusion_catabolica:
+	if EvoManager.mutation_caos_orquestado:
+		if RunManager.run_closed and RunManager.final_route == "CAOS ORQUESTADO":
+			t = UITextBuilders.build_caos_orquestado_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_caos_orquestado_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_fusion_catabolica:
 		if RunManager.run_closed and RunManager.final_route == "FUSIÓN CATABÓLICA":
 			t = _build_fusion_catabolica_closed_text()
 		elif not RunManager.run_closed:
@@ -1236,6 +1243,11 @@ func get_reactor_color() -> Color:
 		return Color(0.45, 1.0, 0.05)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		return Color(0.0, 0.9, 1.0)
+	if EvoManager.mutation_caos_orquestado:
+		if EvoManager.caos_burst_timer > 0.0:
+			return Color(1.15, 0.35, 0.95)  # magenta brillante: el colapso dirigido
+		# violeta → rojo según ε: se ve cuánto caos tenés cargado
+		return Color(0.45, 0.25, 0.85).lerp(Color(1.0, 0.15, 0.25), clampf(StructuralModel.epsilon_runtime, 0.0, 1.0))
 	if EvoManager.mutation_fusion_catabolica:
 		if EvoManager.fusion_burst_timer > 0.0:
 			return Color(1.1, 0.92, 0.12)  # oro brillante durante ráfaga

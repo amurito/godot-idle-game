@@ -35,6 +35,20 @@ static func defs() -> Dictionary:
 			"lose": "TRANSMUT_FUSION_LOSE",
 			"life": func() -> float: return Balance.HYPER_TIMEOUT,
 		},
+		"caos": {
+			"key": "transmut_caos",
+			"base_flag": "mutation_homeostasis",
+			"base_genome": "homeostasis",
+			"target_flag": "mutation_caos_orquestado",
+			"activate": func() -> void: CaosOrquestadoLogic.activate(),
+			"digest": func() -> String: return CaosOrquestadoLogic.digest_homeostasis(),
+			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_OMEGA") % Balance.CAOS_DIGEST_OMEGA_MIN,
+			"base_name": "MUT_HOMEOSTASIS",
+			"target_name": "MUT_CAOS_ORQUESTADO",
+			"lose": "TRANSMUT_CAOS_LOSE",
+			# Homeostasis no se cierra sola (el jugador sella su tier): ventana completa de 5 min.
+			"life": func() -> float: return 1.0e9,
+		},
 	}
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).

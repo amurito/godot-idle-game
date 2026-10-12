@@ -213,6 +213,29 @@ const FUSION_CD_FLOOR             := 30.0   # cooldown mínimo alcanzable (no ba
 const FUSION_CD_COST_BASE         := 1_000_000.0 # costo del nivel 1 (antes 10M: nunca convenía)
 const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
 
+# ── TRANSMUTACIÓN · CAOS ORQUESTADO (revierte HOMEOSTASIS) — CaosOrquestadoLogic ──
+# "Homeostasis aprendió a no temerle al caos: lo dirige." Valores iniciales aprobados por el
+# autor (2026-10-12); a calibrar con el simulador (objetivo 15–25 min desde la reversión).
+const CAOS_DIGEST_OMEGA_MIN      := 0.15   # digestión: Ω_min += esto por el resto de la run
+const CAOS_FUEL_K                := 1.0    # combustible: ingreso × (1 + k·ε)
+const CAOS_FUEL_CAP              := 3.0    # tope del combustible
+const CAOS_CHARGE_RATE           := 0.01   # carga de caos /s (piso de ε): 0.6 en 60 s, 1.0 en 100 s
+const CAOS_CHARGE_MAX            := 2.0
+const CAOS_OMEGA_FLOOR           := 0.20   # Ω no baja de esto con Caos activo
+const CAOS_COLLAPSE_K            := 2.0    # [Q] Colapso Dirigido: ráfaga × (1 + k·ε cobrado)
+const CAOS_COLLAPSE_DURATION     := 20.0
+const CAOS_COLLAPSE_COOLDOWN     := 90.0
+const CAOS_CD_REDUCE_PCT         := 0.20   # [W] "Afinar": −20 % de cooldown por nivel…
+const CAOS_CD_CHARGE_BONUS       := 0.25   # …y +25 % de velocidad de carga por nivel (el ciclo lo limita la carga)
+const CAOS_CD_FLOOR              := 30.0
+const CAOS_CD_COST_BASE          := 500_000.0
+const CAOS_CD_COST_GROWTH        := 1.9
+const CAOS_RED_EPS               := 0.60   # zona roja (sello + "colapso con carga")
+const CAOS_SEAL_RED_TIME         := 360.0  # s acumulados con ε ≥ CAOS_RED_EPS
+const CAOS_SEAL_CHARGED          := 10      # Colapsos Dirigidos con ε ≥ CAOS_RED_EPS al dispararlos
+const CAOS_SEAL_MONEY            := 30_000_000.0  # $ generados desde la reversión
+const CAOS_MYTHIC_EPS            := 1.5    # logro "Sinfonía del Caos": TODOS los Colapsos con ε ≥ esto
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -353,6 +376,7 @@ const PL_REWARDS: Dictionary = {
 	"DOMADOR DEL CAOS":          11,
 	"ASCESIS_PROFUNDA":          7,
 	"FUSIÓN CATABÓLICA":         9,
+	"CAOS ORQUESTADO":           9,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 }
@@ -386,6 +410,7 @@ const NG_CAPS: Dictionary = {
 	"COLAPSO DEPREDATORIO":      5,
 	"PANSPERMIA NEGRA":          6,
 	"FUSIÓN CATABÓLICA":         8,
+	"CAOS ORQUESTADO":           8,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 }

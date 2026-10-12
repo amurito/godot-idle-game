@@ -239,6 +239,7 @@ func update_runtime() -> void:
 		epsilon_active = 0.0
 		epsilon_passive = 0.0
 		epsilon_complex = 0.0
+		_apply_caos_charge_floor()
 		if is_nan(omega) or is_inf(omega):
 			omega = 1.0
 		return
@@ -290,6 +291,7 @@ func update_runtime() -> void:
 
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		epsilon_runtime = max(epsilon_runtime, 0.25)
+	_apply_caos_charge_floor()
 	epsilon_peak = max(epsilon_peak, epsilon_runtime)
 
 	omega = EcoModel.get_omega(epsilon_runtime, k_eff, n_struct)
@@ -383,10 +385,19 @@ func resolve_omega() -> void:
 			omega = max(omega, 0.60)
 		elif LegacyManager.get_buff_value("legado_homeorresis"):
 			omega = max(omega, 0.55)
+		if EvoManager.mutation_caos_orquestado:
+			omega = max(omega, Balance.CAOS_OMEGA_FLOOR)  # Caos Orquestado: ε alto no te mata
 
 	# 5. Control de Ω
 	if control_omega_offset != 0.0:
 		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
+
+## CAOS ORQUESTADO: la carga de caos (crece sola, CaosOrquestadoLogic.process) es piso de ε.
+## Sin esto ε converge a su equilibrio estructural (~0.56 al dominar el pasivo) y la ruta se
+## estanca bajo la zona roja. El Colapso Dirigido vacía la carga.
+func _apply_caos_charge_floor() -> void:
+	if EvoManager.mutation_caos_orquestado:
+		epsilon_runtime = maxf(epsilon_runtime, EvoManager.caos_charge)
 
 ## Estrés post-Red Micelial: en fase 2 (antes de esporular) ε sube sostenidamente.
 func apply_red_micelial_stress(dt: float) -> void:

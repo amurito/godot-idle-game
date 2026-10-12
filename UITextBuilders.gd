@@ -1301,3 +1301,41 @@ static func build_fusion_catabolica_panel_text() -> String:
 	elif not burst_ok:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t
+
+
+# ─── CAOS ORQUESTADO (transmutación de Homeostasis) ──────────────────────────
+
+static func build_caos_orquestado_panel_text() -> String:
+	var tr_ok := "[color=green]✓[/color]"
+	var eps: float = StructuralModel.epsilon_runtime
+	var t := "[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_TITLE") + "[/color]\n"
+	t += TranslationServer.translate("CAOS_PANEL_FUEL") % [eps, CaosOrquestadoLogic.fuel_mult(), Balance.CAOS_FUEL_CAP] + "\n"
+	t += "\n[color=yellow]" + TranslationServer.translate("CAOS_PANEL_COLLAPSE_HDR") + "[/color]\n"
+	if EvoManager.caos_burst_timer > 0.0:
+		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_ACTIVE") % [EvoManager.caos_burst_saved_mult, EvoManager.caos_burst_timer] + "\n"
+	elif EvoManager.caos_cooldown > 0.0:
+		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_CD") % EvoManager.caos_cooldown + "\n"
+	else:
+		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_READY") % (1.0 + Balance.CAOS_COLLAPSE_K * maxf(eps, 0.0)) + "\n"
+	t += "\n[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_SEAL_HDR") + "[/color]\n"
+	var red_ok: bool = EvoManager.caos_red_time >= Balance.CAOS_SEAL_RED_TIME
+	t += TranslationServer.translate("CAOS_PANEL_RED") % [tr_ok if red_ok else "[ ]", int(EvoManager.caos_red_time),
+		int(Balance.CAOS_SEAL_RED_TIME), Balance.CAOS_RED_EPS] + "\n"
+	var ch_ok: bool = EvoManager.caos_charged_collapses >= Balance.CAOS_SEAL_CHARGED
+	t += TranslationServer.translate("CAOS_PANEL_CHARGED") % [tr_ok if ch_ok else "[ ]", EvoManager.caos_charged_collapses,
+		Balance.CAOS_SEAL_CHARGED, Balance.CAOS_RED_EPS] + "\n"
+	var m: float = CaosOrquestadoLogic.money_since_revert()
+	var m_ok: bool = m >= Balance.CAOS_SEAL_MONEY
+	t += TranslationServer.translate("CAOS_PANEL_MONEY") % [tr_ok if m_ok else "[ ]", format_compact(m),
+		format_compact(Balance.CAOS_SEAL_MONEY)] + "\n"
+	if red_ok and ch_ok and m_ok:
+		t += "\n[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + TranslationServer.translate("CAOS_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_caos_orquestado_closed_text() -> String:
+	var t := "[color=#c084fc]" + TranslationServer.translate("CAOS_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("CAOS_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#c084fc]" + TranslationServer.translate("CAOS_CLOSED_REWARD") + "[/color]"
+	return t

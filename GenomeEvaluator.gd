@@ -56,7 +56,7 @@ static func update_ayuno_espejo(ctx: Dictionary) -> void:
 	if EvoManager.mutation_ayuno_primordial or LegacyManager.get_buff_level("transmut_ayuno") <= 0:
 		return
 	if EvoManager.mutation_hyperassimilation or EvoManager.mutation_fusion_catabolica \
-			or EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis \
+			or EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_symbiosis \
 			or EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism \
 			or EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
 		EvoManager._ayuno_mirror_countdown_last = -1
@@ -88,7 +88,7 @@ static func update_hiperasimilacion(ctx: Dictionary) -> void:
 	# Gate de tiempo: en runs avanzadas (t>2) baja de 180s a 60s — el jugador ya
 	# conoce la ruta y no debería gastar 3 min por run cuando busca rutas largas.
 	var hiper_time_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
-	if EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis or EvoManager.mutation_parasitism or EvoManager.mutation_red_micelial:
+	if EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_symbiosis or EvoManager.mutation_parasitism or EvoManager.mutation_red_micelial:
 		EvoManager._set_genome_state("hiperasimilacion", "bloqueado")
 	elif ctx.ap.activo > 80.0 and ctx.epsilon > 0.4 and ctx.biomasa > 4.0 \
 			and ctx.accounting == 0 and ctx.run_time > hiper_time_req:
@@ -125,7 +125,7 @@ static func update_parasitismo(ctx: Dictionary) -> void:
 	# FUSIÓN CATABÓLICA hereda el bloqueo de Hiperasimilación (la reemplaza y apaga su flag): sin
 	# esto la Masa Crítica (420 s) o el estancamiento (1800 s) cerraban la run antes de que el
 	# sello fuera alcanzable. AYUNO NO lo hereda a propósito: el parásito es su trampa.
-	elif EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial or EvoManager.mutation_fusion_catabolica:
+	elif EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_symbiosis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial or EvoManager.mutation_fusion_catabolica:
 		EvoManager._set_genome_state("parasitismo", "bloqueado")
 	elif (ctx.biomasa > 6.0 and ctx.epsilon > 0.35 and ctx.accounting == 0 and ctx.run_time > 420.0) \
 			or inactivity_trigger or stagnation_trigger:
@@ -221,7 +221,7 @@ static func update_depredador(ctx: Dictionary) -> void:
 static func update_simbiosis(ctx: Dictionary) -> void:
 	if EvoManager.mutation_symbiosis:
 		EvoManager._set_genome_state("simbiosis", "activo")
-	elif EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism:
+	elif EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_hyperassimilation or EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism:
 		EvoManager._set_genome_state("simbiosis", "bloqueado")
 	elif ctx.accounting >= 1 and ctx.hifas >= 5.0 and StructuralModel.omega >= 0.40 and ctx.act_domina:
 		EvoManager._set_genome_state("simbiosis", "latente")
@@ -255,7 +255,8 @@ static func update_homeostasis(ctx: Dictionary) -> void:
 		orden_ok = ctx.accounting >= 1
 
 	if EvoManager.mutation_red_micelial or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism \
-			or EvoManager.mutation_symbiosis or EvoManager.mutation_allostasis or EvoManager.mutation_homeorhesis:
+			or EvoManager.mutation_symbiosis or EvoManager.mutation_allostasis or EvoManager.mutation_homeorhesis \
+			or EvoManager.mutation_caos_orquestado or EvoManager.transmut_reverted.get("homeostasis", false):
 		EvoManager._set_genome_state("homeostasis", "bloqueado")
 	elif EvoManager.mutation_homeostasis:
 		EvoManager._set_genome_state("homeostasis", "activo")
@@ -300,7 +301,7 @@ static func update_homeorhesis(_ctx: Dictionary) -> void:
 static func update_red_micelial(ctx: Dictionary) -> void:
 	if EvoManager.mutation_red_micelial:
 		EvoManager._set_genome_state("red_micelial", "activo")
-	elif EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation or EvoManager.mutation_symbiosis:
+	elif EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_hyperassimilation or EvoManager.mutation_symbiosis:
 		EvoManager._set_genome_state("red_micelial", "bloqueado")
 	elif ctx.hifas >= 11.5 and ctx.biomasa >= 5.0 and ctx.epsilon < 0.65 \
 			and ctx.accounting >= 1 and not ctx.act_domina:
@@ -313,7 +314,7 @@ static func update_red_micelial(ctx: Dictionary) -> void:
 
 ## ESPORULACIÓN (Fase 2 de Red Micelial): determinada por presión biológica.
 static func update_esporulacion(ctx: Dictionary) -> void:
-	if EvoManager.mutation_homeostasis or EvoManager.mutation_hyperassimilation:
+	if EvoManager.mutation_homeostasis or EvoManager.mutation_caos_orquestado or EvoManager.mutation_hyperassimilation:
 		EvoManager._set_genome_state("esporulacion", "bloqueado")
 	elif ctx.bio_pressure > 20.0:
 		EvoManager._set_genome_state("esporulacion", "activo")

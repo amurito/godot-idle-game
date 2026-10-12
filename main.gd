@@ -1003,6 +1003,18 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_caos_orquestado:
+				match kc:
+					KEY_Q:
+						if CaosOrquestadoLogic.can_collapse():
+							CaosOrquestadoLogic.collapse()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
+					KEY_W:
+						if CaosOrquestadoLogic.can_buy_cd():
+							CaosOrquestadoLogic.buy_cd()
+							UIManager.update_ng_plus_buttons()
+							get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_fusion_catabolica:
 				match kc:
 					KEY_Q:

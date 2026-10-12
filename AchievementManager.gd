@@ -552,6 +552,9 @@ func on_run_closed(route: String) -> void:
 		unlock("esclerocio_contingencia")
 	if route == "AUTOFAGIA NECRÓTICA" and _eval_autolisis_perfecta({}):
 		unlock("autolisis_perfecta")
+	# Sinfonía: TODOS los Colapsos cobrados a ε ≥ CAOS_MYTHIC_EPS (paciencia: esperar la carga larga).
+	if route == "CAOS ORQUESTADO" and EvoManager.caos_collapse_count > 0 			and EvoManager.caos_min_collapse_eps >= Balance.CAOS_MYTHIC_EPS:
+		unlock("sinfonia_del_caos")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
 	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:

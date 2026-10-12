@@ -1421,7 +1421,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]SOMBRA[/b] (A → anti-A) — no hay botón: es la [b]consecuencia[/b] de jugar al revés de la mutación. Con su llave, hacer lo opuesto la dispara. Recompensa: visibilidad y sistemas nuevos, no multiplicadores.\n"
 			+ "• [b]REDENCIÓN[/b] — sanar en vez de colapsar (Remisión Metabólica).\n\n"
 			+ "Las llaves son permanentes y no tienen interruptor: la decisión es en cada run.\n\n"
-			+ "[i]Hiperasimilación ya tiene las dos: Fusión Catabólica (Transmutación) y Ayuno Primordial (Sombra).[/i]"
+			+ "[i]Hiperasimilación ya tiene las dos: Fusión Catabólica (Transmutación) y Ayuno Primordial (Sombra). Homeostasis tiene su Transmutación: Caos Orquestado.[/i]"
 		),
 		"body_en": (
 			"HYPHAE's endgame is built on [b]involution[/b]: giving something up to open something else. Three families, by tone:\n\n"
@@ -1429,7 +1429,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]SHADOW[/b] (A → anti-A) — no button: it is the [b]consequence[/b] of playing the opposite of the mutation. With its key, doing the opposite triggers it. Reward: visibility and new systems, not multipliers.\n"
 			+ "• [b]REDEMPTION[/b] — healing instead of collapsing (Metabolic Remission).\n\n"
 			+ "Keys are permanent and have no switch: the decision is made in each run.\n\n"
-			+ "[i]Hyperassimilation already has both: Catabolic Fusion (Transmutation) and Primal Fast (Shadow).[/i]"
+			+ "[i]Hyperassimilation already has both: Catabolic Fusion (Transmutation) and Primal Fast (Shadow). Homeostasis has its Transmutation: Orchestrated Chaos.[/i]"
 		),
 		"unlock": {"type": "transcendence_count", "count": 3},
 		"see_also": ["transmut_fusion", "hiperasimilacion", "banco_genetico", "hitos_trascendencia"],
@@ -1461,6 +1461,34 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_fusion"},
 		"see_also": ["transmut_intro", "hiperasimilacion", "formula_produccion"],
+	},
+	"transmut_caos": {
+		"cat": "transmutaciones",
+		"name_es": "Caos Orquestado", "name_en": "Orchestrated Chaos",
+		"body_es": (
+			"Transmutación (A → A+) de [b]Homeostasis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Homeostasis). Con Homeostasis activa aparece el botón [b][T] Revertir[/b] (a los 60 / 170 / 280 s): confirmás y la estabilidad se [b]digiere[/b] en una reserva de Ω (Ω_min +0.15).\n\n"
+			+ "Renunciás al +50% en banda, al piso de Ω 0.35 y a Alostasis/Homeorresis en esa run. A cambio, [b]ε deja de ser amenaza y se vuelve combustible[/b]:\n\n"
+			+ "• Todo el ingreso [b]×(1 + ε)[/b], tope ×3. Ω nunca baja de 0.20.\n"
+			+ "• [b][Q] Colapso Dirigido[/b]: cobrás el ε acumulado → ráfaga [b]×(1 + 2·ε)[/b] durante 20 s, y ε vuelve a 0. Cooldown 90 s.\n"
+			+ "• [b]Carga de caos[/b]: el caos se acumula si no lo dirigís — ε sube solo +0.01/s (es un piso) y el Colapso lo vacía.\n"
+			+ "• [b][W] Afinar[/b]: −20% de cooldown y +25% de velocidad de carga por nivel.\n\n"
+			+ "La decisión constante: ¿mantener ε alto (bonus continuo) o cobrarlo (ráfaga grande)?\n\n"
+			+ "[b]Sello[/b]: 360 s acumulados con ε ≥ 0.60 + 10 Colapsos [b]con carga[/b] (ε ≥ 0.60 al dispararlos) + $30M generados desde la reversión → [b]CAOS ORQUESTADO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Batuta[/b] — una vez por run, en cualquier run, podés llevar ε a 0."
+		),
+		"body_en": (
+			"Transmutation (A → A+) of [b]Homeostasis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Homeostasis). With Homeostasis active the [b][T] Revert[/b] button appears (at 60 / 170 / 280 s): confirm and stability is [b]digested[/b] into an Ω reserve (Ω_min +0.15).\n\n"
+			+ "You give up the +50% in band, the Ω 0.35 floor and Allostasis/Homeorhesis that run. In exchange, [b]ε stops being a threat and becomes fuel[/b]:\n\n"
+			+ "• All income [b]×(1 + ε)[/b], capped at ×3. Ω never drops below 0.20.\n"
+			+ "• [b][Q] Directed Collapse[/b]: cash in the accumulated ε → burst [b]×(1 + 2·ε)[/b] for 20 s, and ε resets to 0. 90 s cooldown.\n"
+			+ "• [b]Chaos charge[/b]: chaos builds up if you do not conduct it — ε rises on its own +0.01/s (as a floor) and the Collapse empties it.\n"
+			+ "• [b][W] Tune[/b]: −20% cooldown and +25% charge speed per level.\n\n"
+			+ "The constant decision: keep ε high (steady bonus) or cash it in (big burst)?\n\n"
+			+ "[b]Seal[/b]: 360 s accumulated at ε ≥ 0.60 + 10 [b]charged[/b] Collapses (ε ≥ 0.60 when fired) + $30M generated since reverting → [b]ORCHESTRATED CHAOS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Baton[/b] — once per run, in any run, you can bring ε to 0."
+		),
+		"unlock": {"type": "buff_owned", "id": "transmut_caos"},
+		"see_also": ["transmut_intro", "homeostasis", "transmut_fusion"],
 	},
 	"ayuno_primordial": {
 		"cat": "transmutaciones",

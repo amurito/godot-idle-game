@@ -338,6 +338,9 @@ func _run_transmutation() -> void:
 		eq(hs[0][0], 40.0) and eq(hs[1][0], 90.0) and eq(hs[2][0], 140.0))
 	chk("Hiper: cada aparición dura 20 s", eq(hs[0][1] - hs[0][0], 20.0))
 	chk("Hiper: la última termina 20 s antes del timeout", eq(hs[2][1], Balance.HYPER_TIMEOUT - 20.0))
+	var cs: Array = TransmutationLogic.slots("caos")  # Homeostasis no cierra sola → ventana de 5 min
+	chk("Homeostasis: apariciones a 60 / 170 / 280 s",
+		eq(cs[0][0], 60.0) and eq(cs[1][0], 170.0) and eq(cs[2][0], 280.0))
 	# Sin la llave no hay candidata aunque Hiper esté activa
 	var snap_buffs := LegacyManager.buffs.duplicate(true)
 	var snap_hiper: bool = EvoManager.mutation_hyperassimilation

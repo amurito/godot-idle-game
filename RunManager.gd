@@ -193,6 +193,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_FUSION_REWARD"))
 			LogManager.add(tr("LOG_FUSION_REWARD"))
 
+	# CAOS ORQUESTADO: legado Batuta (ε → 0 una vez por run, en cualquier run).
+	if route == "CAOS ORQUESTADO":
+		if not LegacyManager.get_buff_value("legado_batuta"):
+			LegacyManager.grant_buff("legado_batuta")
+			UIManager.show_toast(tr("TOAST_CAOS_REWARD"))
+			LogManager.add(tr("LOG_CAOS_REWARD"))
+
 	# AYUNO PRIMORDIAL: recompensa permanente al sellar → pasivo ×2→×1 en los primeros 90 s de run.
 	if route == "AYUNO PRIMORDIAL":
 		if not LegacyManager.get_buff_value("legado_primicia_del_vacio"):
@@ -796,6 +803,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_remision:               return "REMISIÓN METABÓLICA"
 	if EvoManager.mutation_omega_cero:             return "PROTOCOLO OMEGA-CERO"
 	if EvoManager.mutation_met_oscuro:             return "METABOLISMO OSCURO"
+	if EvoManager.mutation_caos_orquestado:        return "CAOS ORQUESTADO"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -948,6 +956,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.1f", "log": "micelio {v} / 20 = {b} (cap {c})"},
 		"FUSIÓN CATABÓLICA": {"value": func() -> Variant: return EconomyManager.total_money_generated, "op": "div", "k": 10_000_000.0,
 			"vfmt": "%.1f", "show": money_m, "log": "generado ${v}M / $10M = {b} (cap {c})"},
+		"CAOS ORQUESTADO": {"value": func() -> Variant: return EvoManager.caos_charged_collapses, "op": "div", "k": 2.0,
+			"vfmt": "%d", "log": "colapsos con carga {v} / 2 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
 			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
 	}

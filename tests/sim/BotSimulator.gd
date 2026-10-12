@@ -206,6 +206,15 @@ func _transmutation_metrics() -> Dictionary:
 			"longest_streak": EvoManager.ayuno_longest_streak,
 			"ascesis_level": EvoManager.ayuno_ascesis_level,
 		},
+		"caos": {
+			"active": EvoManager.get("mutation_caos_orquestado"),
+			"red_time": EvoManager.get("caos_red_time"),
+			"charged": EvoManager.get("caos_charged_collapses"),
+			"collapses": EvoManager.get("caos_collapse_count"),
+			"peak_eps": EvoManager.get("caos_peak_collapse_eps"),
+			"cd_level": EvoManager.get("caos_cd_level"),
+			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("caos_money_mark") if EvoManager.get("caos_money_mark") != null else 0.0),
+		},
 		"fusion": {
 			"active": EvoManager.mutation_fusion_catabolica,
 			"burst_count": EvoManager.fusion_burst_count,

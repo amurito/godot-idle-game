@@ -1,7 +1,7 @@
 # Involución: Transmutaciones, Sombras y Redenciones
 
-> **Estado (2026-10-12):** spec aprobada por el autor. **R1 + R2 implementados** (sistema común,
-> Fusión por botón, Ayuno por espejo de conducta). R3–R6 pendientes.
+> **Estado (2026-10-12):** spec aprobada por el autor. **R1 + R2 + R3 implementados** (sistema común,
+> Fusión por botón, Ayuno por espejo de conducta, Caos Orquestado). R4–R6 pendientes.
 > Reemplaza la implementación actual de transmutaciones (toggle en el Banco que *reemplaza* el
 > disparador de Hiperasimilación), que se desvió de la idea original de
 > [`nuevas transmutaciones.md`](nuevas%20transmutaciones.md). Decisiones del autor: ver §8.
@@ -125,17 +125,39 @@ Nombres: se renombran los dos del brainstorm que chocaban con rutas existentes (
 - Economía, [Q]/[W], sello ($100M · $50M en ráfaga · n≥150) y legado Motor Fundido: sin cambios
   (rebalance `0bf4bd0`). Re-medir duración: ahora arranca con el burst de digestión.
 
-### 5.2 Homeostasis → **CAOS ORQUESTADO**
-*Homeostasis aprendió a no temerle al caos: lo dirige.*
-- Pierde: el +50 % en banda y la estabilización de ε (tiers de homeostasis).
-- Digiere: Ω_min +0.15 (la estabilidad acumulada queda como reserva).
-- Economía: **ε alimenta la producción** — +5 % a todo el ingreso por cada 0.1 de ε; Ω no baja de 0.20.
-- [Q] **Colapso Dirigido**: ε → 0 y ×2 producción 20 s (cooldown). [W] sink: acorta el cooldown.
-- Sello (ejes: riesgo · control · volumen): sostener ε ≥ 0.60 un total de N s · M colapsos dirigidos
-  · $X generados.
-- Legado (propuesta): *Orquesta Interna* — la zona roja de ε penaliza menos en todas las runs.
-- Distinción con su Sombra **Inestabilidad Consciente**: Caos = *domina* ε (poder);
-  Inestabilidad = *renuncia* a controlarlo y paga el precio, a cambio de OBSERVAR (visibilidad).
+### 5.2 Homeostasis → **CAOS ORQUESTADO** ✅ (R3, 2026-10-12)
+*Homeostasis aprendió a no temerle al caos: lo dirige.* Código: `CaosOrquestadoLogic.gd`.
+
+| | Implementado | Constante |
+|---|---|---|
+| Llave | 15 PL, revela T ≥ 3, se habilita tras cerrar Homeostasis | `transmut_caos` |
+| Botón [T] | 60 / 170 / 280 s de Homeostasis activa (no cierra sola → ventana completa) | |
+| Pierde | +50 % en banda, piso Ω 0.35, shocks, Alostasis/Homeorresis esa run | |
+| Digestión | Ω_min +0.15 | `CAOS_DIGEST_OMEGA_MIN` |
+| Combustible | ingreso × (1 + 1.0·ε), tope ×3; Ω ≥ 0.20 | `CAOS_FUEL_K/CAP`, `CAOS_OMEGA_FLOOR` |
+| **Carga de caos** | +0.01/s, piso de ε, tope 2.0; el Colapso la vacía | `CAOS_CHARGE_RATE/MAX` |
+| [Q] Colapso Dirigido | ráfaga × (1 + 2·ε cobrado) 20 s, ε → 0, cooldown 90 s | `CAOS_COLLAPSE_*` |
+| [W] **Afinar** | −20 % cooldown **y +25 % velocidad de carga** por nivel, desde $500K ×1.9 | `CAOS_CD_*` |
+| Sello | 360 s con ε ≥ 0.60 · 10 Colapsos con carga · $30M desde la reversión | `CAOS_SEAL_*` |
+| PL | 9 + floor(colapsos con carga / 2), tope 8 | |
+| Legado | **Batuta**: ε → 0 una vez por run, en cualquier run (botón) | `legado_batuta` |
+| Logros | ANCESTRAL *Director de Orquesta* · MYTHIC *Sinfonía del Caos*: **todos** los Colapsos con ε ≥ 1.5 | |
+
+**Cambios respecto de la propuesta aprobada, por lo que mostró el simulador:**
+1. **Carga de caos (nuevo).** Sin ella, ε converge a su equilibrio estructural (~0.56 cuando domina el
+   pasivo) y se queda debajo de la zona roja: la ruta **no se podía sellar**. Idea: *el caos se acumula
+   si no lo dirigís*.
+2. **[W] también acelera la carga.** Sólo acortar el cooldown no aceleraba el sello (el ciclo lo limita
+   lo que tarda la carga en volver a la zona roja); con $50K además era trivial.
+3. **Sello recalibrado** ($1M era trivial: el ingreso pasa de ~300 $/s a ~30K $/s en 3 min).
+4. **MYTHIC**: "un Colapso con ε ≥ 1.5" salía sin buscarlo (al principio ε llega a 2.0 clickeando);
+   ahora exige **todos** los Colapsos a ε ≥ 1.5 (paciencia: esperar la carga larga).
+
+| Perfil (`tests/sim/Scenarios.gd`) | Sella desde la reversión |
+|---|---:|
+| `ng_caos_player` — cobra con ε ≥ 0.8 y compra [W] | **15.3 min** |
+| `ng_caos_no_cd` — igual, sin [W] | **17.8 min** |
+| `ng_caos_sinfonia` — cobra sólo con ε ≥ 1.5 (logra el MYTHIC) | 21.0 min |
 
 ### 5.3 Simbiosis → **CORO SIMBIÓTICO** *(ex "Singularidad Distribuida")*
 *La cooperación deja de ser un pacto y se vuelve un ritmo.*
@@ -192,7 +214,8 @@ FANTASMA (combos de dos llaves) queda para después de la grilla (requiere ≥ 3
 | R0 | **Esta spec revisada y aprobada** por el autor (§8). |
 | R1 ✅ | Sistema común: `TransmutationLogic.gd` (agenda de apariciones adaptada a la vida de A, digestión, revert), botón flotante parpadeante + diálogo + [T] (`NGPlusButtonManager`), estado en save (`transmut_*`), llaves sin toggle; se quitó la exclusión del Banco. 7 tests unitarios de la agenda. |
 | R2 ✅ | **Fusión** por botón (Hiper a los 83 s → revierte a los 124 s → sella ~17.5 min después) y **Ayuno** por espejo de conducta. Codex ES/EN reescrito (intro de involución, Fusión, Ayuno — corrige además 3 números viejos de Ayuno). Escenarios `ng_hiper_key_no_revert` (camino "no revierto") y bot que transmuta por el diálogo. |
-| R3–R6 | Una transmutación nueva por paso: Caos Orquestado, Coro Simbiótico, Micelio Omnisciente, Huésped Soberano. Cada una con spec propia de números, bot, golden, logros, Codex ES/EN. |
+| R3 ✅ | **Caos Orquestado** (§5.2): calibrado con 3 perfiles de bot, trayectoria golden `ng_caos_player` (cubre además Homeostasis, que no tenía ninguna). |
+| R4–R6 | Coro Simbiótico, Micelio Omnisciente, Huésped Soberano. Cada una con propuesta de números → aprobación → implementación → calibración con bot, golden, logros, Codex ES/EN. |
 | R7 | Retomar la auditoría de gameplay (A2/A3) con las rutas ya en su forma final. |
 
 ---
