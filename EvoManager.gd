@@ -103,7 +103,9 @@ const MET_OSCURO_STATUS_INTERVAL := 12.0
 var mutation_fusion_catabolica := false
 var fusion_burst_timer: float = 0.0      # Metabolismo Híbrido: s restantes de la ráfaga ×2
 var fusion_burst_cooldown: float = 0.0   # s de cooldown tras la ráfaga
-var fusion_burst_count: int = 0          # usos de Metabolismo Híbrido (gate del sello)
+var fusion_burst_count: int = 0          # usos de Metabolismo Híbrido (estadística / logros)
+var fusion_burst_money: float = 0.0      # $ generados mientras la ráfaga estaba activa (gate del sello)
+var _fusion_money_mark: float = -1.0     # total_money_generated en el último tick (−1 = sin marca: tras cargar)
 var fusion_cd_level: int = 0             # niveles comprados de reducción de cooldown (sink de dinero)
 
 # === AYUNO PRIMORDIAL (transmutación SOMBRA — anti-Hiperasimilación) ===
@@ -171,7 +173,7 @@ const TRANSIENT_VARS := [
 	"_depredador_active_tick", "_depredador_status_timer", "_depredador_countdown_last",
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
-	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks",
+	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -404,10 +406,17 @@ func activate_fusion_burst() -> void:
 	if fusion_burst_timer > 0.0 or fusion_burst_cooldown > 0.0: return
 	fusion_burst_timer = Balance.FUSION_BURST_DURATION
 	fusion_burst_count += 1
+	_fusion_money_mark = EconomyManager.total_money_generated  # sólo cuenta lo generado desde ahora
 	UIManager.show_toast(tr("TOAST_FUSION_BURST_ON"))
 
 ## Tick de Fusión Catabólica: avanza la ráfaga / cooldown del Metabolismo Híbrido.
 func process_fusion(dt: float) -> void:
+	# Plata generada en ráfaga: lo que creció total_money_generated desde el tick anterior (pasivo
+	# + clicks del intervalo) mientras la ráfaga estaba activa. Se cuenta ANTES de descontar el timer.
+	var total: float = EconomyManager.total_money_generated
+	if fusion_burst_timer > 0.0 and _fusion_money_mark >= 0.0:
+		fusion_burst_money += maxf(0.0, total - _fusion_money_mark)
+	_fusion_money_mark = total
 	if fusion_burst_timer > 0.0:
 		fusion_burst_timer -= dt
 		if fusion_burst_timer <= 0.0:
@@ -454,7 +463,7 @@ func buy_fusion_cd() -> void:
 func fusion_seal_ready() -> bool:
 	return mutation_fusion_catabolica \
 		and EconomyManager.total_money_generated >= Balance.FUSION_SEAL_MONEY \
-		and fusion_burst_count >= Balance.FUSION_SEAL_BURSTS \
+		and fusion_burst_money >= Balance.FUSION_SEAL_BURST_MONEY \
 		and StructuralModel.get_structural_upgrades() >= Balance.FUSION_SEAL_STRUCTURAL_N
 
 # ── AYUNO PRIMORDIAL (transmutación SOMBRA) ────────────────────────────────

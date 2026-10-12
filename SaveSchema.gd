@@ -111,6 +111,7 @@ static func _define() -> Array:
 			_f("fusion_burst_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("fusion_burst_cooldown", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("fusion_burst_count", EvoManager, {"default": 0, "load_int": true}),
+			_f("fusion_burst_money", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("fusion_cd_level", EvoManager, {"default": 0, "load_int": true}),
 			# Ayuno Primordial
 			_f("mutation_ayuno_primordial", EvoManager, {"default": false}),

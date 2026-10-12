@@ -971,20 +971,20 @@ const ENTRIES: Dictionary = {
 			+ "[b]+9 PL base[/b] (más bonus proporcional al rendimiento).\n\n"
 			+ "[b]Gate de sello (los tres simultáneos):[/b]\n"
 			+ "• $100M generados en total durante la run\n"
-			+ "• 3 ráfagas de Metabolismo Híbrido [Q] activadas\n"
-			+ "• ≥ 150 upgrades estructurales comprados\n\n"
+			+ "• $50M generados [b]durante[/b] ráfagas de Metabolismo Híbrido [Q] (usala cuando más producís; [W] acorta el cooldown)\n"
+			+ "• ≥ 150 upgrades estructurales (n: Trabajo, Ritmo, Trueque, Red, Especialización, Cognitivo, Contabilidad — el click no cuenta)\n\n"
 			+ "Al sellar: se otorga el legado [b]Motor Fundido[/b] permanente (+25% a todo el ingreso, stackeable en runs futuras).\n\n"
-			+ "[i]Sin Contabilidad ≥ 1 no existe Fusión Catabólica — esa tensión de build es intencional.[/i]"
+			+ "[i]Comprar Contabilidad antes de la transmutación la bloquea (se exige Contabilidad = 0 para entrar); una vez activa, Contabilidad vuelve a ser útil. Esa tensión de build es intencional.[/i]"
 		),
 		"body_en": (
 			"You seal the transmutation after mastering the hybrid engine. Reverted Hyperassimilation reaches its maximum stable form.\n\n"
 			+ "[b]+9 LP base[/b] (plus a bonus proportional to performance).\n\n"
 			+ "[b]Seal gate (all three simultaneously):[/b]\n"
 			+ "• $100M total generated during the run\n"
-			+ "• 3 Hybrid Metabolism [Q] bursts activated\n"
-			+ "• ≥ 150 structural upgrades purchased\n\n"
+			+ "• $50M generated [b]during[/b] Hybrid Metabolism [Q] bursts (fire it when you produce the most; [W] shortens the cooldown)\n"
+			+ "• ≥ 150 structural upgrades (n: Labor, Rhythm, Exchange, Network, Specialization, Cognitive, Accounting — clicks don't count)\n\n"
 			+ "On sealing: the [b]Fused Engine[/b] permanent legacy is granted (+25% to all income, stackable in future runs).\n\n"
-			+ "[i]Without Accounting ≥ 1 Catabolic Fusion cannot exist — that build tension is intentional.[/i]"
+			+ "[i]Buying Accounting before the transmutation blocks it (entry requires Accounting = 0); once active, Accounting is useful again. That build tension is intentional.[/i]"
 		),
 		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
 		"see_also": ["transmut_fusion", "hiperasimilacion", "legados_economia"],
@@ -1444,7 +1444,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]Pasivo ×5[/b] permanente (sin el nerf de la hiper)\n"
 			+ "• Botón [b]Metabolismo Híbrido[/b] (tecla [b]Q[/b]): ×2 a TODO el ingreso durante 30 s, cooldown 120 s\n"
 			+ "• Botón [b]Reducir cooldown[/b] (tecla [b]W[/b]): gastás dinero para bajar el cooldown −20% por nivel (piso 30 s). Sink que convierte el ingreso en más ráfagas.\n\n"
-			+ "[b]La run no se cierra[/b]: Fusión Catabólica es jugable. Para sellar el final necesitás [b]$100M generados + 3 ráfagas usadas + n≥150 upgrades estructurales[/b] → botón de sello → [b]FUSIÓN CATABÓLICA[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]La run no se cierra[/b]: Fusión Catabólica es jugable. Para sellar el final necesitás [b]$100M generados + $50M generados durante ráfagas + n≥150 upgrades estructurales[/b] → botón de sello → [b]FUSIÓN CATABÓLICA[/b] (+9 PL base + bonus).\n\n"
 			+ "[b]Recompensa al sellar[/b]: [b]Legado: Motor Fundido[/b] — +25% a TODO el ingreso, permanente en todas las runs futuras.\n\n"
 			+ "[i]Anti-AFK: la ráfaga premia clickear el botón en el momento justo; el motor base ×5/×5 sostiene la run entre ráfagas.[/i]"
 		),
@@ -1455,7 +1455,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]Passive ×5[/b] permanent (without the hyper nerf)\n"
 			+ "• [b]Hybrid Metabolism[/b] button (key [b]Q[/b]): ×2 to ALL income for 30 s, 120 s cooldown\n"
 			+ "• [b]Reduce cooldown[/b] button (key [b]W[/b]): spend money to lower the cooldown −20% per level (floor 30 s). A sink that turns income into more bursts.\n\n"
-			+ "[b]The run does not close[/b]: Catabolic Fusion is playable. To seal the ending you need [b]$100M generated + 3 bursts used + n≥150 structural upgrades[/b] → seal button → [b]CATABOLIC FUSION[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]The run does not close[/b]: Catabolic Fusion is playable. To seal the ending you need [b]$100M generated + $50M generated during bursts + n≥150 structural upgrades[/b] → seal button → [b]CATABOLIC FUSION[/b] (+9 LP base + bonus).\n\n"
 			+ "[b]Reward on sealing[/b]: [b]Legacy: Fused Engine[/b] — +25% to ALL income, permanent across all future runs.\n\n"
 			+ "[i]Anti-AFK: the burst rewards clicking the button at the right moment; the base ×5/×5 engine sustains the run between bursts.[/i]"
 		),

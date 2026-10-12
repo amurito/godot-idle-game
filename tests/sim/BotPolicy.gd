@@ -31,6 +31,8 @@ extends RefCounted
 ##   branch: "none" | "colonization" | "symbiosis"      (sub-rama de Red Micelial)
 ##   allostasis: bool
 ##   fusion_bursts / fusion_cd / fusion_seal: bool
+##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
+##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
 ##   ayuno_burst_at: float (-1 = nunca)  /  ayuno_ascesis / ayuno_seal: bool
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
@@ -100,6 +102,13 @@ func _buy(d: RefCounted) -> void:
 	var uncap: String = str(cfg.get("uncap_passive_on", ""))
 	if uncap != "" and bool(EvoManager.get("mutation_" + uncap)):
 		max_passive = 100.0
+
+	# Fusión: ahorrar para [W] cuando el próximo nivel cuesta pocos segundos de ingreso.
+	var cd_secs: float = float(cfg.get("fusion_cd_save_secs", 0.0))
+	if cd_secs > 0.0 and EvoManager.mutation_fusion_catabolica and not EvoManager.fusion_cd_maxed():
+		var cd_cost: float = EvoManager.fusion_cd_cost()
+		if EconomyManager.money < cd_cost and cd_cost <= EconomyManager.get_delta_total() * cd_secs:
+			return
 
 	# Prioridades: se compran apenas alcanzan; opcionalmente se ahorra para ellas.
 	for id in cfg.get("priority", []):
@@ -187,7 +196,9 @@ func _press(d: RefCounted, method: String, label: String) -> void:
 
 func _route_keys(_d: RefCounted) -> void:
 	if EvoManager.mutation_fusion_catabolica:
-		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_timer <= 0.0 and EvoManager.fusion_burst_cooldown <= 0.0:
+		var burst_limit: int = int(cfg.get("fusion_burst_limit", 1 << 30))
+		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_count < burst_limit \
+				and EvoManager.fusion_burst_timer <= 0.0 and EvoManager.fusion_burst_cooldown <= 0.0:
 			EvoManager.activate_fusion_burst()
 			_after_key("key:Q fusion_burst")
 		if cfg.get("fusion_cd", false) and EvoManager.can_buy_fusion_cd():

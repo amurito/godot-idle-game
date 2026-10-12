@@ -1251,38 +1251,43 @@ static func build_ayuno_primordial_panel_text() -> String:
 	return t
 
 static func build_fusion_catabolica_panel_text() -> String:
-	var t := "[color=#f5c20a]⊗ FUSIÓN CATABÓLICA ACTIVA[/color]\n"
-	t += "Click ×%d | Pasivo ×%d [estable]\n" % [
-		int(Balance.FUSION_CLICK_MULT), int(Balance.FUSION_PASSIVE_MULT)]
+	var t := "[color=#f5c20a]" + TranslationServer.translate("FUSION_PANEL_TITLE") + "[/color]\n"
+	t += TranslationServer.translate("FUSION_PANEL_MULTS") % [int(Balance.FUSION_CLICK_MULT), int(Balance.FUSION_PASSIVE_MULT)] + "\n"
 
-	t += "\n[color=yellow]Metabolismo Híbrido (×%d, %ds):[/color]\n" % [
-		int(Balance.FUSION_BURST_MULT), int(Balance.FUSION_BURST_DURATION)]
+	t += "\n[color=yellow]" + TranslationServer.translate("FUSION_PANEL_BURST_HDR") % [
+		int(Balance.FUSION_BURST_MULT), int(Balance.FUSION_BURST_DURATION)] + "[/color]\n"
 	if EvoManager.fusion_burst_timer > 0.0:
-		t += "  ⚡ ACTIVO — %.0fs restantes\n" % EvoManager.fusion_burst_timer
+		t += TranslationServer.translate("FUSION_PANEL_BURST_ACTIVE") % EvoManager.fusion_burst_timer + "\n"
 	elif EvoManager.fusion_burst_cooldown > 0.0:
-		t += "  Recargando — %.0fs\n" % EvoManager.fusion_burst_cooldown
+		t += TranslationServer.translate("FUSION_PANEL_BURST_CD") % EvoManager.fusion_burst_cooldown + "\n"
 	else:
-		t += "  [Listo — usa el botón en el panel derecho]\n"
+		t += TranslationServer.translate("FUSION_PANEL_BURST_READY") + "\n"
 	if EvoManager.fusion_cd_level > 0:
-		t += "  ⏱ Cooldown: %.0fs (base %.0fs · nivel %d)\n" % [
-			EvoManager.fusion_effective_cooldown(), Balance.FUSION_BURST_COOLDOWN, EvoManager.fusion_cd_level]
+		t += TranslationServer.translate("FUSION_PANEL_CD_LINE") % [
+			EvoManager.fusion_effective_cooldown(), Balance.FUSION_BURST_COOLDOWN, EvoManager.fusion_cd_level] + "\n"
 
-	t += "\n[color=#f5c20a]Condiciones para sellar:[/color]\n"
+	t += "\n[color=#f5c20a]" + TranslationServer.translate("FUSION_PANEL_SEAL_HDR") + "[/color]\n"
+	var ok_mark := "[color=green]✓[/color]"
 	var gen: float = EconomyManager.total_money_generated
-	var need_m: float = Balance.FUSION_SEAL_MONEY
-	var money_ok: bool = gen >= need_m
-	var ck_m: String = "[color=green]✓[/color]" if money_ok else "[ ]"
-	t += "  %s Dinero generado: %s / %s\n" % [ck_m, format_compact(gen), format_compact(need_m)]
-	var burst_ok: bool = EvoManager.fusion_burst_count >= Balance.FUSION_SEAL_BURSTS
-	var ck_b: String = "[color=green]✓[/color]" if burst_ok else "[ ]"
-	t += "  %s Ráfagas usadas: %d / %d\n" % [ck_b, EvoManager.fusion_burst_count, Balance.FUSION_SEAL_BURSTS]
+	var money_ok: bool = gen >= Balance.FUSION_SEAL_MONEY
+	t += TranslationServer.translate("FUSION_PANEL_MONEY") % [ok_mark if money_ok else "[ ]",
+		format_compact(gen), format_compact(Balance.FUSION_SEAL_MONEY)] + "\n"
+	var burst_ok: bool = EvoManager.fusion_burst_money >= Balance.FUSION_SEAL_BURST_MONEY
+	t += TranslationServer.translate("FUSION_PANEL_BURST_MONEY") % [ok_mark if burst_ok else "[ ]",
+		format_compact(EvoManager.fusion_burst_money), format_compact(Balance.FUSION_SEAL_BURST_MONEY)] + "\n"
 	var n_struct: int = StructuralModel.get_structural_upgrades()
 	var n_ok: bool = n_struct >= Balance.FUSION_SEAL_STRUCTURAL_N
-	var ck_n: String = "[color=green]✓[/color]" if n_ok else "[ ]"
-	t += "  %s Estructura (n): %d / %d\n" % [ck_n, n_struct, Balance.FUSION_SEAL_STRUCTURAL_N]
+	t += TranslationServer.translate("FUSION_PANEL_N") % [ok_mark if n_ok else "[ ]", n_struct, Balance.FUSION_SEAL_STRUCTURAL_N] + "\n"
+	if not n_ok:
+		# Qué suma a n (StructuralModel.get_structural_upgrades): con los mismos nombres que los botones.
+		var counted: Array = []
+		for k in ["UPG_AUTO", "UPG_AUTO_MULT", "UPG_TRUEQUE", "UPG_TRUEQUE_NET", "UPG_SPECIALIZATION",
+				"UPG_COGNITIVE", "UPG_ACCOUNTING"]:
+			counted.append(TranslationServer.translate(k))
+		t += "[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_N_HINT") % [", ".join(counted),
+			TranslationServer.translate("UPG_CLICK"), TranslationServer.translate("UPG_CLICK_MULT")] + "[/color]\n"
 	if money_ok and burst_ok and n_ok:
-		t += "\n  [color=#f5c20a]→ Sello disponible en el panel derecho[/color]"
-	else:
-		t += "\n  [$%s generados · %d ráfagas · n≥%d upgrades estructurales]" % [
-			format_compact(need_m), Balance.FUSION_SEAL_BURSTS, Balance.FUSION_SEAL_STRUCTURAL_N]
+		t += "\n[color=#f5c20a]" + TranslationServer.translate("FUSION_PANEL_SEAL_READY") + "[/color]"
+	elif not burst_ok:
+		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t

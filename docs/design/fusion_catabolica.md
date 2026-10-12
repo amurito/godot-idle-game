@@ -51,7 +51,7 @@ el jugador debe renunciar conscientemente para acceder a la transmutación.
 | Cooldown base de la ráfaga | 120s | `FUSION_BURST_COOLDOWN` |
 | Reducción de cooldown **[W]** | −20% compounding por nivel | `FUSION_CD_REDUCE_PCT` |
 | Piso de cooldown | 30s | `FUSION_CD_FLOOR` |
-| Costo del upgrade [W] | $10M × 1.9^n | `FUSION_CD_COST_BASE` / `FUSION_CD_COST_GROWTH` |
+| Costo del upgrade [W] | $1M × 1.9^n (antes $10M) | `FUSION_CD_COST_BASE` / `FUSION_CD_COST_GROWTH` |
 
 **Loop activo:** la ráfaga [Q] es el feedback de corto plazo (clickeás cuando está lista); el sink [W]
 es el long loop (gastás dinero para que la ráfaga vuelva más rápido). Color del reactor: amber/gold
@@ -67,13 +67,36 @@ es el long loop (gastás dinero para que la ráfaga vuelva más rápido). Color 
 |---|---|---|
 | Upgrades estructurales (n) | `FUSION_SEAL_STRUCTURAL_N` | ≥ 150 |
 | Dinero **generado** (total acumulado) | `FUSION_SEAL_MONEY` | ≥ $100M |
-| Ráfagas activadas | `FUSION_SEAL_BURSTS` | ≥ 3 |
+| Dinero generado **durante ráfagas** | `FUSION_SEAL_BURST_MONEY` | ≥ $50M |
 
 Las 3 empujan al jugador en direcciones distintas: estructura (comprar mucho), volumen (generar
 ingreso), y uso activo (usar la ráfaga). Un final no se "espera", se **trabaja**.
 
 > Nota de implementación: `total_money_generated` acumula tanto pasivo como clicks. Hubo que sumar
 > `+= power` en `main.gd:on_reactor_click` y en el bloque Mente Colmena para que los clicks contaran.
+> La plata en ráfaga (`EvoManager.fusion_burst_money`) se mide en `process_fusion()` como lo que creció
+> `total_money_generated` entre ticks mientras la ráfaga estaba activa (se persiste en el save).
+
+### Rebalance 2026-10 (con el simulador)
+
+La versión original pedía **3 ráfagas**. El simulador (`tools/sim`, escenarios `ng_fusion_*`) mostró:
+
+- La condición de ráfagas se cumplía sola a los 6 min: el eje "uso activo" no exigía nada.
+- El sink [W] a $10M no lo compraba nunca ningún perfil (10 % de toda la plata de la run).
+- El sello **no** era inalcanzable: los bots viejos mantenían el pasivo < 15 % toda la run (hábito de
+  Hiper). Un jugador que, ya en Fusión, invierte en estructura llega a n=150 a los ~11 min.
+
+Cambio: "3 ráfagas" → **$50M generados durante ráfagas** + [W] desde **$1M**. Con cooldown base,
+~1/3 del ingreso cae en ráfaga, así que 50M (por encima de 1/3 de $100M) pasa a ser la condición que
+define el sello y acortar el cooldown rinde.
+
+| Perfil (desde la activación) | Sella |
+|---|---:|
+| Natural, usa [Q] siempre y compra [W] | ~18 min |
+| Natural, nunca compra [W] | ~20 min |
+| Sólo estructurales (descuida el click) | ~29 min |
+| Usa la ráfaga 3 veces y se olvida | no sella |
+| Hábito de Hiper (pasivo < 15 %) | no sella (n ≈ 80): el panel ahora explica qué suma a n |
 
 ---
 

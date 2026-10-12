@@ -190,13 +190,17 @@ const FUSION_BURST_MULT       := 2.0        # Metabolismo Híbrido: ×2 a TODO e
 const FUSION_BURST_DURATION   := 30.0       # s que dura la ráfaga
 const FUSION_BURST_COOLDOWN   := 120.0      # s de cooldown tras la ráfaga
 const FUSION_SEAL_MONEY       := 100_000_000.0 # $ generados para habilitar el sello del final
-const FUSION_SEAL_BURSTS      := 3          # usos mínimos de Metabolismo Híbrido (cada ciclo ~150s → gate de tiempo)
+const FUSION_SEAL_BURST_MONEY := 50_000_000.0 # $ generados DURANTE ráfagas: premia usar [Q] y hace útil [W].
+                                              # Con cooldown base ~1/3 del ingreso cae en ráfaga: 50M queda por
+                                              # encima de 1/3 de $100M → es la condición que define el sello.
+                                              # Simulador (2026-10): sella a ~18 min con [W], ~20 sin [W]; sin
+                                              # usar la ráfaga no sella (ng_fusion_lazy_bursts).
 const FUSION_SEAL_STRUCTURAL_N := 150       # upgrades estructurales (n) mínimos: fuerza inversión estructural real
 # Reducción de cooldown de la ráfaga (sink de dinero, tecla W). El $ abundante acelera las ráfagas.
 # Cada nivel multiplica el cooldown por (1 - PCT): efecto compuesto, claramente perceptible.
 const FUSION_CD_REDUCE_PCT        := 0.20   # -20% del cooldown por nivel comprado
 const FUSION_CD_FLOOR             := 30.0   # cooldown mínimo alcanzable (no baja de aquí)
-const FUSION_CD_COST_BASE         := 10_000_000.0 # costo del nivel 1
+const FUSION_CD_COST_BASE         := 1_000_000.0 # costo del nivel 1 (antes 10M: nunca convenía)
 const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
 
 # ── TRANSMUTACIÓN · AYUNO PRIMORDIAL (SOMBRA de Hiperasimilación) ────────────

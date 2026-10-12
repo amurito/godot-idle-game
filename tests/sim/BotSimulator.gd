@@ -202,6 +202,7 @@ func _transmutation_metrics() -> Dictionary:
 			"active": EvoManager.mutation_fusion_catabolica,
 			"burst_count": EvoManager.fusion_burst_count,
 			"cd_level": EvoManager.fusion_cd_level,
+			"burst_money": EvoManager.get("fusion_burst_money"),  # null en código anterior a la condición
 		},
 	}
 
