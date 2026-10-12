@@ -22,9 +22,13 @@ comportamiento de una mutación que el jugador ya conocía**. La sorpresa es ver
 
 ## 2. Mecanismo de disparo
 
-`GenomeEvaluator.update_hiperasimilacion()` evalúa las 5 condiciones de entrada cada tick. Si se
-cumplen **y** `LegacyManager.get_buff_value("transmut_fusion")` está activo → llama a
-`EvoManager.activate_fusion_catabolica()` en lugar de `activate_hyperassimilation()`.
+> **Cambió en 2026-10-12** ([`involucion_transmutaciones.md`](involucion_transmutaciones.md)):
+> Hiperasimilación se activa normal; con la llave `transmut_fusion`, aparece el botón de reversión
+> **[T]** (3 apariciones de 20 s: a los 40 / 90 / 140 s de Hiper activa). Confirmar digiere la hiper
+> (50 % del $ generado durante ella) y llama a `EvoManager.activate_fusion_catabolica()`
+> (`TransmutationLogic.revert`). Lo de abajo describe las condiciones de Hiper, que siguen igual.
+
+`GenomeEvaluator.update_hiperasimilacion()` evalúa las 5 condiciones de entrada cada tick.
 
 **Condiciones de entrada** (checklist visible en el panel evo, vía `UITextBuilders.build_evo_checklist`):
 

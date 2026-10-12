@@ -46,10 +46,43 @@ static func build_eval_context() -> Dictionary:
 # update_genome — Sub-evaluaciones por mutación
 # ─────────────────────────────────────────────────────────────
 
+## AYUNO PRIMORDIAL — SOMBRA de Hiperasimilación por DISPARADOR ESPEJO (no hay botón).
+## Hiper es clickear frenético; Ayuno es renunciar a clickear: con la llave transmut_ayuno, no
+## clickear AYUNO_MIRROR_IDLE s teniendo pasivo propio (≥ AYUNO_MIRROR_PASSIVE_MIN $/s) y ε bajo.
+## Avisa AYUNO_MIRROR_WARN s antes para que un AFK no entre por sorpresa (clickear lo evita).
+## Le gana al Parasitismo por inactividad (120 s): si te demorás dentro del ayuno, la trampa
+## del vacío sigue ahí.
+static func update_ayuno_espejo(ctx: Dictionary) -> void:
+	if EvoManager.mutation_ayuno_primordial or LegacyManager.get_buff_level("transmut_ayuno") <= 0:
+		return
+	if EvoManager.mutation_hyperassimilation or EvoManager.mutation_fusion_catabolica \
+			or EvoManager.mutation_homeostasis or EvoManager.mutation_symbiosis \
+			or EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism \
+			or EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro:
+		EvoManager._ayuno_mirror_countdown_last = -1
+		return
+	var idle: float = EconomyManager.time_since_last_click
+	var ready: bool = ctx.run_time >= Balance.AYUNO_MIRROR_MIN_RUN \
+		and ctx.epsilon < Balance.AYUNO_MIRROR_EPS_MAX \
+		and float(ctx.ap.passive_abs) >= Balance.AYUNO_MIRROR_PASSIVE_MIN
+	if not ready or idle < Balance.AYUNO_MIRROR_IDLE - Balance.AYUNO_MIRROR_WARN:
+		EvoManager._ayuno_mirror_countdown_last = -1
+		return
+	if idle >= Balance.AYUNO_MIRROR_IDLE:
+		EvoManager._ayuno_mirror_countdown_last = -1
+		EvoManager.activate_ayuno_primordial()
+		return
+	var secs_left := int(ceil(Balance.AYUNO_MIRROR_IDLE - idle))
+	if secs_left != EvoManager._ayuno_mirror_countdown_last:
+		EvoManager._ayuno_mirror_countdown_last = secs_left
+		UIManager.show_toast(TranslationServer.translate("TOAST_AYUNO_MIRROR_WARN") % secs_left)
+
+
 ## HIPERASIMILACIÓN (Exceso): activo > 80, ε > 0.4, biomasa > 4, sin contabilidad, run > 180s
 static func update_hiperasimilacion(ctx: Dictionary) -> void:
-	# Transmutación activa: Hiper fue reemplazada, no re-evaluar ni re-disparar.
-	if EvoManager.mutation_ayuno_primordial or EvoManager.mutation_fusion_catabolica:
+	# Revertida (Transmutación) o reemplazada por su Sombra: no re-evaluar ni re-disparar.
+	if EvoManager.mutation_ayuno_primordial or EvoManager.mutation_fusion_catabolica \
+			or EvoManager.transmut_reverted.get("hiperasimilacion", false):
 		EvoManager._set_genome_state("hiperasimilacion", "bloqueado")
 		return
 	# Gate de tiempo: en runs avanzadas (t>2) baja de 180s a 60s — el jugador ya

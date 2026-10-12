@@ -959,6 +959,10 @@ func _input(event):
 
 		# Q/W/E — hotkeys necrosis / autofagia (solo si banco cerrado y run activa)
 		var _bank_open: bool = is_instance_valid(legacy_panel) and legacy_panel.visible
+		# [T] — Transmutar: abre la confirmación de reversión mientras el botón está visible.
+		if kc == KEY_T and not _bank_open and TransmutationLogic.is_visible():
+			UIManager._ng_buttons.open_transmut_dialog()
+			get_viewport().set_input_as_handled()
 		if not _bank_open and not RunManager.run_closed:
 			if EvoManager.mutation_necrosis:
 				match kc:

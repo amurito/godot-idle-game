@@ -484,16 +484,11 @@ static func build_evo_checklist(_main: Node) -> String:
 
 		# HIPERASIMILACIÓN — o transmutación activa (FC/Ayuno), según el buff del Banco Genético.
 		var hiper_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
-		# El título dice lo que REALMENTE va a disparar (misma prioridad que
-		# EvoManager.activate_hyperassimilation): antes con Fusión apagada decía "Hiperasimilación"
-		# aunque lo que se activaba era Ayuno.
-		var hiper_label: String
-		if LegacyManager.get_buff_value("transmut_fusion"):
-			hiper_label = TranslationServer.translate("EVO_FUSION_TITLE")
-		elif LegacyManager.get_buff_value("transmut_ayuno"):
-			hiper_label = TranslationServer.translate("EVO_AYUNO_TITLE")
-		else:
-			hiper_label = TranslationServer.translate("EVO_HIPER_TITLE")
+		# Hiperasimilación se activa siempre como tal; con la llave de Fusión, una vez activa
+		# aparece el botón de reversión [T] (TransmutationLogic). El título lo anticipa.
+		var hiper_label: String = TranslationServer.translate("EVO_HIPER_TITLE")
+		if LegacyManager.get_buff_level("transmut_fusion") > 0:
+			hiper_label += " " + TranslationServer.translate("EVO_HIPER_THEN_FUSION")
 		t += "\n[b]" + hiper_label + "[/b]\n"
 		ch = ok_color + "[x] " if ap_snap.activo > 80.0 else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_HIPER_ACTIVO80") % int(ap_snap.activo) + "[/color]\n"
@@ -505,6 +500,17 @@ static func build_evo_checklist(_main: Node) -> String:
 		t += ch + TranslationServer.translate("EVO_HIPER_NOACC") % acc + "[/color]\n"
 		ch = ok_color + "[x] " if RunManager.run_time > hiper_req else fail_color + "[ ] "
 		t += ch + TranslationServer.translate("EVO_HIPER_TIME") % [format_time(hiper_req), format_time(RunManager.run_time)] + "[/color]\n"
+
+		# AYUNO PRIMORDIAL — Sombra por espejo: lo opuesto de Hiper (GenomeEvaluator.update_ayuno_espejo)
+		if LegacyManager.get_buff_level("transmut_ayuno") > 0:
+			t += "\n[b]" + TranslationServer.translate("EVO_AYUNO_TITLE") + "[/b]\n"
+			var idle: float = EconomyManager.time_since_last_click
+			ch = ok_color + "[x] " if idle >= Balance.AYUNO_MIRROR_IDLE else fail_color + "[ ] "
+			t += ch + TranslationServer.translate("EVO_AYUNO_IDLE") % [int(minf(idle, Balance.AYUNO_MIRROR_IDLE)), int(Balance.AYUNO_MIRROR_IDLE)] + "[/color]\n"
+			ch = ok_color + "[x] " if StructuralModel.epsilon_runtime < Balance.AYUNO_MIRROR_EPS_MAX else fail_color + "[ ] "
+			t += ch + TranslationServer.translate("EVO_AYUNO_EPS") % [snapped(StructuralModel.epsilon_runtime, 0.01), Balance.AYUNO_MIRROR_EPS_MAX] + "[/color]\n"
+			ch = ok_color + "[x] " if float(ap_snap.passive_abs) >= Balance.AYUNO_MIRROR_PASSIVE_MIN else fail_color + "[ ] "
+			t += ch + TranslationServer.translate("EVO_AYUNO_PASSIVE") % [snapped(float(ap_snap.passive_abs), 0.1), Balance.AYUNO_MIRROR_PASSIVE_MIN] + "[/color]\n"
 
 	if not EvoManager.mutation_homeostasis and not EvoManager.mutation_hyperassimilation \
 		and not EvoManager.mutation_sporulation and not EvoManager.mutation_red_micelial \

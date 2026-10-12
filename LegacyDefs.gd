@@ -477,8 +477,8 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "transcendence_count", "count": 3},
 		"effect": {"type": "transmut_fusion_active", "value": 1.0},
 		# TODAS las transmutaciones se revelan a partir de T≥3 (hito de meta-progresión).
-		# Con el buff activo (toggle on), el trigger de HIPERASIMILACIÓN activa FUSIÓN CATABÓLICA
-		# en su lugar (gate en EvoManager.activate_hyperassimilation). Togglearlo off → hiper normal.
+		# LLAVE permanente, sin toggle: con Hiperasimilación activa aparece el botón de reversión [T]
+		# (TransmutationLogic). Spec: docs/design/involucion_transmutaciones.md.
 	},
 	# Recompensa de SELLAR Fusión Catabólica (otorgada vía grant_buff, cost 0, no comprable).
 	"legado_motor_fundido": {
@@ -489,9 +489,9 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "FUSIÓN CATABÓLICA"},
 		"effect": {"type": "all_income_mult", "value": 0.25},
 	},
-	# SOMBRA de Hiperasimilación: abandona el consumo por completo.
-	# Con este buff activo, el trigger de HIPERASIMILACIÓN activa AYUNO PRIMORDIAL en su lugar.
-	# Mutuamente exclusivo con transmut_fusion (solo uno activo a la vez).
+	# SOMBRA de Hiperasimilación: abandona el consumo por completo. LLAVE permanente, sin toggle:
+	# se entra por DISPARADOR ESPEJO — dejar de clickear con pasivo propio y ε bajo
+	# (GenomeEvaluator.update_ayuno_espejo). No compite con Fusión: una se toma teniendo Hiper.
 	"transmut_ayuno": {
 		"name": "Transmutación: Ayuno Primordial",
 		"flavor": "El hongo desaprende el frenesí absorbente. Sin sustrato, sin nutrientes — descubre que el silencio también produce.",

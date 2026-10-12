@@ -112,6 +112,10 @@ static func _define() -> Array:
 			_f("fusion_burst_cooldown", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("fusion_burst_count", EvoManager, {"default": 0, "load_int": true}),
 			_f("fusion_burst_money", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			# Involución: agenda del botón de reversión y mutaciones revertidas esta run
+			_f("transmut_base_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("transmut_money_mark", EvoManager, {"save_sf": -1.0, "default": -1.0, "load_sf": [-1.0, -1.0]}),
+			_f("transmut_reverted", EvoManager, {"default": {}}),
 			_f("fusion_cd_level", EvoManager, {"default": 0, "load_int": true}),
 			# Ayuno Primordial
 			_f("mutation_ayuno_primordial", EvoManager, {"default": false}),
@@ -262,6 +266,10 @@ static func apply_section(sec: Dictionary, main: Node, raw: Variant) -> void:
 			value = SaveManager._sf(value, f.load_sf[0], f.load_sf[1])
 		elif f.get("load_int", false):
 			value = int(value)
+		# Las secciones están cacheadas: un default Dictionary/Array sería el MISMO objeto en cada
+		# carga y mutarlo en juego contaminaría el default. Copia siempre.
+		if typeof(value) == TYPE_DICTIONARY or typeof(value) == TYPE_ARRAY:
+			value = value.duplicate(true)
 		target.set(f.prop, value)
 
 

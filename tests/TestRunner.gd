@@ -71,6 +71,7 @@ func _ready() -> void:
 	_run_biosphere()
 	_run_legacy_manager()
 	_run_save_load()
+	_run_transmutation()
 
 	print("\n════════════════════════════════════════════")
 	var label := "✅ TODOS PASARON" if _total_failed == 0 else "❌  %d FALLARON" % _total_failed
@@ -275,25 +276,6 @@ func _run_legacy_manager() -> void:
 	chk("buff desconocido: get_buff_level = 0",
 		LegacyManager.get_buff_level("BUFF_QUE_NO_EXISTE") == 0)
 
-	# Transmutaciones excluyentes (no se llama a toggle/purchase: escriben el banco en disco)
-	var snap_enabled := LegacyManager.buff_enabled.duplicate(true)
-	LegacyManager.buffs = {}
-	LegacyManager.buff_enabled = {}
-	LegacyManager._set_buff_level("transmut_fusion", 1)
-	LegacyManager._set_buff_level("transmut_ayuno", 1)
-	LegacyManager._normalize_exclusive_groups()
-	chk("excluyentes: save viejo con ambas activas → queda Fusión",
-		LegacyManager.get_buff_value("transmut_fusion") and not LegacyManager.get_buff_value("transmut_ayuno"))
-	LegacyManager.buff_enabled["transmut_ayuno"] = true
-	var off: Array = LegacyManager._enforce_exclusive("transmut_ayuno")
-	chk("excluyentes: activar Ayuno apaga Fusión",
-		off == ["transmut_fusion"] and LegacyManager.get_buff_value("transmut_ayuno") and not LegacyManager.get_buff_value("transmut_fusion"))
-	LegacyManager.buffs.erase("transmut_fusion")
-	LegacyManager.buff_enabled = {}
-	chk("excluyentes: sin la otra comprada no apaga nada",
-		LegacyManager._enforce_exclusive("transmut_ayuno").is_empty())
-	LegacyManager.buff_enabled = snap_enabled
-
 	# Restaurar estado real del jugador
 	LegacyManager.buffs = snap_buffs
 	LegacyManager.endings_achieved = snap_endings
@@ -342,4 +324,31 @@ func _run_save_load() -> void:
 	else:
 		chk("load_game sin archivo (skip — save existente en disco)", true)
 
+	_end()
+
+
+# =====================================================
+# SUITE 5 — Involución: agenda del botón de reversión
+# =====================================================
+func _run_transmutation() -> void:
+	_begin("TransmutationLogic")
+	var hs: Array = TransmutationLogic.slots("fusion")  # vida de Hiper = HYPER_TIMEOUT (180 s)
+	chk("Hiper: 3 apariciones", hs.size() == 3)
+	chk("Hiper: apariciones a 40 / 90 / 140 s",
+		eq(hs[0][0], 40.0) and eq(hs[1][0], 90.0) and eq(hs[2][0], 140.0))
+	chk("Hiper: cada aparición dura 20 s", eq(hs[0][1] - hs[0][0], 20.0))
+	chk("Hiper: la última termina 20 s antes del timeout", eq(hs[2][1], Balance.HYPER_TIMEOUT - 20.0))
+	# Sin la llave no hay candidata aunque Hiper esté activa
+	var snap_buffs := LegacyManager.buffs.duplicate(true)
+	var snap_hiper: bool = EvoManager.mutation_hyperassimilation
+	LegacyManager.buffs = {}
+	EvoManager.mutation_hyperassimilation = true
+	chk("sin llave: no hay transmutación disponible", TransmutationLogic.candidate() == "")
+	LegacyManager._set_buff_level("transmut_fusion", 1)
+	chk("con llave + Hiper activa: candidata = fusion", TransmutationLogic.candidate() == "fusion")
+	EvoManager.transmut_reverted["hiperasimilacion"] = true
+	chk("revertida esta run: ya no es candidata", TransmutationLogic.candidate() == "")
+	EvoManager.transmut_reverted.erase("hiperasimilacion")
+	EvoManager.mutation_hyperassimilation = snap_hiper
+	LegacyManager.buffs = snap_buffs
 	_end()

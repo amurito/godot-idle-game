@@ -162,6 +162,12 @@ var control_omega_last_ms: int = 0       # timestamp del último pulso de Contro
 # === NG+ METABOLISMO GLITCH ===
 var _glitch_was_active: bool = false
 
+# === INVOLUCIÓN (TransmutationLogic) ===
+var transmut_base_time: float = 0.0      # s con la mutación A activa (agenda del botón de reversión)
+var transmut_money_mark: float = -1.0    # total_money_generated cuando empezó A (base de la digestión)
+var transmut_reverted: Dictionary = {}   # genome_id → true: A revertida esta run, no se reactiva
+var _ayuno_mirror_countdown_last: int = -1  # último segundo avisado del espejo de Ayuno
+
 ## ── Clasificación del estado ────────────────────────────────────────────────
 ## Toda variable de EvoManager está en SaveSchema o en TRANSIENT_VARS (SaveSchema.validate lo
 ## verifica): agregar una variable de ruta sin decidir si persiste es un error, no un olvido.
@@ -174,6 +180,7 @@ const TRANSIENT_VARS := [
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
 	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
+	"_ayuno_mirror_countdown_last",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -212,6 +219,7 @@ func update_genome():
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
 	var ctx := GenomeEvaluator.build_eval_context()
+	GenomeEvaluator.update_ayuno_espejo(ctx)
 	GenomeEvaluator.update_hiperasimilacion(ctx)
 	GenomeEvaluator.update_parasitismo(ctx)
 	GenomeEvaluator.update_met_oscuro(ctx)
@@ -280,6 +288,7 @@ func tick_route_processes(dt: float) -> void:
 	elif depredador_timer > 0.0 and depredador_timer < 30.0:
 		process_depredador_progress(dt)
 	process_glitch(dt)
+	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el
 ## bonus de entrada. Antes vivía en main._trigger_allostasis().
@@ -370,14 +379,8 @@ func activate_met_oscuro():
 
 func activate_hyperassimilation():
 	if mutation_homeostasis or mutation_parasitism or mutation_symbiosis: return
-	# TRANSMUTACIONES: con el buff activo el trigger de Hiperasimilación desvía a la ruta revertida.
-	# FC y Ayuno son mutuamente excluyentes; FC tiene prioridad si por algún bug ambos están activos.
-	if LegacyManager.get_buff_value("transmut_fusion"):
-		activate_fusion_catabolica()
-		return
-	if LegacyManager.get_buff_value("transmut_ayuno"):
-		activate_ayuno_primordial()
-		return
+	# Revertida esta run (Transmutación) o reemplazada por su Sombra: no se reactiva.
+	if transmut_reverted.get("hiperasimilacion", false) or mutation_ayuno_primordial: return
 	mutation_hyperassimilation = true
 	LogManager.add(tr("LOG_HIPER_EFFECTS"))
 	mutation_activated.emit("hiperasimilacion", tr("MUT_HIPERASIMILACION"))
@@ -393,10 +396,10 @@ func activate_hyperassimilation():
 func activate_fusion_catabolica():
 	if mutation_fusion_catabolica: return
 	mutation_fusion_catabolica = true
-	mutation_hyperassimilation = false  # la reversión apaga la hiper
+	mutation_hyperassimilation = false  # la reversión apaga la hiper (TransmutationLogic.revert)
 	LogManager.add(tr("LOG_FUSION_EFFECTS"))
 	mutation_activated.emit("fusion_catabolica", tr("MUT_FUSION_CATABOLICA"))
-	AchievementManager.on_mutation_activated("hiperasimilacion")  # cuenta como activar la rama hiper
+	AchievementManager.on_mutation_activated("fusion_catabolica")
 	UIManager.show_toast(tr("TOAST_FUSION_ON"))
 	_save_after_mutation()
 

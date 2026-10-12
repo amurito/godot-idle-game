@@ -1416,20 +1416,20 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Qué son las Transmutaciones", "name_en": "What Transmutations are",
 		"body_es": (
-			"Una capa nueva del Banco Genético (categoría TRANSMUTACIONES) que se abre tras dominar una mutación. La idea: [b]dar un paso atrás para tomar impulso[/b].\n\n"
-			+ "Al comprar una transmutación, [b]revertís[/b] una mutación que ya completaste: perdés sus efectos originales, pero a cambio se desbloquea una ruta alternativa más poderosa, con su propio botón activo y su propio final.\n\n"
-			+ "• Se revelan solo tras haber cerrado la mutación correspondiente.\n"
-			+ "• Son toggles: si las desactivás, jugás la mutación original como siempre.\n"
-			+ "• Con la transmutación activa, el trigger de la mutación original activa la ruta revertida en su lugar.\n\n"
-			+ "[i]Primera transmutación: Fusión Catabólica (revierte Hiperasimilación).[/i]"
+			"El endgame de HYPHAE se organiza en [b]involución[/b]: renunciar a algo para abrir otra cosa. Tres familias, según el tono:\n\n"
+			+ "• [b]TRANSMUTACIÓN[/b] (A → A+) — [b]el paso atrás para tomar impulso[/b]. Comprás la [b]llave[/b] en el Banco Genético. En la run, con la mutación activa, aparece un botón parpadeante [b][T] Revertir[/b] (3 veces, unos segundos cada vez, y después desaparece). Si confirmás, perdés la mutación, la [b]digerís[/b] (pago inmediato) y se abre una ruta más poderosa.\n"
+			+ "• [b]SOMBRA[/b] (A → anti-A) — no hay botón: es la [b]consecuencia[/b] de jugar al revés de la mutación. Con su llave, hacer lo opuesto la dispara. Recompensa: visibilidad y sistemas nuevos, no multiplicadores.\n"
+			+ "• [b]REDENCIÓN[/b] — sanar en vez de colapsar (Remisión Metabólica).\n\n"
+			+ "Las llaves son permanentes y no tienen interruptor: la decisión es en cada run.\n\n"
+			+ "[i]Hiperasimilación ya tiene las dos: Fusión Catabólica (Transmutación) y Ayuno Primordial (Sombra).[/i]"
 		),
 		"body_en": (
-			"A new Genetic Bank layer (TRANSMUTATIONS category) that opens after mastering a mutation. The idea: [b]a step back to gain momentum[/b].\n\n"
-			+ "Buying a transmutation [b]reverts[/b] a mutation you already completed: you lose its original effects, but in exchange an alternative, more powerful route unlocks, with its own active button and its own ending.\n\n"
-			+ "• Revealed only after closing the corresponding mutation.\n"
-			+ "• They are toggles: disable them and you play the original mutation as usual.\n"
-			+ "• With the transmutation active, the original mutation's trigger activates the reverted route instead.\n\n"
-			+ "[i]First transmutation: Catabolic Fusion (reverts Hyperassimilation).[/i]"
+			"HYPHAE's endgame is built on [b]involution[/b]: giving something up to open something else. Three families, by tone:\n\n"
+			+ "• [b]TRANSMUTATION[/b] (A → A+) — [b]a step back to gain momentum[/b]. You buy the [b]key[/b] in the Genetic Bank. In a run, with the mutation active, a blinking [b][T] Revert[/b] button appears (3 times, a few seconds each, then it is gone). If you confirm, you lose the mutation, [b]digest[/b] it (instant payoff) and a more powerful route opens.\n"
+			+ "• [b]SHADOW[/b] (A → anti-A) — no button: it is the [b]consequence[/b] of playing the opposite of the mutation. With its key, doing the opposite triggers it. Reward: visibility and new systems, not multipliers.\n"
+			+ "• [b]REDEMPTION[/b] — healing instead of collapsing (Metabolic Remission).\n\n"
+			+ "Keys are permanent and have no switch: the decision is made in each run.\n\n"
+			+ "[i]Hyperassimilation already has both: Catabolic Fusion (Transmutation) and Primal Fast (Shadow).[/i]"
 		),
 		"unlock": {"type": "transcendence_count", "count": 3},
 		"see_also": ["transmut_fusion", "hiperasimilacion", "banco_genetico", "hitos_trascendencia"],
@@ -1438,8 +1438,8 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Fusión Catabólica", "name_en": "Catabolic Fusion",
 		"body_es": (
-			"Transmutación que revierte [b]Hiperasimilación[/b]. Se compra en el Banco Genético (15 PL, tras cerrar Hiperasimilación).\n\n"
-			+ "Renunciás al click ×10 salvaje y al pasivo nerfeado a ×0.25. A cambio, el sistema se vuelve un motor estable:\n\n"
+			"Transmutación (A → A+) de [b]Hiperasimilación[/b]. La llave se compra en el Banco Genético (15 PL). Con Hiperasimilación activa aparece el botón [b][T] Revertir[/b]: confirmás y la hiper se [b]digiere[/b] (recibís el 50% del dinero generado durante la hiper).\n\n"
+			+ "Renunciás al click ×10 salvaje, al pasivo nerfeado a ×0.25 y al camino del Depredador. A cambio, el sistema se vuelve un motor estable:\n\n"
 			+ "• [b]Click ×5[/b] permanente\n"
 			+ "• [b]Pasivo ×5[/b] permanente (sin el nerf de la hiper)\n"
 			+ "• Botón [b]Metabolismo Híbrido[/b] (tecla [b]Q[/b]): ×2 a TODO el ingreso durante 30 s, cooldown 120 s\n"
@@ -1449,8 +1449,8 @@ const ENTRIES: Dictionary = {
 			+ "[i]Anti-AFK: la ráfaga premia clickear el botón en el momento justo; el motor base ×5/×5 sostiene la run entre ráfagas.[/i]"
 		),
 		"body_en": (
-			"Transmutation that reverts [b]Hyperassimilation[/b]. Bought in the Genetic Bank (15 LP, after closing Hyperassimilation).\n\n"
-			+ "You give up the wild ×10 click and the passive nerfed to ×0.25. In exchange, the system becomes a stable engine:\n\n"
+			"Transmutation (A → A+) of [b]Hyperassimilation[/b]. The key is bought in the Genetic Bank (15 LP). With Hyperassimilation active, the [b][T] Revert[/b] button appears: confirm and the hyper is [b]digested[/b] (you receive 50% of the money generated during it).\n\n"
+			+ "You give up the wild ×10 click, the passive nerfed to ×0.25 and the path to the Predator. In exchange, the system becomes a stable engine:\n\n"
 			+ "• [b]Click ×5[/b] permanent\n"
 			+ "• [b]Passive ×5[/b] permanent (without the hyper nerf)\n"
 			+ "• [b]Hybrid Metabolism[/b] button (key [b]Q[/b]): ×2 to ALL income for 30 s, 120 s cooldown\n"
@@ -1466,30 +1466,30 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Ayuno Primordial", "name_en": "Primal Fast",
 		"body_es": (
-			"Transmutación que revierte [b]Hiperasimilación[/b] hacia su opuesto filosófico. Se compra en el Banco Genético (20 PL).\n\n"
-			+ "[b]Mecánica central:[/b] abandonás el consumo. La biomasa drena activamente a 0.5/s. A cambio acumulás [b]Silencio (S)[/b]: un recurso que se construye cuando B es bajo y ε es bajo. El pasivo vale ×(1 + S×0.01).\n\n"
+			"[b]Sombra[/b] (A → anti-A) de [b]Hiperasimilación[/b]. La llave se compra en el Banco Genético (20 PL). No hay botón: Hiperasimilación es clickear frenético, y el Ayuno es [b]renunciar a clickear[/b]. Con la llave, si dejás de clickear 60 s teniendo un pasivo propio (≥ 10/s) y ε < 0.10, el hongo empieza a ayunar (te avisa 10 s antes: un click lo evita).\n\n"
+			+ "[b]Mecánica central:[/b] abandonás el consumo. La biomasa drena activamente (2/s + 20%/s). A cambio acumulás [b]Silencio (S)[/b] cuando B es bajo y ε es bajo. El pasivo vale ×(1 + S×0.01).\n\n"
 			+ "Botones activos:\n"
 			+ "• [b][Q] Romper el Ayuno[/b]: liberás todo el S como burst de producción (×(1+S/50) durante 15 s). Reset de S=0 y un spike de B+5.\n"
 			+ "• [b][W] Ascesis[/b]: mejora la tasa de acumulación de S en +15% por nivel.\n\n"
 			+ "Condiciones de sello:\n"
 			+ "• Ciclos (usos de Romper) ≥ 5\n"
 			+ "• S acumulado total ≥ 500\n"
-			+ "• Streak limpio (B<1 y ε<0.10 consecutivos) ≥ 90 s\n\n"
-			+ "[b]Recompensa al sellar:[/b] [b]Primicia del Vacío[/b] — al inicio de cada run, el pasivo arranca ×2.0 y decae a ×1.0 en 90 segundos.\n\n"
-			+ "[i]Mutualmente excluyente con Fusión Catabólica: activá uno o el otro en el Banco Genético.[/i]"
+			+ "• Racha de silencio (B<1 y ε<0.10 consecutivos) ≥ 180 s\n\n"
+			+ "[b]Recompensa al sellar:[/b] [b]Primicia del Vacío[/b] — al inicio de cada run, el pasivo arranca ×3 y decae a ×1 en 10 minutos.\n\n"
+			+ "[i]Cuidado: el parásito acecha a quien deja de moverse demasiado tiempo.[/i]"
 		),
 		"body_en": (
-			"Transmutation that reverts [b]Hyperassimilation[/b] to its philosophical opposite. Purchased in the Genetic Bank (20 LP).\n\n"
-			+ "[b]Core mechanic:[/b] you abandon consumption. Biomass drains actively at 0.5/s. In return you accumulate [b]Silence (S)[/b]: a resource that builds when B is low and ε is low. Passive income = ×(1 + S×0.01).\n\n"
+			"[b]Shadow[/b] (A → anti-A) of [b]Hyperassimilation[/b]. The key is bought in the Genetic Bank (20 LP). There is no button: Hyperassimilation is frantic clicking, and the Fast is [b]giving up clicking[/b]. With the key, if you stop clicking for 60 s while having your own passive income (≥ 10/s) and ε < 0.10, the fungus begins to fast (you are warned 10 s before: one click prevents it).\n\n"
+			+ "[b]Core mechanic:[/b] you abandon consumption. Biomass drains actively (2/s + 20%/s). In return you accumulate [b]Silence (S)[/b] while B and ε are low. Passive income = ×(1 + S×0.01).\n\n"
 			+ "Active buttons:\n"
 			+ "• [b][Q] Break the Fast[/b]: release all S as a production burst (×(1+S/50) for 15 s). Resets S=0 and spikes B+5.\n"
 			+ "• [b][W] Ascesis[/b]: improves S accumulation rate by +15% per level.\n\n"
 			+ "Seal conditions:\n"
 			+ "• Cycles (uses of Break the Fast) ≥ 5\n"
 			+ "• Total accumulated S ≥ 500\n"
-			+ "• Clean streak (B<1 and ε<0.10 consecutive) ≥ 90 s\n\n"
-			+ "[b]Reward on sealing:[/b] [b]Primacy of Void[/b] — at the start of each run, passive income starts at ×2.0 and decays to ×1.0 over 90 seconds.\n\n"
-			+ "[i]Mutually exclusive with Catabolic Fusion: activate one or the other in the Genetic Bank.[/i]"
+			+ "• Silence streak (B<1 and ε<0.10 consecutive) ≥ 180 s\n\n"
+			+ "[b]Reward on sealing:[/b] [b]Primacy of Void[/b] — at the start of each run, passive income starts at ×3 and decays to ×1 over 10 minutes.\n\n"
+			+ "[i]Beware: the parasite stalks those who stay still for too long.[/i]"
 		),
 		"unlock": {"type": "route_closed", "route": "AYUNO PRIMORDIAL"},
 		"see_also": ["transmut_fusion", "transmut_intro", "hiperasimilacion", "formula_produccion"],

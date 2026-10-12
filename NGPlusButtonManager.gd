@@ -51,6 +51,10 @@ var _ayuno_burst_btn: Button = null      # [Q] ROMPER EL AYUNO — burst basado 
 var _ayuno_ascesis_btn: Button = null    # [W] ASCESIS — mejora la tasa de S
 var _ayuno_seal_btn: Button = null       # Sello del final AYUNO PRIMORDIAL
 var _simbiosis_seal_btn: Button = null
+var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
+var _transmut_tween: Tween = null
+var _transmut_dialog: ConfirmationDialog = null
+var _transmut_dialog_id: String = ""
 var _run_buffs_btn: Button = null        # Botón "Buffs activos (N)" del panel derecho
 var _run_buffs_panel: PanelContainer = null  # Panel flotante con la lista de buffs heredados
 
@@ -152,6 +156,12 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
+	if is_instance_valid(_transmut_btn):
+		_transmut_btn.queue_free()
+		_transmut_btn = null
+	if is_instance_valid(_transmut_dialog):
+		_transmut_dialog.queue_free()
+		_transmut_dialog = null
 
 ## Actualiza todos los botones dinámicos de NG+. Llamar desde _on_ui_tick().
 func update_ng_plus_buttons() -> void:
@@ -177,6 +187,76 @@ func update_ng_plus_buttons() -> void:
 	_update_ayuno_buttons()
 	_update_simbiosis_seal_button()
 	_update_run_buffs_button()
+	_update_transmut_button()
+
+# ── INVOLUCIÓN: botón de reversión [T] ──────────────────────────────────────────
+## Flotante (arriba al centro) y parpadeante mientras dura una aparición de la agenda de
+## TransmutationLogic.slots(); se oculta entre apariciones y desaparece al agotarlas.
+func _update_transmut_button() -> void:
+	var secs: float = TransmutationLogic.visible_secs_left()
+	if secs <= 0.0:
+		if is_instance_valid(_transmut_btn):
+			_transmut_btn.visible = false
+		return
+	var id: String = TransmutationLogic.candidate()
+	var t: Dictionary = TransmutationLogic.defs()[id]
+	if not is_instance_valid(_transmut_btn):
+		var b := Button.new()
+		b.name = "TransmutButton"
+		b.z_index = 45
+		b.custom_minimum_size = Vector2(0, 54)
+		b.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.12, 0.07, 0.02, 0.95)
+		sb.set_border_width_all(3)
+		sb.border_color = Color(0.97, 0.76, 0.05)
+		sb.set_corner_radius_all(10)
+		b.add_theme_stylebox_override("normal", sb)
+		b.add_theme_stylebox_override("hover", sb)
+		b.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+		b.pressed.connect(open_transmut_dialog)
+		_scene.add_child(b)
+		_transmut_btn = b
+	if not _transmut_btn.visible or _transmut_tween == null or not _transmut_tween.is_valid():
+		_transmut_btn.visible = true
+		_transmut_tween = _scene.create_tween().set_loops()
+		_transmut_tween.tween_property(_transmut_btn, "modulate:a", 0.45, 0.45)
+		_transmut_tween.tween_property(_transmut_btn, "modulate:a", 1.0, 0.45)
+	_transmut_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_TRANSMUT") % [
+		TranslationServer.translate(t.base_name), TranslationServer.translate(t.target_name),
+		int(ceil(secs)), TransmutationLogic.appearances_left()])
+	# Ancho según el texto (varía con el idioma) y centrado arriba, sobre la grilla de upgrades.
+	_transmut_btn.reset_size()
+	_transmut_btn.position = Vector2((_scene.get_viewport_rect().size.x - _transmut_btn.size.x) / 2.0, 132.0)
+
+## Diálogo "¿Seguro que querés revertir?" (botón flotante o tecla [T]).
+func open_transmut_dialog() -> void:
+	var id: String = TransmutationLogic.candidate()
+	if id == "" or not TransmutationLogic.is_visible():
+		return
+	var t: Dictionary = TransmutationLogic.defs()[id]
+	if not is_instance_valid(_transmut_dialog):
+		_transmut_dialog = ConfirmationDialog.new()
+		_transmut_dialog.dialog_autowrap = true
+		_transmut_dialog.min_size = Vector2i(520, 0)
+		_transmut_dialog.confirmed.connect(_on_transmut_confirmed)
+		_scene.add_child(_transmut_dialog)
+	_transmut_dialog_id = id
+	_transmut_dialog.title = TranslationServer.translate("TRANSMUT_DIALOG_TITLE")
+	_transmut_dialog.ok_button_text = TranslationServer.translate("TRANSMUT_DIALOG_OK")
+	_transmut_dialog.cancel_button_text = TranslationServer.translate("TRANSMUT_DIALOG_CANCEL")
+	_transmut_dialog.dialog_text = EmojiToRichText.strip(TranslationServer.translate("TRANSMUT_DIALOG_BODY") % [
+		TranslationServer.translate(t.base_name), TranslationServer.translate(t.lose),
+		t.preview.call(), TranslationServer.translate(t.target_name)])
+	_transmut_dialog.popup_centered()
+
+func _on_transmut_confirmed() -> void:
+	if TransmutationLogic.revert(_transmut_dialog_id, false):
+		if is_instance_valid(_transmut_btn):
+			_transmut_btn.visible = false
+		var sc = _scene
+		if sc.has_method("update_ui"):
+			sc.update_ui()
 
 ## Fuerza el orden visual Q→W→E (Agent→Catalyst→Purge) en el panel derecho.
 ## Necesario porque cada botón se crea con move_child(0) en orden de creación,

@@ -178,10 +178,20 @@ const DEP_DEVOUR_TICK_BASE         := 1.5   # s entre devorados al inicio
 const DEP_DEVOUR_TICK_FAST         := 1.2   # s entre devorados tras DEP_DEVOUR_TICK_FAST_AT
 const DEP_DEVOUR_TICK_FAST_AT      := 50    # a partir de N devorados el tick acelera
 
+# ── INVOLUCIÓN · sistema común (docs/design/involucion_transmutaciones.md) ──
+# TRANSMUTACIÓN (A → A+): con la llave del Banco y A activa, el botón de reversión [T] aparece
+# TRANSMUT_APPEARANCES veces × TRANSMUT_APPEAR_DURATION s dentro de una ventana adaptada a la vida
+# de A, y después desaparece esa run. Ver TransmutationLogic.slots().
+const TRANSMUT_FIRST_DELAY      := 60.0   # s con A activa antes de la 1ª aparición (o W/4 si A vive poco)
+const TRANSMUT_WINDOW_MAX       := 300.0  # ventana máxima (5 min)
+const TRANSMUT_WINDOW_MARGIN    := 20.0   # la ventana termina este margen antes de la vida esperada de A
+const TRANSMUT_APPEARANCES      := 3
+const TRANSMUT_APPEAR_DURATION  := 20.0
+const TRANSMUT_DIGEST_HIPER     := 0.5    # Hiper se digiere en $: 50 % de lo generado con Hiper activa
+
 # ── TRANSMUTACIÓN · FUSIÓN CATABÓLICA (revierte HIPERASIMILACIÓN) ──
-# "Un paso atrás para tomar impulso": se compra el buff transmut_fusion en el Banco
-# Genético (categoría Transmutaciones). Con el buff activo, al dispararse el trigger de
-# Hiperasimilación se activa FUSIÓN CATABÓLICA en su lugar: la run NO se cierra, es jugable.
+# "Un paso atrás para tomar impulso": con la llave transmut_fusion y Hiperasimilación activa,
+# el botón [T] la revierte (digestión en $) y activa FUSIÓN CATABÓLICA: la run NO se cierra.
 # Se sacrifica el ×10 salvaje de click por un Click ×5 + Pasivo ×5 estable + una ráfaga
 # activable (Metabolismo Híbrido) anti-AFK. Cierre voluntario al sello tras alcanzar el hito.
 const FUSION_CLICK_MULT       := 5.0        # click ×5 (reemplaza el ×10 de Hiperasimilación)
@@ -203,8 +213,15 @@ const FUSION_CD_FLOOR             := 30.0   # cooldown mínimo alcanzable (no ba
 const FUSION_CD_COST_BASE         := 1_000_000.0 # costo del nivel 1 (antes 10M: nunca convenía)
 const FUSION_CD_COST_GROWTH       := 1.9    # multiplicador de costo por nivel
 
-# ── TRANSMUTACIÓN · AYUNO PRIMORDIAL (SOMBRA de Hiperasimilación) ────────────
-# Con el buff transmut_ayuno activo, el trigger de Hiper activa AYUNO PRIMORDIAL en su lugar.
+# ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
+# Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
+# Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
+# teniendo pasivo propio y ε bajo activa el ayuno. Se avisa AYUNO_MIRROR_WARN s antes.
+const AYUNO_MIRROR_IDLE           := 60.0   # s sin clickear
+const AYUNO_MIRROR_WARN           := 10.0   # aviso previo ("el hongo empieza a ayunar…")
+const AYUNO_MIRROR_EPS_MAX        := 0.10   # ε por debajo de esto
+const AYUNO_MIRROR_PASSIVE_MIN    := 10.0   # $/s de pasivo propio (sin economía no hay ayuno, hay abandono)
+const AYUNO_MIRROR_MIN_RUN        := 60.0   # s mínimos de run
 # El ayuno drena B activamente; la ausencia de B/ε acumula Silencio (S) que amplifica el pasivo.
 # [Q] ROMPER EL AYUNO: burst basado en S acumulado, resetea S. [W] ASCESIS: mejora S_rate Y pasivo.
 const AYUNO_BIOMASA_DRAIN         := 2.0    # componente fija del drain de B (/s)

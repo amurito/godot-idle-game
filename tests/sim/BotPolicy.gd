@@ -30,6 +30,7 @@ extends RefCounted
 ##   mutation: "none" | "homeostasis" | "simbiosis" | "red_micelial"
 ##   branch: "none" | "colonization" | "symbiosis"      (sub-rama de Red Micelial)
 ##   allostasis: bool
+##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
 ##   fusion_bursts / fusion_cd / fusion_seal: bool
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
@@ -195,6 +196,13 @@ func _press(d: RefCounted, method: String, label: String) -> void:
 # ── Teclas de transmutación y sellos ────────────────────────────────────────────
 
 func _route_keys(_d: RefCounted) -> void:
+	var tid: String = str(cfg.get("transmute", ""))
+	if tid != "" and TransmutationLogic.candidate() == tid and TransmutationLogic.is_visible():
+		# Mismo camino que el jugador: [T] abre la confirmación y se acepta.
+		UIManager._ng_buttons.open_transmut_dialog()
+		UIManager._ng_buttons._on_transmut_confirmed()
+		if TransmutationLogic.candidate() != tid:
+			_after_key("key:T transmute:" + tid)
 	if EvoManager.mutation_fusion_catabolica:
 		var burst_limit: int = int(cfg.get("fusion_burst_limit", 1 << 30))
 		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_count < burst_limit \

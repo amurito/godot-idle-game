@@ -54,21 +54,19 @@ const ALL := {
 
 	# ── Transmutaciones (T3+) ───────────────────────────────────────────────────
 	"ng_ayuno_lazy": {
-		"desc": "T3 + AYUNO. Activa Ayuno clickeando y después NO toca nada. ¿Se sella solo?",
+		"desc": "T3 + AYUNO (Sombra por espejo): clickea 2 min para armar pasivo, deja de clickear → ayuno, y no toca nada más. ¿Se sella solo?",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
 			"buffs": {"transmut_ayuno": 1}},
-		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
-			"stop_click_when": ["ayuno_primordial"], "ayuno_seal": true},
+		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest", "ayuno_seal": true},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
 	"ng_ayuno_player": {
-		"desc": "T3 + AYUNO jugado: rompe el ayuno con S≥120, compra Ascesis y sella apenas puede.",
+		"desc": "T3 + AYUNO jugado (Sombra por espejo): clickea 2 min, deja de clickear → ayuno; rompe con S≥120, compra Ascesis y sella apenas puede.",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
 			"buffs": {"transmut_ayuno": 1}},
-		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
-			"stop_click_when": ["ayuno_primordial"],
+		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest",
 			"ayuno_burst_at": 120.0, "ayuno_ascesis": true, "ayuno_seal": true},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
@@ -78,8 +76,16 @@ const ALL := {
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
 			"buffs": {"transmut_fusion": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
-			"fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
 		"max_t": 2400.0, "sample_every": 10.0,
+	},
+	"ng_hiper_key_no_revert": {
+		"desc": "T3 con la llave de Fusión pero sin usar el botón [T]: Hiper sigue su curso normal (camino 'no revierto'). Sirve para ver el botón en modo visual.",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
+			"buffs": {"transmut_fusion": 1}},
+		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0},
+		"max_t": 1200.0, "sample_every": 10.0,
 	},
 	"ng_fusion_natural": {
 		"desc": "T3 + FUSIÓN: entra como Hiper (pasivo < 15%), y una vez en Fusión compra lo más barato de todo (sin tope de pasivo) + Contabilidad. ¿Sella sin buscarlo?",
@@ -88,7 +94,7 @@ const ALL := {
 			"buffs": {"transmut_fusion": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
 			"uncap_passive_on": "fusion_catabolica", "unavoid_on": {"accounting": "fusion_catabolica"},
-			"fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 	"ng_fusion_hunter": {
@@ -100,7 +106,7 @@ const ALL := {
 			"uncap_passive_on": "fusion_catabolica", "unavoid_on": {"accounting": "fusion_catabolica"},
 			"buy_ids_on": {"fusion_catabolica": ["auto", "auto_mult", "trueque", "trueque_net", "trueque_allo",
 				"cognitive", "accounting", "specialization", "persistence"]},
-			"fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 	"ng_fusion_no_cd": {
@@ -110,7 +116,7 @@ const ALL := {
 			"buffs": {"transmut_fusion": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
 			"uncap_passive_on": "fusion_catabolica", "unavoid_on": {"accounting": "fusion_catabolica"},
-			"fusion_bursts": true, "fusion_cd": false, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": false, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 	"ng_fusion_optimizer": {
@@ -120,7 +126,7 @@ const ALL := {
 			"buffs": {"transmut_fusion": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
 			"uncap_passive_on": "fusion_catabolica", "unavoid_on": {"accounting": "fusion_catabolica"},
-			"fusion_bursts": true, "fusion_cd": true, "fusion_cd_save_secs": 600.0, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": true, "fusion_cd_save_secs": 600.0, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 	"ng_fusion_lazy_bursts": {
@@ -130,7 +136,7 @@ const ALL := {
 			"buffs": {"transmut_fusion": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
 			"uncap_passive_on": "fusion_catabolica", "unavoid_on": {"accounting": "fusion_catabolica"},
-			"fusion_bursts": true, "fusion_burst_limit": 3, "fusion_cd": false, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_burst_limit": 3, "fusion_cd": false, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 	"ng_legacy_showcase": {
@@ -151,7 +157,7 @@ const ALL := {
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
 			"unavoid_on": {"accounting": "fusion_catabolica"}, "priority": ["accounting"],
 			"save_for_priority": true, "save_from": 0.0,
-			"fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
+			"transmute": "fusion", "fusion_bursts": true, "fusion_cd": true, "fusion_seal": true},
 		"max_t": 5400.0, "sample_every": 30.0,
 	},
 }

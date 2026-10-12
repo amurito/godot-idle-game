@@ -1,6 +1,7 @@
 # Involución: Transmutaciones, Sombras y Redenciones
 
-> **Estado: SPEC PARA REVISIÓN (2026-10-12).** Nada de esto está implementado todavía salvo lo marcado ✅.
+> **Estado (2026-10-12):** spec aprobada por el autor. **R1 + R2 implementados** (sistema común,
+> Fusión por botón, Ayuno por espejo de conducta). R3–R6 pendientes.
 > Reemplaza la implementación actual de transmutaciones (toggle en el Banco que *reemplaza* el
 > disparador de Hiperasimilación), que se desvió de la idea original de
 > [`nuevas transmutaciones.md`](nuevas%20transmutaciones.md). Decisiones del autor: ver §8.
@@ -89,15 +90,23 @@ perfil de bot + trayectoria golden. Duración objetivo: **15–25 min** desde la
 - Recompensa: un **sistema o visibilidad nueva** (OBSERVAR, estadísticas ocultas, una capa de juego),
   nunca sólo ×N. Es el contraste con la Transmutación, que sí da poder.
 
-**Ayuno Primordial (rework):** deja de colgar del disparador de Hiper.
+**Ayuno Primordial (rework) ✅** — deja de colgar del disparador de Hiper.
 
-| Hiperasimilación pide | Espejo → Ayuno pide |
+El espejo *literal* de los números de Hiper (activo < 20 %, ε < 0.10, biomasa < 1) resultó
+**inalcanzable** al medirlo: "activo %" no mide si clickeás (un jugador que dejó de clickear sigue en
+~70 %), y la biomasa sólo crece (< 1 sólo en los primeros ~110 s). Decisión del autor: **espejo de
+conducta** — Hiper es clickear frenético; Ayuno es renunciar a clickear:
+
+| Ayuno pide (`GenomeEvaluator.update_ayuno_espejo`) | Constante |
 |---|---|
-| activo > 80 % | activo < 20 % (casi sin clickear) |
-| ε > 0.40 | ε < 0.10 |
-| biomasa > 4 | biomasa < 1 (dejarla morir) |
-| Contabilidad = 0 | (sin requisito: el ayuno no es una tensión de build) |
-| run_time > 60 s (T>2) | run_time > 60 s |
+| no clickear durante 60 s | `AYUNO_MIRROR_IDLE` |
+| pasivo propio ≥ 10 $/s (sin economía no hay ayuno, hay abandono) | `AYUNO_MIRROR_PASSIVE_MIN` |
+| ε < 0.10 | `AYUNO_MIRROR_EPS_MAX` |
+| run ≥ 60 s | `AYUNO_MIRROR_MIN_RUN` |
+
+Aviso **10 s antes** ("el hongo empieza a ayunar… clickeá para evitarlo", `AYUNO_MIRROR_WARN`):
+decisión del autor para que un AFK no entre por sorpresa. Gana al Parasitismo por inactividad (120 s);
+dentro del ayuno, quedarse quieto demasiado sigue llevando a la Trampa del Vacío.
 
 Riesgo a vigilar: **ASCESIS PROFUNDA** (post-trascendencia de Vacío) también es una ruta de renuncia.
 Mantener identidades distintas: Ascesis = renuncia *activa* (clicks sin pasivo); Ayuno = renuncia al
@@ -181,8 +190,8 @@ FANTASMA (combos de dos llaves) queda para después de la grilla (requiere ≥ 3
 | Paso | Contenido |
 |---|---|
 | R0 | **Esta spec revisada y aprobada** por el autor (§8). |
-| R1 | Sistema común: botón de reversión (patrón de apariciones, diálogo, hotkey, save), digestión, genoma "revertido", llave sin toggle + migración de saves. Disparador espejo genérico para Sombras. |
-| R2 | Rework de **Fusión** (botón) y **Ayuno** (espejo) sobre R1. Re-balance con el simulador. Codex/locale. |
+| R1 ✅ | Sistema común: `TransmutationLogic.gd` (agenda de apariciones adaptada a la vida de A, digestión, revert), botón flotante parpadeante + diálogo + [T] (`NGPlusButtonManager`), estado en save (`transmut_*`), llaves sin toggle; se quitó la exclusión del Banco. 7 tests unitarios de la agenda. |
+| R2 ✅ | **Fusión** por botón (Hiper a los 83 s → revierte a los 124 s → sella ~17.5 min después) y **Ayuno** por espejo de conducta. Codex ES/EN reescrito (intro de involución, Fusión, Ayuno — corrige además 3 números viejos de Ayuno). Escenarios `ng_hiper_key_no_revert` (camino "no revierto") y bot que transmuta por el diálogo. |
 | R3–R6 | Una transmutación nueva por paso: Caos Orquestado, Coro Simbiótico, Micelio Omnisciente, Huésped Soberano. Cada una con spec propia de números, bot, golden, logros, Codex ES/EN. |
 | R7 | Retomar la auditoría de gameplay (A2/A3) con las rutas ya en su forma final. |
 
