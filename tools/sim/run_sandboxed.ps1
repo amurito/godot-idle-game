@@ -27,7 +27,8 @@
 param(
     [string]$Scene = "res://tests/sim/BotSimulator.tscn",
     [string[]]$SceneArgs = @(),
-    [string]$Godot = "C:\Users\nicol\Downloads\Godot_v4.5.1-stable_win64.exe\Godot_v4.5.1-stable_win64_console.exe",
+    # Vacio = $env:HYPHAE_GODOT (CI) o, si no esta definida, la instalacion local del autor.
+    [string]$Godot = "",
     # Instancias independientes (copia + user:// propios) permiten correr en paralelo.
     [ValidatePattern('^[A-Za-z0-9_]+$')]
     [string]$Instance = "default",
@@ -40,6 +41,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if ($Godot -eq "") {
+    if ($env:HYPHAE_GODOT) { $Godot = $env:HYPHAE_GODOT }
+    else { $Godot = "C:\Users\nicol\Downloads\Godot_v4.5.1-stable_win64.exe\Godot_v4.5.1-stable_win64_console.exe" }
+}
 # SimGuard exige que user:// contenga HYPHAE_SIM_SANDBOX; el sufijo separa instancias.
 $SANDBOX_NAME = "HYPHAE_SIM_SANDBOX_" + $Instance
 if ($SandboxRoot -eq "") {

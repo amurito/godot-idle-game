@@ -1,0 +1,91 @@
+# Tests de HYPHAE: unitarios (tests/TestRunner) + golden de caracterización (tools/sim/run_golden.ps1).
+#
+# Corre en Windows a propósito: el harness usa robocopy, PowerShell 5.1 y AppData igual que en la
+# máquina del autor, así CI ejecuta exactamente lo mismo que el lanzador local. Todo pasa por
+# run_sandboxed.ps1 (user:// propio, telemetría OFF): CI nunca toca datos reales.
+#
+# Si un golden falla: el log del job muestra el diff; los logs completos de Godot quedan como
+# artefacto "sandbox-logs". Re-grabar goldens SÓLO si el cambio de comportamiento es intencional
+# (.\tools\sim\run_golden.ps1 -Mode record, revisando el diff) — nunca para "arreglar" CI.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**.md", "screens/**", "screens para subir/**"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.md", "screens/**", "screens para subir/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      GODOT_VERSION: 4.5.1-stable
+      # SHA512 oficial (SHA512-SUMS.txt del release) de Godot_v4.5.1-stable_win64.exe.zip
+      GODOT_ZIP_SHA512: ab84df90ead5a888530faaabe744a27678ef7635068883900174fae37f7fc6178d033b551d88963c7dc2466580915a582bbc79aca97c19085900655761f56a27
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache de Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\godot
+          key: godot-${{ env.GODOT_VERSION }}-win64
+
+      - name: Descargar Godot (verificado por SHA512)
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          $zip = Join-Path $env:RUNNER_TEMP "godot.zip"
+          $url = "https://github.com/godotengine/godot/releases/download/$env:GODOT_VERSION/Godot_v$($env:GODOT_VERSION)_win64.exe.zip"
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA512).Hash.ToLower()
+          if ($hash -ne $env:GODOT_ZIP_SHA512) { throw "SHA512 de Godot no coincide: $hash" }
+          Expand-Archive $zip -DestinationPath (Join-Path $env:RUNNER_TEMP "godot") -Force
+
+      - name: Configurar ruta de Godot
+        shell: powershell
+        run: |
+          $exe = Join-Path $env:RUNNER_TEMP "godot\Godot_v$($env:GODOT_VERSION)_win64_console.exe"
+          if (-not (Test-Path $exe)) { throw "No se encontró $exe" }
+          # ASCII: en PowerShell 5.1 "-Encoding utf8" escribe BOM y rompe la primera variable.
+          Add-Content -Path $env:GITHUB_ENV -Value "HYPHAE_GODOT=$exe" -Encoding ascii
+
+      - name: Tests unitarios
+        shell: powershell
+        run: .\tools\sim\run_sandboxed.ps1 -Instance unit -Scene "res://tests/TestRunner.tscn" -TimeoutSec 600
+
+      - name: Golden tests
+        shell: powershell
+        run: .\tools\sim\run_golden.ps1
+
+      - name: Juntar logs del sandbox
+        if: failure()
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force sandbox-logs | Out-Null
+          Get-ChildItem "$env:LOCALAPPDATA\HyphaeSimSandbox" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $dst = Join-Path sandbox-logs $_.Name
+            New-Item -ItemType Directory -Force $dst | Out-Null
+            Copy-Item (Join-Path $_.FullName "*.log") $dst -ErrorAction SilentlyContinue
+          }
+
+      - name: Subir logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandbox-logs
+          path: sandbox-logs
+          retention-days: 14
