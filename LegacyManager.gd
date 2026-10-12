@@ -425,6 +425,7 @@ func load_legacy():
 		AchievementManager.load_data(achievement_data)
 
 	_migrate_retroactive_endings()
+	_normalize_exclusive_groups()
 	print("📂 [Legacy] Banco genético cargado. PL:", legacy_points, " Ξ:", esencia, " T#:", trascendencia_count, " buffs:", buffs.size())
 
 func _migrate_retroactive_endings() -> void:
@@ -473,13 +474,49 @@ func get_buff_value(id: String) -> bool:
 	# Respeta el toggle manual: false en buff_enabled = desactivado explícitamente
 	return buff_enabled.get(id, true)
 
+# ── Buffs mutuamente excluyentes ─────────────────────────────────────────────
+## A lo sumo uno activo por grupo. Las transmutaciones de Hiperasimilación comparten disparador:
+## con dos activas sólo una puede ganar, y el jugador no tenía forma de saber cuál.
+## El orden del grupo es la prioridad al normalizar saves viejos (Fusión primero = comportamiento
+## que ya tenían, ver EvoManager.activate_hyperassimilation).
+const EXCLUSIVE_GROUPS := [["transmut_fusion", "transmut_ayuno"]]
+## Buffs que la última activación apagó por exclusión (para que la UI lo avise).
+var last_exclusive_disabled: Array = []
+
+func _exclusive_peers(id: String) -> Array:
+	for group in EXCLUSIVE_GROUPS:
+		if id in group:
+			return group.filter(func(other: String) -> bool: return other != id)
+	return []
+
+## Deja `id` como el único activo de su grupo. Devuelve los que apagó.
+func _enforce_exclusive(id: String) -> Array:
+	var turned_off: Array = []
+	for other in _exclusive_peers(id):
+		if get_buff_level(other) > 0 and buff_enabled.get(other, true):
+			buff_enabled[other] = false
+			turned_off.append(other)
+	return turned_off
+
+## Saves anteriores a la exclusión pueden tener varios activos: queda el primero del grupo.
+func _normalize_exclusive_groups() -> void:
+	for group in EXCLUSIVE_GROUPS:
+		for id in group:
+			if get_buff_level(id) > 0 and buff_enabled.get(id, true):
+				_enforce_exclusive(id)
+				break
+
 ## Activa o desactiva el efecto de un buff ya comprado.
-## Devuelve el nuevo estado (true = activo).
+## Devuelve el nuevo estado (true = activo). Activar uno de un grupo excluyente apaga a los demás
+## (quedan en last_exclusive_disabled).
 func toggle_buff_enabled(id: String) -> bool:
+	last_exclusive_disabled = []
 	if get_buff_level(id) <= 0:
 		return false  # No se puede togglear un buff no comprado
 	var current: bool = buff_enabled.get(id, true)
 	buff_enabled[id] = not current
+	if buff_enabled[id]:
+		last_exclusive_disabled = _enforce_exclusive(id)
 	save_legacy()
 	print("🔄 [Legacy] Buff %s → %s" % [id, "ACTIVO" if buff_enabled[id] else "INACTIVO"])
 	return buff_enabled[id]
@@ -643,6 +680,11 @@ func purchase_legacy(id: String) -> bool:
 	var cost: int = get_current_cost(id)
 	legacy_points -= cost
 	_set_buff_level(id, get_buff_level(id) + 1)
+	# Recién comprado = el que el jugador quiere usar: queda activo y apaga a su grupo.
+	last_exclusive_disabled = []
+	if not _exclusive_peers(id).is_empty():
+		buff_enabled[id] = true
+		last_exclusive_disabled = _enforce_exclusive(id)
 	save_legacy()
 	AudioManager.play_sfx("upgrade")
 	print("✨ [Legacy] Comprado: %s (nivel %d) por %d PL" % [id, get_buff_level(id), cost])

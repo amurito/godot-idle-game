@@ -25,7 +25,8 @@ const VOLATILE_KEYS := ["unlocked_at", "timestamp", "created_at", "control_omega
 
 ## Cachés internos (no son estado de juego): se excluyen de los volcados por completo.
 ## Su corrección se verifica con invariantes explícitos (ver GoldenRunner), no por valor.
-const EXCLUDED_VARS := ["_memo", "_memo_depth", "_memo_frame", "_ng_rules", "_reset_defaults"]
+const EXCLUDED_VARS := ["_memo", "_memo_depth", "_memo_frame", "_ng_rules", "_reset_defaults",
+	"last_exclusive_disabled"]
 
 
 static func encode(v: Variant) -> Variant:

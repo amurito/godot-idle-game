@@ -909,6 +909,8 @@ func _build_legacy_item(id: String) -> Control:
 				scene.add_lap(tr("LAP_MC_IA_MANUAL") % (tr("GAME_BUFF_ACTIVE").to_lower() if new_state else tr("GAME_BUFF_INACTIVE").to_lower()))
 			refresh_legacy_store()
 			show_toast(tr("GAME_BUFF_ACTIVE") + ": " + def.get("name", id) if new_state else tr("GAME_BUFF_INACTIVE") + ": " + def.get("name", id))
+			for off_id in LegacyManager.last_exclusive_disabled:
+				show_toast(tr("TOAST_BUFF_EXCLUSIVE_OFF") % LegacyManager.LEGACY_DEFS.get(off_id, {}).get("name", off_id))
 			scene.update_ui()
 		)
 		v.add_child(toggle_btn)

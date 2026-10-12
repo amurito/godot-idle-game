@@ -275,6 +275,25 @@ func _run_legacy_manager() -> void:
 	chk("buff desconocido: get_buff_level = 0",
 		LegacyManager.get_buff_level("BUFF_QUE_NO_EXISTE") == 0)
 
+	# Transmutaciones excluyentes (no se llama a toggle/purchase: escriben el banco en disco)
+	var snap_enabled := LegacyManager.buff_enabled.duplicate(true)
+	LegacyManager.buffs = {}
+	LegacyManager.buff_enabled = {}
+	LegacyManager._set_buff_level("transmut_fusion", 1)
+	LegacyManager._set_buff_level("transmut_ayuno", 1)
+	LegacyManager._normalize_exclusive_groups()
+	chk("excluyentes: save viejo con ambas activas → queda Fusión",
+		LegacyManager.get_buff_value("transmut_fusion") and not LegacyManager.get_buff_value("transmut_ayuno"))
+	LegacyManager.buff_enabled["transmut_ayuno"] = true
+	var off: Array = LegacyManager._enforce_exclusive("transmut_ayuno")
+	chk("excluyentes: activar Ayuno apaga Fusión",
+		off == ["transmut_fusion"] and LegacyManager.get_buff_value("transmut_ayuno") and not LegacyManager.get_buff_value("transmut_fusion"))
+	LegacyManager.buffs.erase("transmut_fusion")
+	LegacyManager.buff_enabled = {}
+	chk("excluyentes: sin la otra comprada no apaga nada",
+		LegacyManager._enforce_exclusive("transmut_ayuno").is_empty())
+	LegacyManager.buff_enabled = snap_enabled
+
 	# Restaurar estado real del jugador
 	LegacyManager.buffs = snap_buffs
 	LegacyManager.endings_achieved = snap_endings

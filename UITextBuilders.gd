@@ -484,10 +484,14 @@ static func build_evo_checklist(_main: Node) -> String:
 
 		# HIPERASIMILACIÓN — o transmutación activa (FC/Ayuno), según el buff del Banco Genético.
 		var hiper_req: float = 60.0 if LegacyManager.trascendencia_count > 2 else 180.0
-		var is_fc: bool = LegacyManager.get_buff_value("transmut_fusion")
+		# El título dice lo que REALMENTE va a disparar (misma prioridad que
+		# EvoManager.activate_hyperassimilation): antes con Fusión apagada decía "Hiperasimilación"
+		# aunque lo que se activaba era Ayuno.
 		var hiper_label: String
-		if is_fc:
+		if LegacyManager.get_buff_value("transmut_fusion"):
 			hiper_label = TranslationServer.translate("EVO_FUSION_TITLE")
+		elif LegacyManager.get_buff_value("transmut_ayuno"):
+			hiper_label = TranslationServer.translate("EVO_AYUNO_TITLE")
 		else:
 			hiper_label = TranslationServer.translate("EVO_HIPER_TITLE")
 		t += "\n[b]" + hiper_label + "[/b]\n"
