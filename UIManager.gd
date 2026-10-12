@@ -892,7 +892,17 @@ func _build_legacy_item(id: String) -> Control:
 	v.add_child(l_title)
 	v.add_child(l_desc)
 
-	if lvl > 0 and not (id in TransmutationLogic.key_ids() or id == "transmut_ayuno"):
+	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno"
+	if lvl > 0 and is_key:
+		# Llave de involución comprada: permanente y sin interruptor (la decisión es en la run).
+		var key_lbl: Button = Button.new()
+		key_lbl.custom_minimum_size.y = 22
+		key_lbl.text = tr("GAME_KEY_OWNED_TRANSMUT") if id in TransmutationLogic.key_ids() else tr("GAME_KEY_OWNED_SOMBRA")
+		key_lbl.modulate = Color(0.4, 1.0, 0.5)
+		key_lbl.focus_mode = Control.FOCUS_NONE
+		key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(key_lbl)
+	elif lvl > 0:
 		var is_on: bool = LegacyManager.buff_enabled.get(id, true)
 		var toggle_btn: Button = Button.new()
 		toggle_btn.custom_minimum_size.y = 22

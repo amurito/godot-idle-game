@@ -83,7 +83,7 @@ const ALL := {
 		"desc": "T3 con la llave de Fusión pero sin usar el botón [T]: Hiper sigue su curso normal (camino 'no revierto'). Sirve para ver el botón en modo visual.",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
-			"buffs": {"transmut_fusion": 1}},
+			"buffs": {"transmut_fusion": 1, "transmut_ayuno": 1}},
 		"bot": {"click_cps": 7.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0},
 		"max_t": 1200.0, "sample_every": 10.0,
 	},

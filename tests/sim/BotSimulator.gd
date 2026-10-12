@@ -16,6 +16,7 @@ extends Node
 ##   --speed=<x>           modo visual: segundos de juego por segundo real (default 5)
 ##   --autoquit            modo visual: cerrar la ventana al terminar (sin esperar Esc)
 ##   --screenshot=<ruta.png>  modo visual: guarda una captura de la ventana al terminar
+##   --open-bank           modo visual: abre el Banco Genético antes de la captura
 ##   --list                lista los escenarios y sale
 ##
 ## Modo visual — teclas: + / - velocidad · Espacio pausa · Esc salir.
@@ -79,8 +80,15 @@ func _ready() -> void:
 	if args.has("out"):
 		if SimGuard.write_text(str(args["out"]), SimGuard.to_canonical_json(report)):
 			print("[BotSimulator] reporte → %s" % args["out"])
+	if visual and SimGuard.arg_bool(args, "open-bank", false):
+		UIManager.open_legacy_panel()  # para revisar el Banco en la captura
+		if is_instance_valid(_hud):
+			_hud.get_parent().visible = false  # el panel del simulador taparía la columna derecha
+		for _i in 3:
+			await get_tree().process_frame
 	if visual and args.has("screenshot"):
-		_render_hud(null, null, report)
+		if not SimGuard.arg_bool(args, "open-bank", false):
+			_render_hud(null, null, report)
 		await get_tree().process_frame
 		await get_tree().process_frame
 		get_viewport().get_texture().get_image().save_png(str(args["screenshot"]))
