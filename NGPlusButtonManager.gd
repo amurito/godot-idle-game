@@ -355,8 +355,17 @@ func _on_batuta_pressed() -> void:
 	_update_batuta_button()
 
 # ── INVOLUCIÓN: botón de reversión [T] ──────────────────────────────────────────
-## Flotante (arriba al centro) y parpadeante mientras dura una aparición de la agenda de
-## TransmutationLogic.slots(); se oculta entre apariciones y desaparece al agotarlas.
+## Círculo chico pegado arriba a la derecha del núcleo, parpadeante mientras dura una aparición
+## de la agenda de TransmutationLogic.slots(); se oculta entre apariciones y desaparece al agotarlas.
+## El borde toma el color de la transmutación destino; el detalle va en el tooltip y en el diálogo.
+const TRANSMUT_BTN_D := 46.0
+const TRANSMUT_BTN_COLORS := {
+	"fusion": Color(0.97, 0.76, 0.05),
+	"caos": Color(1.0, 0.25, 0.5),
+	"coro": Color(1.0, 0.5, 0.42),
+}
+var _transmut_secs_lbl: Label = null
+
 func _update_transmut_button() -> void:
 	var secs: float = TransmutationLogic.visible_secs_left()
 	if secs <= 0.0:
@@ -365,34 +374,56 @@ func _update_transmut_button() -> void:
 		return
 	var id: String = TransmutationLogic.candidate()
 	var t: Dictionary = TransmutationLogic.defs()[id]
+	var col: Color = TRANSMUT_BTN_COLORS.get(id, Color(0.97, 0.76, 0.05))
 	if not is_instance_valid(_transmut_btn):
 		var b := Button.new()
 		b.name = "TransmutButton"
 		b.z_index = 45
-		b.custom_minimum_size = Vector2(0, 54)
-		b.add_theme_font_size_override("font_size", AccessibilityManager.fs(15))
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.12, 0.07, 0.02, 0.95)
-		sb.set_border_width_all(3)
-		sb.border_color = Color(0.97, 0.76, 0.05)
-		sb.set_corner_radius_all(10)
-		b.add_theme_stylebox_override("normal", sb)
-		b.add_theme_stylebox_override("hover", sb)
-		b.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+		b.custom_minimum_size = Vector2(TRANSMUT_BTN_D, TRANSMUT_BTN_D)
+		b.size = b.custom_minimum_size
+		b.text = EmojiToRichText.strip("⟳")
+		b.add_theme_font_size_override("font_size", AccessibilityManager.fs(22))
 		b.pressed.connect(open_transmut_dialog)
+		var lbl := Label.new()
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
+		lbl.position = Vector2(0, TRANSMUT_BTN_D + 2)
+		lbl.size = Vector2(TRANSMUT_BTN_D, 16)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(lbl)
+		_transmut_secs_lbl = lbl
 		_scene.add_child(b)
 		_transmut_btn = b
+	# Estilo por transmutación (el candidato cambia entre runs).
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.04, 0.05, 0.92)
+	sb.set_border_width_all(3)
+	sb.border_color = col
+	sb.set_corner_radius_all(int(TRANSMUT_BTN_D / 2.0))
+	for st in ["normal", "hover", "pressed", "focus"]:
+		_transmut_btn.add_theme_stylebox_override(st, sb)
+	_transmut_btn.add_theme_color_override("font_color", col)
+	_transmut_btn.add_theme_color_override("font_hover_color", col.lightened(0.3))
 	if not _transmut_btn.visible or _transmut_tween == null or not _transmut_tween.is_valid():
 		_transmut_btn.visible = true
 		_transmut_tween = _scene.create_tween().set_loops()
 		_transmut_tween.tween_property(_transmut_btn, "modulate:a", 0.45, 0.45)
 		_transmut_tween.tween_property(_transmut_btn, "modulate:a", 1.0, 0.45)
-	_transmut_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_TRANSMUT") % [
+	_transmut_btn.tooltip_text = EmojiToRichText.strip(TranslationServer.translate("BTN_TRANSMUT") % [
 		TranslationServer.translate(t.base_name), TranslationServer.translate(t.target_name),
 		int(ceil(secs)), TransmutationLogic.appearances_left()])
-	# Ancho según el texto (varía con el idioma) y centrado arriba, sobre la grilla de upgrades.
-	_transmut_btn.reset_size()
-	_transmut_btn.position = Vector2((_scene.get_viewport_rect().size.x - _transmut_btn.size.x) / 2.0, 132.0)
+	if is_instance_valid(_transmut_secs_lbl):
+		_transmut_secs_lbl.text = "%ds" % int(ceil(secs))
+		_transmut_secs_lbl.add_theme_color_override("font_color", col)
+	# Arriba a la derecha del núcleo: sobre la diagonal a ~72 % del radio del botón del reactor.
+	var rb: Control = UIManager.big_click_button
+	if is_instance_valid(rb):
+		var r: Rect2 = rb.get_global_rect()
+		var rad: float = minf(r.size.x, r.size.y) * 0.5
+		var c: Vector2 = r.get_center() + Vector2(rad, -rad) * 0.72
+		_transmut_btn.global_position = c - _transmut_btn.size / 2.0
+	else:
+		_transmut_btn.position = Vector2((_scene.get_viewport_rect().size.x - TRANSMUT_BTN_D) / 2.0, 132.0)
 
 ## Diálogo "¿Seguro que querés revertir?" (botón flotante o tecla [T]).
 func open_transmut_dialog() -> void:

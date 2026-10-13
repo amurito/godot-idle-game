@@ -159,7 +159,7 @@ Nombres: se renombran los dos del brainstorm que chocaban con rutas existentes (
 | `ng_caos_no_cd` — igual, sin [W] | **17.8 min** |
 | `ng_caos_sinfonia` — cobra sólo con ε ≥ 1.5 (logra el MYTHIC) | 21.0 min |
 
-### 5.3 Simbiosis → **CORO SIMBIÓTICO** ✅ (R4, 2026-10-12) *(ex "Singularidad Distribuida")*
+### 5.3 Simbiosis → **CORO SIMBIÓTICO** ✅ (R4, 2026-10-12) — ⚠️ se rehace como ritmo: ver §10.2 *(ex "Singularidad Distribuida")*
 *La cooperación deja de ser un pacto y se vuelve un ritmo.* Código: `CoroSimbioticoLogic.gd`.
 
 | | Implementado | Constante |
@@ -186,7 +186,7 @@ jugador promedio necesita [W] (o clickear más rápido) para sostenerlo.
 | `ng_coro_no_w` — igual, sin [W] | **22.1 min** |
 | `ng_coro_fortissimo` — 11 clicks/s (logra el MYTHIC) | 12.2 min |
 
-### 5.4 Red Micelial → **MICELIO OMNISCIENTE**
+### 5.4 Red Micelial → **MICELIO OMNISCIENTE** — ⚠️ reemplazado por §10.3 (asignar)
 *La red deja de crecer hacia afuera y empieza a verlo todo desde adentro.*
 - Pierde: pasivo ×2.5 y click ×0.5 (y la rama Colonización/Simbiosis de esa run).
 - Digiere: micelio al 100 % + hifas ×1.5.
@@ -195,7 +195,7 @@ jugador promedio necesita [W] (o clickear más rápido) para sostenerlo.
 - Sello (ejes: expansión · gasto · volumen): hifas ≥ H · micelio gastado total ≥ M · $X.
 - Legado (propuesta): *Red Latente* — arranque de run con micelio parcial.
 
-### 5.5 Parasitismo → **HUÉSPED SOBERANO** *(ex "Simbiosis Depredadora")*
+### 5.5 Parasitismo → **HUÉSPED SOBERANO** *(ex "Simbiosis Depredadora")* — ⚠️ reemplazado por §10.4 (domesticar)
 *El huésped deja de ser víctima: domestica a su parásito.*
 - Pierde: crecimiento de biomasa ×2, corrosión y drenaje (y sus finales de colapso).
 - Digiere: biomasa robada → dinero.
@@ -233,10 +233,105 @@ FANTASMA (combos de dos llaves) queda para después de la grilla (requiere ≥ 3
 | R2 ✅ | **Fusión** por botón (Hiper a los 83 s → revierte a los 124 s → sella ~17.5 min después) y **Ayuno** por espejo de conducta. Codex ES/EN reescrito (intro de involución, Fusión, Ayuno — corrige además 3 números viejos de Ayuno). Escenarios `ng_hiper_key_no_revert` (camino "no revierto") y bot que transmuta por el diálogo. |
 | R3 ✅ | **Caos Orquestado** (§5.2): calibrado con 3 perfiles de bot, trayectoria golden `ng_caos_player` (cubre además Homeostasis, que no tenía ninguna). |
 | R4 ✅ | **Coro Simbiótico** (§5.3) + paleta y animación de transmutación (§9). |
-| R5–R6 | Micelio Omnisciente, Huésped Soberano. Cada una con propuesta de números → aprobación → implementación → calibración con bot, golden, logros, Codex ES/EN. |
+| R5–R6 | **Rediseño por verbos (§10)**: R5 Micelio (asignar), R4b Coro (ritmo), R3b Caos (Gran Colapso), R6 Huésped (domesticar). Cada una con propuesta de números → aprobación → implementación → calibración con bot, golden, logros, Codex ES/EN. |
 | R7 | Retomar la auditoría de gameplay (A2/A3) con las rutas ya en su forma final. |
 
 ---
+
+## 10. Rediseño: un verbo por transmutación (propuesta 2026-10-12, para revisión)
+
+**Problema (autor):** las cuatro transmutaciones implementadas o propuestas comparten el mismo molde
+— [Q] ráfaga activable, [W] sumidero de $, sello de 3 casillas, legado "+% de ingreso" — y se sienten
+iguales. **Decisión:** cada una tiene un **verbo propio**; el sello y el legado también cambian de forma.
+Coro se rehace (hoy es "clickear rápido", casi lo mismo que Hiper/Fusión); Caos sólo cambia el sello.
+
+| Transmutación | Verbo | Teclas | Forma del sello | Forma del legado |
+|---|---|---|---|---|
+| Fusión Catabólica ✅ | **Ráfaga** | Q · W | 3 casillas (queda: es el molde original) | ingreso |
+| Caos Orquestado ✅ | **Apuesta** | Q · W | **un solo Gran Colapso** | botón (Batuta) |
+| Coro Simbiótico | **Ritmo** (a tiempo, no rápido) | ninguna: el núcleo | **partitura** en 3 movimientos | click |
+| Micelio Omnisciente | **Asignar** | click derecho en upgrades | **red completa** | un nodo elegido |
+| Huésped Soberano | **Domesticar** | Q (alimentar) | **confianza** nivel 5 | corrosión más lenta |
+
+Todos los números de abajo son **propuesta para calibrar con el simulador** (mismo proceso que R3/R4:
+nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde la reversión).
+
+### 10.1 Caos Orquestado — sello de **Gran Colapso** (único cambio)
+- Hoy: 360 s con ε ≥ 0.60 · 10 Colapsos con carga · $30M (tres casillas).
+- Propuesta: **un Colapso Dirigido cobrado con ε ≥ 1.8 que genere ≥ $X durante su ráfaga** sella la
+  ruta al terminar la ráfaga. Es la apuesta llevada al extremo: esperar la carga larga (ε llega a 1.8
+  sólo con la carga de caos), y que la economía ya sea grande para que la ráfaga alcance.
+- Si la ráfaga no llega a $X, no pasa nada: volvés a cargar (cooldown + carga = el costo del intento).
+- $X a calibrar para ~15 min (punto de partida: $15M en 20 s). [W] se queda (acelera la carga = más
+  intentos). MYTHIC *Sinfonía del Caos* sin cambios (todos los Colapsos con ε ≥ 1.5).
+- Panel: muestra "Gran Colapso: ε cobrado X / 1.8 · ráfaga $Y / $X" del último intento.
+
+### 10.2 Coro Simbiótico — **ritmo de verdad**
+*La cooperación deja de ser un pacto y se vuelve un ritmo.* Reemplaza la mecánica de R4.
+- **Metrónomo:** el núcleo late a un tempo visible (aro que se cierra hacia el golpe; reutiliza el
+  latido a contrafase de `ReactorFX`). Clickear **en el golpe** (±150 ms, tolerante a la latencia web)
+  suma 1 al **compás** (combo). Clickear fuera de tiempo **corta el compás a la mitad**; los clicks
+  siguen dando $ normal, pero spamear rompe el combo → el verbo es la precisión, no la velocidad.
+- **Economía:** ingreso × (1 + 0.04·compás), tope compás 64 (×3.56). Pierde click ×2.5 y pasivo ×0.5
+  de Simbiosis (como hoy). A 90–130 BPM clickeás 1.5–2.2 veces por segundo: la run es activa pero calma.
+- **Partitura (sello):** tres movimientos en orden; cada uno fija el tempo:
+  | Movimiento | Tempo | Objetivo |
+  |---|---|---|
+  | I. *Andante* | 90 BPM | compás 16 |
+  | II. *Moderato* | 110 BPM | compás 32 |
+  | III. *Allegro* | 130 BPM | compás 64 |
+  Completar el III habilita el botón de sellar. Romper el compás no te baja de movimiento.
+- **Digestión:** arrancás con compás 16 (el Movimiento I a medio camino… o completo si lo sostenés).
+- Salen Sobrecarga [Q] y Sostener [W]. Sin teclas: todo pasa en el núcleo.
+- **Legado — Compás Interno:** en todas las runs el núcleo marca un pulso suave; cada click en el
+  golpe suma +1 % de click, tope +15 %, y se corta al fallar.
+- **MYTHIC — Fortissimo:** completar el Allegro sin cortar nunca el compás (una toma limpia de 64).
+- **Bot:** perfil que clickea en el golpe con precisión p (RNG con semilla): p = 0.9 (jugador normal)
+  y p = 0.99 (MYTHIC). Sirve también de test de la ventana ±150 ms.
+- **Abierto:** ¿sonido de metrónomo (tick suave) además del visual? Recomiendo sí, con volumen propio.
+
+### 10.3 Micelio Omnisciente — **asignar**
+*La red deja de crecer hacia afuera y empieza a verlo todo desde adentro.* Reemplaza Colonizar/Anastomosis.
+- **Presupuesto de micelio:** crece 0.05·hifas %/s hasta el **tope = 60 + 4·hifas** (≈100 con 10 hifas,
+  ≈180 con 30). La digestión de Red Micelial deja el micelio en max(actual, 60).
+- **Nodos = los 9 upgrades.** Click derecho en un upgrade le conecta 5 de micelio (máx. 20 por nodo);
+  Shift + click derecho le saca 5 (vuelve al presupuesto). Cada nodo muestra una barrita violeta.
+- **Efecto por nodo:** su aporte × (1 + conexión/20) (hasta ×2) y su costo −1.5 % por punto (hasta −30 %).
+  **Un nodo en 20 se autocompra** cuando alcanza la plata: *la red lo ve*. La run se vuelve de
+  planificación: qué conectás primero y qué dejás que la red compre sola.
+- **Deriva:** el micelio sin asignar fluye solo (1 punto cada 10 s) al nodo más comprado: jugar AFK
+  funciona, pero peor que planificar.
+- **Sello — red completa:** los 9 nodos en 20 (= 180 de micelio → necesitás ~30 hifas, o sea una
+  economía pasiva grande) sostenidos 60 s.
+- Pierde: pasivo ×2.5 / click ×0.5 de Red Micelial, la bifurcación y Esporulación. El botón [T]
+  desaparece si ya arrancó el primordio (punto sin retorno).
+- **Legado — Nodo Latente:** el upgrade más conectado al sellar queda con ×1.25 en todas las runs
+  (lo elegís vos con tu forma de jugar).
+- **MYTHIC — Ojo de la Red:** sellar sin desconectar nunca un nodo (cero reasignaciones).
+- Recordatorio medido: biomasa, micelio e hifas **no generan $** por sí solos (las hifas se recalculan
+  cada tick desde el pasivo), por eso acá el micelio pasa a ser el recurso que mueve la economía.
+
+### 10.4 Huésped Soberano — **domesticar**
+*El huésped deja de ser víctima: domestica a su parásito.*
+- **El parásito tiene hambre** (0–100), sube +2/s. **[Q] Alimentar**: −30 de hambre, cuesta 10 % del
+  dinero actual o 2 de biomasa si tenés (la biomasa es comida barata).
+- **Banda de domesticación 30–70:** la **confianza** sube +1/s.
+  - Hambre > 70: muerde → vuelve la corrosión de Parasitismo mientras siga hambriento.
+  - Hambre < 30: saciado y perezoso → no trae regalos y la confianza baja −0.5/s.
+- **Regalos por nivel de confianza** (niveles a los 60 / 150 / 270 / 420 / 600 de confianza):
+  cada 20 s deja una gota de $ = (nivel × 5) s de ingreso, y el trueque sube ×(1 + 0.2·nivel).
+- **Sello: confianza nivel 5** (≈ 10 min dentro de la banda). Ritmo de cuidado: alimentar cada ~15–20 s.
+- **Digestión:** la biomasa robada durante Parasitismo pasa a la **despensa** (comida gratis).
+- Pierde: crecimiento de biomasa ×2, drenaje y los finales de colapso de Parasitismo.
+- **Legado — Pacto Soberano:** la corrosión de Parasitismo es 50 % más lenta en todas las runs.
+- **MYTHIC — Simbionte Perfecto:** desde el nivel 1, no salir nunca de la banda hasta sellar.
+- ⚠️ Parasitismo vive poco: medir su vida real con el bot antes de fijar la agenda del botón [T].
+
+### 10.5 Orden de implementación propuesto
+1. **R5 Micelio (asignar)** — lo más nuevo en UI (barras en upgrades + click derecho).
+2. **R4b Coro (ritmo)** — rehace R4: metrónomo visual + sonido, bot con precisión.
+3. **R3b Caos (Gran Colapso)** — cambio chico de sello.
+4. **R6 Huésped (domesticar)**.
 
 ## 9. Identidad visual de las transmutaciones (2026-10-12)
 

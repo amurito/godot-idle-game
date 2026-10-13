@@ -1231,7 +1231,14 @@ func get_reactor_color() -> Color:
 				return Color(0.42, 0.05, 0.18)  # rojo-rosado profundo: el caos dirigido, en reposo
 			"CORO SIMBIÓTICO":
 				return Color(0.45, 0.14, 0.11)  # coral profundo: el ritmo, en silencio
-		return Color(0.3, 0.3, 0.32)  # fallback genérico para cualquier ruta no listada
+		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
+		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
+		return _live_reactor_color().darkened(0.45)
+	return _live_reactor_color()
+
+
+## Color del núcleo mientras la run está abierta (también base del color de cierre por defecto).
+func _live_reactor_color() -> Color:
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
