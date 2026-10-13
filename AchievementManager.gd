@@ -555,6 +555,9 @@ func on_run_closed(route: String) -> void:
 	# Sinfonía: TODOS los Colapsos cobrados a ε ≥ CAOS_MYTHIC_EPS (paciencia: esperar la carga larga).
 	if route == "CAOS ORQUESTADO" and EvoManager.caos_collapse_count > 0 			and EvoManager.caos_min_collapse_eps >= Balance.CAOS_MYTHIC_EPS:
 		unlock("sinfonia_del_caos")
+	# Ojo de la Red: sin desconectar nunca un nodo ni comprar a mano tras revertir (la red compra por vos).
+	if route == "MICELIO OMNISCIENTE" and EvoManager.micelio_disconnects == 0 and EvoManager.micelio_manual_buys == 0:
+		unlock("ojo_de_la_red")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
 	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:

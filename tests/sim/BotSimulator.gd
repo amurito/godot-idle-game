@@ -214,6 +214,16 @@ func _transmutation_metrics() -> Dictionary:
 			"w_level": EvoManager.get("coro_w_level"),
 			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("coro_money_mark") if EvoManager.get("coro_money_mark") != null else 0.0),
 		},
+		"micelio": {
+			"active": EvoManager.get("mutation_micelio_omnisciente"),
+			"pool": EvoManager.get("micelio_pool"),
+			"nodes": EvoManager.get("micelio_nodes"),
+			"full_time": EvoManager.get("micelio_full_time"),
+			"peak_network": EvoManager.get("micelio_peak_network"),
+			"disconnects": EvoManager.get("micelio_disconnects"),
+			"first_full": EvoManager.get("micelio_first_full"),
+			"manual_buys": EvoManager.get("micelio_manual_buys"),
+		},
 		"caos": {
 			"active": EvoManager.get("mutation_caos_orquestado"),
 			"red_time": EvoManager.get("caos_red_time"),

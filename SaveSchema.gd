@@ -141,6 +141,16 @@ static func _define() -> Array:
 			_f("coro_rhythm_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("coro_peak_stacks", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("coro_fortissimo_streak", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			# Micelio Omnisciente (transmutación de Red Micelial)
+			_f("mutation_micelio_omnisciente", EvoManager, {"default": false}),
+			_f("micelio_pool", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_nodes", EvoManager, {"default": {}}),
+			_f("micelio_drift_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_full_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_peak_network", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_disconnects", EvoManager, {"default": 0, "load_int": true}),
+			_f("micelio_first_full", EvoManager, {"default": ""}),
+			_f("micelio_manual_buys", EvoManager, {"default": 0, "load_int": true}),
 			_f("fusion_cd_level", EvoManager, {"default": 0, "load_int": true}),
 			# Ayuno Primordial
 			_f("mutation_ayuno_primordial", EvoManager, {"default": false}),

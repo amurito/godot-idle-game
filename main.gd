@@ -807,6 +807,13 @@ func _on_btn_colonization_pressed() -> void:
 		$DimmerBackground.visible = false
 	update_ui()
 
+## Cierra el panel de bifurcación (Micelio Omnisciente deshace la rama de Red Micelial).
+func hide_evo_choice_panel() -> void:
+	if is_instance_valid(evo_choice_panel):
+		evo_choice_panel.visible = false
+	if has_node("DimmerBackground"):
+		$DimmerBackground.visible = false
+
 func _trigger_allostasis() -> void:
 	EvoManager.trigger_allostasis()  # regla de juego: EvoManager
 	update_ui()

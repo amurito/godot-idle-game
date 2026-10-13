@@ -525,6 +525,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "CORO SIMBIÓTICO"},
 		"effect": {"type": "eco_del_coro_active", "value": 1.0},
 	},
+	# TRANSMUTACIÓN de Red Micelial (A → A+). Llave sin toggle: con Red Micelial activa aparece [T].
+	"transmut_micelio": {
+		"name": "Transmutación: Micelio Omnisciente",
+		"flavor": "La red deja de crecer hacia afuera y empieza a verlo todo desde adentro.",
+		"cat": "transmutaciones", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed_any", "routes": ["ESPORULACIÓN", "ESPORULACION", "PANSPERMIA NEGRA"]},
+		"effect": {"type": "transmut_micelio_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Micelio Omnisciente: el primer nodo que llenaste queda conectado.
+	"legado_nodo_latente": {
+		"name": "Legado: Nodo Latente",
+		"flavor": "La red recuerda el primer lugar que vio entero: ese upgrade rinde más en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "MICELIO OMNISCIENTE"},
+		"unlock": {"type": "route_closed", "route": "MICELIO OMNISCIENTE"},
+		"effect": {"type": "nodo_latente_active", "value": 1.0},
+	},
 	# SOMBRA de Hiperasimilación: abandona el consumo por completo. LLAVE permanente, sin toggle:
 	# se entra por DISPARADOR ESPEJO — dejar de clickear con pasivo propio y ε bajo
 	# (GenomeEvaluator.update_ayuno_espejo). No compite con Fusión: una se toma teniendo Hiper.

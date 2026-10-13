@@ -132,6 +132,9 @@ func _compute_auto_income_effective() -> float:
 	if EvoManager.mutation_allostasis:
 		effective *= 5.0
 
+	# MICELIO OMNISCIENTE: Contabilidad conectada amplifica su +5 %/nivel (1.0 fuera de la ruta).
+	effective *= MicelioOmniscienteLogic.accounting_factor()
+
 	return effective
 
 func get_trueque_raw() -> float:
@@ -156,6 +159,8 @@ func _compute_trueque_income_effective() -> float:
 	var trueque_bonus: float = LegacyManager.get_effect_value("trueque_efficiency_add")
 	if trueque_bonus > 0.0:
 		base *= (1.0 + trueque_bonus)
+
+	base *= MicelioOmniscienteLogic.accounting_factor()
 
 	return base
 

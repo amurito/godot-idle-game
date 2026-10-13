@@ -199,11 +199,22 @@ func cost(id: String) -> float:
 		var nut_mult :float= clamp(floor(nut / 50.0) * 0.15, 0.0, 0.45)
 		base_cost *= (1.0 - nut_mult)
 
+	# MICELIO OMNISCIENTE: el nodo conectado se abarata (1.0 fuera de la ruta).
+	base_cost *= MicelioOmniscienteLogic.cost_factor(id)
+
 	return base_cost
 
 ## Valor actual (click_value, income_per_second, etc.)
+## MICELIO OMNISCIENTE / legado Nodo Latente: lo que aportan los niveles (sobre el valor base) se
+## multiplica por el factor del nodo; fuera de la ruta el factor es 1.0 y el valor no cambia.
 func value(id: String) -> float:
-	return states.get(id, {}).get("current_value", 0.0)
+	var v: float = states.get(id, {}).get("current_value", 0.0)
+	var k: float = MicelioOmniscienteLogic.node_factor(id)
+	if k != 1.0:
+		var def := get_def(id)
+		if def != null:
+			v = def.base_value + (v - def.base_value) * k
+	return v
 
 ## Nivel actual
 func level(id: String) -> int:
@@ -271,6 +282,7 @@ func purchase_upgrade(id: String) -> void:
 			EconomyManager.money -= c
 			LogManager.add("Comprado: " + get_def(id).label)
 			apply_bought_effects(id)
+			MicelioOmniscienteLogic.on_purchase()
 			upgrade_bought.emit(id)
 
 func apply_bought_effects(id: String) -> void:

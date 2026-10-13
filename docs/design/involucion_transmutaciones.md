@@ -290,7 +290,28 @@ nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde 
   y p = 0.99 (MYTHIC). Sirve también de test de la ventana ±150 ms.
 - **Abierto:** ¿sonido de metrónomo (tick suave) además del visual? Recomiendo sí, con volumen propio.
 
-### 10.3 Micelio Omnisciente — **asignar**
+### 10.3 Micelio Omnisciente — **asignar** ✅ (R5, 2026-10-12) · código `MicelioOmniscienteLogic.gd`
+
+**Implementado como abajo, con dos cambios por el simulador:**
+1. **MYTHIC *Ojo de la Red*** = sin desconectar nunca **y sin comprar un upgrade a mano** tras revertir
+   (la red compra por vos). "Sin desconectar" solo lo sacaba también el jugador AFK.
+2. **Legado *Nodo Latente*** = el **primer** nodo que llenaste (al sellar los 9 están llenos: "el más
+   conectado" no distinguía).
+
+| Perfil (`tests/sim/Scenarios.gd`) | Sella desde la reversión | MYTHIC |
+|---|---:|---|
+| `ng_micelio_player` — conecta en orden, corrige el plan una vez, compra a mano | **16.1 min** | no |
+| `ng_micelio_planner` — plan fijo sin desconectar, compra a mano | 16.1 min | no |
+| `ng_micelio_ojo` — Trueque primero, sólo autocompra | **13.8 min** | sí |
+| `ng_micelio_afk` — no conecta nada (sólo deriva) | 31.6 min | no |
+
+El orden del plan mueve poco (15.5–17.5 min): lo que limita es el tope de 180 (≈30 hifas = economía
+pasiva). Jugar contra AFK: ×2. Dejar que la red compre es lo más rápido (autocompra con −30 % y sólo en
+nodos llenos, contra un comprador "lo más barato" que dispersa la plata).
+⚠️ Hallazgo para la auditoría: el perfil viejo `fresh_red_micelial` **nunca llega a Red Micelial**
+(no compra Contabilidad, pasivo ~75 $/s a los 30 min); los perfiles de Micelio usan clicks 4/s los
+primeros 7 min y después sólo pasivo (`buy_ids_from`).
+
 *La red deja de crecer hacia afuera y empieza a verlo todo desde adentro.* Reemplaza Colonizar/Anastomosis.
 - **Presupuesto de micelio:** crece 0.05·hifas %/s hasta el **tope = 60 + 4·hifas** (≈100 con 10 hifas,
   ≈180 con 30). La digestión de Red Micelial deja el micelio en max(actual, 60).
@@ -328,7 +349,7 @@ nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde 
 - ⚠️ Parasitismo vive poco: medir su vida real con el bot antes de fijar la agenda del botón [T].
 
 ### 10.5 Orden de implementación propuesto
-1. **R5 Micelio (asignar)** — lo más nuevo en UI (barras en upgrades + click derecho).
+1. ✅ **R5 Micelio (asignar)** — barras en upgrades + click derecho.
 2. **R4b Coro (ritmo)** — rehace R4: metrónomo visual + sonido, bot con precisión.
 3. **R3b Caos (Gran Colapso)** — cambio chico de sello.
 4. **R6 Huésped (domesticar)**.

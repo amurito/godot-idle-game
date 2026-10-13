@@ -57,7 +57,8 @@ var _caos_seal_btn: Button = null        # Sello CAOS ORQUESTADO
 var _batuta_btn: Button = null
 var _coro_overload_btn: Button = null    # [Q] Sobrecarga (Coro Simbiótico)
 var _coro_w_btn: Button = null           # [W] Sostener el coro
-var _coro_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
+var _coro_seal_btn: Button = null
+var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
 var _transmut_dialog: ConfirmationDialog = null
@@ -163,7 +164,7 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_overload_btn, _coro_w_btn, _coro_seal_btn]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_overload_btn, _coro_w_btn, _coro_seal_btn, _micelio_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
@@ -173,6 +174,7 @@ func reset_ng_plus_buttons() -> void:
 	_coro_overload_btn = null
 	_coro_w_btn = null
 	_coro_seal_btn = null
+	_micelio_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -207,7 +209,25 @@ func update_ng_plus_buttons() -> void:
 	_update_transmut_button()
 	_update_caos_buttons()
 	_update_coro_buttons()
+	_update_micelio_buttons()
 	_update_batuta_button()
+
+# ── MICELIO OMNISCIENTE: sello (el resto se juega con click derecho en los upgrades) ──
+func _update_micelio_buttons() -> void:
+	if MicelioOmniscienteLogic.seal_ready():
+		if not is_instance_valid(_micelio_seal_btn):
+			_micelio_seal_btn = _make_rp_button(Color(0.78, 0.55, 1.0), 70, _on_micelio_seal_pressed, 0)
+		_micelio_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_MICELIO_SEAL") % int(Balance.PL_REWARDS.get("MICELIO OMNISCIENTE", 9)))
+		_micelio_seal_btn.visible = true
+	elif is_instance_valid(_micelio_seal_btn):
+		_micelio_seal_btn.visible = false
+
+func _on_micelio_seal_pressed() -> void:
+	if RunManager.run_closed or not MicelioOmniscienteLogic.seal_ready():
+		return
+	if is_instance_valid(_micelio_seal_btn):
+		_micelio_seal_btn.visible = false
+	RunManager.close_run("MICELIO OMNISCIENTE", TranslationServer.translate("CLOSE_MICELIO"))
 
 # ── CORO SIMBIÓTICO: [Q] Sobrecarga · [W] Sostener · sello ───────────────────
 func _update_coro_buttons() -> void:
@@ -363,6 +383,7 @@ const TRANSMUT_BTN_COLORS := {
 	"fusion": Color(0.97, 0.76, 0.05),
 	"caos": Color(1.0, 0.25, 0.5),
 	"coro": Color(1.0, 0.5, 0.42),
+	"micelio": Color(0.72, 0.45, 1.0),
 }
 var _transmut_secs_lbl: Label = null
 

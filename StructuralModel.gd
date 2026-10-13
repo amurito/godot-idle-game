@@ -123,7 +123,8 @@ func get_persistence_target() -> float:
 
 # ==================== CAPITAL COGNITIVO EFECTIVO (μ) ====================
 func get_cognitive_mu() -> float:
-	var mu: float = 1.0 + log(1.0 + float(UpgradeManager.level("cognitive"))) * COGNITIVE_MULTIPLIER
+	# MicelioOmniscienteLogic.cognitive_level() = nivel × factor del nodo (= nivel fuera de la ruta).
+	var mu: float = 1.0 + log(1.0 + MicelioOmniscienteLogic.cognitive_level()) * COGNITIVE_MULTIPLIER
 	return snapped(mu, 0.01)
 
 # ==================== MODELO ESTRUCTURAL ====================

@@ -588,6 +588,19 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "fortissimo",
 	},
+	"ruta_micelio_omnisciente": {
+		"name": "Red Omnisciente",
+		"desc": "La red dejó de crecer hacia afuera y empezó a verlo todo desde adentro.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "MICELIO OMNISCIENTE"}],
+	},
+	"ojo_de_la_red": {
+		"name": "Ojo de la Red",
+		"desc": "Sellar Micelio Omnisciente sin desconectar nunca un nodo ni comprar un upgrade a mano: la red compra por vos.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "ojo_de_la_red",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

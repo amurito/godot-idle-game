@@ -1516,6 +1516,34 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "buff_owned", "id": "transmut_coro"},
 		"see_also": ["transmut_intro", "simbiosis", "transmut_caos"],
 	},
+	"transmut_micelio": {
+		"cat": "transmutaciones",
+		"name_es": "Micelio Omnisciente", "name_en": "Omniscient Mycelium",
+		"body_es": (
+			"Transmutación (A → A+) de [b]Red Micelial[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Esporulación). Con Red Micelial activa aparece el botón [b][T] Revertir[/b] (desaparece si ya arrancó el primordio). Al revertir, la red se [b]digiere[/b] en micelio libre (al menos 60) y se deshace la rama elegida.\n\n"
+			+ "Renunciás al pasivo ×2.5, al click ×0.5, a la bifurcación y al final Esporulación. A cambio, [b]la red deja de crecer hacia afuera y empieza a verlo todo desde adentro[/b]:\n\n"
+			+ "• [b]Micelio libre[/b]: crece con las hifas (0.05 por hifa por segundo) hasta un tope de 60 + 4 por hifa (libre + conectado).\n"
+			+ "• [b]Nodos[/b]: los 9 upgrades. [b]Click derecho[/b] conecta 5 de micelio (máx. 20 por nodo); [b]Shift + click derecho[/b] lo desconecta.\n"
+			+ "• Cada nodo conectado: lo que aportan sus niveles × (1 + conexión/20) — hasta ×2 — y su costo −1.5% por punto (−30% lleno).\n"
+			+ "• [b]Un nodo lleno se autocompra[/b] cuando alcanza la plata: la red lo ve.\n"
+			+ "• [b]Deriva[/b]: el micelio libre fluye solo, 1 punto cada 10 s, al upgrade más comprado.\n\n"
+			+ "[b]Sello[/b]: los 9 nodos llenos (180 de micelio: hacen falta ~30 hifas) sostenidos 60 s → [b]MICELIO OMNISCIENTE[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Nodo Latente[/b] — el primer nodo que llenaste queda conectado en todas las runs (lo que aportan sus niveles ×1.25)."
+		),
+		"body_en": (
+			"Transmutation (A → A+) of [b]Mycelial Network[/b]. The key is bought in the Genetic Bank (15 LP, after closing Sporulation). With the Mycelial Network active the [b][T] Revert[/b] button appears (it disappears once the primordium has started). On reverting, the network is [b]digested[/b] into free mycelium (at least 60) and the chosen branch is undone.\n\n"
+			+ "You give up the ×2.5 passive, the ×0.5 click, the branch choice and the Sporulation ending. In exchange, [b]the network stops growing outward and starts seeing everything from within[/b]:\n\n"
+			+ "• [b]Free mycelium[/b]: grows with hyphae (0.05 per hypha per second) up to a cap of 60 + 4 per hypha (free + connected).\n"
+			+ "• [b]Nodes[/b]: the 9 upgrades. [b]Right click[/b] connects 5 mycelium (max 20 per node); [b]Shift + right click[/b] disconnects it.\n"
+			+ "• Each connected node: what its levels contribute × (1 + connection/20) — up to ×2 — and its cost −1.5% per point (−30% when full).\n"
+			+ "• [b]A full node buys itself[/b] once you can afford it: the network sees it.\n"
+			+ "• [b]Drift[/b]: free mycelium flows on its own, 1 point every 10 s, to the most-bought upgrade.\n\n"
+			+ "[b]Seal[/b]: all 9 nodes full (180 mycelium: you need ~30 hyphae) sustained for 60 s → [b]OMNISCIENT MYCELIUM[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Latent Node[/b] — the first node you filled stays connected in every run (what its levels contribute ×1.25)."
+		),
+		"unlock": {"type": "buff_owned", "id": "transmut_micelio"},
+		"see_also": ["transmut_intro", "transmut_coro", "transmut_caos"],
+	},
 	"ayuno_primordial": {
 		"cat": "transmutaciones",
 		"name_es": "Ayuno Primordial", "name_en": "Primal Fast",

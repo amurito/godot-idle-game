@@ -207,6 +207,17 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_CORO_REWARD"))
 			LogManager.add(tr("LOG_CORO_REWARD"))
 
+	# MICELIO OMNISCIENTE: legado Nodo Latente (el primer nodo que llenaste queda conectado).
+	if route == "MICELIO OMNISCIENTE":
+		var node_id: String = EvoManager.micelio_first_full
+		if node_id == "":
+			node_id = "auto"
+		LegacyManager.nodo_latente_id = node_id
+		if not LegacyManager.get_buff_value("legado_nodo_latente"):
+			LegacyManager.grant_buff("legado_nodo_latente")
+			UIManager.show_toast(tr("TOAST_MICELIO_REWARD"))
+		LogManager.add(tr("LOG_MICELIO_REWARD") % tr("UPG_" + node_id.to_upper()))
+
 	# AYUNO PRIMORDIAL: recompensa permanente al sellar → pasivo ×2→×1 en los primeros 90 s de run.
 	if route == "AYUNO PRIMORDIAL":
 		if not LegacyManager.get_buff_value("legado_primicia_del_vacio"):
@@ -505,7 +516,7 @@ func update_homeostasis_mode(delta: float):
 
 	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
 	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
-	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_symbiosis \
+	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_symbiosis \
 		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism
 	if not EvoManager.primordio_active and not en_mutacion_avanzada:
 		disturbance_timer += delta
@@ -816,6 +827,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_met_oscuro:             return "METABOLISMO OSCURO"
 	if EvoManager.mutation_caos_orquestado:        return "CAOS ORQUESTADO"
 	if EvoManager.mutation_coro_simbiotico:        return "CORO SIMBIÓTICO"
+	if EvoManager.mutation_micelio_omnisciente:    return "MICELIO OMNISCIENTE"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -972,6 +984,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "colapsos con carga {v} / 2 = {b} (cap {c})"},
 		"CORO SIMBIÓTICO": {"value": func() -> Variant: return EvoManager.coro_peak_stacks, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "pico de ritmo {v} / 20 = {b} (cap {c})"},
+		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
+			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
 			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
 	}

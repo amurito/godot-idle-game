@@ -10,7 +10,7 @@ class_name GenomeEvaluator
 ## Maneja el caso especial de Red Micelial / Parasitismo activos (Tier 1 congelado).
 ## Returns: true si manejó el caso (caller debe retornar), false en caso contrario.
 static func handle_terminal_mutations() -> bool:
-	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism):
+	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism or EvoManager.mutation_micelio_omnisciente):
 		return false
 
 	if EvoManager.genome.hiperasimilacion != "activo": EvoManager._set_genome_state("hiperasimilacion", "bloqueado")
@@ -21,6 +21,7 @@ static func handle_terminal_mutations() -> bool:
 	# Forzamos estado activo en el genoma para que no se vea como "latente" en el HUD
 	if EvoManager.mutation_red_micelial: EvoManager._set_genome_state("red_micelial", "activo")
 	if EvoManager.mutation_parasitism: EvoManager._set_genome_state("parasitismo", "activo")
+	if EvoManager.mutation_micelio_omnisciente: EvoManager._set_genome_state("red_micelial", "bloqueado")
 
 	# No bloqueamos esporulación: es el final de la rama roja
 	check_automatic_activations()

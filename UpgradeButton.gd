@@ -15,6 +15,8 @@ const HOTKEY_MAP := {
 ## invalida el tema del botón (recalcula tamaño mínimo y redibuja): hacerlo en cada refresco de UI
 ## costaba ~75% de update_ui(). Se re-aplica sólo cuando la clave cambia; el resultado es idéntico.
 var _style_key := ""
+## Micelio conectado la última vez que se dibujó la barra (MICELIO OMNISCIENTE).
+var _micelio_drawn := 0.0
 
 func _ready() -> void:
 	add_to_group("upgrade_buttons")
@@ -53,6 +55,41 @@ func _ready() -> void:
 
 func _on_pressed() -> void:
 	UpgradeManager.purchase_upgrade(upgrade_id)
+
+## MICELIO OMNISCIENTE: click derecho conecta micelio al nodo; Shift + click derecho lo desconecta.
+## (El botón sólo responde al click izquierdo para comprar, así que el derecho queda libre.)
+func _gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT):
+		return
+	if not MicelioOmniscienteLogic.is_active() or not (upgrade_id in MicelioOmniscienteLogic.NODES):
+		return
+	if event.shift_pressed:
+		MicelioOmniscienteLogic.unassign(upgrade_id)
+	else:
+		MicelioOmniscienteLogic.assign(upgrade_id)
+	_refresh_micelio()
+	accept_event()
+
+## Barra violeta abajo del botón: cuánto micelio tiene conectado (lila claro = lleno, se autocompra).
+func _draw() -> void:
+	if _micelio_drawn <= 0.0:
+		return
+	var frac: float = clampf(_micelio_drawn / Balance.MICELIO_NODE_MAX, 0.0, 1.0)
+	var col := Color(0.95, 0.8, 1.0) if frac >= 1.0 else Color(0.62, 0.38, 0.95)
+	draw_rect(Rect2(2.0, size.y - 5.0, (size.x - 4.0) * frac, 3.0), col)
+
+func _refresh_micelio() -> void:
+	var c: float = MicelioOmniscienteLogic.connection(upgrade_id) if EvoManager.mutation_micelio_omnisciente else 0.0
+	if c != _micelio_drawn:
+		_micelio_drawn = c
+		queue_redraw()
+	if MicelioOmniscienteLogic.is_active() and upgrade_id in MicelioOmniscienteLogic.NODES:
+		var tip := tr("UPG_MICELIO_TIP") % [c, Balance.MICELIO_NODE_MAX, MicelioOmniscienteLogic.node_factor(upgrade_id),
+			Balance.MICELIO_NODE_DISCOUNT * c * 100.0]
+		tooltip_text = tip if tooltip_text == "" else tooltip_text + "\n\n" + tip
+	elif LegacyManager.get_buff_value("legado_nodo_latente") and LegacyManager.nodo_latente_id == upgrade_id:
+		var tip2 := tr("UPG_NODO_LATENTE_TIP") % Balance.MICELIO_LATENT_MULT
+		tooltip_text = tip2 if tooltip_text == "" else tooltip_text + "\n\n" + tip2
 
 ## Actualiza el texto y estado del botón basándose en el manager y dinero actual
 func update_appearance(current_money: float) -> void:
@@ -143,6 +180,7 @@ func update_appearance(current_money: float) -> void:
 
 	# Aplicar estilos visuales basados en affordability (Phase 6 — Visual Affordability Indicators)
 	_apply_affordability_style(can_afford)
+	_refresh_micelio()
 
 ## Aplica estilos visuales basados en si el upgrade es asequible
 func _apply_affordability_style(can_afford: bool) -> void:

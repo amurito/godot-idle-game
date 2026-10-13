@@ -64,6 +64,22 @@ static func defs() -> Dictionary:
 			# queden apariciones del botón (RunManager.check_symbiosis_final).
 			"life": func() -> float: return Balance.TRANSMUT_LIFE_SIMBIOSIS,
 		},
+		"micelio": {
+			"key": "transmut_micelio",
+			"base_flag": "mutation_red_micelial",
+			"base_genome": "red_micelial",
+			"target_flag": "mutation_micelio_omnisciente",
+			"activate": func() -> void: MicelioOmniscienteLogic.activate(),
+			"digest": func() -> String: return MicelioOmniscienteLogic.digest_red_micelial(),
+			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_MICELIO") % int(maxf(BiosphereEngine.micelio, Balance.MICELIO_DIGEST_POOL)),
+			"base_name": "MUT_RED_MICELIAL",
+			"target_name": "MUT_MICELIO_OMNISCIENTE",
+			"lose": "TRANSMUT_MICELIO_LOSE",
+			# Red Micelial no cierra sola (Esporulación pide 900 s): ventana completa de 5 min. El
+			# botón desaparece si arrancó el primordio (punto sin retorno del ciclo biológico).
+			"life": func() -> float: return 1.0e9,
+			"blocked": func() -> bool: return MicelioOmniscienteLogic.revert_blocked(),
+		},
 	}
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).
@@ -87,6 +103,8 @@ static func candidate() -> String:
 		if not bool(EvoManager.get(t.base_flag)) or bool(EvoManager.get(t.target_flag)):
 			continue
 		if EvoManager.transmut_reverted.get(t.base_genome, false):
+			continue
+		if t.has("blocked") and t.blocked.call():
 			continue
 		return id
 	return ""

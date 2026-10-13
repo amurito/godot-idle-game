@@ -79,6 +79,7 @@ var omega_remision_done: bool = false
 # Mejor Núcleo Φ logrado al sellar PROTOCOLO OMEGA-CERO (intensidad del buff memoria_sinaptica).
 # Se preserva al trascender (como las demás estadísticas-pico de desbloqueo).
 var omega_cero_kernel_max: float = 0.0
+var nodo_latente_id: String = ""   # legado Nodo Latente (Micelio Omnisciente): upgrade conectado en todas las runs
 
 # Historial de Ciclos Bióticos (gateado por upgrade memoria_de_run)
 # current_cycle_history: runs del loop de trascendencia actual (se vacía al trascender)
@@ -236,6 +237,7 @@ func reload_for_slot() -> void:
 	cosmic_unlocked = {}
 	achievement_data = {}
 	post_tras_route = ""
+	nodo_latente_id = ""
 	reencarnacion_snapshot = {}
 	current_cycle_history = []
 	all_time_history = []
@@ -270,6 +272,7 @@ func get_save_dict() -> Dictionary:
 		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
 		"omega_remision_done": omega_remision_done,
 		"omega_cero_kernel_max": omega_cero_kernel_max,
+		"nodo_latente_id": nodo_latente_id,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -298,6 +301,7 @@ func save_legacy():
 		"homeorhesis_necrosis_done": homeorhesis_necrosis_done,
 		"omega_remision_done": omega_remision_done,
 		"omega_cero_kernel_max": omega_cero_kernel_max,
+		"nodo_latente_id": nodo_latente_id,
 		"reencarnacion_snapshot": reencarnacion_snapshot,
 		"current_cycle_history": current_cycle_history,
 		"all_time_history": all_time_history,
@@ -397,6 +401,7 @@ func load_legacy():
 	homeorhesis_necrosis_done = data.get("homeorhesis_necrosis_done", false)
 	omega_remision_done = data.get("omega_remision_done", false)
 	omega_cero_kernel_max = data.get("omega_cero_kernel_max", 0.0)
+	nodo_latente_id = str(data.get("nodo_latente_id", ""))
 	reencarnacion_snapshot = data.get("reencarnacion_snapshot", {})
 	current_cycle_history = data.get("current_cycle_history", [])
 	all_time_history = data.get("all_time_history", [])

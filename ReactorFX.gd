@@ -40,7 +40,7 @@ static func _elapsed() -> float:
 
 static func transmutation_active() -> bool:
 	return EvoManager.mutation_fusion_catabolica or EvoManager.mutation_caos_orquestado \
-		or EvoManager.mutation_coro_simbiotico
+		or EvoManager.mutation_coro_simbiotico or EvoManager.mutation_micelio_omnisciente
 
 
 ## Multiplicador de escala del núcleo (compresión + latido a contrafase).

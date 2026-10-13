@@ -25,6 +25,7 @@ extends RefCounted
 ##                                 (perfil "busco Hiperasimilación": exige >80% activo)
 ##   uncap_passive_on: mutation    ignora max_passive_pct cuando EvoManager.mutation_<mutation> es true
 ##   buy_ids_on: {mutation: [ids]} reemplaza buy_ids mientras EvoManager.mutation_<mutation> es true
+##   buy_ids_from: [t, [ids]]      reemplaza buy_ids desde los t s de run (p.ej. invertir sólo en pasivo)
 ##   max_buys_per_decision: int
 ##   decision_interval: s          cada cuánto decide compras/botones (default 0.5)
 ##   mutation: "none" | "homeostasis" | "simbiosis" | "red_micelial"
@@ -39,6 +40,11 @@ extends RefCounted
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
 ##   ayuno_burst_at: float (-1 = nunca)  /  ayuno_ascesis / ayuno_seal: bool
+##   micelio_plan: [ids]           Micelio Omnisciente: conecta (click derecho) en este orden, llenando
+##                                 cada nodo antes de pasar al siguiente (salta los bloqueados)
+##   micelio_swap: [from, to, t]   a los t s de Micelio, desconecta `from` entero y lo pasa a `to`
+##                                 (jugador que corrige su plan → no saca el MYTHIC)
+##   micelio_seal: bool
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
 	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
@@ -49,6 +55,9 @@ var cfg: Dictionary
 var actions: Array = []
 
 var _click_acc: float = 0.0
+var _micelio_start: float = -1.0
+var _swapped := false
+var _micelio_plan: Array = []
 var _next_decision_frame: int = 0
 
 
@@ -103,6 +112,9 @@ func _buy(d: RefCounted) -> void:
 		return
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
+	var ids_from: Array = cfg.get("buy_ids_from", [])
+	if ids_from.size() == 2 and RunManager.run_time >= float(ids_from[0]):
+		ids = ids_from[1]
 	var ids_on: Dictionary = cfg.get("buy_ids_on", {})
 	for mut in ids_on:
 		if bool(EvoManager.get("mutation_" + str(mut))):
@@ -221,6 +233,8 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("coro_seal", false) and CoroSimbioticoLogic.seal_ready():
 			UIManager._ng_buttons._on_coro_seal_pressed()
 			_log("seal:coro")
+	if EvoManager.mutation_micelio_omnisciente:
+		_micelio()
 	if EvoManager.mutation_caos_orquestado:
 		var at: float = float(cfg.get("caos_collapse_at", -1.0))
 		if at >= 0.0 and StructuralModel.epsilon_runtime >= at and CaosOrquestadoLogic.can_collapse():
@@ -256,6 +270,33 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("ayuno_seal", false) and EvoManager.ayuno_seal_ready():
 			UIManager._ng_buttons._on_ayuno_seal_pressed()
 			_log("seal:ayuno")
+
+
+func _micelio() -> void:
+	if _micelio_start < 0.0:
+		_micelio_start = RunManager.run_time
+		_micelio_plan = cfg.get("micelio_plan", []).duplicate()
+	var swap: Array = cfg.get("micelio_swap", [])
+	if swap.size() == 3 and not _swapped and RunManager.run_time - _micelio_start >= float(swap[2]):
+		_swapped = true
+		while MicelioOmniscienteLogic.unassign(str(swap[0])):
+			pass
+		_log("rclick:micelio_swap %s→%s" % [swap[0], swap[1]])
+		_micelio_plan.erase(swap[1])
+		_micelio_plan.push_front(swap[1])
+	for id in _micelio_plan:
+		if not UpgradeManager.is_unlocked(id):
+			continue
+		var n := 0
+		while EvoManager.micelio_pool >= Balance.MICELIO_NODE_STEP and MicelioOmniscienteLogic.assign(id):
+			n += 1
+		if n > 0:
+			_log("rclick:micelio %s x%d" % [id, n])
+		if MicelioOmniscienteLogic.connection(id) < Balance.MICELIO_NODE_MAX:
+			break  # llena en orden: no pasa al siguiente hasta completar éste
+	if cfg.get("micelio_seal", false) and MicelioOmniscienteLogic.seal_ready():
+		UIManager._ng_buttons._on_micelio_seal_pressed()
+		_log("seal:micelio")
 
 
 func _after_key(label: String) -> void:

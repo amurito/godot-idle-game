@@ -1378,3 +1378,42 @@ static func build_coro_simbiotico_closed_text() -> String:
 	t += "[i]" + TranslationServer.translate("CORO_CLOSED_LORE") + "[/i]\n\n"
 	t += "[color=#ff8a7a]" + TranslationServer.translate("CORO_CLOSED_REWARD") + "[/color]"
 	return t
+
+
+# ─── MICELIO OMNISCIENTE (transmutación de Red Micelial) ─────────────────────
+
+static func build_micelio_omnisciente_panel_text() -> String:
+	var ok_mark := "[color=green]✓[/color]"
+	var nmax: float = Balance.MICELIO_NODE_MAX
+	var t := "[color=#c08cff]" + TranslationServer.translate("MICELIO_PANEL_TITLE") + "[/color]\n"
+	t += TranslationServer.translate("MICELIO_PANEL_POOL") % [EvoManager.micelio_pool,
+		MicelioOmniscienteLogic.connected_total(), MicelioOmniscienteLogic.cap(),
+		MicelioOmniscienteLogic.growth_rate()] + "\n"
+	t += "\n[color=#c08cff]" + TranslationServer.translate("MICELIO_PANEL_NODES_HDR") + "[/color]\n"
+	for id in MicelioOmniscienteLogic.NODES:
+		if not UpgradeManager.is_unlocked(id):
+			continue
+		var c: float = MicelioOmniscienteLogic.connection(id)
+		var mark := "[color=#f0d0ff]◈[/color]" if c >= nmax else ("[color=#9a6ad8]◈[/color]" if c > 0.0 else "[color=#555555]·[/color]")
+		t += TranslationServer.translate("MICELIO_PANEL_NODE") % [mark, TranslationServer.translate("UPG_" + id.to_upper()),
+			c, nmax, MicelioOmniscienteLogic.node_factor(id),
+			Balance.MICELIO_NODE_DISCOUNT * c * 100.0] + "\n"
+	t += "\n[color=#c08cff]" + TranslationServer.translate("MICELIO_PANEL_SEAL_HDR") + "[/color]\n"
+	var full: int = MicelioOmniscienteLogic.full_nodes()
+	var n_nodes: int = MicelioOmniscienteLogic.NODES.size()
+	t += TranslationServer.translate("MICELIO_PANEL_FULL") % [ok_mark if full >= n_nodes else "[ ]", full, n_nodes] + "\n"
+	var hold_ok: bool = EvoManager.micelio_full_time >= Balance.MICELIO_SEAL_HOLD
+	t += TranslationServer.translate("MICELIO_PANEL_HOLD") % [ok_mark if hold_ok else "[ ]",
+		int(EvoManager.micelio_full_time), int(Balance.MICELIO_SEAL_HOLD)] + "\n"
+	if hold_ok:
+		t += "\n[color=#c08cff]" + TranslationServer.translate("MICELIO_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + TranslationServer.translate("MICELIO_PANEL_TIP") % int(Balance.MICELIO_NODE_STEP) + "[/color]"
+	return t
+
+static func build_micelio_omnisciente_closed_text() -> String:
+	var t := "[color=#c08cff]" + TranslationServer.translate("MICELIO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("MICELIO_CLOSED_LORE") + "[/i]\n\n"
+	var node_id: String = LegacyManager.nodo_latente_id if LegacyManager.nodo_latente_id != "" else "auto"
+	t += "[color=#c08cff]" + TranslationServer.translate("MICELIO_CLOSED_REWARD") % TranslationServer.translate("UPG_" + node_id.to_upper()) + "[/color]"
+	return t

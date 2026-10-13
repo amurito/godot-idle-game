@@ -262,6 +262,21 @@ const CORO_MYTHIC_SECONDS        := 30.0   # …durante 30 s seguidos sin Sobrec
 const CORO_ECHO_BONUS            := 0.005  # legado Eco del Coro: +0.5 % por stack en todas las runs…
 const CORO_ECHO_CAP              := 0.20   # …tope +20 %
 
+# ── TRANSMUTACIÓN · MICELIO OMNISCIENTE (revierte RED MICELIAL) — MicelioOmniscienteLogic ──
+# Verbo: ASIGNAR. "La red deja de crecer hacia afuera y empieza a verlo todo desde adentro."
+# Spec §10.3 (2026-10-12); a calibrar con el simulador (objetivo 15–20 min desde la reversión).
+const MICELIO_DIGEST_POOL        := 60.0   # digestión: micelio libre inicial = max(micelio de la red, esto)
+const MICELIO_GROW_PER_HIFA      := 0.05   # micelio libre /s por hifa
+const MICELIO_CAP_BASE           := 60.0   # tope (libre + conectado) = base + por_hifa · hifas
+const MICELIO_CAP_PER_HIFA       := 4.0    # 180 (red completa) ≈ 30 hifas
+const MICELIO_NODE_STEP          := 5.0    # micelio por click derecho
+const MICELIO_NODE_MAX           := 20.0   # conexión máxima por nodo (lleno = autocompra)
+const MICELIO_NODE_BONUS         := 1.0    # lo que aportan los niveles × (1 + bonus · conexión/máx)
+const MICELIO_NODE_DISCOUNT      := 0.015  # −1.5 % de costo por punto conectado (−30 % lleno)
+const MICELIO_DRIFT_INTERVAL     := 10.0   # s: 1 punto libre fluye solo al nodo más comprado
+const MICELIO_SEAL_HOLD          := 60.0   # s con los 9 nodos llenos para habilitar el sello
+const MICELIO_LATENT_MULT        := 1.25   # legado Nodo Latente: el primer nodo lleno, en todas las runs
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -404,6 +419,7 @@ const PL_REWARDS: Dictionary = {
 	"FUSIÓN CATABÓLICA":         9,
 	"CAOS ORQUESTADO":           9,
 	"CORO SIMBIÓTICO":           9,
+	"MICELIO OMNISCIENTE":       9,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 }
@@ -439,6 +455,7 @@ const NG_CAPS: Dictionary = {
 	"FUSIÓN CATABÓLICA":         8,
 	"CAOS ORQUESTADO":           8,
 	"CORO SIMBIÓTICO":           8,
+	"MICELIO OMNISCIENTE":       8,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 }
