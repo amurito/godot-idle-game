@@ -49,6 +49,21 @@ static func defs() -> Dictionary:
 			# Homeostasis no se cierra sola (el jugador sella su tier): ventana completa de 5 min.
 			"life": func() -> float: return 1.0e9,
 		},
+		"coro": {
+			"key": "transmut_coro",
+			"base_flag": "mutation_symbiosis",
+			"base_genome": "simbiosis",
+			"target_flag": "mutation_coro_simbiotico",
+			"activate": func() -> void: CoroSimbioticoLogic.activate(),
+			"digest": func() -> String: return CoroSimbioticoLogic.digest_simbiosis(),
+			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_STACKS") % int(Balance.CORO_DIGEST_STACKS),
+			"base_name": "MUT_SIMBIOSIS",
+			"target_name": "MUT_CORO_SIMBIOTICO",
+			"lose": "TRANSMUT_CORO_LOSE",
+			# Simbiosis cierra sola cuando ε entra en banda (impredecible): su cierre espera mientras
+			# queden apariciones del botón (RunManager.check_symbiosis_final).
+			"life": func() -> float: return Balance.TRANSMUT_LIFE_SIMBIOSIS,
+		},
 	}
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).
@@ -139,6 +154,7 @@ static func revert(id: String, require_visible: bool = true) -> bool:
 	if id == "" or candidate() != id or (require_visible and not is_visible()):
 		return false
 	var t: Dictionary = defs()[id]
+	ReactorFX.start_transmutation(UIManager.get_reactor_color())  # compresión visual (color de A → A+)
 	var digest_text: String = t.digest.call()
 	EvoManager.transmut_reverted[t.base_genome] = true
 	EvoManager.set(t.base_flag, false)

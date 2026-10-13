@@ -130,6 +130,17 @@ static func _define() -> Array:
 			_f("caos_peak_collapse_eps", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("caos_min_collapse_eps", EvoManager, {"save_sf": 99.0, "default": 99.0, "load_sf": [99.0, 0.0]}),
 			_f("batuta_used", EvoManager, {"default": false}),
+			# Coro Simbiótico (transmutación de Simbiosis) + ritmo (legado Eco del Coro)
+			_f("mutation_coro_simbiotico", EvoManager, {"default": false}),
+			_f("coro_stacks", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_money_mark", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_overload_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_cooldown", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_overload_count", EvoManager, {"default": 0, "load_int": true}),
+			_f("coro_w_level", EvoManager, {"default": 0, "load_int": true}),
+			_f("coro_rhythm_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_peak_stacks", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("coro_fortissimo_streak", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("fusion_cd_level", EvoManager, {"default": 0, "load_int": true}),
 			# Ayuno Primordial
 			_f("mutation_ayuno_primordial", EvoManager, {"default": false}),

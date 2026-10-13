@@ -236,6 +236,32 @@ const CAOS_SEAL_CHARGED          := 10      # Colapsos Dirigidos con ε ≥ CAOS
 const CAOS_SEAL_MONEY            := 30_000_000.0  # $ generados desde la reversión
 const CAOS_MYTHIC_EPS            := 1.5    # logro "Sinfonía del Caos": TODOS los Colapsos con ε ≥ esto
 
+# ── TRANSMUTACIÓN · CORO SIMBIÓTICO (revierte SIMBIOSIS) — CoroSimbioticoLogic ──
+# "La cooperación deja de ser un pacto y se vuelve un ritmo." Valores iniciales aprobados por el
+# autor (2026-10-12); a calibrar con el simulador (objetivo 15–25 min desde la reversión).
+const TRANSMUT_LIFE_SIMBIOSIS    := 160.0  # vida estimada de Simbiosis para la agenda del botón [T]
+                                           # (su cierre automático espera mientras queden apariciones)
+const CORO_DIGEST_STACKS         := 40.0   # digestión: ritmo inicial (decae si no se sostiene)
+const CORO_WINDOW_BASE           := 5.0    # s: constante de decaimiento del ritmo (stacks ≈ cps × ventana)
+const CORO_STACK_BONUS           := 0.02   # +2 % de ingreso por stack (× desafinación 1 − ε/2)
+const CORO_STACK_CAP             := 100.0
+const CORO_OVERLOAD_CPS          := 20.0   # [Q] Sobrecarga: auto-click
+const CORO_OVERLOAD_DURATION     := 10.0
+const CORO_OVERLOAD_COOLDOWN     := 90.0
+const CORO_OVERLOAD_EPS          := 0.20   # la Sobrecarga desafina (ε +0.20)
+const CORO_W_WINDOW_PER_LEVEL    := 1.0    # [W] Sostener el coro: +1 s de ventana por nivel
+const CORO_W_MAX_LEVEL           := 5
+const CORO_W_COST_BASE           := 100_000.0
+const CORO_W_COST_GROWTH         := 1.9
+const CORO_SEAL_STACKS           := 35.0   # sello: tiempo con ≥ esto stacks…
+const CORO_SEAL_RHYTHM_TIME      := 300.0  # …acumulado
+const CORO_SEAL_OVERLOADS        := 6
+const CORO_SEAL_MONEY            := 10_000_000.0
+const CORO_MYTHIC_STACKS         := 50.0   # Fortissimo: ≥ 50 stacks (10 clicks/s)…
+const CORO_MYTHIC_SECONDS        := 30.0   # …durante 30 s seguidos sin Sobrecarga
+const CORO_ECHO_BONUS            := 0.005  # legado Eco del Coro: +0.5 % por stack en todas las runs…
+const CORO_ECHO_CAP              := 0.20   # …tope +20 %
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -377,6 +403,7 @@ const PL_REWARDS: Dictionary = {
 	"ASCESIS_PROFUNDA":          7,
 	"FUSIÓN CATABÓLICA":         9,
 	"CAOS ORQUESTADO":           9,
+	"CORO SIMBIÓTICO":           9,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 }
@@ -411,6 +438,7 @@ const NG_CAPS: Dictionary = {
 	"PANSPERMIA NEGRA":          6,
 	"FUSIÓN CATABÓLICA":         8,
 	"CAOS ORQUESTADO":           8,
+	"CORO SIMBIÓTICO":           8,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 }

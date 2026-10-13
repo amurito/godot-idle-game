@@ -1,7 +1,7 @@
 # Involución: Transmutaciones, Sombras y Redenciones
 
-> **Estado (2026-10-12):** spec aprobada por el autor. **R1 + R2 + R3 implementados** (sistema común,
-> Fusión por botón, Ayuno por espejo de conducta, Caos Orquestado). R4–R6 pendientes.
+> **Estado (2026-10-12):** spec aprobada por el autor. **R1 + R2 + R3 + R4 implementados** (sistema común,
+> Fusión por botón, Ayuno por espejo de conducta, Caos Orquestado, Coro Simbiótico). R5–R6 pendientes.
 > Reemplaza la implementación actual de transmutaciones (toggle en el Banco que *reemplaza* el
 > disparador de Hiperasimilación), que se desvió de la idea original de
 > [`nuevas transmutaciones.md`](nuevas%20transmutaciones.md). Decisiones del autor: ver §8.
@@ -159,15 +159,32 @@ Nombres: se renombran los dos del brainstorm que chocaban con rutas existentes (
 | `ng_caos_no_cd` — igual, sin [W] | **17.8 min** |
 | `ng_caos_sinfonia` — cobra sólo con ε ≥ 1.5 (logra el MYTHIC) | 21.0 min |
 
-### 5.3 Simbiosis → **CORO SIMBIÓTICO** *(ex "Singularidad Distribuida")*
-*La cooperación deja de ser un pacto y se vuelve un ritmo.*
-- Pierde: click ×2.5 y pasivo ×0.5.
-- Digiere: biomasa ×2 (cap).
-- Economía: **ritmo** — cada click da +x % a todos los upgrades por 5 s, acumulable (stacks);
-  dejar de clickear los deja caer.
-- [Q] **Sobrecarga**: auto-click ×50 durante 10 s, pero ε +0.2. [W] sink: más duración de stacks.
-- Sello (ejes: ritmo · riesgo · volumen): pico de stacks ≥ S · N sobrecargas · $X.
-- Legado (propuesta): *Eco del Coro* — los primeros stacks de cada run no decaen.
+### 5.3 Simbiosis → **CORO SIMBIÓTICO** ✅ (R4, 2026-10-12) *(ex "Singularidad Distribuida")*
+*La cooperación deja de ser un pacto y se vuelve un ritmo.* Código: `CoroSimbioticoLogic.gd`.
+
+| | Implementado | Constante |
+|---|---|---|
+| Llave | 15 PL, revela T ≥ 3, se habilita tras cerrar Simbiosis | `transmut_coro` |
+| Botón [T] | 35 / 78 / 120 s; **el cierre automático de Simbiosis espera** mientras queden apariciones | `TRANSMUT_LIFE_SIMBIOSIS` |
+| Pierde | click ×2.5, pasivo ×0.5, final Simbiosis | |
+| Digestión | **40 de ritmo inicial** (decae si no se sostiene) — decisión del autor en lugar de biomasa ×2 | `CORO_DIGEST_STACKS` |
+| Ritmo | cada click +1; decae con constante = ventana (≈ clicks/s × ventana). +2 % de ingreso por punto, tope 100. Se cuenta en todas las runs | `CORO_STACK_*`, `CORO_WINDOW_BASE` |
+| Desafinación | bonus × (1 − ε/2) | |
+| [Q] Sobrecarga | 10 s de auto-click a 20/s, ε +0.20, cooldown 90 s | `CORO_OVERLOAD_*` |
+| [W] Sostener | +1 s de ventana por nivel (máx. 5), desde $100K ×1.9 | `CORO_W_*` |
+| Sello | **ritmo ≥ 35** sostenido 300 s · 6 Sobrecargas · $10M desde la reversión | `CORO_SEAL_*` |
+| PL | 9 + floor(pico de ritmo / 20), tope 8 | |
+| Legado | **Eco del Coro**: en todas las runs, +0.5 % por punto de ritmo, tope +20 % | `CORO_ECHO_*` |
+| Logros | ANCESTRAL *Coro Completo* · MYTHIC *Fortissimo*: ≥ 50 de ritmo 30 s seguidos sin Sobrecarga | |
+
+**Calibración:** con umbral 30 [W] no aportaba (a 6 clicks/s × 5 s el ritmo ya daba 30); con **35**, el
+jugador promedio necesita [W] (o clickear más rápido) para sostenerlo.
+
+| Perfil | Sella desde la reversión |
+|---|---:|
+| `ng_coro_player` — 6 clicks/s, Sobrecarga, [W] | **17.2 min** |
+| `ng_coro_no_w` — igual, sin [W] | **22.1 min** |
+| `ng_coro_fortissimo` — 11 clicks/s (logra el MYTHIC) | 12.2 min |
 
 ### 5.4 Red Micelial → **MICELIO OMNISCIENTE**
 *La red deja de crecer hacia afuera y empieza a verlo todo desde adentro.*
@@ -215,10 +232,33 @@ FANTASMA (combos de dos llaves) queda para después de la grilla (requiere ≥ 3
 | R1 ✅ | Sistema común: `TransmutationLogic.gd` (agenda de apariciones adaptada a la vida de A, digestión, revert), botón flotante parpadeante + diálogo + [T] (`NGPlusButtonManager`), estado en save (`transmut_*`), llaves sin toggle; se quitó la exclusión del Banco. 7 tests unitarios de la agenda. |
 | R2 ✅ | **Fusión** por botón (Hiper a los 83 s → revierte a los 124 s → sella ~17.5 min después) y **Ayuno** por espejo de conducta. Codex ES/EN reescrito (intro de involución, Fusión, Ayuno — corrige además 3 números viejos de Ayuno). Escenarios `ng_hiper_key_no_revert` (camino "no revierto") y bot que transmuta por el diálogo. |
 | R3 ✅ | **Caos Orquestado** (§5.2): calibrado con 3 perfiles de bot, trayectoria golden `ng_caos_player` (cubre además Homeostasis, que no tenía ninguna). |
-| R4–R6 | Coro Simbiótico, Micelio Omnisciente, Huésped Soberano. Cada una con propuesta de números → aprobación → implementación → calibración con bot, golden, logros, Codex ES/EN. |
+| R4 ✅ | **Coro Simbiótico** (§5.3) + paleta y animación de transmutación (§9). |
+| R5–R6 | Micelio Omnisciente, Huésped Soberano. Cada una con propuesta de números → aprobación → implementación → calibración con bot, golden, logros, Codex ES/EN. |
 | R7 | Retomar la auditoría de gameplay (A2/A3) con las rutas ya en su forma final. |
 
 ---
+
+## 9. Identidad visual de las transmutaciones (2026-10-12)
+
+**Paleta — complementario separado** (decisión del autor): cada transmutación toma el lado opuesto
+del círculo cromático de su evolución, corrido lo justo para distinguirse (el complementario exacto
+dejaba tres en rosa-magenta, porque Homeostasis, Simbiosis y Red Micelial son verdes/turquesas).
+
+| Evolución | Transmutación | Activa | Sellada |
+|---|---|---|---|
+| Hiperasimilación (rojo) | Fusión Catabólica | **oro** (excepción: se mantiene) | ámbar oscuro |
+| Homeostasis (turquesa) | Caos Orquestado | **rojo-rosado** (más vivo con más ε) | rojo-rosado profundo |
+| Simbiosis (verde agua) | Coro Simbiótico | **coral** (más vivo con más ritmo) | coral profundo |
+| Red Micelial (verde) | Micelio Omnisciente | violeta (pendiente) | |
+| Parasitismo (naranja) | Huésped Soberano | azul (pendiente) | |
+| — Sombras — | Ayuno Primordial | casi negro | plateado frío |
+
+**Animación (`ReactorFX.gd`, 2D y 3D):**
+- **Compresión al transmutar** (~1.7 s): el núcleo se comprime mientras el color de la evolución pasa a
+  blanco, aguanta un instante y se expande con rebote en el color de la transmutación.
+- **Latido a contrafase** mientras una transmutación A+ está activa: el núcleo se contrae en el golpe
+  (las evoluciones laten hacia afuera).
+- Puramente visual (reloj de pared, no entra en el estado del juego ni en los goldens).
 
 ## 8. Decisiones
 

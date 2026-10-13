@@ -29,6 +29,7 @@ var target_tint := Color(0.15, 0.65, 1.0) # Azul base (EvoManager lo sobreescrib
 var value_label: Label
 var zoom_scale: float = 1.0
 var _remision_peril: float = 0.0
+var _base_scale: float = BASE_CORE_SCALE  # escala suavizada SIN efectos (ReactorFX multiplica aparte)
 
 # =========================
 # API PÚBLICA
@@ -116,11 +117,13 @@ func _process(delta: float) -> void:
 
 	# Suavizado de la escala
 	var pulse_offset := pulse * PULSE_STRENGTH
-	var final_scale: float = lerp(core.scale.x, target_scale + pulse_offset, 0.2)
-	core.scale = Vector2.ONE * final_scale
+	var final_scale: float = lerp(_base_scale, target_scale + pulse_offset, 0.2)
+	_base_scale = final_scale
+	var fx: float = ReactorFX.scale_mult()  # compresión de transmutación / latido a contrafase
+	core.scale = Vector2.ONE * final_scale * fx
 
 	# Inner core: más pequeño, pulsa más fuerte
-	var inner_scale: float = lerp(core_inner.scale.x, final_scale * 0.38 + pulse * 0.18, 0.35)
+	var inner_scale: float = lerp(core_inner.scale.x, final_scale * 0.38 * fx + pulse * 0.18, 0.35)
 	core_inner.scale = Vector2.ONE * inner_scale
 
 	# Rotación y escala del ring (crece con el poder, más pequeño en early)
@@ -140,6 +143,7 @@ func _process(delta: float) -> void:
 	else:
 		_remision_peril = 0.0
 
+	display_tint = ReactorFX.tint(display_tint)  # blanco durante la compresión de transmutación
 	core.modulate = core.modulate.lerp(display_tint, 0.2)
 
 	# Inner core más blanco/brillante — centro caliente

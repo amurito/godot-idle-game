@@ -507,6 +507,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "CAOS ORQUESTADO"},
 		"effect": {"type": "batuta_active", "value": 1.0},
 	},
+	# TRANSMUTACIÓN de Simbiosis (A → A+). Llave sin toggle: con Simbiosis activa aparece [T].
+	"transmut_coro": {
+		"name": "Transmutación: Coro Simbiótico",
+		"flavor": "El pacto se disuelve en ritmo. Ya no cooperan dos: late uno solo.",
+		"cat": "transmutaciones", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
+		"effect": {"type": "transmut_coro_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Coro Simbiótico: el ritmo sigue sonando en todas las runs.
+	"legado_eco_del_coro": {
+		"name": "Legado: Eco del Coro",
+		"flavor": "El coro terminó, pero el ritmo quedó: clickear sostenido rinde un poco más en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "CORO SIMBIÓTICO"},
+		"unlock": {"type": "route_closed", "route": "CORO SIMBIÓTICO"},
+		"effect": {"type": "eco_del_coro_active", "value": 1.0},
+	},
 	# SOMBRA de Hiperasimilación: abandona el consumo por completo. LLAVE permanente, sin toggle:
 	# se entra por DISPARADOR ESPEJO — dejar de clickear con pasivo propio y ε bajo
 	# (GenomeEvaluator.update_ayuno_espejo). No compite con Fusión: una se toma teniendo Hiper.

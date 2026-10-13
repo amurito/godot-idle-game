@@ -575,6 +575,19 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "sinfonia_del_caos",
 	},
+	"ruta_coro_simbiotico": {
+		"name": "Coro Completo",
+		"desc": "La cooperación dejó de ser un pacto y se volvió un ritmo.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "CORO SIMBIÓTICO"}],
+	},
+	"fortissimo": {
+		"name": "Fortissimo",
+		"desc": "En Coro Simbiótico, sostener ≥ 50 de ritmo durante 30 s seguidos sin Sobrecarga.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "fortissimo",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

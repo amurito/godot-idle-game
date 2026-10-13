@@ -54,7 +54,10 @@ var _simbiosis_seal_btn: Button = null
 var _caos_collapse_btn: Button = null    # [Q] Colapso Dirigido (Caos Orquestado)
 var _caos_cd_btn: Button = null          # [W] cooldown del Colapso
 var _caos_seal_btn: Button = null        # Sello CAOS ORQUESTADO
-var _batuta_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
+var _batuta_btn: Button = null
+var _coro_overload_btn: Button = null    # [Q] Sobrecarga (Coro Simbiótico)
+var _coro_w_btn: Button = null           # [W] Sostener el coro
+var _coro_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
 var _transmut_dialog: ConfirmationDialog = null
@@ -160,13 +163,16 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_overload_btn, _coro_w_btn, _coro_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
 	_caos_cd_btn = null
 	_caos_seal_btn = null
 	_batuta_btn = null
+	_coro_overload_btn = null
+	_coro_w_btn = null
+	_coro_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -200,7 +206,65 @@ func update_ng_plus_buttons() -> void:
 	_update_run_buffs_button()
 	_update_transmut_button()
 	_update_caos_buttons()
+	_update_coro_buttons()
 	_update_batuta_button()
+
+# ── CORO SIMBIÓTICO: [Q] Sobrecarga · [W] Sostener · sello ───────────────────
+func _update_coro_buttons() -> void:
+	var active: bool = EvoManager.mutation_coro_simbiotico and not RunManager.run_closed
+	if not active:
+		for b in [_coro_overload_btn, _coro_w_btn, _coro_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	if not is_instance_valid(_coro_overload_btn):
+		_coro_overload_btn = _make_rp_button(Color(1.0, 0.6, 0.5), 50, _on_coro_overload_pressed, 0)
+	if EvoManager.coro_overload_timer > 0.0:
+		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_ACTIVE") % EvoManager.coro_overload_timer
+		_coro_overload_btn.disabled = true
+	elif EvoManager.coro_cooldown > 0.0:
+		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_COOLDOWN") % EvoManager.coro_cooldown
+		_coro_overload_btn.disabled = true
+	else:
+		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_READY") % [int(Balance.CORO_OVERLOAD_CPS), int(Balance.CORO_OVERLOAD_DURATION)]
+		_coro_overload_btn.disabled = false
+	_coro_overload_btn.text = EmojiToRichText.strip(_coro_overload_btn.text)
+	_coro_overload_btn.visible = true
+
+	if not is_instance_valid(_coro_w_btn):
+		_coro_w_btn = _make_rp_button(Color(0.97, 0.82, 0.3), 46, _on_coro_w_pressed, 1)
+	if CoroSimbioticoLogic.w_maxed():
+		_coro_w_btn.text = TranslationServer.translate("BTN_CORO_W_MAXED") % CoroSimbioticoLogic.window()
+		_coro_w_btn.disabled = true
+	else:
+		_coro_w_btn.text = TranslationServer.translate("BTN_CORO_W") % [CoroSimbioticoLogic.window(),
+			CoroSimbioticoLogic.window() + Balance.CORO_W_WINDOW_PER_LEVEL, UITextBuilders.format_compact(CoroSimbioticoLogic.w_cost())]
+		_coro_w_btn.disabled = not CoroSimbioticoLogic.can_buy_w()
+	_coro_w_btn.text = EmojiToRichText.strip(_coro_w_btn.text)
+	_coro_w_btn.visible = true
+
+	if CoroSimbioticoLogic.seal_ready():
+		if not is_instance_valid(_coro_seal_btn):
+			_coro_seal_btn = _make_rp_button(Color(1.0, 0.65, 0.55), 70, _on_coro_seal_pressed, 0)
+		_coro_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_CORO_SEAL") % int(Balance.PL_REWARDS.get("CORO SIMBIÓTICO", 9)))
+		_coro_seal_btn.visible = true
+	elif is_instance_valid(_coro_seal_btn):
+		_coro_seal_btn.visible = false
+
+func _on_coro_overload_pressed() -> void:
+	CoroSimbioticoLogic.overload()
+	_update_coro_buttons()
+
+func _on_coro_w_pressed() -> void:
+	CoroSimbioticoLogic.buy_w()
+	_update_coro_buttons()
+
+func _on_coro_seal_pressed() -> void:
+	if RunManager.run_closed or not CoroSimbioticoLogic.seal_ready():
+		return
+	if is_instance_valid(_coro_seal_btn):
+		_coro_seal_btn.visible = false
+	RunManager.close_run("CORO SIMBIÓTICO", TranslationServer.translate("CLOSE_CORO"))
 
 # ── CAOS ORQUESTADO: [Q] Colapso Dirigido · [W] cooldown · sello ──────────────
 func _make_rp_button(color: Color, min_h: float, cb: Callable, index: int) -> Button:

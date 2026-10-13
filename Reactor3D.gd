@@ -167,13 +167,15 @@ func _process(delta: float) -> void:
 		_remision_peril = 0.0
 
 	current_scale = lerp(current_scale, target_scale * seta_bonus, 0.12)
-	var display_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.06
+	var base_s: float = current_scale + pulse * PULSE_STRENGTH + epsilon * 0.06
+	var display_s: float = base_s * ReactorFX.scale_mult()
+	target_tint = ReactorFX.tint(target_tint)  # compresión de transmutación: color de A → blanco → A+
 
 	core.scale = Vector3(display_s, display_s, display_s)
 
 	# Cámara dinámica: se aleja cuando la esfera crece → nunca se corta
 	# target_z = display_s * 2.5 garantiza que la esfera ocupa ~70% del alto del viewport
-	var target_z: float = max(display_s * 1.65, 4.0)
+	var target_z: float = max(base_s * 1.65, 4.0)  # sin ReactorFX: la cámara no persigue la compresión
 	var new_cam_pos := Vector3(0.0, target_z * 0.15, target_z)
 	cam.position = cam.position.lerp(new_cam_pos, 0.08)
 	cam.look_at(Vector3.ZERO, Vector3.UP)

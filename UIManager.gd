@@ -551,7 +551,14 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if not is_instance_valid(genome_summary_label):
 			return
 	var t: String
-	if EvoManager.mutation_caos_orquestado:
+	if EvoManager.mutation_coro_simbiotico:
+		if RunManager.run_closed and RunManager.final_route == "CORO SIMBIÓTICO":
+			t = UITextBuilders.build_coro_simbiotico_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_coro_simbiotico_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_caos_orquestado:
 		if RunManager.run_closed and RunManager.final_route == "CAOS ORQUESTADO":
 			t = UITextBuilders.build_caos_orquestado_closed_text()
 		elif not RunManager.run_closed:
@@ -1221,7 +1228,9 @@ func get_reactor_color() -> Color:
 			"AYUNO PRIMORDIAL":
 				return Color(0.55, 0.62, 0.70)  # plateado frío: el silencio grabado en el genoma
 			"CAOS ORQUESTADO":
-				return Color(0.42, 0.08, 0.34)  # magenta profundo: el caos dirigido, en reposo
+				return Color(0.42, 0.05, 0.18)  # rojo-rosado profundo: el caos dirigido, en reposo
+			"CORO SIMBIÓTICO":
+				return Color(0.45, 0.14, 0.11)  # coral profundo: el ritmo, en silencio
 		return Color(0.3, 0.3, 0.32)  # fallback genérico para cualquier ruta no listada
 	if EvoManager.mutation_omega_cero:
 		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
@@ -1245,11 +1254,17 @@ func get_reactor_color() -> Color:
 		return Color(0.45, 1.0, 0.05)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		return Color(0.0, 0.9, 1.0)
+	# TRANSMUTACIONES: complemento de su evolución, separado para distinguirse (paleta 2026-10-12).
+	if EvoManager.mutation_coro_simbiotico:
+		if EvoManager.coro_overload_timer > 0.0:
+			return Color(1.25, 0.72, 0.62)  # coral casi blanco: Sobrecarga
+		# coral apagado → coral vivo según el ritmo
+		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(EvoManager.coro_stacks / 50.0, 0.0, 1.0))
 	if EvoManager.mutation_caos_orquestado:
 		if EvoManager.caos_burst_timer > 0.0:
-			return Color(1.15, 0.35, 0.95)  # magenta brillante: el colapso dirigido
-		# violeta → rojo según ε: se ve cuánto caos tenés cargado
-		return Color(0.45, 0.25, 0.85).lerp(Color(1.0, 0.15, 0.25), clampf(StructuralModel.epsilon_runtime, 0.0, 1.0))
+			return Color(1.2, 0.3, 0.6)  # rosa encendido: el colapso dirigido
+		# rojo-rosado apagado → encendido según ε: se ve cuánto caos tenés cargado
+		return Color(0.55, 0.12, 0.28).lerp(Color(1.0, 0.12, 0.38), clampf(StructuralModel.epsilon_runtime, 0.0, 1.0))
 	if EvoManager.mutation_fusion_catabolica:
 		if EvoManager.fusion_burst_timer > 0.0:
 			return Color(1.1, 0.92, 0.12)  # oro brillante durante ráfaga

@@ -1308,7 +1308,7 @@ static func build_fusion_catabolica_panel_text() -> String:
 static func build_caos_orquestado_panel_text() -> String:
 	var tr_ok := "[color=green]✓[/color]"
 	var eps: float = StructuralModel.epsilon_runtime
-	var t := "[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_TITLE") + "[/color]\n"
+	var t := "[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_TITLE") + "[/color]\n"
 	t += TranslationServer.translate("CAOS_PANEL_FUEL") % [eps, CaosOrquestadoLogic.fuel_mult(), Balance.CAOS_FUEL_CAP] + "\n"
 	t += "\n[color=yellow]" + TranslationServer.translate("CAOS_PANEL_COLLAPSE_HDR") + "[/color]\n"
 	if EvoManager.caos_burst_timer > 0.0:
@@ -1317,7 +1317,7 @@ static func build_caos_orquestado_panel_text() -> String:
 		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_CD") % EvoManager.caos_cooldown + "\n"
 	else:
 		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_READY") % (1.0 + Balance.CAOS_COLLAPSE_K * maxf(eps, 0.0)) + "\n"
-	t += "\n[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_SEAL_HDR") + "[/color]\n"
+	t += "\n[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_SEAL_HDR") + "[/color]\n"
 	var red_ok: bool = EvoManager.caos_red_time >= Balance.CAOS_SEAL_RED_TIME
 	t += TranslationServer.translate("CAOS_PANEL_RED") % [tr_ok if red_ok else "[ ]", int(EvoManager.caos_red_time),
 		int(Balance.CAOS_SEAL_RED_TIME), Balance.CAOS_RED_EPS] + "\n"
@@ -1329,13 +1329,52 @@ static func build_caos_orquestado_panel_text() -> String:
 	t += TranslationServer.translate("CAOS_PANEL_MONEY") % [tr_ok if m_ok else "[ ]", format_compact(m),
 		format_compact(Balance.CAOS_SEAL_MONEY)] + "\n"
 	if red_ok and ch_ok and m_ok:
-		t += "\n[color=#c084fc]" + TranslationServer.translate("CAOS_PANEL_SEAL_READY") + "[/color]"
+		t += "\n[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_SEAL_READY") + "[/color]"
 	else:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("CAOS_PANEL_TIP") + "[/color]"
 	return t
 
 static func build_caos_orquestado_closed_text() -> String:
-	var t := "[color=#c084fc]" + TranslationServer.translate("CAOS_CLOSED_TITLE") + "[/color]\n\n"
+	var t := "[color=#ff5c8a]" + TranslationServer.translate("CAOS_CLOSED_TITLE") + "[/color]\n\n"
 	t += "[i]" + TranslationServer.translate("CAOS_CLOSED_LORE") + "[/i]\n\n"
-	t += "[color=#c084fc]" + TranslationServer.translate("CAOS_CLOSED_REWARD") + "[/color]"
+	t += "[color=#ff5c8a]" + TranslationServer.translate("CAOS_CLOSED_REWARD") + "[/color]"
+	return t
+
+
+# ─── CORO SIMBIÓTICO (transmutación de Simbiosis) ────────────────────────────
+
+static func build_coro_simbiotico_panel_text() -> String:
+	var ok_mark := "[color=green]✓[/color]"
+	var st: float = EvoManager.coro_stacks
+	var t := "[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_TITLE") + "[/color]\n"
+	t += TranslationServer.translate("CORO_PANEL_RHYTHM") % [st, CoroSimbioticoLogic.rhythm_mult(),
+		CoroSimbioticoLogic.tuning() * 100.0, CoroSimbioticoLogic.window()] + "\n"
+	t += "\n[color=yellow]" + TranslationServer.translate("CORO_PANEL_OVERLOAD_HDR") + "[/color]\n"
+	if EvoManager.coro_overload_timer > 0.0:
+		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_ACTIVE") % EvoManager.coro_overload_timer + "\n"
+	elif EvoManager.coro_cooldown > 0.0:
+		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_CD") % EvoManager.coro_cooldown + "\n"
+	else:
+		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_READY") + "\n"
+	t += "\n[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_SEAL_HDR") + "[/color]\n"
+	var r_ok: bool = EvoManager.coro_rhythm_time >= Balance.CORO_SEAL_RHYTHM_TIME
+	t += TranslationServer.translate("CORO_PANEL_RHYTHM_TIME") % [ok_mark if r_ok else "[ ]", int(EvoManager.coro_rhythm_time),
+		int(Balance.CORO_SEAL_RHYTHM_TIME), int(Balance.CORO_SEAL_STACKS)] + "\n"
+	var o_ok: bool = EvoManager.coro_overload_count >= Balance.CORO_SEAL_OVERLOADS
+	t += TranslationServer.translate("CORO_PANEL_OVERLOADS") % [ok_mark if o_ok else "[ ]", EvoManager.coro_overload_count,
+		Balance.CORO_SEAL_OVERLOADS] + "\n"
+	var m: float = CoroSimbioticoLogic.money_since_revert()
+	var m_ok: bool = m >= Balance.CORO_SEAL_MONEY
+	t += TranslationServer.translate("CORO_PANEL_MONEY") % [ok_mark if m_ok else "[ ]", format_compact(m),
+		format_compact(Balance.CORO_SEAL_MONEY)] + "\n"
+	if r_ok and o_ok and m_ok:
+		t += "\n[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + TranslationServer.translate("CORO_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_coro_simbiotico_closed_text() -> String:
+	var t := "[color=#ff8a7a]" + TranslationServer.translate("CORO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("CORO_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#ff8a7a]" + TranslationServer.translate("CORO_CLOSED_REWARD") + "[/color]"
 	return t

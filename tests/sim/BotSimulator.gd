@@ -206,6 +206,14 @@ func _transmutation_metrics() -> Dictionary:
 			"longest_streak": EvoManager.ayuno_longest_streak,
 			"ascesis_level": EvoManager.ayuno_ascesis_level,
 		},
+		"coro": {
+			"active": EvoManager.get("mutation_coro_simbiotico"),
+			"rhythm_time": EvoManager.get("coro_rhythm_time"),
+			"overloads": EvoManager.get("coro_overload_count"),
+			"peak_stacks": EvoManager.get("coro_peak_stacks"),
+			"w_level": EvoManager.get("coro_w_level"),
+			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("coro_money_mark") if EvoManager.get("coro_money_mark") != null else 0.0),
+		},
 		"caos": {
 			"active": EvoManager.get("mutation_caos_orquestado"),
 			"red_time": EvoManager.get("caos_red_time"),

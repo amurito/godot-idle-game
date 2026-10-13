@@ -34,6 +34,7 @@ extends RefCounted
 ##   cps_when: {mutation: cps}     ritmo de clicks mientras EvoManager.mutation_<mutation> es true
 ##   caos_collapse_at: float       dispara [Q] Colapso Dirigido cuando ε ≥ esto (-1 = nunca)
 ##   caos_cd / caos_seal: bool     compra [W] cuando alcanza / sella apenas puede
+##   coro_overload / coro_w / coro_seal: bool  Sobrecarga cuando está lista / compra [W] / sella
 ##   fusion_bursts / fusion_cd / fusion_seal: bool
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
@@ -210,6 +211,16 @@ func _route_keys(_d: RefCounted) -> void:
 		UIManager._ng_buttons._on_transmut_confirmed()
 		if TransmutationLogic.candidate() != tid:
 			_after_key("key:T transmute:" + tid)
+	if EvoManager.mutation_coro_simbiotico:
+		if cfg.get("coro_overload", false) and CoroSimbioticoLogic.can_overload():
+			CoroSimbioticoLogic.overload()
+			_after_key("key:Q coro_overload stacks=%.0f" % EvoManager.coro_stacks)
+		if cfg.get("coro_w", false) and CoroSimbioticoLogic.can_buy_w():
+			CoroSimbioticoLogic.buy_w()
+			_after_key("key:W coro_w")
+		if cfg.get("coro_seal", false) and CoroSimbioticoLogic.seal_ready():
+			UIManager._ng_buttons._on_coro_seal_pressed()
+			_log("seal:coro")
 	if EvoManager.mutation_caos_orquestado:
 		var at: float = float(cfg.get("caos_collapse_at", -1.0))
 		if at >= 0.0 and StructuralModel.epsilon_runtime >= at and CaosOrquestadoLogic.can_collapse():

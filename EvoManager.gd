@@ -183,6 +183,18 @@ var caos_peak_collapse_eps: float = 0.0   # mayor ε cobrado en un Colapso
 var caos_min_collapse_eps: float = 99.0   # menor ε cobrado (logro MYTHIC: todos ≥ CAOS_MYTHIC_EPS)
 var batuta_used: bool = false             # legado Batuta: ε → 0 una vez por run
 
+# === CORO SIMBIÓTICO (Transmutación de Simbiosis — CoroSimbioticoLogic) ===
+var mutation_coro_simbiotico := false
+var coro_stacks: float = 0.0              # ritmo: se cuenta en todas las runs (legado Eco del Coro)
+var coro_money_mark: float = 0.0
+var coro_overload_timer: float = 0.0      # s restantes de Sobrecarga
+var coro_cooldown: float = 0.0
+var coro_overload_count: int = 0
+var coro_w_level: int = 0
+var coro_rhythm_time: float = 0.0         # s acumulados con ≥ CORO_SEAL_STACKS
+var coro_peak_stacks: float = 0.0
+var coro_fortissimo_streak: float = 0.0   # s seguidos con ≥ CORO_MYTHIC_STACKS sin Sobrecarga
+
 ## ── Clasificación del estado ────────────────────────────────────────────────
 ## Toda variable de EvoManager está en SaveSchema o en TRANSIENT_VARS (SaveSchema.validate lo
 ## verifica): agregar una variable de ruta sin decidir si persiste es un error, no un olvido.
@@ -304,6 +316,7 @@ func tick_route_processes(dt: float) -> void:
 		process_depredador_progress(dt)
 	process_glitch(dt)
 	CaosOrquestadoLogic.process(dt)  # se auto-gatea (corre en paralelo a la cadena de arriba)
+	CoroSimbioticoLogic.process(dt)  # ritmo (todas las runs) + Coro Simbiótico si está activo
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el
@@ -351,21 +364,21 @@ func _set_genome_state(mutation: String, new_state: String):
 
 
 func activate_allostasis():
-	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
+	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or mutation_coro_simbiotico: return
 	LogManager.add(tr("LOG_ALOSTASIS_EVO"))
 	mutation_allostasis = true
 	mutation_activated.emit("allostasis", tr("MUT_ALLOSTASIS"))
 	AchievementManager.on_mutation_activated("allostasis")
 	
 func activate_homeorhesis():
-	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis: return
+	if mutation_red_micelial or mutation_hyperassimilation or mutation_parasitism or mutation_symbiosis or mutation_coro_simbiotico: return
 	LogManager.add(tr("LOG_HOMEORRESIS_EVO"))
 	mutation_homeorhesis = true
 	mutation_activated.emit("homeorhesis", tr("MUT_HOMEORHESIS"))
 	AchievementManager.on_mutation_activated("homeorhesis")
 
 func activate_depredador():
-	if mutation_homeostasis or mutation_caos_orquestado or mutation_red_micelial or mutation_symbiosis or mutation_parasitism: return
+	if mutation_homeostasis or mutation_caos_orquestado or mutation_red_micelial or mutation_symbiosis or mutation_coro_simbiotico or mutation_parasitism: return
 	if mutation_fusion_catabolica: return  # motor ya estabilizado: la transmutación cierra el glitch del Depredador
 	LogManager.add(tr("LOG_GLITCH_ALERT"))
 	mutation_depredador = true
@@ -394,7 +407,7 @@ func activate_met_oscuro():
 	_save_after_mutation()
 
 func activate_hyperassimilation():
-	if mutation_homeostasis or mutation_caos_orquestado or mutation_parasitism or mutation_symbiosis: return
+	if mutation_homeostasis or mutation_caos_orquestado or mutation_parasitism or mutation_symbiosis or mutation_coro_simbiotico: return
 	# Revertida esta run (Transmutación) o reemplazada por su Sombra: no se reactiva.
 	if transmut_reverted.get("hiperasimilacion", false) or mutation_ayuno_primordial: return
 	mutation_hyperassimilation = true
@@ -568,14 +581,14 @@ func ayuno_seal_ready() -> bool:
 		and ayuno_longest_streak >= Balance.AYUNO_SELLO_STREAK
 
 func activate_homeostasis():
-	if mutation_homeostasis or mutation_caos_orquestado or mutation_symbiosis: return
+	if mutation_homeostasis or mutation_caos_orquestado or mutation_symbiosis or mutation_coro_simbiotico: return
 	mutation_homeostasis = true
 	mutation_hyperassimilation = false # bloqueo cruzado
 	mutation_activated.emit("homeostasis", tr("MUT_HOMEOSTASIS"))
 	AchievementManager.on_mutation_activated("homeostasis")
 
 func activate_red_micelial():
-	if mutation_homeostasis or mutation_caos_orquestado or mutation_hyperassimilation or mutation_symbiosis: return
+	if mutation_homeostasis or mutation_caos_orquestado or mutation_hyperassimilation or mutation_symbiosis or mutation_coro_simbiotico: return
 	mutation_red_micelial = true
 	mutation_activated.emit("red_micelial", tr("MUT_RED_MICELIAL"))
 	AchievementManager.on_red_micelial_activated()
@@ -591,7 +604,7 @@ func activate_sporulation():
 	run_ended_by_mutation.emit("ESPORULACION", "El sistema abandona la coherencia local y se dispersa en esporas")
 
 func activate_parasitism():
-	if mutation_homeostasis or mutation_caos_orquestado or mutation_symbiosis or mutation_parasitism: return
+	if mutation_homeostasis or mutation_caos_orquestado or mutation_symbiosis or mutation_coro_simbiotico or mutation_parasitism: return
 	mutation_parasitism = true
 	mutation_hyperassimilation = false
 	BiosphereEngine.apply_parasitism_buffs()

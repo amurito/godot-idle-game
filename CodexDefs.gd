@@ -1421,7 +1421,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]SOMBRA[/b] (A → anti-A) — no hay botón: es la [b]consecuencia[/b] de jugar al revés de la mutación. Con su llave, hacer lo opuesto la dispara. Recompensa: visibilidad y sistemas nuevos, no multiplicadores.\n"
 			+ "• [b]REDENCIÓN[/b] — sanar en vez de colapsar (Remisión Metabólica).\n\n"
 			+ "Las llaves son permanentes y no tienen interruptor: la decisión es en cada run.\n\n"
-			+ "[i]Hiperasimilación ya tiene las dos: Fusión Catabólica (Transmutación) y Ayuno Primordial (Sombra). Homeostasis tiene su Transmutación: Caos Orquestado.[/i]"
+			+ "[i]Hiperasimilación ya tiene las dos: Fusión Catabólica (Transmutación) y Ayuno Primordial (Sombra). Homeostasis tiene su Transmutación (Caos Orquestado) y Simbiosis la suya (Coro Simbiótico).[/i]"
 		),
 		"body_en": (
 			"HYPHAE's endgame is built on [b]involution[/b]: giving something up to open something else. Three families, by tone:\n\n"
@@ -1429,7 +1429,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]SHADOW[/b] (A → anti-A) — no button: it is the [b]consequence[/b] of playing the opposite of the mutation. With its key, doing the opposite triggers it. Reward: visibility and new systems, not multipliers.\n"
 			+ "• [b]REDEMPTION[/b] — healing instead of collapsing (Metabolic Remission).\n\n"
 			+ "Keys are permanent and have no switch: the decision is made in each run.\n\n"
-			+ "[i]Hyperassimilation already has both: Catabolic Fusion (Transmutation) and Primal Fast (Shadow). Homeostasis has its Transmutation: Orchestrated Chaos.[/i]"
+			+ "[i]Hyperassimilation already has both: Catabolic Fusion (Transmutation) and Primal Fast (Shadow). Homeostasis has its Transmutation (Orchestrated Chaos) and so does Symbiosis (Symbiotic Chorus).[/i]"
 		),
 		"unlock": {"type": "transcendence_count", "count": 3},
 		"see_also": ["transmut_fusion", "hiperasimilacion", "banco_genetico", "hitos_trascendencia"],
@@ -1489,6 +1489,32 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_caos"},
 		"see_also": ["transmut_intro", "homeostasis", "transmut_fusion"],
+	},
+	"transmut_coro": {
+		"cat": "transmutaciones",
+		"name_es": "Coro Simbiótico", "name_en": "Symbiotic Chorus",
+		"body_es": (
+			"Transmutación (A → A+) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Simbiosis). Con Simbiosis activa aparece el botón [b][T] Revertir[/b] (el pacto espera tu decisión: Simbiosis no cierra mientras el botón tenga apariciones). Al revertir, el pacto se [b]digiere[/b] en 40 de ritmo inicial.\n\n"
+			+ "Renunciás al click ×2.5, al pasivo ×0.5 y al final Simbiosis. A cambio, [b]la cooperación se vuelve ritmo[/b]:\n\n"
+			+ "• [b]Ritmo[/b]: cada click suma; si dejás de clickear, se va (≈ clicks por segundo × 5). Cada punto da [b]+2%[/b] a todo el ingreso, tope 100.\n"
+			+ "• [b]Desafinación[/b]: el estrés desafina el coro — el bonus se multiplica por (1 − ε/2).\n"
+			+ "• [b][Q] Sobrecarga[/b]: 10 s de auto-click a 20/s (lleva el ritmo al tope), pero ε +0.20. Cooldown 90 s.\n"
+			+ "• [b][W] Sostener el coro[/b]: +1 s de ventana de ritmo por nivel (más ritmo con los mismos clicks).\n\n"
+			+ "[b]Sello[/b]: ritmo ≥ 30 sostenido un total de 300 s + 6 Sobrecargas + dinero generado desde la reversión → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Eco del Coro[/b] — en todas las runs, clickear sostenido rinde +0.5% por punto de ritmo (máx. +20%)."
+		),
+		"body_en": (
+			"Transmutation (A → A+) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Symbiosis). With Symbiosis active the [b][T] Revert[/b] button appears (the pact waits for your decision: Symbiosis does not close while the button has appearances left). On reverting, the pact is [b]digested[/b] into 40 starting rhythm.\n\n"
+			+ "You give up the ×2.5 click, the ×0.5 passive and the Symbiosis ending. In exchange, [b]cooperation becomes rhythm[/b]:\n\n"
+			+ "• [b]Rhythm[/b]: every click adds; stop clicking and it fades (≈ clicks per second × 5). Each point gives [b]+2%[/b] to all income, capped at 100.\n"
+			+ "• [b]Detuning[/b]: stress detunes the chorus — the bonus is multiplied by (1 − ε/2).\n"
+			+ "• [b][Q] Overload[/b]: 10 s of auto-click at 20/s (maxes the rhythm), but ε +0.20. 90 s cooldown.\n"
+			+ "• [b][W] Sustain the chorus[/b]: +1 s of rhythm window per level (more rhythm from the same clicks).\n\n"
+			+ "[b]Seal[/b]: rhythm ≥ 30 sustained for a total of 300 s + 6 Overloads + money generated since reverting → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Echo of the Chorus[/b] — in every run, sustained clicking yields +0.5% per rhythm point (max +20%)."
+		),
+		"unlock": {"type": "buff_owned", "id": "transmut_coro"},
+		"see_also": ["transmut_intro", "simbiosis", "transmut_caos"],
 	},
 	"ayuno_primordial": {
 		"cat": "transmutaciones",
