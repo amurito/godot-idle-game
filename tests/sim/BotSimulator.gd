@@ -208,11 +208,12 @@ func _transmutation_metrics() -> Dictionary:
 		},
 		"coro": {
 			"active": EvoManager.get("mutation_coro_simbiotico"),
-			"rhythm_time": EvoManager.get("coro_rhythm_time"),
-			"overloads": EvoManager.get("coro_overload_count"),
-			"peak_stacks": EvoManager.get("coro_peak_stacks"),
-			"w_level": EvoManager.get("coro_w_level"),
-			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("coro_money_mark") if EvoManager.get("coro_money_mark") != null else 0.0),
+			"combo": EvoManager.get("coro_combo"),
+			"peak_combo": EvoManager.get("coro_peak_combo"),
+			"movement": EvoManager.get("coro_movement"),
+			"bars": EvoManager.get("coro_bars"),
+			"misses": EvoManager.get("coro_misses"),
+			"allegro_misses": EvoManager.get("coro_allegro_misses"),
 		},
 		"micelio": {
 			"active": EvoManager.get("mutation_micelio_omnisciente"),

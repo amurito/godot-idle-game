@@ -407,7 +407,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	if EvoManager.mutation_necrosis:
 		EvoManager.add_necromasa_from_click(power)
 	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
-	CoroSimbioticoLogic.on_click()  # ritmo (Coro Simbiótico / legado Eco del Coro)
+	CoroSimbioticoLogic.on_click()  # golpe del metrónomo (Coro Simbiótico / legado Compás Interno)
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
 
@@ -1009,18 +1009,6 @@ func _input(event):
 							get_viewport().set_input_as_handled()
 						elif EvoManager.can_autofagia_digest_burst():
 							EvoManager.autofagia_digest_burst()
-							UIManager.update_ng_plus_buttons()
-							get_viewport().set_input_as_handled()
-			elif EvoManager.mutation_coro_simbiotico:
-				match kc:
-					KEY_Q:
-						if CoroSimbioticoLogic.can_overload():
-							CoroSimbioticoLogic.overload()
-							UIManager.update_ng_plus_buttons()
-							get_viewport().set_input_as_handled()
-					KEY_W:
-						if CoroSimbioticoLogic.can_buy_w():
-							CoroSimbioticoLogic.buy_w()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_caos_orquestado:

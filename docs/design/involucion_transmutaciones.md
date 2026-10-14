@@ -266,7 +266,26 @@ nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde 
   intentos). MYTHIC *Sinfonía del Caos* sin cambios (todos los Colapsos con ε ≥ 1.5).
 - Panel: muestra "Gran Colapso: ε cobrado X / 1.8 · ráfaga $Y / $X" del último intento.
 
-### 10.2 Coro Simbiótico — **ritmo de verdad**
+### 10.2 Coro Simbiótico — **ritmo de verdad** ✅ (R4b, 2026-10-13) · `CoroSimbioticoLogic.gd` + `MetronomeRing.gd`
+
+**Implementado con estos ajustes (simulador):**
+- **La partitura cuenta compases, no combo.** Compás = 4 golpes seguidos a tiempo; I 40 compases (90 BPM),
+  II 60 (110), III 80 (130). Con "combo 16/32/64" y el combo a la mitad al fallar, un jugador con 94 %
+  de precisión no llegaba nunca a 64. Ahora fallar corta el **combo** (ingreso) pero no borra compases.
+- **Golpe salteado: combo −4** (sin esto se arma ×3.5 y se queda AFK).
+- **Fortissimo (MYTHIC)** = sellar con 0 clicks fuera de tiempo en el Allegro (320 golpes).
+- **Metrónomo**: aro sobre el núcleo + tick sintetizado (acento en el 1er golpe), volumen propio en
+  Ajustes; suena también con el legado **Compás Interno** (100 BPM, +1 % click por golpe seguido, tope 15 %).
+- Reloj: `RunManager.run_time` (por frame) → juicio de ±150 ms determinista en el simulador.
+
+| Perfil | Precisión | Sella desde la reversión | MYTHIC |
+|---|---:|---:|---|
+| `ng_coro_player` | 94 % | **7.8 min** | no (33 fallos en el Allegro) |
+| `ng_coro_sloppy` | 85 % | 9.6 min | no |
+| `ng_coro_fortissimo` | 99.95 % | 6.4 min | sí |
+
+Es la transmutación más corta (~8 min) pero **toda activa**: el tiempo lo pone la partitura, no la economía.
+
 *La cooperación deja de ser un pacto y se vuelve un ritmo.* Reemplaza la mecánica de R4.
 - **Metrónomo:** el núcleo late a un tempo visible (aro que se cierra hacia el golpe; reutiliza el
   latido a contrafase de `ReactorFX`). Clickear **en el golpe** (±150 ms, tolerante a la latencia web)
@@ -350,7 +369,7 @@ primeros 7 min y después sólo pasivo (`buy_ids_from`).
 
 ### 10.5 Orden de implementación propuesto
 1. ✅ **R5 Micelio (asignar)** — barras en upgrades + click derecho.
-2. **R4b Coro (ritmo)** — rehace R4: metrónomo visual + sonido, bot con precisión.
+2. ✅ **R4b Coro (ritmo)** — metrónomo visual + sonido, bot con precisión.
 3. **R3b Caos (Gran Colapso)** — cambio chico de sello.
 4. **R6 Huésped (domesticar)**.
 

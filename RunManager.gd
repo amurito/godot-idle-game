@@ -200,10 +200,10 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_CAOS_REWARD"))
 			LogManager.add(tr("LOG_CAOS_REWARD"))
 
-	# CORO SIMBIÓTICO: legado Eco del Coro (ritmo suave en todas las runs).
+	# CORO SIMBIÓTICO: legado Compás Interno (metrónomo suave en todas las runs).
 	if route == "CORO SIMBIÓTICO":
-		if not LegacyManager.get_buff_value("legado_eco_del_coro"):
-			LegacyManager.grant_buff("legado_eco_del_coro")
+		if not LegacyManager.get_buff_value("legado_compas_interno"):
+			LegacyManager.grant_buff("legado_compas_interno")
 			UIManager.show_toast(tr("TOAST_CORO_REWARD"))
 			LogManager.add(tr("LOG_CORO_REWARD"))
 
@@ -982,8 +982,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.1f", "show": money_m, "log": "generado ${v}M / $10M = {b} (cap {c})"},
 		"CAOS ORQUESTADO": {"value": func() -> Variant: return EvoManager.caos_charged_collapses, "op": "div", "k": 2.0,
 			"vfmt": "%d", "log": "colapsos con carga {v} / 2 = {b} (cap {c})"},
-		"CORO SIMBIÓTICO": {"value": func() -> Variant: return EvoManager.coro_peak_stacks, "op": "div", "k": 20.0,
-			"vfmt": "%.0f", "log": "pico de ritmo {v} / 20 = {b} (cap {c})"},
+		"CORO SIMBIÓTICO": {"value": func() -> Variant: return EvoManager.coro_peak_combo, "op": "div", "k": 8.0,
+			"vfmt": "%d", "log": "pico de combo {v} / 8 = {b} (cap {c})"},
 		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,

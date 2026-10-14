@@ -1278,10 +1278,10 @@ func _live_reactor_color() -> Color:
 		var frac: float = MicelioOmniscienteLogic.connected_total() / (Balance.MICELIO_NODE_MAX * MicelioOmniscienteLogic.NODES.size())
 		return Color(0.35, 0.2, 0.55).lerp(Color(0.72, 0.42, 1.0), clampf(frac, 0.0, 1.0))
 	if EvoManager.mutation_coro_simbiotico:
-		if EvoManager.coro_overload_timer > 0.0:
-			return Color(1.25, 0.72, 0.62)  # coral casi blanco: Sobrecarga
-		# coral apagado → coral vivo según el ritmo
-		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(EvoManager.coro_stacks / 50.0, 0.0, 1.0))
+		if CoroSimbioticoLogic.score_done():
+			return Color(1.25, 0.72, 0.62)  # coral casi blanco: partitura completa
+		# coral apagado → coral vivo según el combo
+		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(float(EvoManager.coro_combo) / Balance.CORO_COMBO_CAP, 0.0, 1.0))
 	if EvoManager.mutation_caos_orquestado:
 		if EvoManager.caos_burst_timer > 0.0:
 			return Color(1.2, 0.3, 0.6)  # rosa encendido: el colapso dirigido

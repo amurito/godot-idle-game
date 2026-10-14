@@ -56,7 +56,7 @@ static func defs() -> Dictionary:
 			"target_flag": "mutation_coro_simbiotico",
 			"activate": func() -> void: CoroSimbioticoLogic.activate(),
 			"digest": func() -> String: return CoroSimbioticoLogic.digest_simbiosis(),
-			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_STACKS") % int(Balance.CORO_DIGEST_STACKS),
+			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_STACKS") % Balance.CORO_DIGEST_COMBO,
 			"base_name": "MUT_SIMBIOSIS",
 			"target_name": "MUT_CORO_SIMBIOTICO",
 			"lose": "TRANSMUT_CORO_LOSE",

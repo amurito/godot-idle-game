@@ -584,7 +584,7 @@ const DEFS := {
 	},
 	"fortissimo": {
 		"name": "Fortissimo",
-		"desc": "En Coro Simbiótico, sostener ≥ 50 de ritmo durante 30 s seguidos sin Sobrecarga.",
+		"desc": "Sellar Coro Simbiótico tocando todo el Allegro sin un solo click fuera de tiempo.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "fortissimo",
 	},

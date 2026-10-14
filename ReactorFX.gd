@@ -60,6 +60,9 @@ static func scale_mult() -> float:
 		return m
 	if transmutation_active() and not RunManager.run_closed:
 		var phase: float = fmod(Time.get_ticks_msec() / 1000.0, HEARTBEAT_PERIOD) / HEARTBEAT_PERIOD
+		if EvoManager.mutation_coro_simbiotico and CoroSimbioticoLogic.period() > 0.0:
+			# Coro: el latido marca el golpe del metrónomo (contracción máxima justo en el golpe).
+			phase = fposmod(CoroSimbioticoLogic.beat_phase() + 0.25, 1.0)
 		var beat: float = pow(maxf(sin(phase * TAU), 0.0), 4.0)  # golpe corto y seco
 		m = 1.0 - HEARTBEAT_DEPTH * beat
 	return m

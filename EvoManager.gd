@@ -185,15 +185,16 @@ var batuta_used: bool = false             # legado Batuta: ε → 0 una vez por 
 
 # === CORO SIMBIÓTICO (Transmutación de Simbiosis — CoroSimbioticoLogic) ===
 var mutation_coro_simbiotico := false
-var coro_stacks: float = 0.0              # ritmo: se cuenta en todas las runs (legado Eco del Coro)
-var coro_money_mark: float = 0.0
-var coro_overload_timer: float = 0.0      # s restantes de Sobrecarga
-var coro_cooldown: float = 0.0
-var coro_overload_count: int = 0
-var coro_w_level: int = 0
-var coro_rhythm_time: float = 0.0         # s acumulados con ≥ CORO_SEAL_STACKS
-var coro_peak_stacks: float = 0.0
-var coro_fortissimo_streak: float = 0.0   # s seguidos con ≥ CORO_MYTHIC_STACKS sin Sobrecarga
+var coro_combo: int = 0                   # golpes a tiempo (ingreso con Coro; click con el legado)
+var coro_anchor: float = 0.0              # run_time del golpe 0 del tempo actual
+var coro_last_hit_beat: int = -1          # último golpe acertado (índice desde el ancla)
+var coro_last_closed_beat: int = -1       # último golpe ya cerrado (para descontar los salteados)
+var coro_bar_hits: int = 0                # golpes seguidos del compás en curso
+var coro_movement: int = 0                # 0..2 = movimiento en curso · 3 = partitura completa
+var coro_bars: int = 0                    # compases tocados en el movimiento en curso
+var coro_peak_combo: int = 0
+var coro_misses: int = 0                  # clicks fuera de tiempo con Coro
+var coro_allegro_misses: int = 0          # …durante el Allegro (MYTHIC Fortissimo: 0)
 
 # === MICELIO OMNISCIENTE (Transmutación de Red Micelial — MicelioOmniscienteLogic) ===
 var mutation_micelio_omnisciente := false
@@ -327,7 +328,7 @@ func tick_route_processes(dt: float) -> void:
 		process_depredador_progress(dt)
 	process_glitch(dt)
 	CaosOrquestadoLogic.process(dt)  # se auto-gatea (corre en paralelo a la cadena de arriba)
-	CoroSimbioticoLogic.process(dt)  # ritmo (todas las runs) + Coro Simbiótico si está activo
+	CoroSimbioticoLogic.process(dt)  # metrónomo: golpes salteados (Coro o legado Compás Interno)
 	MicelioOmniscienteLogic.process(dt)  # se auto-gatea
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 

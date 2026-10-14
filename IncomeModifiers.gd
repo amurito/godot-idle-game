@@ -120,11 +120,11 @@ static func _build() -> Dictionary:
 	d["caos_fuel"] = _row("Caos Orquestado (ε)", "route", caos_fuel, caos_fuel)
 	var caos_burst := func() -> float: return CaosOrquestadoLogic.burst_mult()
 	d["caos_burst"] = _row("Colapso Dirigido", "route", caos_burst, caos_burst)
-	# CORO SIMBIÓTICO (transmutación de Simbiosis): el ritmo paga (× desafinación por ε).
+	# CORO SIMBIÓTICO (transmutación de Simbiosis): el combo de golpes a tiempo paga todo el ingreso.
 	var coro_rhythm := func() -> float: return CoroSimbioticoLogic.rhythm_mult()
 	d["coro_rhythm"] = _row("Coro Simbiótico (ritmo)", "route", coro_rhythm, coro_rhythm)
 	var coro_echo := func() -> float: return CoroSimbioticoLogic.echo_mult()
-	d["coro_echo"] = _row("Eco del Coro", "legacy", coro_echo, coro_echo)
+	d["coro_echo"] = _row("Compás Interno", "legacy", coro_echo, Callable())  # sólo click
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

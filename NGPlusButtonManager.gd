@@ -55,9 +55,8 @@ var _caos_collapse_btn: Button = null    # [Q] Colapso Dirigido (Caos Orquestado
 var _caos_cd_btn: Button = null          # [W] cooldown del Colapso
 var _caos_seal_btn: Button = null        # Sello CAOS ORQUESTADO
 var _batuta_btn: Button = null
-var _coro_overload_btn: Button = null    # [Q] Sobrecarga (Coro Simbiótico)
-var _coro_w_btn: Button = null           # [W] Sostener el coro
-var _coro_seal_btn: Button = null
+var _coro_seal_btn: Button = null        # Sello de Coro Simbiótico (partitura completa)
+var _metronome_ring: Control = null      # Anillo del metrónomo sobre el núcleo (Coro / Compás Interno)
 var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -164,16 +163,15 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_overload_btn, _coro_w_btn, _coro_seal_btn, _micelio_seal_btn]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
 	_caos_cd_btn = null
 	_caos_seal_btn = null
 	_batuta_btn = null
-	_coro_overload_btn = null
-	_coro_w_btn = null
 	_coro_seal_btn = null
+	_metronome_ring = null
 	_micelio_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
@@ -229,40 +227,15 @@ func _on_micelio_seal_pressed() -> void:
 		_micelio_seal_btn.visible = false
 	RunManager.close_run("MICELIO OMNISCIENTE", TranslationServer.translate("CLOSE_MICELIO"))
 
-# ── CORO SIMBIÓTICO: [Q] Sobrecarga · [W] Sostener · sello ───────────────────
+# ── CORO SIMBIÓTICO: metrónomo (anillo sobre el núcleo) + sello ──────────────
 func _update_coro_buttons() -> void:
-	var active: bool = EvoManager.mutation_coro_simbiotico and not RunManager.run_closed
-	if not active:
-		for b in [_coro_overload_btn, _coro_w_btn, _coro_seal_btn]:
-			if is_instance_valid(b):
-				b.visible = false
-		return
-	if not is_instance_valid(_coro_overload_btn):
-		_coro_overload_btn = _make_rp_button(Color(1.0, 0.6, 0.5), 50, _on_coro_overload_pressed, 0)
-	if EvoManager.coro_overload_timer > 0.0:
-		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_ACTIVE") % EvoManager.coro_overload_timer
-		_coro_overload_btn.disabled = true
-	elif EvoManager.coro_cooldown > 0.0:
-		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_COOLDOWN") % EvoManager.coro_cooldown
-		_coro_overload_btn.disabled = true
-	else:
-		_coro_overload_btn.text = TranslationServer.translate("BTN_CORO_READY") % [int(Balance.CORO_OVERLOAD_CPS), int(Balance.CORO_OVERLOAD_DURATION)]
-		_coro_overload_btn.disabled = false
-	_coro_overload_btn.text = EmojiToRichText.strip(_coro_overload_btn.text)
-	_coro_overload_btn.visible = true
-
-	if not is_instance_valid(_coro_w_btn):
-		_coro_w_btn = _make_rp_button(Color(0.97, 0.82, 0.3), 46, _on_coro_w_pressed, 1)
-	if CoroSimbioticoLogic.w_maxed():
-		_coro_w_btn.text = TranslationServer.translate("BTN_CORO_W_MAXED") % CoroSimbioticoLogic.window()
-		_coro_w_btn.disabled = true
-	else:
-		_coro_w_btn.text = TranslationServer.translate("BTN_CORO_W") % [CoroSimbioticoLogic.window(),
-			CoroSimbioticoLogic.window() + Balance.CORO_W_WINDOW_PER_LEVEL, UITextBuilders.format_compact(CoroSimbioticoLogic.w_cost())]
-		_coro_w_btn.disabled = not CoroSimbioticoLogic.can_buy_w()
-	_coro_w_btn.text = EmojiToRichText.strip(_coro_w_btn.text)
-	_coro_w_btn.visible = true
-
+	var metro: bool = CoroSimbioticoLogic.period() > 0.0
+	if metro and not is_instance_valid(_metronome_ring) and is_instance_valid(UIManager.big_click_button):
+		_metronome_ring = MetronomeRing.new()
+		_metronome_ring.name = "MetronomeRing"
+		UIManager.big_click_button.add_child(_metronome_ring)
+	if is_instance_valid(_metronome_ring):
+		_metronome_ring.visible = metro
 	if CoroSimbioticoLogic.seal_ready():
 		if not is_instance_valid(_coro_seal_btn):
 			_coro_seal_btn = _make_rp_button(Color(1.0, 0.65, 0.55), 70, _on_coro_seal_pressed, 0)
@@ -270,14 +243,6 @@ func _update_coro_buttons() -> void:
 		_coro_seal_btn.visible = true
 	elif is_instance_valid(_coro_seal_btn):
 		_coro_seal_btn.visible = false
-
-func _on_coro_overload_pressed() -> void:
-	CoroSimbioticoLogic.overload()
-	_update_coro_buttons()
-
-func _on_coro_w_pressed() -> void:
-	CoroSimbioticoLogic.buy_w()
-	_update_coro_buttons()
 
 func _on_coro_seal_pressed() -> void:
 	if RunManager.run_closed or not CoroSimbioticoLogic.seal_ready():

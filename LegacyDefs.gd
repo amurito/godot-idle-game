@@ -516,14 +516,14 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
 		"effect": {"type": "transmut_coro_active", "value": 1.0},
 	},
-	# Recompensa de SELLAR Coro Simbiótico: el ritmo sigue sonando en todas las runs.
-	"legado_eco_del_coro": {
-		"name": "Legado: Eco del Coro",
-		"flavor": "El coro terminó, pero el ritmo quedó: clickear sostenido rinde un poco más en todas las runs.",
+	# Recompensa de SELLAR Coro Simbiótico: el metrónomo sigue sonando en todas las runs.
+	"legado_compas_interno": {
+		"name": "Legado: Compás Interno",
+		"flavor": "El coro terminó, pero el pulso quedó: en todas las runs, clickear a tiempo rinde más.",
 		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
 		"reveal": {"type": "route_closed", "route": "CORO SIMBIÓTICO"},
 		"unlock": {"type": "route_closed", "route": "CORO SIMBIÓTICO"},
-		"effect": {"type": "eco_del_coro_active", "value": 1.0},
+		"effect": {"type": "compas_interno_active", "value": 1.0},
 	},
 	# TRANSMUTACIÓN de Red Micelial (A → A+). Llave sin toggle: con Red Micelial activa aparece [T].
 	"transmut_micelio": {

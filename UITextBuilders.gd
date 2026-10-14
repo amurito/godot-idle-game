@@ -1345,29 +1345,21 @@ static func build_caos_orquestado_closed_text() -> String:
 
 static func build_coro_simbiotico_panel_text() -> String:
 	var ok_mark := "[color=green]✓[/color]"
-	var st: float = EvoManager.coro_stacks
 	var t := "[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_TITLE") + "[/color]\n"
-	t += TranslationServer.translate("CORO_PANEL_RHYTHM") % [st, CoroSimbioticoLogic.rhythm_mult(),
-		CoroSimbioticoLogic.tuning() * 100.0, CoroSimbioticoLogic.window()] + "\n"
-	t += "\n[color=yellow]" + TranslationServer.translate("CORO_PANEL_OVERLOAD_HDR") + "[/color]\n"
-	if EvoManager.coro_overload_timer > 0.0:
-		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_ACTIVE") % EvoManager.coro_overload_timer + "\n"
-	elif EvoManager.coro_cooldown > 0.0:
-		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_CD") % EvoManager.coro_cooldown + "\n"
-	else:
-		t += TranslationServer.translate("CORO_PANEL_OVERLOAD_READY") + "\n"
-	t += "\n[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_SEAL_HDR") + "[/color]\n"
-	var r_ok: bool = EvoManager.coro_rhythm_time >= Balance.CORO_SEAL_RHYTHM_TIME
-	t += TranslationServer.translate("CORO_PANEL_RHYTHM_TIME") % [ok_mark if r_ok else "[ ]", int(EvoManager.coro_rhythm_time),
-		int(Balance.CORO_SEAL_RHYTHM_TIME), int(Balance.CORO_SEAL_STACKS)] + "\n"
-	var o_ok: bool = EvoManager.coro_overload_count >= Balance.CORO_SEAL_OVERLOADS
-	t += TranslationServer.translate("CORO_PANEL_OVERLOADS") % [ok_mark if o_ok else "[ ]", EvoManager.coro_overload_count,
-		Balance.CORO_SEAL_OVERLOADS] + "\n"
-	var m: float = CoroSimbioticoLogic.money_since_revert()
-	var m_ok: bool = m >= Balance.CORO_SEAL_MONEY
-	t += TranslationServer.translate("CORO_PANEL_MONEY") % [ok_mark if m_ok else "[ ]", format_compact(m),
-		format_compact(Balance.CORO_SEAL_MONEY)] + "\n"
-	if r_ok and o_ok and m_ok:
+	t += TranslationServer.translate("CORO_PANEL_COMBO") % [EvoManager.coro_combo, CoroSimbioticoLogic.rhythm_mult(),
+		int(CoroSimbioticoLogic.tempo())] + "\n"
+	t += "\n[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_SCORE_HDR") + "[/color]\n"
+	var bars: Array = Balance.CORO_MOVEMENT_BARS
+	for i in bars.size():
+		var mov_name := TranslationServer.translate("CORO_MOVEMENT_%d" % i)
+		var bpm := int(Balance.CORO_TEMPOS[i])
+		if EvoManager.coro_movement > i:
+			t += TranslationServer.translate("CORO_PANEL_MOV") % [ok_mark, mov_name, bpm, int(bars[i]), int(bars[i])] + "\n"
+		elif EvoManager.coro_movement == i:
+			t += TranslationServer.translate("CORO_PANEL_MOV") % ["[color=#ffcc66]▶[/color]", mov_name, bpm, EvoManager.coro_bars, int(bars[i])] + "\n"
+		else:
+			t += TranslationServer.translate("CORO_PANEL_MOV") % ["[ ]", mov_name, bpm, 0, int(bars[i])] + "\n"
+	if CoroSimbioticoLogic.score_done():
 		t += "\n[color=#ff8a7a]" + TranslationServer.translate("CORO_PANEL_SEAL_READY") + "[/color]"
 	else:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("CORO_PANEL_TIP") + "[/color]"

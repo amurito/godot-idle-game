@@ -16,6 +16,8 @@ var music_volume: float = 0.5
 var sfx_volume: float = 0.7
 var music_muted: bool = false
 var sfx_muted: bool = false
+var metronome_volume: float = 0.6
+var metronome_muted: bool = false
 
 # IDs → nombre de archivo en res://audio/
 const SFX_FILES := {
@@ -51,6 +53,11 @@ var _pending_music_id: String = ""
 var _bus_music: int = -1
 var _bus_sfx: int = -1
 
+# Metrónomo (Coro Simbiótico / legado Compás Interno): ticks sintetizados, sin archivos.
+var _metro_player: AudioStreamPlayer = null
+var _metro_tick: AudioStreamWAV = null
+var _metro_accent: AudioStreamWAV = null
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # sigue funcionando si el árbol se pausa
@@ -59,6 +66,7 @@ func _ready() -> void:
 	_load_streams()
 	_build_sfx_pool()
 	_build_music_player()
+	_build_metronome()
 	_apply_volumes()
 
 
@@ -158,6 +166,43 @@ func play_sfx(id: String) -> void:
 	player.play()
 
 
+## Metrónomo: tick corto y suave; el primer golpe de cada compás (acento) es más agudo.
+func play_metronome(accent: bool = false) -> void:
+	if metronome_muted or sfx_muted or metronome_volume <= 0.001 or not _audio_unlocked:
+		return
+	if not is_instance_valid(_metro_player):
+		return
+	_metro_player.stream = _metro_accent if accent else _metro_tick
+	_metro_player.volume_db = linear_to_db(metronome_volume) - 4.0
+	_metro_player.play()
+
+
+func _build_metronome() -> void:
+	_metro_tick = _synth_tick(1320.0)
+	_metro_accent = _synth_tick(1980.0)
+	_metro_player = AudioStreamPlayer.new()
+	_metro_player.bus = "SFX"
+	add_child(_metro_player)
+
+
+## Senoidal de 45 ms con caída exponencial (PCM 16 bits mono).
+static func _synth_tick(freq: float) -> AudioStreamWAV:
+	var rate := 44100
+	var n := int(rate * 0.045)
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	for i in n:
+		var t := float(i) / rate
+		var v: float = sin(TAU * freq * t) * exp(-t * 90.0) * 0.8
+		data.encode_s16(i * 2, int(clampf(v, -1.0, 1.0) * 32767.0))
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS
+	w.mix_rate = rate
+	w.stereo = false
+	w.data = data
+	return w
+
+
 func play_music(id: String) -> void:
 	# Si ya está sonando lo mismo, no reiniciar.
 	if _current_music_id == id and _music_player.playing:
@@ -205,6 +250,16 @@ func set_sfx_volume(v: float) -> void:
 	_save_settings()
 
 
+func set_metronome_volume(v: float) -> void:
+	metronome_volume = clampf(v, 0.0, 1.0)
+	_save_settings()
+
+
+func set_metronome_muted(b: bool) -> void:
+	metronome_muted = b
+	_save_settings()
+
+
 func set_music_muted(b: bool) -> void:
 	music_muted = b
 	_apply_volumes()
@@ -243,6 +298,8 @@ func _load_settings() -> void:
 	sfx_volume = float(data.get("sfx_volume", sfx_volume))
 	music_muted = bool(data.get("music_muted", music_muted))
 	sfx_muted = bool(data.get("sfx_muted", sfx_muted))
+	metronome_volume = float(data.get("metronome_volume", metronome_volume))
+	metronome_muted = bool(data.get("metronome_muted", metronome_muted))
 
 
 func _save_settings() -> void:
@@ -251,6 +308,8 @@ func _save_settings() -> void:
 		"sfx_volume": sfx_volume,
 		"music_muted": music_muted,
 		"sfx_muted": sfx_muted,
+		"metronome_volume": metronome_volume,
+		"metronome_muted": metronome_muted,
 	}
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file:
@@ -316,6 +375,11 @@ func show_settings_panel(parent: Node) -> void:
 		Callable(self, "set_sfx_volume"),
 		Callable(self, "set_sfx_muted"),
 		"click")
+
+	_build_volume_row(vbox, tr("SET_METRONOME"), metronome_volume, metronome_muted,
+		Callable(self, "set_metronome_volume"),
+		Callable(self, "set_metronome_muted"),
+		"metronome")
 
 	vbox.add_child(HSeparator.new())
 	_build_locale_row(vbox)
@@ -433,7 +497,9 @@ func _build_volume_row(parent: VBoxContainer, label_text: String,
 	slider.value_changed.connect(func(v: float):
 		on_value_change.call(v)
 		pct.text = "%d%%" % int(v * 100)
-		if preview_sfx_id != "":
+		if preview_sfx_id == "metronome":
+			play_metronome(true)
+		elif preview_sfx_id != "":
 			play_sfx(preview_sfx_id))
 	mute_btn.toggled.connect(func(pressed: bool):
 		on_mute_change.call(pressed))

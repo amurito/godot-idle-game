@@ -35,7 +35,10 @@ extends RefCounted
 ##   cps_when: {mutation: cps}     ritmo de clicks mientras EvoManager.mutation_<mutation> es true
 ##   caos_collapse_at: float       dispara [Q] Colapso Dirigido cuando ε ≥ esto (-1 = nunca)
 ##   caos_cd / caos_seal: bool     compra [W] cuando alcanza / sella apenas puede
-##   coro_overload / coro_w / coro_seal: bool  Sobrecarga cuando está lista / compra [W] / sella
+##   rhythm_accuracy: float        Coro Simbiótico: en cada golpe del metrónomo clickea a tiempo con esta
+##                                 probabilidad (si no, clickea medio pulso tarde = fuera de tiempo)
+##   rhythm_seed: int              semilla del RNG de precisión (default 7)
+##   coro_seal: bool               sella apenas la partitura está completa
 ##   fusion_bursts / fusion_cd / fusion_seal: bool
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
@@ -55,6 +58,9 @@ var cfg: Dictionary
 var actions: Array = []
 
 var _click_acc: float = 0.0
+var _rng := RandomNumberGenerator.new()
+var _rh_last_beat_time: float = -1.0e9
+var _rh_miss_at: float = -1.0
 var _micelio_start: float = -1.0
 var _swapped := false
 var _micelio_plan: Array = []
@@ -63,13 +69,17 @@ var _next_decision_frame: int = 0
 
 func _init(config: Dictionary) -> void:
 	cfg = config
+	_rng.seed = int(cfg.get("rhythm_seed", 7))
 
 
 func act(d: RefCounted) -> void:
 	if RunManager.run_closed:
 		return
-	var cps := _current_cps()
-	if cps > 0.0:
+	var acc: float = float(cfg.get("rhythm_accuracy", -1.0))
+	if acc >= 0.0 and EvoManager.mutation_coro_simbiotico and CoroSimbioticoLogic.period() > 0.0:
+		_rhythm(d, acc)
+	elif _current_cps() > 0.0:
+		var cps := _current_cps()
 		_click_acc += cps * d.dt()
 		while _click_acc >= 1.0:
 			_click_acc -= 1.0
@@ -80,6 +90,24 @@ func act(d: RefCounted) -> void:
 		_buy(d)
 		_mutation_choice(d)
 		_route_keys(d)
+
+
+## Coro: un click por golpe — en el golpe (≤ 1 frame tarde) con probabilidad `acc`, si no medio
+## pulso tarde (fuera de la ventana). Por tiempo absoluto del golpe: el cambio de tempo re-ancla.
+func _rhythm(d: RefCounted, acc: float) -> void:
+	var t: float = RunManager.run_time
+	var p: float = CoroSimbioticoLogic.period()
+	var k: int = floori(CoroSimbioticoLogic.beat_pos(t))
+	var beat_t: float = EvoManager.coro_anchor + k * p
+	if beat_t > _rh_last_beat_time + 1.0e-6:
+		_rh_last_beat_time = beat_t
+		if _rng.randf() < acc:
+			d.click()
+		else:
+			_rh_miss_at = beat_t + p * 0.5
+	if _rh_miss_at >= 0.0 and t >= _rh_miss_at:
+		_rh_miss_at = -1.0
+		d.click()
 
 
 func _current_cps() -> float:
@@ -224,12 +252,6 @@ func _route_keys(_d: RefCounted) -> void:
 		if TransmutationLogic.candidate() != tid:
 			_after_key("key:T transmute:" + tid)
 	if EvoManager.mutation_coro_simbiotico:
-		if cfg.get("coro_overload", false) and CoroSimbioticoLogic.can_overload():
-			CoroSimbioticoLogic.overload()
-			_after_key("key:Q coro_overload stacks=%.0f" % EvoManager.coro_stacks)
-		if cfg.get("coro_w", false) and CoroSimbioticoLogic.can_buy_w():
-			CoroSimbioticoLogic.buy_w()
-			_after_key("key:W coro_w")
 		if cfg.get("coro_seal", false) and CoroSimbioticoLogic.seal_ready():
 			UIManager._ng_buttons._on_coro_seal_pressed()
 			_log("seal:coro")

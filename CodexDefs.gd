@@ -1494,24 +1494,24 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Coro Simbiótico", "name_en": "Symbiotic Chorus",
 		"body_es": (
-			"Transmutación (A → A+) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Simbiosis). Con Simbiosis activa aparece el botón [b][T] Revertir[/b] (el pacto espera tu decisión: Simbiosis no cierra mientras el botón tenga apariciones). Al revertir, el pacto se [b]digiere[/b] en 40 de ritmo inicial.\n\n"
-			+ "Renunciás al click ×2.5, al pasivo ×0.5 y al final Simbiosis. A cambio, [b]la cooperación se vuelve ritmo[/b]:\n\n"
-			+ "• [b]Ritmo[/b]: cada click suma; si dejás de clickear, se va (≈ clicks por segundo × 5). Cada punto da [b]+2%[/b] a todo el ingreso, tope 100.\n"
-			+ "• [b]Desafinación[/b]: el estrés desafina el coro — el bonus se multiplica por (1 − ε/2).\n"
-			+ "• [b][Q] Sobrecarga[/b]: 10 s de auto-click a 20/s (lleva el ritmo al tope), pero ε +0.20. Cooldown 90 s.\n"
-			+ "• [b][W] Sostener el coro[/b]: +1 s de ventana de ritmo por nivel (más ritmo con los mismos clicks).\n\n"
-			+ "[b]Sello[/b]: ritmo ≥ 30 sostenido un total de 300 s + 6 Sobrecargas + dinero generado desde la reversión → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
-			+ "[b]Recompensa[/b]: [b]Legado: Eco del Coro[/b] — en todas las runs, clickear sostenido rinde +0.5% por punto de ritmo (máx. +20%)."
+			"Transmutación (A → A+) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Simbiosis). Con Simbiosis activa aparece el botón [b][T] Revertir[/b] (el pacto espera tu decisión: Simbiosis no cierra mientras el botón tenga apariciones). Al revertir, el pacto se [b]digiere[/b] en combo 16.\n\n"
+			+ "Renunciás al click ×2.5, al pasivo ×0.5 y al final Simbiosis. A cambio, [b]la cooperación se vuelve ritmo[/b]: no importa clickear rápido, importa clickear [b]a tiempo[/b].\n\n"
+			+ "• [b]Metrónomo[/b]: un aro se cierra sobre el núcleo y lo toca en el golpe (con un tick de sonido; volumen propio en Ajustes).\n"
+			+ "• [b]Golpe a tiempo[/b] (±0.15 s): combo +1. Cada punto de combo da [b]+4%[/b] a todo el ingreso (tope 64).\n"
+			+ "• [b]Fuera de tiempo[/b]: el combo se corta a la mitad. Golpe salteado: −4.\n"
+			+ "• [b]Compás[/b]: 4 golpes seguidos a tiempo.\n\n"
+			+ "[b]Sello — la partitura[/b]: I. Andante (90 BPM, 40 compases) → II. Moderato (110 BPM, 60) → III. Allegro (130 BPM, 80). Fallar corta el combo, pero los compases tocados no se pierden → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Compás Interno[/b] — en todas las runs suena un metrónomo suave; cada golpe a tiempo seguido suma +1% de click (máx. +15%)."
 		),
 		"body_en": (
-			"Transmutation (A → A+) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Symbiosis). With Symbiosis active the [b][T] Revert[/b] button appears (the pact waits for your decision: Symbiosis does not close while the button has appearances left). On reverting, the pact is [b]digested[/b] into 40 starting rhythm.\n\n"
-			+ "You give up the ×2.5 click, the ×0.5 passive and the Symbiosis ending. In exchange, [b]cooperation becomes rhythm[/b]:\n\n"
-			+ "• [b]Rhythm[/b]: every click adds; stop clicking and it fades (≈ clicks per second × 5). Each point gives [b]+2%[/b] to all income, capped at 100.\n"
-			+ "• [b]Detuning[/b]: stress detunes the chorus — the bonus is multiplied by (1 − ε/2).\n"
-			+ "• [b][Q] Overload[/b]: 10 s of auto-click at 20/s (maxes the rhythm), but ε +0.20. 90 s cooldown.\n"
-			+ "• [b][W] Sustain the chorus[/b]: +1 s of rhythm window per level (more rhythm from the same clicks).\n\n"
-			+ "[b]Seal[/b]: rhythm ≥ 30 sustained for a total of 300 s + 6 Overloads + money generated since reverting → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
-			+ "[b]Reward[/b]: [b]Legacy: Echo of the Chorus[/b] — in every run, sustained clicking yields +0.5% per rhythm point (max +20%)."
+			"Transmutation (A → A+) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Symbiosis). With Symbiosis active the [b][T] Revert[/b] button appears (the pact waits for your decision: Symbiosis does not close while the button has appearances left). On reverting, the pact is [b]digested[/b] into combo 16.\n\n"
+			+ "You give up the ×2.5 click, the ×0.5 passive and the Symbiosis ending. In exchange, [b]cooperation becomes rhythm[/b]: clicking fast doesn't matter, clicking [b]on time[/b] does.\n\n"
+			+ "• [b]Metronome[/b]: a ring closes on the core and touches it on the beat (with a tick sound; its own volume in Settings).\n"
+			+ "• [b]On-beat hit[/b] (±0.15 s): combo +1. Each combo point gives [b]+4%[/b] to all income (cap 64).\n"
+			+ "• [b]Off-beat[/b]: the combo is cut in half. Skipped beat: −4.\n"
+			+ "• [b]Bar[/b]: 4 on-beat hits in a row.\n\n"
+			+ "[b]Seal — the score[/b]: I. Andante (90 BPM, 40 bars) → II. Moderato (110 BPM, 60) → III. Allegro (130 BPM, 80). Missing cuts the combo, but bars already played are kept → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Inner Beat[/b] — a soft metronome plays in every run; each consecutive on-beat hit adds +1% click (max +15%)."
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_coro"},
 		"see_also": ["transmut_intro", "simbiosis", "transmut_caos"],
