@@ -571,7 +571,7 @@ const DEFS := {
 	},
 	"sinfonia_del_caos": {
 		"name": "Sinfonía del Caos",
-		"desc": "Sellar Caos Orquestado cobrando TODOS los Colapsos Dirigidos con ε ≥ 1.5.",
+		"desc": "Sellar Caos Orquestado con el primer Gran Colapso que intentes: ni un intento fallido.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "sinfonia_del_caos",
 	},

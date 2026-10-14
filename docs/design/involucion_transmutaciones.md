@@ -256,7 +256,23 @@ Coro se rehace (hoy es "clickear rápido", casi lo mismo que Hiper/Fusión); Cao
 Todos los números de abajo son **propuesta para calibrar con el simulador** (mismo proceso que R3/R4:
 nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde la reversión).
 
-### 10.1 Caos Orquestado — sello de **Gran Colapso** (único cambio)
+### 10.1 Caos Orquestado — sello de **Gran Colapso** ✅ (R3b, 2026-10-13)
+
+**Implementado:** un Colapso cobrado con ε ≥ 1.8 cuya ráfaga genere **$5M** sella la ruta al terminar
+(sin botón). Dos cambios por el simulador:
+1. **[W] también suma +15 % al multiplicador del Colapso por nivel.** Sólo acortar cooldown/acelerar la
+   carga no movía el sello: el Gran Colapso lo limita lo que rinde una ráfaga.
+2. **MYTHIC *Sinfonía del Caos* = sellar con el primer Gran Colapso intentado** (ni un intento fallido).
+   "Todos los Colapsos con ε ≥ 1.5" salía solo jugando a la ruta nueva. Ahora pide cultivar cobrando por
+   debajo de 1.8 y apostar una sola vez, en el momento justo.
+
+| Perfil | Sella desde la reversión | MYTHIC |
+|---|---:|---|
+| `ng_caos_player` — cobra con ε ≥ 0.8, [W], a los 8 min busca el Gran Colapso | **14.8 min** (4 intentos) | no |
+| `ng_caos_no_cd` — igual sin [W] | 20.5 min | no |
+| `ng_caos_sinfonia` — cultiva con ε < 1.6, un solo intento a los 19 min | 21.3 min | sí |
+
+**Diseño original de §10.1:**
 - Hoy: 360 s con ε ≥ 0.60 · 10 Colapsos con carga · $30M (tres casillas).
 - Propuesta: **un Colapso Dirigido cobrado con ε ≥ 1.8 que genere ≥ $X durante su ráfaga** sella la
   ruta al terminar la ráfaga. Es la apuesta llevada al extremo: esperar la carga larga (ε llega a 1.8
@@ -370,7 +386,7 @@ primeros 7 min y después sólo pasivo (`buy_ids_from`).
 ### 10.5 Orden de implementación propuesto
 1. ✅ **R5 Micelio (asignar)** — barras en upgrades + click derecho.
 2. ✅ **R4b Coro (ritmo)** — metrónomo visual + sonido, bot con precisión.
-3. **R3b Caos (Gran Colapso)** — cambio chico de sello.
+3. ✅ **R3b Caos (Gran Colapso)**.
 4. **R6 Huésped (domesticar)**.
 
 ## 9. Identidad visual de las transmutaciones (2026-10-12)

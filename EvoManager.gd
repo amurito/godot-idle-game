@@ -180,7 +180,13 @@ var caos_cd_level: int = 0
 var caos_collapse_count: int = 0
 var caos_charged_collapses: int = 0       # Colapsos con ε ≥ CAOS_RED_EPS (sello)
 var caos_peak_collapse_eps: float = 0.0   # mayor ε cobrado en un Colapso
-var caos_min_collapse_eps: float = 99.0   # menor ε cobrado (logro MYTHIC: todos ≥ CAOS_MYTHIC_EPS)
+var caos_min_collapse_eps: float = 99.0   # menor ε cobrado (estadística)
+var caos_burst_eps: float = 0.0           # ε cobrado por la ráfaga en curso
+var caos_burst_money_mark: float = 0.0    # total_money_generated al disparar la ráfaga en curso
+var caos_last_burst_eps: float = 0.0      # último intento (panel)
+var caos_last_burst_money: float = 0.0
+var caos_best_grand_money: float = 0.0    # mejor ráfaga con ε ≥ CAOS_GRAND_EPS
+var caos_grand_attempts: int = 0          # ráfagas con ε ≥ CAOS_GRAND_EPS (MYTHIC Sinfonía: sellar con la 1ª)
 var batuta_used: bool = false             # legado Batuta: ε → 0 una vez por run
 
 # === CORO SIMBIÓTICO (Transmutación de Simbiosis — CoroSimbioticoLogic) ===

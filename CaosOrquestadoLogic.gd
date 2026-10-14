@@ -11,7 +11,8 @@ class_name CaosOrquestadoLogic
 ##   · [Q] Colapso Dirigido: cobra el ε acumulado → ráfaga × (1 + CAOS_COLLAPSE_K · ε) durante
 ##     CAOS_COLLAPSE_DURATION s y ε vuelve a 0. Decisión constante: mantener ε alto o cobrarlo.
 ##   · [W] acorta el cooldown del Colapso (sink de dinero).
-##   · Sello: tiempo en zona roja (ε ≥ CAOS_RED_EPS) · Colapsos "con carga" · $ desde la reversión.
+##   · Sello: GRAN COLAPSO — un Colapso cobrado con ε ≥ CAOS_GRAND_EPS cuya ráfaga genere
+##     ≥ CAOS_GRAND_MONEY sella la ruta al terminar. Si no alcanza, se vuelve a cargar.
 
 static func activate() -> void:
 	if EvoManager.mutation_caos_orquestado:
@@ -51,6 +52,7 @@ static func process(dt: float) -> void:
 		if EvoManager.caos_burst_timer <= 0.0:
 			EvoManager.caos_burst_timer = 0.0
 			EvoManager.caos_cooldown = effective_cooldown()
+			_end_burst()
 	elif EvoManager.caos_cooldown > 0.0:
 		EvoManager.caos_cooldown = maxf(0.0, EvoManager.caos_cooldown - dt)
 
@@ -80,21 +82,30 @@ static func collapse() -> void:
 	if not can_collapse():
 		return
 	var eps: float = maxf(StructuralModel.epsilon_runtime, 0.0)
-	EvoManager.caos_burst_saved_mult = 1.0 + Balance.CAOS_COLLAPSE_K * eps
+	EvoManager.caos_burst_saved_mult = 1.0 + collapse_k() * eps
 	EvoManager.caos_burst_timer = Balance.CAOS_COLLAPSE_DURATION
 	EvoManager.caos_collapse_count += 1
 	if eps >= Balance.CAOS_RED_EPS:
 		EvoManager.caos_charged_collapses += 1
+	EvoManager.caos_burst_eps = eps
+	EvoManager.caos_burst_money_mark = EconomyManager.total_money_generated
 	EvoManager.caos_peak_collapse_eps = maxf(EvoManager.caos_peak_collapse_eps, eps)
 	EvoManager.caos_min_collapse_eps = minf(EvoManager.caos_min_collapse_eps, eps)
 	EvoManager.caos_charge = 0.0
 	StructuralModel.epsilon_runtime = 0.0
-	UIManager.show_toast(TranslationServer.translate("TOAST_CAOS_COLLAPSE") % [eps, EvoManager.caos_burst_saved_mult])
+	if is_grand_attempt():
+		UIManager.show_toast(TranslationServer.translate("TOAST_CAOS_GRAND_START") % [eps, UIManager.format_compact(Balance.CAOS_GRAND_MONEY)])
+	else:
+		UIManager.show_toast(TranslationServer.translate("TOAST_CAOS_COLLAPSE") % [eps, EvoManager.caos_burst_saved_mult])
 
 
 # ── [W] "Afinar la orquesta" (sink): menos cooldown y carga más rápida ───────
-## El ciclo de Colapsos lo limitan el cooldown Y lo que tarda la carga en volver a la zona roja;
-## por eso [W] baja los dos (medido: sólo cooldown no aceleraba el sello).
+## El ciclo de Colapsos lo limitan el cooldown Y lo que tarda la carga en volver a la zona roja,
+## y el Gran Colapso lo limita lo que rinde una ráfaga: [W] ataca los tres.
+## Multiplicador por ε del Colapso: [W] lo afina (+CAOS_CD_BURST_BONUS por nivel).
+static func collapse_k() -> float:
+	return Balance.CAOS_COLLAPSE_K * (1.0 + Balance.CAOS_CD_BURST_BONUS * EvoManager.caos_cd_level)
+
 static func charge_rate() -> float:
 	return Balance.CAOS_CHARGE_RATE * (1.0 + Balance.CAOS_CD_CHARGE_BONUS * EvoManager.caos_cd_level)
 
@@ -124,14 +135,32 @@ static func buy_cd() -> void:
 
 # ── Sello ────────────────────────────────────────────────────────────────────
 
-static func money_since_revert() -> float:
-	return maxf(EconomyManager.total_money_generated - EvoManager.caos_money_mark, 0.0)
+## La ráfaga en curso fue cobrada con ε suficiente para un Gran Colapso.
+static func is_grand_attempt() -> bool:
+	return EvoManager.caos_burst_eps >= Balance.CAOS_GRAND_EPS
 
+## $ generados por la ráfaga en curso.
+static func burst_money() -> float:
+	return maxf(EconomyManager.total_money_generated - EvoManager.caos_burst_money_mark, 0.0)
+
+## Fin de una ráfaga: registra el intento; un Gran Colapso logrado sella la ruta.
+static func _end_burst() -> void:
+	var money: float = burst_money()
+	EvoManager.caos_last_burst_eps = EvoManager.caos_burst_eps
+	EvoManager.caos_last_burst_money = money
+	if not is_grand_attempt():
+		return
+	EvoManager.caos_grand_attempts += 1
+	EvoManager.caos_best_grand_money = maxf(EvoManager.caos_best_grand_money, money)
+	if money >= Balance.CAOS_GRAND_MONEY:
+		LogManager.add(TranslationServer.translate("LOG_CAOS_GRAND_DONE") % [EvoManager.caos_burst_eps, UIManager.format_compact(money)])
+		RunManager.close_run("CAOS ORQUESTADO", TranslationServer.translate("CLOSE_CAOS"))
+	else:
+		UIManager.show_toast(TranslationServer.translate("TOAST_CAOS_GRAND_FAIL") % [UIManager.format_compact(money), UIManager.format_compact(Balance.CAOS_GRAND_MONEY)])
+
+## Sin botón: el Gran Colapso sella solo al terminar su ráfaga.
 static func seal_ready() -> bool:
-	return EvoManager.mutation_caos_orquestado \
-		and EvoManager.caos_red_time >= Balance.CAOS_SEAL_RED_TIME \
-		and EvoManager.caos_charged_collapses >= Balance.CAOS_SEAL_CHARGED \
-		and money_since_revert() >= Balance.CAOS_SEAL_MONEY
+	return false
 
 
 # ── Legado: Batuta (ε → 0 una vez por run, en cualquier run) ────────────────

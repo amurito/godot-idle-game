@@ -53,7 +53,6 @@ var _ayuno_seal_btn: Button = null       # Sello del final AYUNO PRIMORDIAL
 var _simbiosis_seal_btn: Button = null
 var _caos_collapse_btn: Button = null    # [Q] Colapso Dirigido (Caos Orquestado)
 var _caos_cd_btn: Button = null          # [W] cooldown del Colapso
-var _caos_seal_btn: Button = null        # Sello CAOS ORQUESTADO
 var _batuta_btn: Button = null
 var _coro_seal_btn: Button = null        # Sello de Coro Simbiótico (partitura completa)
 var _metronome_ring: Control = null      # Anillo del metrónomo sobre el núcleo (Coro / Compás Interno)
@@ -163,12 +162,11 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
 	_caos_cd_btn = null
-	_caos_seal_btn = null
 	_batuta_btn = null
 	_coro_seal_btn = null
 	_metronome_ring = null
@@ -268,7 +266,7 @@ func _make_rp_button(color: Color, min_h: float, cb: Callable, index: int) -> Bu
 func _update_caos_buttons() -> void:
 	var active: bool = EvoManager.mutation_caos_orquestado and not RunManager.run_closed
 	if not active:
-		for b in [_caos_collapse_btn, _caos_cd_btn, _caos_seal_btn]:
+		for b in [_caos_collapse_btn, _caos_cd_btn]:
 			if is_instance_valid(b):
 				b.visible = false
 		return
@@ -295,18 +293,13 @@ func _update_caos_buttons() -> void:
 	else:
 		var next_cd: float = maxf(Balance.CAOS_CD_FLOOR, Balance.CAOS_COLLAPSE_COOLDOWN * pow(1.0 - Balance.CAOS_CD_REDUCE_PCT, EvoManager.caos_cd_level + 1))
 		_caos_cd_btn.text = TranslationServer.translate("BTN_CAOS_CD") % [CaosOrquestadoLogic.effective_cooldown(), next_cd,
-			1.0 + Balance.CAOS_CD_CHARGE_BONUS * (EvoManager.caos_cd_level + 1), UITextBuilders.format_compact(CaosOrquestadoLogic.cd_cost())]
+			1.0 + Balance.CAOS_CD_CHARGE_BONUS * (EvoManager.caos_cd_level + 1),
+			1.0 + Balance.CAOS_CD_BURST_BONUS * (EvoManager.caos_cd_level + 1), UITextBuilders.format_compact(CaosOrquestadoLogic.cd_cost())]
 		_caos_cd_btn.disabled = not CaosOrquestadoLogic.can_buy_cd()
 	_caos_cd_btn.text = EmojiToRichText.strip(_caos_cd_btn.text)
 	_caos_cd_btn.visible = true
 
-	if CaosOrquestadoLogic.seal_ready():
-		if not is_instance_valid(_caos_seal_btn):
-			_caos_seal_btn = _make_rp_button(Color(0.8, 0.6, 1.0), 70, _on_caos_seal_pressed, 0)
-		_caos_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_CAOS_SEAL") % int(Balance.PL_REWARDS.get("CAOS ORQUESTADO", 9)))
-		_caos_seal_btn.visible = true
-	elif is_instance_valid(_caos_seal_btn):
-		_caos_seal_btn.visible = false
+	# Sin botón de sello: el Gran Colapso sella solo al terminar su ráfaga (CaosOrquestadoLogic).
 
 func _on_caos_collapse_pressed() -> void:
 	CaosOrquestadoLogic.collapse()
@@ -315,13 +308,6 @@ func _on_caos_collapse_pressed() -> void:
 func _on_caos_cd_pressed() -> void:
 	CaosOrquestadoLogic.buy_cd()
 	_update_caos_buttons()
-
-func _on_caos_seal_pressed() -> void:
-	if RunManager.run_closed or not CaosOrquestadoLogic.seal_ready():
-		return
-	if is_instance_valid(_caos_seal_btn):
-		_caos_seal_btn.visible = false
-	RunManager.close_run("CAOS ORQUESTADO", TranslationServer.translate("CLOSE_CAOS"))
 
 ## Legado Batuta (cualquier run): botón discreto mientras haya ε para silenciar.
 func _update_batuta_button() -> void:

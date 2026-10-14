@@ -552,8 +552,9 @@ func on_run_closed(route: String) -> void:
 		unlock("esclerocio_contingencia")
 	if route == "AUTOFAGIA NECRÓTICA" and _eval_autolisis_perfecta({}):
 		unlock("autolisis_perfecta")
-	# Sinfonía: TODOS los Colapsos cobrados a ε ≥ CAOS_MYTHIC_EPS (paciencia: esperar la carga larga).
-	if route == "CAOS ORQUESTADO" and EvoManager.caos_collapse_count > 0 			and EvoManager.caos_min_collapse_eps >= Balance.CAOS_MYTHIC_EPS:
+	# Sinfonía: sellar con el PRIMER Gran Colapso intentado (ni un intento fallido: cobrar por debajo de
+	# ε 1.8 mientras se cultiva la economía y apostar una sola vez, en el momento justo).
+	if route == "CAOS ORQUESTADO" and EvoManager.caos_grand_attempts == 1:
 		unlock("sinfonia_del_caos")
 	# Fortissimo: el Allegro entero sin un click fuera de tiempo.
 	if route == "CORO SIMBIÓTICO" and EvoManager.coro_allegro_misses == 0:

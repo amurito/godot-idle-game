@@ -1471,9 +1471,9 @@ const ENTRIES: Dictionary = {
 			+ "• Todo el ingreso [b]×(1 + ε)[/b], tope ×3. Ω nunca baja de 0.20.\n"
 			+ "• [b][Q] Colapso Dirigido[/b]: cobrás el ε acumulado → ráfaga [b]×(1 + 2·ε)[/b] durante 20 s, y ε vuelve a 0. Cooldown 90 s.\n"
 			+ "• [b]Carga de caos[/b]: el caos se acumula si no lo dirigís — ε sube solo +0.01/s (es un piso) y el Colapso lo vacía.\n"
-			+ "• [b][W] Afinar[/b]: −20% de cooldown y +25% de velocidad de carga por nivel.\n\n"
+			+ "• [b][W] Afinar[/b]: por nivel, −20% de cooldown, +25% de velocidad de carga y +15% al multiplicador del Colapso.\n\n"
 			+ "La decisión constante: ¿mantener ε alto (bonus continuo) o cobrarlo (ráfaga grande)?\n\n"
-			+ "[b]Sello[/b]: 360 s acumulados con ε ≥ 0.60 + 10 Colapsos [b]con carga[/b] (ε ≥ 0.60 al dispararlos) + $30M generados desde la reversión → [b]CAOS ORQUESTADO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Sello — Gran Colapso[/b]: cobrá un Colapso con [b]ε ≥ 1.8[/b] cuya ráfaga genere [b]$5M[/b]: al terminar la ráfaga, la ruta se sella sola → [b]CAOS ORQUESTADO[/b] (+9 PL base + bonus). Si no alcanza, volvés a cargar. La apuesta: cobrar seguido para crecer, y cuando la economía sea grande, dejar cargar el caos hasta el extremo.\n\n"
 			+ "[b]Recompensa[/b]: [b]Legado: Batuta[/b] — una vez por run, en cualquier run, podés llevar ε a 0."
 		),
 		"body_en": (
@@ -1482,9 +1482,9 @@ const ENTRIES: Dictionary = {
 			+ "• All income [b]×(1 + ε)[/b], capped at ×3. Ω never drops below 0.20.\n"
 			+ "• [b][Q] Directed Collapse[/b]: cash in the accumulated ε → burst [b]×(1 + 2·ε)[/b] for 20 s, and ε resets to 0. 90 s cooldown.\n"
 			+ "• [b]Chaos charge[/b]: chaos builds up if you do not conduct it — ε rises on its own +0.01/s (as a floor) and the Collapse empties it.\n"
-			+ "• [b][W] Tune[/b]: −20% cooldown and +25% charge speed per level.\n\n"
+			+ "• [b][W] Tune[/b]: per level, −20% cooldown, +25% charge speed and +15% to the Collapse multiplier.\n\n"
 			+ "The constant decision: keep ε high (steady bonus) or cash it in (big burst)?\n\n"
-			+ "[b]Seal[/b]: 360 s accumulated at ε ≥ 0.60 + 10 [b]charged[/b] Collapses (ε ≥ 0.60 when fired) + $30M generated since reverting → [b]ORCHESTRATED CHAOS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Seal — Grand Collapse[/b]: cash a Collapse at [b]ε ≥ 1.8[/b] whose burst generates [b]$5M[/b]: when the burst ends, the route seals itself → [b]ORCHESTRATED CHAOS[/b] (+9 LP base + bonus). If it falls short, charge again. The bet: cash in often to grow, and once the economy is big, let chaos charge to the extreme.\n\n"
 			+ "[b]Reward[/b]: [b]Legacy: Baton[/b] — once per run, in any run, you can bring ε to 0."
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_caos"},

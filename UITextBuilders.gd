@@ -1306,7 +1306,6 @@ static func build_fusion_catabolica_panel_text() -> String:
 # ─── CAOS ORQUESTADO (transmutación de Homeostasis) ──────────────────────────
 
 static func build_caos_orquestado_panel_text() -> String:
-	var tr_ok := "[color=green]✓[/color]"
 	var eps: float = StructuralModel.epsilon_runtime
 	var t := "[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_TITLE") + "[/color]\n"
 	t += TranslationServer.translate("CAOS_PANEL_FUEL") % [eps, CaosOrquestadoLogic.fuel_mult(), Balance.CAOS_FUEL_CAP] + "\n"
@@ -1316,22 +1315,17 @@ static func build_caos_orquestado_panel_text() -> String:
 	elif EvoManager.caos_cooldown > 0.0:
 		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_CD") % EvoManager.caos_cooldown + "\n"
 	else:
-		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_READY") % (1.0 + Balance.CAOS_COLLAPSE_K * maxf(eps, 0.0)) + "\n"
+		t += TranslationServer.translate("CAOS_PANEL_COLLAPSE_READY") % (1.0 + CaosOrquestadoLogic.collapse_k() * maxf(eps, 0.0)) + "\n"
 	t += "\n[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_SEAL_HDR") + "[/color]\n"
-	var red_ok: bool = EvoManager.caos_red_time >= Balance.CAOS_SEAL_RED_TIME
-	t += TranslationServer.translate("CAOS_PANEL_RED") % [tr_ok if red_ok else "[ ]", int(EvoManager.caos_red_time),
-		int(Balance.CAOS_SEAL_RED_TIME), Balance.CAOS_RED_EPS] + "\n"
-	var ch_ok: bool = EvoManager.caos_charged_collapses >= Balance.CAOS_SEAL_CHARGED
-	t += TranslationServer.translate("CAOS_PANEL_CHARGED") % [tr_ok if ch_ok else "[ ]", EvoManager.caos_charged_collapses,
-		Balance.CAOS_SEAL_CHARGED, Balance.CAOS_RED_EPS] + "\n"
-	var m: float = CaosOrquestadoLogic.money_since_revert()
-	var m_ok: bool = m >= Balance.CAOS_SEAL_MONEY
-	t += TranslationServer.translate("CAOS_PANEL_MONEY") % [tr_ok if m_ok else "[ ]", format_compact(m),
-		format_compact(Balance.CAOS_SEAL_MONEY)] + "\n"
-	if red_ok and ch_ok and m_ok:
-		t += "\n[color=#ff5c8a]" + TranslationServer.translate("CAOS_PANEL_SEAL_READY") + "[/color]"
-	else:
-		t += "\n[color=#aaaaaa]" + TranslationServer.translate("CAOS_PANEL_TIP") + "[/color]"
+	t += TranslationServer.translate("CAOS_PANEL_GRAND") % [Balance.CAOS_GRAND_EPS, format_compact(Balance.CAOS_GRAND_MONEY)] + "\n"
+	t += TranslationServer.translate("CAOS_PANEL_CHARGE") % [EvoManager.caos_charge, Balance.CAOS_GRAND_EPS] + "\n"
+	if EvoManager.caos_burst_timer > 0.0 and CaosOrquestadoLogic.is_grand_attempt():
+		t += "[color=#ffcc66]" + TranslationServer.translate("CAOS_PANEL_GRAND_LIVE") % [format_compact(CaosOrquestadoLogic.burst_money()),
+			format_compact(Balance.CAOS_GRAND_MONEY)] + "[/color]\n"
+	elif EvoManager.caos_best_grand_money > 0.0:
+		t += TranslationServer.translate("CAOS_PANEL_GRAND_BEST") % [format_compact(EvoManager.caos_best_grand_money),
+			format_compact(Balance.CAOS_GRAND_MONEY)] + "\n"
+	t += "\n[color=#aaaaaa]" + TranslationServer.translate("CAOS_PANEL_TIP") + "[/color]"
 	return t
 
 static func build_caos_orquestado_closed_text() -> String:

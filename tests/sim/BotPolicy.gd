@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 ## BotPolicy — qué hace el "jugador" simulado en cada frame.
 ##
 ## Sólo usa acciones que el jugador real tiene, por el mismo camino de código que la UI:
@@ -34,7 +34,9 @@ extends RefCounted
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
 ##   cps_when: {mutation: cps}     ritmo de clicks mientras EvoManager.mutation_<mutation> es true
 ##   caos_collapse_at: float       dispara [Q] Colapso Dirigido cuando ε ≥ esto (-1 = nunca)
-##   caos_cd / caos_seal: bool     compra [W] cuando alcanza / sella apenas puede
+##   caos_cd: bool                 compra [W] cuando alcanza
+##   caos_grand_from: s            a los s de Caos pasa a cobrar sólo con ε ≥ CAOS_GRAND_EPS (Gran Colapso)
+##   caos_hold_below: float        antes de eso deja de clickear con ε ≥ esto (no gastar el Gran Colapso)
 ##   rhythm_accuracy: float        Coro Simbiótico: en cada golpe del metrónomo clickea a tiempo con esta
 ##                                 probabilidad (si no, clickea medio pulso tarde = fuera de tiempo)
 ##   rhythm_seed: int              semilla del RNG de precisión (default 7)
@@ -62,6 +64,8 @@ var _rng := RandomNumberGenerator.new()
 var _rh_last_beat_time: float = -1.0e9
 var _rh_miss_at: float = -1.0
 var _micelio_start: float = -1.0
+var _caos_start: float = -1.0
+var _caos_was_bursting := false
 var _swapped := false
 var _micelio_plan: Array = []
 var _next_decision_frame: int = 0
@@ -116,6 +120,9 @@ func _current_cps() -> float:
 		return 0.0
 	var until: float = float(cfg.get("click_until", -1.0))
 	if until >= 0.0 and t >= until:
+		return 0.0
+	var hold: float = float(cfg.get("caos_hold_below", -1.0))
+	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
 	for m in cfg.get("stop_click_when", []):
 		if bool(EvoManager.get("mutation_" + str(m))):
@@ -258,7 +265,15 @@ func _route_keys(_d: RefCounted) -> void:
 	if EvoManager.mutation_micelio_omnisciente:
 		_micelio()
 	if EvoManager.mutation_caos_orquestado:
+		if _caos_start < 0.0:
+			_caos_start = RunManager.run_time
+		if _caos_was_bursting and EvoManager.caos_burst_timer <= 0.0:
+			_log("burst_end eps=%.2f money=%.0f" % [EvoManager.caos_last_burst_eps, EvoManager.caos_last_burst_money])
+		_caos_was_bursting = EvoManager.caos_burst_timer > 0.0
 		var at: float = float(cfg.get("caos_collapse_at", -1.0))
+		var grand_from: float = float(cfg.get("caos_grand_from", -1.0))
+		if grand_from >= 0.0 and RunManager.run_time - _caos_start >= grand_from:
+			at = Balance.CAOS_GRAND_EPS + 0.02
 		if at >= 0.0 and StructuralModel.epsilon_runtime >= at and CaosOrquestadoLogic.can_collapse():
 			var eps_now: float = StructuralModel.epsilon_runtime
 			CaosOrquestadoLogic.collapse()
@@ -266,9 +281,6 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("caos_cd", false) and CaosOrquestadoLogic.can_buy_cd():
 			CaosOrquestadoLogic.buy_cd()
 			_after_key("key:W caos_cd")
-		if cfg.get("caos_seal", false) and CaosOrquestadoLogic.seal_ready():
-			UIManager._ng_buttons._on_caos_seal_pressed()
-			_log("seal:caos")
 	if EvoManager.mutation_fusion_catabolica:
 		var burst_limit: int = int(cfg.get("fusion_burst_limit", 1 << 30))
 		if cfg.get("fusion_bursts", false) and EvoManager.fusion_burst_count < burst_limit \

@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 ## Scenarios — runs predefinidas para el simulador.
 ##
 ## Cada escenario define:
@@ -155,18 +155,18 @@ const ALL := {
 		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
 			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
 			"mutation": "homeostasis", "transmute": "caos", "cps_when": {"caos_orquestado": 7.0},
-			"caos_collapse_at": 0.8, "caos_cd": true, "caos_seal": true},
+			"caos_collapse_at": 0.8, "caos_cd": true, "caos_grand_from": 480.0},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_caos_sinfonia": {
-		"desc": "T3 + llave de CAOS ORQUESTADO: juega Homeostasis, revierte con [T], clickea para subir ε y cobra cada Colapso recién con ε ≥ 1.5 (logro MYTHIC Sinfonía del Caos).",
+		"desc": "Caos para el MYTHIC: cultiva cobrando con ε < 1.8 (deja de clickear al acercarse) y apuesta UNA sola vez al Gran Colapso, a los 19 min.",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HOMEOSTASIS",
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
 			"buffs": {"transmut_caos": 1}},
 		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
 			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
 			"mutation": "homeostasis", "transmute": "caos", "cps_when": {"caos_orquestado": 7.0},
-			"caos_collapse_at": 1.5, "caos_cd": true, "caos_seal": true},
+			"caos_collapse_at": 0.8, "caos_cd": true, "caos_hold_below": 1.6, "caos_grand_from": 1140.0},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_caos_no_cd": {
@@ -177,7 +177,7 @@ const ALL := {
 		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
 			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
 			"mutation": "homeostasis", "transmute": "caos", "cps_when": {"caos_orquestado": 7.0},
-			"caos_collapse_at": 0.8, "caos_cd": false, "caos_seal": true},
+			"caos_collapse_at": 0.8, "caos_cd": false, "caos_grand_from": 480.0},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_coro_player": {

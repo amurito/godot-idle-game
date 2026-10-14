@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # ================================================================
 # Balance.gd — Autoload de constantes de diseño
@@ -226,15 +226,16 @@ const CAOS_COLLAPSE_K            := 2.0    # [Q] Colapso Dirigido: ráfaga × (1
 const CAOS_COLLAPSE_DURATION     := 20.0
 const CAOS_COLLAPSE_COOLDOWN     := 90.0
 const CAOS_CD_REDUCE_PCT         := 0.20   # [W] "Afinar": −20 % de cooldown por nivel…
-const CAOS_CD_CHARGE_BONUS       := 0.25   # …y +25 % de velocidad de carga por nivel (el ciclo lo limita la carga)
+const CAOS_CD_CHARGE_BONUS       := 0.25   # …+25 % de velocidad de carga por nivel…
+const CAOS_CD_BURST_BONUS        := 0.15   # …y +15 % al multiplicador del Colapso (el Gran Colapso lo limita la ráfaga)
 const CAOS_CD_FLOOR              := 30.0
 const CAOS_CD_COST_BASE          := 500_000.0
 const CAOS_CD_COST_GROWTH        := 1.9
 const CAOS_RED_EPS               := 0.60   # zona roja (sello + "colapso con carga")
-const CAOS_SEAL_RED_TIME         := 360.0  # s acumulados con ε ≥ CAOS_RED_EPS
-const CAOS_SEAL_CHARGED          := 10      # Colapsos Dirigidos con ε ≥ CAOS_RED_EPS al dispararlos
-const CAOS_SEAL_MONEY            := 30_000_000.0  # $ generados desde la reversión
-const CAOS_MYTHIC_EPS            := 1.5    # logro "Sinfonía del Caos": TODOS los Colapsos con ε ≥ esto
+# Sello = GRAN COLAPSO (§10.1): un Colapso cobrado con ε ≥ GRAND_EPS cuya ráfaga genere ≥ GRAND_MONEY
+# sella la ruta al terminar. Es la apuesta al extremo: esperar la carga larga y una economía grande.
+const CAOS_GRAND_EPS             := 1.8
+const CAOS_GRAND_MONEY           := 5_000_000.0  # simulador: ~15 min con [W], ~20 sin [W]
 
 # ── TRANSMUTACIÓN · CORO SIMBIÓTICO (revierte SIMBIOSIS) — CoroSimbioticoLogic ──
 # "La cooperación deja de ser un pacto y se vuelve un ritmo." Valores iniciales aprobados por el
