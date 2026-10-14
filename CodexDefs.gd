@@ -1497,20 +1497,20 @@ const ENTRIES: Dictionary = {
 			"Transmutación (A → A+) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Simbiosis). Con Simbiosis activa aparece el botón [b][T] Revertir[/b] (el pacto espera tu decisión: Simbiosis no cierra mientras el botón tenga apariciones). Al revertir, el pacto se [b]digiere[/b] en combo 16.\n\n"
 			+ "Renunciás al click ×2.5, al pasivo ×0.5 y al final Simbiosis. A cambio, [b]la cooperación se vuelve ritmo[/b]: no importa clickear rápido, importa clickear [b]a tiempo[/b].\n\n"
 			+ "• [b]Metrónomo[/b]: un aro se cierra sobre el núcleo y lo toca en el golpe (con un tick de sonido; volumen propio en Ajustes).\n"
-			+ "• [b]Golpe a tiempo[/b] (±0.15 s): combo +1. Cada punto de combo da [b]+4%[/b] a todo el ingreso (tope 64).\n"
+			+ "• [b]Golpe a tiempo[/b] (±0.20 s): combo +1. Cada punto de combo da [b]+4%[/b] a todo el ingreso (tope 64).\n"
 			+ "• [b]Fuera de tiempo[/b]: el combo se corta a la mitad. Golpe salteado: −4.\n"
 			+ "• [b]Compás[/b]: 4 golpes seguidos a tiempo.\n\n"
-			+ "[b]Sello — la partitura[/b]: I. Andante (90 BPM, 40 compases) → II. Moderato (110 BPM, 60) → III. Allegro (130 BPM, 80). Fallar corta el combo, pero los compases tocados no se pierden → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Sello — la partitura[/b]: I. Andante (80 BPM, 40 compases) → II. Moderato (95 BPM, 60) → III. Allegro (110 BPM, 80). Fallar corta el combo, pero los compases tocados no se pierden → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
 			+ "[b]Recompensa[/b]: [b]Legado: Compás Interno[/b] — en todas las runs suena un metrónomo suave; cada golpe a tiempo seguido suma +1% de click (máx. +15%)."
 		),
 		"body_en": (
 			"Transmutation (A → A+) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Symbiosis). With Symbiosis active the [b][T] Revert[/b] button appears (the pact waits for your decision: Symbiosis does not close while the button has appearances left). On reverting, the pact is [b]digested[/b] into combo 16.\n\n"
 			+ "You give up the ×2.5 click, the ×0.5 passive and the Symbiosis ending. In exchange, [b]cooperation becomes rhythm[/b]: clicking fast doesn't matter, clicking [b]on time[/b] does.\n\n"
 			+ "• [b]Metronome[/b]: a ring closes on the core and touches it on the beat (with a tick sound; its own volume in Settings).\n"
-			+ "• [b]On-beat hit[/b] (±0.15 s): combo +1. Each combo point gives [b]+4%[/b] to all income (cap 64).\n"
+			+ "• [b]On-beat hit[/b] (±0.20 s): combo +1. Each combo point gives [b]+4%[/b] to all income (cap 64).\n"
 			+ "• [b]Off-beat[/b]: the combo is cut in half. Skipped beat: −4.\n"
 			+ "• [b]Bar[/b]: 4 on-beat hits in a row.\n\n"
-			+ "[b]Seal — the score[/b]: I. Andante (90 BPM, 40 bars) → II. Moderato (110 BPM, 60) → III. Allegro (130 BPM, 80). Missing cuts the combo, but bars already played are kept → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Seal — the score[/b]: I. Andante (80 BPM, 40 bars) → II. Moderato (95 BPM, 60) → III. Allegro (110 BPM, 80). Missing cuts the combo, but bars already played are kept → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
 			+ "[b]Reward[/b]: [b]Legacy: Inner Beat[/b] — a soft metronome plays in every run; each consecutive on-beat hit adds +1% click (max +15%)."
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_coro"},
@@ -1543,6 +1543,32 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_micelio"},
 		"see_also": ["transmut_intro", "transmut_coro", "transmut_caos"],
+	},
+	"transmut_huesped": {
+		"cat": "transmutaciones",
+		"name_es": "Huésped Soberano", "name_en": "Sovereign Host",
+		"body_es": (
+			"Transmutación (A → A+) de [b]Parasitismo[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Parasitismo). Parasitismo dura segundos, así que con la llave [b]espera tu decisión[/b]: el botón [b][T] Revertir[/b] aparece 3 veces en 80 s mientras el parásito sigue drenando. Al revertir, la biomasa robada se [b]digiere[/b] en la despensa (1 comida cada 2 de biomasa).\n\n"
+			+ "Renunciás al crecimiento de biomasa ×2, al drenaje y a los finales de Parasitismo. A cambio, [b]el huésped domestica a su parásito[/b]:\n\n"
+			+ "• [b]Hambre[/b] (0–100): sube sola, más rápido cuanto más confía. [b][Q] Alimentar[/b]: −30 (gasta una comida de la despensa; sin despensa, el 4% de tu dinero).\n"
+			+ "• [b]Banda 25–75[/b]: la [b]confianza[/b] sube. Por encima, [b]muerde[/b] (corrosión). Por debajo, empachado y perezoso: la confianza baja.\n"
+			+ "• [b]Antojos[/b]: cada 30–50 s el hambre salta +15, con aviso 4 s antes.\n"
+			+ "• [b]Regalos[/b]: cada 20 s en banda, (5 × nivel) s de ingreso; el trueque sube ×(1 + 0.2 × nivel).\n\n"
+			+ "[b]Sello[/b]: confianza nivel 5 (600) → [b]HUÉSPED SOBERANO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Pacto Soberano[/b] — en todas las runs, la corrosión de Parasitismo avanza a la mitad."
+		),
+		"body_en": (
+			"Transmutation (A → A+) of [b]Parasitism[/b]. The key is bought in the Genetic Bank (15 LP, after closing Parasitism). Parasitism lasts seconds, so with the key it [b]waits for your decision[/b]: the [b][T] Revert[/b] button appears 3 times within 80 s while the parasite keeps draining. On reverting, the stolen biomass is [b]digested[/b] into the pantry (1 meal per 2 biomass).\n\n"
+			+ "You give up the ×2 biomass growth, the drain and the Parasitism endings. In exchange, [b]the host tames its parasite[/b]:\n\n"
+			+ "• [b]Hunger[/b] (0–100): rises on its own, faster the more it trusts you. [b][Q] Feed[/b]: −30 (uses a pantry meal; with an empty pantry, 4% of your money).\n"
+			+ "• [b]Band 25–75[/b]: [b]trust[/b] rises. Above, it [b]bites[/b] (corrosion). Below, overfed and lazy: trust drops.\n"
+			+ "• [b]Cravings[/b]: every 30–50 s hunger jumps +15, with a 4 s warning.\n"
+			+ "• [b]Gifts[/b]: every 20 s in band, (5 × level) s of income; barter rises ×(1 + 0.2 × level).\n\n"
+			+ "[b]Seal[/b]: trust level 5 (600) → [b]SOVEREIGN HOST[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Sovereign Pact[/b] — in every run, Parasitism's corrosion advances at half speed."
+		),
+		"unlock": {"type": "buff_owned", "id": "transmut_huesped"},
+		"see_also": ["transmut_intro", "transmut_micelio", "transmut_coro"],
 	},
 	"ayuno_primordial": {
 		"cat": "transmutaciones",

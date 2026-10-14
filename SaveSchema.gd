@@ -158,6 +158,18 @@ static func _define() -> Array:
 			_f("micelio_disconnects", EvoManager, {"default": 0, "load_int": true}),
 			_f("micelio_first_full", EvoManager, {"default": ""}),
 			_f("micelio_manual_buys", EvoManager, {"default": 0, "load_int": true}),
+			# Huésped Soberano (transmutación de Parasitismo)
+			_f("mutation_huesped_soberano", EvoManager, {"default": false}),
+			_f("huesped_hunger", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("huesped_trust", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("huesped_pantry", EvoManager, {"default": 0, "load_int": true}),
+			_f("huesped_feeds", EvoManager, {"default": 0, "load_int": true}),
+			_f("huesped_gift_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("huesped_craving_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("huesped_craving_warned", EvoManager, {"default": false}),
+			_f("huesped_cravings", EvoManager, {"default": 0, "load_int": true}),
+			_f("huesped_bite_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("huesped_left_band", EvoManager, {"default": false}),
 			_f("fusion_cd_level", EvoManager, {"default": 0, "load_int": true}),
 			# Ayuno Primordial
 			_f("mutation_ayuno_primordial", EvoManager, {"default": false}),

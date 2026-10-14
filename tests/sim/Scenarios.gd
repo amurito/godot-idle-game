@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 ## Scenarios — runs predefinidas para el simulador.
 ##
 ## Cada escenario define:
@@ -243,6 +243,40 @@ const ALL := {
 			"micelio_seal": true},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
+	"ng_parasito_probe": {
+		"desc": "T3 que clickea 2 min y se va (AFK): mide cuánto vive Parasitismo (agenda del botón de Huésped).",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "PARASITISMO",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "SIMBIOSIS"]},
+		"bot": {"click_cps": 4.0, "click_until": 120.0, "buy": "cheapest"},
+		"max_t": 2400.0, "sample_every": 10.0,
+	},	"ng_huesped_player": {
+		"desc": "T3 + llave de HUÉSPED: AFK → Parasitismo, revierte con [T] y alimenta al parásito cuando el hambre llega a 68 (no anticipa los antojos).",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "PARASITISMO",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "SIMBIOSIS"],
+			"buffs": {"transmut_huesped": 1}},
+		"bot": {"click_cps": 4.0, "click_until": 120.0, "buy": "cheapest", "transmute": "huesped",
+			"huesped_feed_at": 68.0, "huesped_seal": true},
+		"max_t": 3600.0, "sample_every": 30.0,
+	},
+	"ng_huesped_lazy": {
+		"desc": "Huésped descuidado: alimenta recién con hambre 85 (muerde seguido). ¿Sella igual?",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "PARASITISMO",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "SIMBIOSIS"],
+			"buffs": {"transmut_huesped": 1}},
+		"bot": {"click_cps": 4.0, "click_until": 120.0, "buy": "cheapest", "transmute": "huesped",
+			"huesped_feed_at": 85.0, "huesped_seal": true},
+		"max_t": 3600.0, "sample_every": 30.0,
+	},
+	"ng_huesped_perfect": {
+		"desc": "Huésped prolijo: alimenta a 60 y anticipa cada antojo: ¿saca el MYTHIC Simbionte Perfecto?",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "PARASITISMO",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "SIMBIOSIS"],
+			"buffs": {"transmut_huesped": 1}},
+		"bot": {"click_cps": 4.0, "click_until": 120.0, "buy": "cheapest", "transmute": "huesped",
+			"huesped_feed_at": 60.0, "huesped_precraving": true, "huesped_seal": true},
+		"max_t": 3600.0, "sample_every": 30.0,
+	},
+
 	"ng_coro_sloppy": {
 		"desc": "Coro con un jugador impreciso (85 % de golpes a tiempo): ¿llega a sellar?",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "SIMBIOSIS",

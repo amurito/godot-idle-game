@@ -1403,3 +1403,40 @@ static func build_micelio_omnisciente_closed_text() -> String:
 	var node_id: String = LegacyManager.nodo_latente_id if LegacyManager.nodo_latente_id != "" else "auto"
 	t += "[color=#c08cff]" + TranslationServer.translate("MICELIO_CLOSED_REWARD") % TranslationServer.translate("UPG_" + node_id.to_upper()) + "[/color]"
 	return t
+
+
+# ─── HUÉSPED SOBERANO (transmutación de Parasitismo) ─────────────────────────
+
+static func build_huesped_soberano_panel_text() -> String:
+	var h: float = EvoManager.huesped_hunger
+	var t := "[color=#7aa8ff]" + TranslationServer.translate("HUESPED_PANEL_TITLE") + "[/color]\n"
+	var state: String
+	if h > Balance.HUESPED_BAND_HI:
+		state = "[color=#ff5c6a]" + TranslationServer.translate("HUESPED_STATE_BITE") + "[/color]"
+	elif h < Balance.HUESPED_BAND_LO:
+		state = "[color=#aaaaaa]" + TranslationServer.translate("HUESPED_STATE_LAZY") + "[/color]"
+	else:
+		state = "[color=green]" + TranslationServer.translate("HUESPED_STATE_OK") + "[/color]"
+	t += TranslationServer.translate("HUESPED_PANEL_HUNGER") % [h, int(Balance.HUESPED_BAND_LO), int(Balance.HUESPED_BAND_HI), state] + "\n"
+	var c: float = HuespedSoberanoLogic.craving_in()
+	var c_line: String = TranslationServer.translate("HUESPED_PANEL_CRAVING") % [c, int(Balance.HUESPED_CRAVING_HUNGER)]
+	t += ("[color=#ffcc66]" + c_line + "[/color]" if c <= Balance.HUESPED_CRAVING_WARN else c_line) + "\n"
+	t += TranslationServer.translate("HUESPED_PANEL_PANTRY") % [EvoManager.huesped_pantry, int(Balance.HUESPED_FEED_MONEY_PCT * 100.0)] + "\n"
+	t += "\n[color=#7aa8ff]" + TranslationServer.translate("HUESPED_PANEL_TRUST_HDR") + "[/color]\n"
+	var lvl: int = HuespedSoberanoLogic.level()
+	var n_lvls: int = Balance.HUESPED_LEVELS.size()
+	t += TranslationServer.translate("HUESPED_PANEL_TRUST") % [lvl, n_lvls, EvoManager.huesped_trust,
+		HuespedSoberanoLogic.next_level_trust() if lvl < n_lvls else float(Balance.HUESPED_LEVELS[n_lvls - 1])] + "\n"
+	t += TranslationServer.translate("HUESPED_PANEL_GIFTS") % [int(Balance.HUESPED_GIFT_INTERVAL),
+		int(Balance.HUESPED_GIFT_SECS_PER_LEVEL * lvl), HuespedSoberanoLogic.trueque_mult()] + "\n"
+	if HuespedSoberanoLogic.seal_ready():
+		t += "\n[color=#7aa8ff]" + TranslationServer.translate("HUESPED_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + TranslationServer.translate("HUESPED_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_huesped_soberano_closed_text() -> String:
+	var t := "[color=#7aa8ff]" + TranslationServer.translate("HUESPED_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("HUESPED_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#7aa8ff]" + TranslationServer.translate("HUESPED_CLOSED_REWARD") + "[/color]"
+	return t

@@ -284,6 +284,10 @@ nada inalcanzable, el bot normal no saca el MYTHIC, objetivo ~15–20 min desde 
 
 ### 10.2 Coro Simbiótico — **ritmo de verdad** ✅ (R4b, 2026-10-13) · `CoroSimbioticoLogic.gd` + `MetronomeRing.gd`
 
+> **Ajuste del autor (2026-10-13):** "lo siento muy difícil, dale más tiempo para acertar" → ventana
+> **±0.20 s** (antes ±0.15) y tempos **80 / 95 / 110 BPM** (antes 90/110/130); legado a 90 BPM.
+> Perfil normal: 9.0 min (antes 7.8). Los números de abajo son los de la primera versión.
+
 **Implementado con estos ajustes (simulador):**
 - **La partitura cuenta compases, no combo.** Compás = 4 golpes seguidos a tiempo; I 40 compases (90 BPM),
   II 60 (110), III 80 (130). Con "combo 16/32/64" y el combo a la mitad al fallar, un jugador con 94 %
@@ -367,7 +371,27 @@ primeros 7 min y después sólo pasivo (`buy_ids_from`).
 - Recordatorio medido: biomasa, micelio e hifas **no generan $** por sí solos (las hifas se recalculan
   cada tick desde el pasivo), por eso acá el micelio pasa a ser el recurso que mueve la economía.
 
-### 10.4 Huésped Soberano — **domesticar**
+### 10.4 Huésped Soberano — **domesticar** ✅ (R6, 2026-10-13) · `HuespedSoberanoLogic.gd`
+
+**Implementado con estos ajustes (simulador):**
+- **Ventana del botón:** Parasitismo vive 13–20 s. Con la llave, su cierre **espera mientras el botón [T]
+  tenga apariciones** (25 / 52 / 80 s); el parásito sigue drenando mientras dudás.
+- **Banda 25–75** (no 30–70): con 30–70, alimentar −30 y antojo +15, había momentos sin salida (ni
+  alimentar ni esperar evitaban salir de la banda) y el MYTHIC era imposible incluso jugando perfecto.
+- **Antojos** (+15, cada 40/30/50/35/45 s, aviso 4 s antes): sin ellos, alimentar en piloto automático
+  sacaba el MYTHIC.
+- **Alimentar sin despensa cuesta el 4 %** del dinero (10 % congelaba la economía en ~90 s de ingreso).
+- Despensa = 1 comida cada 2 de biomasa robada. Sin [W].
+
+| Perfil | Juego | Sella desde la reversión | MYTHIC |
+|---|---|---:|---|
+| `ng_huesped_player` | alimenta con hambre 68 | **10.0 min** (1 s de mordida) | no |
+| `ng_huesped_lazy` | alimenta con hambre 85 | 16.0 min (6 min mordiendo, economía a 0) | no |
+| `ng_huesped_perfect` | alimenta a 60 y anticipa los antojos | 10.0 min | sí |
+
+Como Coro, es corta (~10 min) pero toda activa.
+
+**Diseño original de §10.4:**
 *El huésped deja de ser víctima: domestica a su parásito.*
 - **El parásito tiene hambre** (0–100), sube +2/s. **[Q] Alimentar**: −30 de hambre, cuesta 10 % del
   dinero actual o 2 de biomasa si tenés (la biomasa es comida barata).
@@ -387,7 +411,7 @@ primeros 7 min y después sólo pasivo (`buy_ids_from`).
 1. ✅ **R5 Micelio (asignar)** — barras en upgrades + click derecho.
 2. ✅ **R4b Coro (ritmo)** — metrónomo visual + sonido, bot con precisión.
 3. ✅ **R3b Caos (Gran Colapso)**.
-4. **R6 Huésped (domesticar)**.
+4. ✅ **R6 Huésped (domesticar)**. **Fila de 5 transmutaciones completa.**
 
 ## 9. Identidad visual de las transmutaciones (2026-10-12)
 

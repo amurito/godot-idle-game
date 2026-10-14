@@ -115,6 +115,7 @@ static func from_run(main: Node) -> RunSnapshot:
 	if EvoManager.mutation_symbiosis:           muts.append("symbiosis")
 	if EvoManager.mutation_red_micelial:        muts.append("red_micelial")
 	if EvoManager.mutation_micelio_omnisciente: muts.append("micelio_omnisciente")
+	if EvoManager.mutation_huesped_soberano:    muts.append("huesped_soberano")
 	if EvoManager.mutation_sporulation:         muts.append("sporulation")
 	if EvoManager.mutation_parasitism:          muts.append("parasitism")
 	if EvoManager.mutation_depredador:          muts.append("depredador")

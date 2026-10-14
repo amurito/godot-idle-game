@@ -559,6 +559,9 @@ func on_run_closed(route: String) -> void:
 	# Fortissimo: el Allegro entero sin un click fuera de tiempo.
 	if route == "CORO SIMBIÓTICO" and EvoManager.coro_allegro_misses == 0:
 		unlock("fortissimo")
+	# Simbionte Perfecto: desde el nivel 1 de confianza, el parásito nunca salió de la banda.
+	if route == "HUÉSPED SOBERANO" and not EvoManager.huesped_left_band:
+		unlock("simbionte_perfecto")
 	# Ojo de la Red: sin desconectar nunca un nodo ni comprar a mano tras revertir (la red compra por vos).
 	if route == "MICELIO OMNISCIENTE" and EvoManager.micelio_disconnects == 0 and EvoManager.micelio_manual_buys == 0:
 		unlock("ojo_de_la_red")

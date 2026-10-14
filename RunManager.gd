@@ -218,6 +218,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_MICELIO_REWARD"))
 		LogManager.add(tr("LOG_MICELIO_REWARD") % tr("UPG_" + node_id.to_upper()))
 
+	# HUÉSPED SOBERANO: legado Pacto Soberano (la corrosión de Parasitismo avanza a la mitad).
+	if route == "HUÉSPED SOBERANO":
+		if not LegacyManager.get_buff_value("legado_pacto_soberano"):
+			LegacyManager.grant_buff("legado_pacto_soberano")
+			UIManager.show_toast(tr("TOAST_HUESPED_REWARD"))
+			LogManager.add(tr("LOG_HUESPED_REWARD"))
+
 	# AYUNO PRIMORDIAL: recompensa permanente al sellar → pasivo ×2→×1 en los primeros 90 s de run.
 	if route == "AYUNO PRIMORDIAL":
 		if not LegacyManager.get_buff_value("legado_primicia_del_vacio"):
@@ -430,6 +437,9 @@ func check_fractura_epistemica(dt: float):
 func check_parasitism_final(_delta: float):
 	if not RouteManager.allows_bifurcation() or run_closed or not EvoManager.mutation_parasitism:
 		return
+	# Con la llave de Huésped Soberano, el parásito espera la decisión (sigue drenando mientras tanto).
+	if TransmutationLogic.candidate() == "huesped" and TransmutationLogic.appearances_left() > 0:
+		return
 
 	# Opción A: Colapso estructural clásico
 	if BiosphereEngine.biomasa > 18.0 and StructuralModel.omega < 0.22 and StructuralModel.epsilon_effective > 0.45:
@@ -516,7 +526,7 @@ func update_homeostasis_mode(delta: float):
 
 	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
 	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
-	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_symbiosis \
+	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano or EvoManager.mutation_symbiosis \
 		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism
 	if not EvoManager.primordio_active and not en_mutacion_avanzada:
 		disturbance_timer += delta
@@ -828,6 +838,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_caos_orquestado:        return "CAOS ORQUESTADO"
 	if EvoManager.mutation_coro_simbiotico:        return "CORO SIMBIÓTICO"
 	if EvoManager.mutation_micelio_omnisciente:    return "MICELIO OMNISCIENTE"
+	if EvoManager.mutation_huesped_soberano:       return "HUÉSPED SOBERANO"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -986,6 +997,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "pico de combo {v} / 8 = {b} (cap {c})"},
 		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
+		"HUÉSPED SOBERANO": {"value": func() -> Variant: return EvoManager.huesped_trust, "op": "div", "k": 75.0,
+			"vfmt": "%.0f", "log": "confianza {v} / 75 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
 			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
 	}

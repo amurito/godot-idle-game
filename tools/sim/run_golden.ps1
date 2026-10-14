@@ -25,7 +25,7 @@ param(
     [string[]]$Suites = @("economy", "save", "close_run", "actions", "tick", "trajectory"),
     # Rutas que se recorren dentro de la ventana: Hiper, trampa de Masa Critica (ejercita
     # close_run), Ayuno (incluye Parasitismo hibrido) y Fusion Catabolica.
-    [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player", "ng_caos_player", "ng_coro_player", "ng_micelio_player"),
+    [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player", "ng_caos_player", "ng_coro_player", "ng_micelio_player", "ng_huesped_player"),
     [int]$TrajectorySeconds = 450,
     [string]$Instance = "golden"
 )

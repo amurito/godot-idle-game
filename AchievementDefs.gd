@@ -601,6 +601,19 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "ojo_de_la_red",
 	},
+	"ruta_huesped_soberano": {
+		"name": "Domador del Parásito",
+		"desc": "El huésped dejó de ser víctima: domesticó a su parásito.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "HUÉSPED SOBERANO"}],
+	},
+	"simbionte_perfecto": {
+		"name": "Simbionte Perfecto",
+		"desc": "Sellar Huésped Soberano sin que el parásito salga nunca de la banda desde el primer nivel de confianza.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "simbionte_perfecto",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

@@ -134,7 +134,8 @@ static func _build() -> Dictionary:
 	# PARASITISMO: crecimiento parásito inicial (pasivo) y corrosión que converge a 0 (ambos)
 	d["parasitism_growth"] = _row("Crecimiento Parásito", "route", none,
 		func() -> float: return 1.2 if EvoManager.mutation_parasitism else 1.0)
-	var corrosion := func() -> float: return EconomyManager.parasitism_corrosion if EvoManager.mutation_parasitism else 1.0
+	# La corrosión sigue pesando con Huésped Soberano (las mordidas la profundizan).
+	var corrosion := func() -> float: return EconomyManager.parasitism_corrosion if (EvoManager.mutation_parasitism or EvoManager.mutation_huesped_soberano) else 1.0
 	d["parasitism_corrosion"] = _row("Corrosión Parasitaria", "route", corrosion, corrosion)
 	# MET.OSCURO: click ×3 de energía alternativa (×AUTOLISIS_CLICK_MULT en Autofagia / Omega-Cero,
 	# que reabren las compras). Pasivo anulado salvo en las sub-rutas que lo liberan:

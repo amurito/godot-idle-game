@@ -1011,6 +1011,11 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EvoManager.mutation_huesped_soberano:
+				if kc == KEY_Q and HuespedSoberanoLogic.can_feed():
+					HuespedSoberanoLogic.feed()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_caos_orquestado:
 				match kc:
 					KEY_Q:

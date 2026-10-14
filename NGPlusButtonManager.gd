@@ -56,7 +56,9 @@ var _caos_cd_btn: Button = null          # [W] cooldown del Colapso
 var _batuta_btn: Button = null
 var _coro_seal_btn: Button = null        # Sello de Coro Simbiótico (partitura completa)
 var _metronome_ring: Control = null      # Anillo del metrónomo sobre el núcleo (Coro / Compás Interno)
-var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente           # Legado Batuta: ε → 0 una vez por run (cualquier run)
+var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente
+var _huesped_feed_btn: Button = null     # [Q] Alimentar (Huésped Soberano)
+var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
 var _transmut_dialog: ConfirmationDialog = null
@@ -162,7 +164,7 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
@@ -171,6 +173,8 @@ func reset_ng_plus_buttons() -> void:
 	_coro_seal_btn = null
 	_metronome_ring = null
 	_micelio_seal_btn = null
+	_huesped_feed_btn = null
+	_huesped_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -206,7 +210,44 @@ func update_ng_plus_buttons() -> void:
 	_update_caos_buttons()
 	_update_coro_buttons()
 	_update_micelio_buttons()
+	_update_huesped_buttons()
 	_update_batuta_button()
+
+# ── HUÉSPED SOBERANO: [Q] Alimentar · sello ──────────────────────────────────
+func _update_huesped_buttons() -> void:
+	if not HuespedSoberanoLogic.is_active():
+		for b in [_huesped_feed_btn, _huesped_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	if not is_instance_valid(_huesped_feed_btn):
+		_huesped_feed_btn = _make_rp_button(Color(0.45, 0.7, 1.0), 50, _on_huesped_feed_pressed, 0)
+	var cost_txt: String
+	if EvoManager.huesped_pantry > 0:
+		cost_txt = TranslationServer.translate("BTN_HUESPED_FEED_PANTRY") % EvoManager.huesped_pantry
+	else:
+		cost_txt = "$" + UITextBuilders.format_compact(HuespedSoberanoLogic.feed_cost())
+	_huesped_feed_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_HUESPED_FEED") % [EvoManager.huesped_hunger, cost_txt])
+	_huesped_feed_btn.disabled = not HuespedSoberanoLogic.can_feed()
+	_huesped_feed_btn.visible = true
+	if HuespedSoberanoLogic.seal_ready():
+		if not is_instance_valid(_huesped_seal_btn):
+			_huesped_seal_btn = _make_rp_button(Color(0.4, 0.65, 1.0), 70, _on_huesped_seal_pressed, 0)
+		_huesped_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_HUESPED_SEAL") % int(Balance.PL_REWARDS.get("HUÉSPED SOBERANO", 9)))
+		_huesped_seal_btn.visible = true
+	elif is_instance_valid(_huesped_seal_btn):
+		_huesped_seal_btn.visible = false
+
+func _on_huesped_feed_pressed() -> void:
+	HuespedSoberanoLogic.feed()
+	_update_huesped_buttons()
+
+func _on_huesped_seal_pressed() -> void:
+	if RunManager.run_closed or not HuespedSoberanoLogic.seal_ready():
+		return
+	if is_instance_valid(_huesped_seal_btn):
+		_huesped_seal_btn.visible = false
+	RunManager.close_run("HUÉSPED SOBERANO", TranslationServer.translate("CLOSE_HUESPED"))
 
 # ── MICELIO OMNISCIENTE: sello (el resto se juega con click derecho en los upgrades) ──
 func _update_micelio_buttons() -> void:
@@ -335,6 +376,7 @@ const TRANSMUT_BTN_COLORS := {
 	"caos": Color(1.0, 0.25, 0.5),
 	"coro": Color(1.0, 0.5, 0.42),
 	"micelio": Color(0.72, 0.45, 1.0),
+	"huesped": Color(0.4, 0.65, 1.0),
 }
 var _transmut_secs_lbl: Label = null
 

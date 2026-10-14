@@ -10,7 +10,7 @@ class_name GenomeEvaluator
 ## Maneja el caso especial de Red Micelial / Parasitismo activos (Tier 1 congelado).
 ## Returns: true si manejó el caso (caller debe retornar), false en caso contrario.
 static func handle_terminal_mutations() -> bool:
-	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism or EvoManager.mutation_micelio_omnisciente):
+	if not (EvoManager.mutation_red_micelial or EvoManager.mutation_parasitism or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano):
 		return false
 
 	if EvoManager.genome.hiperasimilacion != "activo": EvoManager._set_genome_state("hiperasimilacion", "bloqueado")

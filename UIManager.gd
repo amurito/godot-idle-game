@@ -551,7 +551,14 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if not is_instance_valid(genome_summary_label):
 			return
 	var t: String
-	if EvoManager.mutation_micelio_omnisciente:
+	if EvoManager.mutation_huesped_soberano:
+		if RunManager.run_closed and RunManager.final_route == "HUÉSPED SOBERANO":
+			t = UITextBuilders.build_huesped_soberano_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_huesped_soberano_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_micelio_omnisciente:
 		if RunManager.run_closed and RunManager.final_route == "MICELIO OMNISCIENTE":
 			t = UITextBuilders.build_micelio_omnisciente_closed_text()
 		elif not RunManager.run_closed:
@@ -1240,6 +1247,8 @@ func get_reactor_color() -> Color:
 				return Color(0.45, 0.14, 0.11)  # coral profundo: el ritmo, en silencio
 			"MICELIO OMNISCIENTE":
 				return Color(0.30, 0.13, 0.46)  # violeta profundo: la red que ve, en reposo
+			"HUÉSPED SOBERANO":
+				return Color(0.10, 0.18, 0.42)  # azul profundo: el pacto, en reposo
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
 		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
 		return _live_reactor_color().darkened(0.45)
@@ -1271,6 +1280,11 @@ func _live_reactor_color() -> Color:
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		return Color(0.0, 0.9, 1.0)
 	# TRANSMUTACIONES: complemento de su evolución, separado para distinguirse (paleta 2026-10-12).
+	if EvoManager.mutation_huesped_soberano:
+		if EvoManager.huesped_hunger > Balance.HUESPED_BAND_HI:
+			return Color(0.85, 0.3, 0.45)  # muerde: el azul se enrojece
+		# azul apagado → vivo según el nivel de confianza
+		return Color(0.15, 0.28, 0.6).lerp(Color(0.35, 0.6, 1.0), clampf(HuespedSoberanoLogic.level() / 5.0, 0.0, 1.0))
 	if EvoManager.mutation_micelio_omnisciente:
 		if MicelioOmniscienteLogic.full_nodes() >= MicelioOmniscienteLogic.NODES.size():
 			return Color(0.95, 0.8, 1.25)  # lila casi blanco: la red completa

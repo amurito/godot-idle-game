@@ -80,6 +80,21 @@ static func defs() -> Dictionary:
 			"life": func() -> float: return 1.0e9,
 			"blocked": func() -> bool: return MicelioOmniscienteLogic.revert_blocked(),
 		},
+		"huesped": {
+			"key": "transmut_huesped",
+			"base_flag": "mutation_parasitism",
+			"base_genome": "parasitismo",
+			"target_flag": "mutation_huesped_soberano",
+			"activate": func() -> void: HuespedSoberanoLogic.activate(),
+			"digest": func() -> String: return HuespedSoberanoLogic.digest_parasitismo(),
+			"preview": func() -> String: return TranslationServer.translate("TRANSMUT_DIGEST_PANTRY") % HuespedSoberanoLogic.pantry_preview(),
+			"base_name": "MUT_PARASITISMO",
+			"target_name": "MUT_HUESPED_SOBERANO",
+			"lose": "TRANSMUT_HUESPED_LOSE",
+			# Parasitismo vive 13–20 s: su cierre espera mientras queden apariciones del botón
+			# (RunManager.check_parasitism_final). Mientras dudás, el parásito sigue drenando.
+			"life": func() -> float: return Balance.TRANSMUT_LIFE_PARASITISMO,
+		},
 	}
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).

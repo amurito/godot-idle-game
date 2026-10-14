@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # ================================================================
 # Balance.gd — Autoload de constantes de diseño
@@ -243,14 +243,15 @@ const CAOS_GRAND_MONEY           := 5_000_000.0  # simulador: ~15 min con [W], ~
 const TRANSMUT_LIFE_SIMBIOSIS    := 160.0  # vida estimada de Simbiosis para la agenda del botón [T]
                                            # (su cierre automático espera mientras queden apariciones)
 const CORO_DIGEST_COMBO          := 16     # digestión: combo inicial (se va si no lo sostenés)
-const CORO_TEMPOS                := [90.0, 110.0, 130.0]  # BPM por movimiento: I Andante · II Moderato · III Allegro
+const CORO_TEMPOS                := [80.0, 95.0, 110.0]   # BPM por movimiento: I Andante · II Moderato · III Allegro
+                                                          # (autor 2026-10-13: 90/110/130 con ±0.15 s se sentía muy difícil)
 const CORO_MOVEMENT_BARS         := [40, 60, 80]          # compases (4 golpes seguidos a tiempo) por movimiento
 const CORO_BEATS_PER_BAR         := 4
-const CORO_HIT_WINDOW            := 0.15   # s: ventana de acierto a cada lado del golpe (tolerante a latencia web)
+const CORO_HIT_WINDOW            := 0.20   # s: ventana de acierto a cada lado del golpe (tolerante a latencia web)
 const CORO_COMBO_BONUS           := 0.04   # ingreso × (1 + 0.04 · combo)…
 const CORO_COMBO_CAP             := 64     # …tope ×3.56
 const CORO_SKIP_DECAY            := 4      # combo perdido por golpe salteado (no se arma y se suelta)
-const CORO_LEGACY_TEMPO          := 100.0  # legado Compás Interno: metrónomo suave en todas las runs…
+const CORO_LEGACY_TEMPO          := 90.0   # legado Compás Interno: metrónomo suave en todas las runs…
 const CORO_LEGACY_BONUS          := 0.01   # …+1 % de click por golpe a tiempo seguido…
 const CORO_LEGACY_CAP            := 0.15   # …tope +15 %
 
@@ -268,6 +269,30 @@ const MICELIO_NODE_DISCOUNT      := 0.015  # −1.5 % de costo por punto conecta
 const MICELIO_DRIFT_INTERVAL     := 10.0   # s: 1 punto libre fluye solo al nodo más comprado
 const MICELIO_SEAL_HOLD          := 60.0   # s con los 9 nodos llenos para habilitar el sello
 const MICELIO_LATENT_MULT        := 1.25   # legado Nodo Latente: el primer nodo lleno, en todas las runs
+
+# ── TRANSMUTACIÓN · HUÉSPED SOBERANO (revierte PARASITISMO) — HuespedSoberanoLogic ──
+# Verbo: DOMESTICAR. Spec §10.4 (2026-10-13); a calibrar con el simulador.
+const TRANSMUT_LIFE_PARASITISMO  := 120.0  # Parasitismo vive 13–20 s: su cierre espera al botón [T] (25/52/80 s)
+const HUESPED_PANTRY_BIO_PER_MEAL := 2.0   # digestión: 1 comida de despensa por cada 2 de biomasa robada
+const HUESPED_HUNGER_START       := 50.0
+const HUESPED_HUNGER_RATE        := 2.0    # hambre /s…
+const HUESPED_HUNGER_LEVEL_K     := 0.2    # …× (1 + 0.2 · nivel de confianza): el parásito crece
+const HUESPED_FEED               := 30.0   # [Q] Alimentar: −30 de hambre
+const HUESPED_FEED_MONEY_PCT     := 0.04   # sin despensa cuesta el 4 % del dinero actual (10 % congelaba la economía)
+const HUESPED_BAND_LO            := 25.0   # banda de domesticación (confianza sube): 50 de ancho deja
+                                           # lugar para anticipar un antojo (con 30–70 había casos sin salida)
+const HUESPED_BAND_HI            := 75.0
+const HUESPED_TRUST_GAIN         := 1.0    # confianza /s en banda
+const HUESPED_TRUST_LOSS         := 0.5    # confianza /s perdida si está saciado (perezoso)
+const HUESPED_BITE_CORROSION     := 0.004  # corrosión /s mientras muerde (hambre > banda)
+const HUESPED_LEVELS             := [60, 150, 270, 420, 600]  # confianza para cada nivel (el 5 sella)
+const HUESPED_GIFT_INTERVAL      := 20.0   # s en banda entre regalos…
+const HUESPED_GIFT_SECS_PER_LEVEL := 5.0   # …de (5 · nivel) s de ingreso
+const HUESPED_TRUEQUE_PER_LEVEL  := 0.2    # trueque × (1 + 0.2 · nivel)
+const HUESPED_CRAVING_INTERVALS  := [40.0, 30.0, 50.0, 35.0, 45.0]  # antojos (secuencia fija, sin RNG)
+const HUESPED_CRAVING_WARN       := 4.0    # s de aviso antes del antojo
+const HUESPED_CRAVING_HUNGER     := 15.0   # hambre que suma el antojo
+const HUESPED_PACT_CORROSION     := 0.5    # legado Pacto Soberano: corrosión de Parasitismo × 0.5
 
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
@@ -412,6 +437,7 @@ const PL_REWARDS: Dictionary = {
 	"CAOS ORQUESTADO":           9,
 	"CORO SIMBIÓTICO":           9,
 	"MICELIO OMNISCIENTE":       9,
+	"HUÉSPED SOBERANO":          9,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 }
@@ -448,6 +474,7 @@ const NG_CAPS: Dictionary = {
 	"CAOS ORQUESTADO":           8,
 	"CORO SIMBIÓTICO":           8,
 	"MICELIO OMNISCIENTE":       8,
+	"HUÉSPED SOBERANO":          8,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 }

@@ -215,6 +215,16 @@ func _transmutation_metrics() -> Dictionary:
 			"misses": EvoManager.get("coro_misses"),
 			"allegro_misses": EvoManager.get("coro_allegro_misses"),
 		},
+		"huesped": {
+			"active": EvoManager.get("mutation_huesped_soberano"),
+			"trust": EvoManager.get("huesped_trust"),
+			"hunger": EvoManager.get("huesped_hunger"),
+			"pantry": EvoManager.get("huesped_pantry"),
+			"feeds": EvoManager.get("huesped_feeds"),
+			"cravings": EvoManager.get("huesped_cravings"),
+			"bite_time": EvoManager.get("huesped_bite_time"),
+			"left_band": EvoManager.get("huesped_left_band"),
+		},
 		"micelio": {
 			"active": EvoManager.get("mutation_micelio_omnisciente"),
 			"pool": EvoManager.get("micelio_pool"),

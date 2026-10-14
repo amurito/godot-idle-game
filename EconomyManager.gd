@@ -161,6 +161,7 @@ func _compute_trueque_income_effective() -> float:
 		base *= (1.0 + trueque_bonus)
 
 	base *= MicelioOmniscienteLogic.accounting_factor()
+	base *= HuespedSoberanoLogic.trueque_mult()  # trueque domesticado (1.0 fuera de la ruta)
 
 	return base
 
@@ -282,7 +283,7 @@ func apply_parasitism_drain(dt: float) -> void:
 	if not EvoManager.mutation_parasitism:
 		return
 	var drain_intensity: float = clamp(BiosphereEngine.biomasa / 15.0, 0.4, 3.0)
-	parasitism_corrosion = max(0.0, parasitism_corrosion - 0.002 * drain_intensity * dt)
+	parasitism_corrosion = max(0.0, parasitism_corrosion - 0.002 * drain_intensity * dt * HuespedSoberanoLogic.corrosion_rate_mult())
 	var money_drain: float = BiosphereEngine.biomasa * 0.25 * dt
 	money = max(money - money_drain, 0.0)
 

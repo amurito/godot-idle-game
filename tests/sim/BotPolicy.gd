@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 ## BotPolicy — qué hace el "jugador" simulado en cada frame.
 ##
 ## Sólo usa acciones que el jugador real tiene, por el mismo camino de código que la UI:
@@ -50,6 +50,10 @@
 ##   micelio_swap: [from, to, t]   a los t s de Micelio, desconecta `from` entero y lo pasa a `to`
 ##                                 (jugador que corrige su plan → no saca el MYTHIC)
 ##   micelio_seal: bool
+##   huesped_feed_at: float        Huésped: alimenta cuando el hambre llega a esto
+##   huesped_precraving: bool      durante el aviso de antojo, si el hambre llegaría alta, alimenta apenas
+##                                 puede sin empacharlo (anticipa)
+##   huesped_seal: bool
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
 	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
@@ -264,6 +268,19 @@ func _route_keys(_d: RefCounted) -> void:
 			_log("seal:coro")
 	if EvoManager.mutation_micelio_omnisciente:
 		_micelio()
+	if EvoManager.mutation_huesped_soberano:
+		var feed_at: float = float(cfg.get("huesped_feed_at", -1.0))
+		var h_at: float = EvoManager.huesped_hunger + HuespedSoberanoLogic.hunger_rate() * HuespedSoberanoLogic.craving_in()
+		var pre: bool = cfg.get("huesped_precraving", false) and HuespedSoberanoLogic.craving_in() <= Balance.HUESPED_CRAVING_WARN \
+			and h_at + Balance.HUESPED_CRAVING_HUNGER > Balance.HUESPED_BAND_HI - 2.0 \
+			and EvoManager.huesped_hunger - Balance.HUESPED_FEED >= Balance.HUESPED_BAND_LO + 1.0
+		if (feed_at >= 0.0 and EvoManager.huesped_hunger >= feed_at) or pre:
+			var h0: float = EvoManager.huesped_hunger
+			HuespedSoberanoLogic.feed()
+			_after_key("key:Q huesped_feed h=%.0f" % h0)
+		if cfg.get("huesped_seal", false) and HuespedSoberanoLogic.seal_ready():
+			UIManager._ng_buttons._on_huesped_seal_pressed()
+			_log("seal:huesped")
 	if EvoManager.mutation_caos_orquestado:
 		if _caos_start < 0.0:
 			_caos_start = RunManager.run_time

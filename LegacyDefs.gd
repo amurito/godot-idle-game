@@ -543,6 +543,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "MICELIO OMNISCIENTE"},
 		"effect": {"type": "nodo_latente_active", "value": 1.0},
 	},
+	# TRANSMUTACIÓN de Parasitismo (A → A+). Llave sin toggle: con Parasitismo activo aparece [T].
+	"transmut_huesped": {
+		"name": "Transmutación: Huésped Soberano",
+		"flavor": "El huésped deja de ser víctima: domestica a su parásito.",
+		"cat": "transmutaciones", "cost": 15, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "PARASITISMO"},
+		"effect": {"type": "transmut_huesped_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Huésped Soberano: el pacto con el parásito sigue en todas las runs.
+	"legado_pacto_soberano": {
+		"name": "Legado: Pacto Soberano",
+		"flavor": "El parásito recuerda quién lo alimentó: en todas las runs, su corrosión avanza a la mitad.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "HUÉSPED SOBERANO"},
+		"unlock": {"type": "route_closed", "route": "HUÉSPED SOBERANO"},
+		"effect": {"type": "pacto_soberano_active", "value": 1.0},
+	},
 	# SOMBRA de Hiperasimilación: abandona el consumo por completo. LLAVE permanente, sin toggle:
 	# se entra por DISPARADOR ESPEJO — dejar de clickear con pasivo propio y ε bajo
 	# (GenomeEvaluator.update_ayuno_espejo). No compite con Fusión: una se toma teniendo Hiper.
