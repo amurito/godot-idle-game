@@ -393,6 +393,10 @@ const MC_BURST_COOLDOWN   := 45.0    # s de cooldown tras la ráfaga
 # Gate ENDURECIDO: sostener simetría + estabilidad + producción SIMULTÁNEAS (reset al romper).
 const MC_GATE_HOLD        := 100.0   # s sostenidos sin romper para sincronizar con la IA
 const MC_GATE_RATIO_TOL   := 0.03    # tolerancia del ratio activo/pasivo respecto a 0.50
+# Multiplicadores de Red Micelial (IncomeModifiers). El portal de Mente Colmena mide el equilibrio
+# SIN ellos (G8, auditoría 2026-10): con click ×0.5 y pasivo ×2.5 el 50/50 era inalcanzable.
+const RED_MICELIAL_CLICK_MULT   := 0.5
+const RED_MICELIAL_PASSIVE_MULT := 2.5
 const MC_GATE_EPS_LO      := 0.20    # banda de ε: el sistema debe estar "vivo"
 const MC_GATE_EPS_HI      := 0.45    # banda de ε: sin caos
 const MC_GATE_DELTA_MIN   := 200.0   # Δ$/s mínimo — throughput real (no idle)

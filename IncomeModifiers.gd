@@ -104,8 +104,8 @@ static func _build() -> Dictionary:
 		func() -> float: return 2.5 if EvoManager.mutation_symbiosis else 1.0,
 		func() -> float: return 0.5 if EvoManager.mutation_symbiosis else 1.0)
 	d["red_micelial"] = _row("Red Micelial", "route",
-		func() -> float: return 0.5 if EvoManager.mutation_red_micelial else 1.0,
-		func() -> float: return 2.5 if EvoManager.mutation_red_micelial else 1.0)
+		func() -> float: return Balance.RED_MICELIAL_CLICK_MULT if EvoManager.mutation_red_micelial else 1.0,
+		func() -> float: return Balance.RED_MICELIAL_PASSIVE_MULT if EvoManager.mutation_red_micelial else 1.0)
 	# Hiperasimilación: deja de aplicar bajo MET.OSCURO (MO reemplaza la economía).
 	# Click: RUSH DE CLICK EXTREMO. Pasivo: se sacrifica por el núcleo.
 	d["hyperassimilation"] = _row("Hiperasimilación", "route",

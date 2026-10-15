@@ -40,6 +40,10 @@ extends RefCounted
 ##   balance_ratio: bool           compra click si el activo es < 50 % y pasivo si es > 50 % (Mente Colmena)
 ##   blue_seal: bool               rama azul: con el Núcleo de Conciencia aprieta el final (SINGULARIDAD)
 ##   mo_seal_bio: float            Metabolismo Oscuro: sella con biomasa ≥ esto (-1 = nunca)
+##   dark: {devour_target, route}  Árbol oscuro. En el Depredador sigue clickeando hasta `devour_target`
+##                                 devorados y después deja de clickear y gasta todo (< $1000 → Met. Oscuro);
+##                                 en MO activa `route` ("esclerocio" | "autofagia" | "necrosis" | "omega" |
+##                                 "omega_starve" | "remision") y juega su minijuego hasta el cierre
 ##   evo_seal: tier                aprieta "SELLAR FINAL" cuando ofrece este tier de Homeostasis
 ##                                 ("HOMEOSTASIS" | "ALLOSTASIS" | "HOMEORHESIS"), como el jugador
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
@@ -142,6 +146,13 @@ func _current_cps() -> float:
 	var hold: float = float(cfg.get("caos_hold_below", -1.0))
 	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
+	var dark: Dictionary = cfg.get("dark", {})
+	if not dark.is_empty() and (EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro):
+		if EvoManager.mutation_necrosis:
+			return float(cfg.get("click_cps", 10.0))  # la Necromasa sale de los clicks
+		if EvoManager.mutation_met_oscuro:
+			return 0.0
+		return float(cfg.get("click_cps", 10.0)) if EvoManager.met_oscuro_devoured_count < int(dark.get("devour_target", 10)) else 0.0
 	var band: Array = cfg.get("eps_band", [])
 	var band_on: String = str(cfg.get("eps_band_on", ""))
 	if band.size() == 3 and (band_on == "" or bool(EvoManager.get("mutation_" + band_on))):
@@ -190,8 +201,8 @@ func _buy(d: RefCounted) -> void:
 		if bool(EvoManager.get("mutation_" + str(mut))):
 			ids = ids_on[mut]
 	if cfg.get("balance_ratio", false) and EvoManager.mutation_red_micelial:
-		var ap: Dictionary = EconomyManager.get_active_passive_breakdown()
-		ids = ["click", "click_mult", "accounting"] if float(ap.activo) < 50.0 else ["auto", "auto_mult", "trueque", "trueque_net", "accounting"]
+		# Mismo ratio que mide el portal de Mente Colmena (sin los multiplicadores de Red Micelial).
+		ids = ["click", "click_mult", "accounting"] if RunManager.mente_colmena_ratio() < 0.5 else ["auto", "auto_mult", "trueque", "trueque_net", "accounting"]
 	# Panspermia: con la seta formada se ahorra para el lanzamiento (no se compra nada).
 	if not cfg.get("green", {}).is_empty() and EvoManager.seta_formada and EvoManager.is_panspermia_window():
 		return
@@ -199,6 +210,19 @@ func _buy(d: RefCounted) -> void:
 	var uncap: String = str(cfg.get("uncap_passive_on", ""))
 	if uncap != "" and bool(EvoManager.get("mutation_" + uncap)):
 		max_passive = 100.0
+	var dark_cfg: Dictionary = cfg.get("dark", {})
+	if not dark_cfg.is_empty():
+		if EvoManager.mutation_autolisis or (EvoManager.mutation_omega_cero and str(dark_cfg.get("route", "")) != "omega"):
+			return  # no recomprar: que se coma lo que hay (Omega-Cero normal SÍ realimenta el loop)
+		if EvoManager.mutation_omega_cero:
+			ids = DEFAULT_BUY_IDS
+			avoid = []
+			max_passive = 100.0
+		if EvoManager.mutation_depredador and not EvoManager.mutation_met_oscuro \
+				and EvoManager.met_oscuro_devoured_count >= int(dark_cfg.get("devour_target", 10)):
+			ids = DEFAULT_BUY_IDS
+			avoid = []
+			max_passive = 100.0
 
 	# Fusión: ahorrar para [W] cuando el próximo nivel cuesta pocos segundos de ingreso.
 	var cd_secs: float = float(cfg.get("fusion_cd_save_secs", 0.0))
@@ -321,6 +345,15 @@ func _route_keys(_d: RefCounted) -> void:
 			and BiosphereEngine.biomasa >= mo_bio:
 		UIManager._ng_buttons._on_met_oscuro_seal_pressed()
 		_log("seal:met_oscuro bio=%.0f" % BiosphereEngine.biomasa)
+	if not cfg.get("dark", {}).is_empty() and EvoManager.mutation_met_oscuro:
+		_dark(str(cfg.dark.get("route", "")))
+	elif not cfg.get("dark", {}).is_empty() and EvoManager.mutation_depredador and cfg.dark.get("buy_time", true):
+		# Comprar tiempo con biomasa: el Depredador sigue devorando, la economía se achica y la plata
+		# puede bajar de $1000 (Met. Oscuro). El botón aparece en el panel del Depredador.
+		if EvoManager.depredador_inestabilidad >= EvoManager.DEPREDADOR_INESTABILIDAD_MAX - 12.0 \
+				and BiosphereEngine.biomasa >= DarkTreeLogic.depredador_time_cost():
+			DarkTreeLogic.buy_depredador_time()
+			_log("dark:comprar_tiempo")
 	var evo: String = str(cfg.get("evo_seal", ""))
 	if evo != "" and RunManager.target_evolution == evo and is_instance_valid(RunManager.evolution_button) \
 			and RunManager.evolution_button.visible:
@@ -424,6 +457,62 @@ func _micelio() -> void:
 	if cfg.get("micelio_seal", false) and MicelioOmniscienteLogic.seal_ready():
 		UIManager._ng_buttons._on_micelio_seal_pressed()
 		_log("seal:micelio")
+
+
+func _dark(route: String) -> void:
+	var ng = UIManager._ng_buttons
+	var free: bool = not (EvoManager.mutation_autolisis or EvoManager.mutation_necrosis \
+		or EvoManager.mutation_omega_cero or EvoManager.mutation_remision)
+	match route:
+		"esclerocio":
+			if free and EvoManager.met_oscuro_devoured_count >= Balance.ESCLEROCIO_DEVOURED_REQ \
+					and BiosphereEngine.biomasa >= Balance.ESCLEROCIO_BIO_REQ \
+					and StructuralModel.epsilon_runtime < Balance.ESCLEROCIO_EPS_MAX:
+				ng._on_esclerocio_pressed()
+				_log("dark:esclerocio")
+		"autofagia":
+			if free and BiosphereEngine.biomasa >= Balance.AUTOLISIS_BIO_REQ \
+					and UpgradeManager.get_owned_levels_count() >= Balance.AUTOLISIS_UPGRADES_REQ:
+				EvoManager.activate_autolisis()
+				_log("dark:autofagia")
+			elif EvoManager.mutation_autolisis:
+				for kind in ["speed", "double"]:
+					if EvoManager.can_buy_autofagia_upgrade(kind):
+						EvoManager.buy_autofagia_upgrade(kind)
+						_log("dark:autofagia_" + kind)
+		"necrosis":
+			if free and BiosphereEngine.biomasa >= Balance.NECROSIS_BIO_REQ \
+					and EconomyManager.get_delta_total() >= Balance.NECROSIS_FLOW_REQ:
+				EvoManager.activate_necrosis()
+				_log("dark:necrosis")
+			elif EvoManager.mutation_necrosis:
+				if EvoManager.necrosis_toxicidad > 0.55 and EvoManager.can_purge_necrosis():
+					EvoManager.purge_necrosis()
+					_log("dark:necrosis_purga")
+				elif EvoManager.necrosis_toxicidad < 0.55 and EvoManager.can_buy_necrosis_agent():
+					EvoManager.buy_necrosis_agent()
+					_log("dark:necrosis_agente")
+		"omega", "omega_starve":
+			if EvoManager.omega_cero_gate_ready():
+				ng._on_omega_cero_pressed()
+				_log("dark:omega_cero")
+			elif route == "omega" and EvoManager.mutation_omega_cero and EvoManager.omega_cero_can_seal():
+				ng._on_omega_cero_seal_pressed()
+				_log("dark:omega_sello")
+		"remision":
+			if EvoManager.remision_gate_ready():
+				ng._on_remision_pressed()
+				_log("dark:remision")
+			elif EvoManager.mutation_remision:
+				if EvoManager.remision_can_seal():
+					ng._on_remision_seal_pressed()
+					_log("dark:remision_sello")
+				else:
+					var c: float = DarkTreeLogic.remision_band_center()
+					if EvoManager.remision_omega < c - 0.01:
+						ng._on_remision_up_pressed()
+					elif EvoManager.remision_omega > c + 0.01:
+						ng._on_remision_down_pressed()
 
 
 func _after_key(label: String) -> void:
