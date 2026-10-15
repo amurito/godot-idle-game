@@ -21,7 +21,8 @@ static func handle_terminal_mutations() -> bool:
 	# Forzamos estado activo en el genoma para que no se vea como "latente" en el HUD
 	if EvoManager.mutation_red_micelial: EvoManager._set_genome_state("red_micelial", "activo")
 	if EvoManager.mutation_parasitism: EvoManager._set_genome_state("parasitismo", "activo")
-	if EvoManager.mutation_micelio_omnisciente: EvoManager._set_genome_state("red_micelial", "bloqueado")
+	if EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano:
+		EvoManager._set_genome_state("red_micelial", "bloqueado")
 
 	# No bloqueamos esporulación: es el final de la rama roja
 	check_automatic_activations()

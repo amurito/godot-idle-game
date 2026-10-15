@@ -1232,6 +1232,8 @@ func update_ui():
 	if is_instance_valid(btn_evolve):
 		if RunManager.run_closed:
 			btn_evolve.visible = false
+		elif TransmutationLogic.any_active():
+			btn_evolve.visible = false  # transmutación / Sombra activa: la ruta ya se decidió
 		elif EvoManager.mutation_parasitism:
 			btn_evolve.visible = true
 			btn_evolve.disabled = true

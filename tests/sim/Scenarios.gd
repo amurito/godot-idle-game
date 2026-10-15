@@ -69,6 +69,14 @@ const ALL := {
 		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest", "ayuno_seal": true},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
+	"ng_ayuno_trap_huesped": {
+		"desc": "AYUNO + llave de HUÉSPED, AFK: el parásito entra durante el ayuno → Trampa del Vacío (la llave de Huésped no rescata; no aparece [T]).",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
+			"buffs": {"transmut_ayuno": 1, "transmut_huesped": 1}},
+		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest", "transmute": "huesped", "ayuno_burst_at": 40.0},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
 	"ng_ayuno_player": {
 		"desc": "T3 + AYUNO jugado (Sombra por espejo): clickea 2 min, deja de clickear → ayuno; rompe con S≥120, compra Ascesis y sella apenas puede.",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",

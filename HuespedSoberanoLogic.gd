@@ -91,6 +91,11 @@ static func feed() -> void:
 static func process(dt: float) -> void:
 	if not is_active():
 		return
+	# Saves de antes del arreglo: Huésped activado sobre un Ayuno (Trampa del Vacío) dejaba las dos
+	# rutas activas. Huésped reemplaza al Ayuno.
+	if EvoManager.mutation_ayuno_primordial:
+		EvoManager.mutation_ayuno_primordial = false
+		EvoManager._set_genome_state("hiperasimilacion", "bloqueado")
 	var lvl_before := level()
 	EvoManager.huesped_hunger = minf(EvoManager.huesped_hunger + hunger_rate() * dt, 100.0)
 	# Antojos (secuencia fija de intervalos: determinista, sin RNG).

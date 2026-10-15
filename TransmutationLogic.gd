@@ -94,8 +94,16 @@ static func defs() -> Dictionary:
 			# Parasitismo vive 13–20 s: su cierre espera mientras queden apariciones del botón
 			# (RunManager.check_parasitism_final). Mientras dudás, el parásito sigue drenando.
 			"life": func() -> float: return Balance.TRANSMUT_LIFE_PARASITISMO,
+			# Parásito que entró durante el Ayuno = Trampa del Vacío: la llave no rescata de la trampa.
+			"blocked": func() -> bool: return EvoManager.mutation_ayuno_primordial,
 		},
 	}
+
+## Hay una transmutación (A+) o una Sombra activa: la ruta ya se decidió (sin botón de mutación).
+static func any_active() -> bool:
+	return EvoManager.mutation_fusion_catabolica or EvoManager.mutation_caos_orquestado \
+		or EvoManager.mutation_coro_simbiotico or EvoManager.mutation_micelio_omnisciente \
+		or EvoManager.mutation_huesped_soberano or EvoManager.mutation_ayuno_primordial
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).
 static func key_ids() -> Array:
