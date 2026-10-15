@@ -51,8 +51,12 @@ Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla
 | PARASITISMO (Trampa del Vacío) | `ng_ayuno_trap_huesped` | 242 s | romper el ayuno sin clickear antes |
 | FUSIÓN CATABÓLICA | `ng_fusion_natural` | 1176 s | `ng_fusion_player` (golden) no sella: tope de pasivo 15 % toda la run — es a propósito |
 | CAOS · CORO · MICELIO · HUÉSPED | `ng_*_player` | 1297 · 874 · 1619 · 867 s | perfiles de la calibración R3–R6 |
-| PANSPERMIA NEGRA · SINGULARIDAD · MENTE COLMENA | ❌ | | paso 2 |
-| COLAPSO DEPREDATORIO · DEPREDADOR DE REALIDADES · METABOLISMO OSCURO | ❌ | | paso 3 |
+| PANSPERMIA NEGRA | `t1_panspermia` (T1 tras Esporulación) | **886 s** | ✅ bot `green` + eyección sin sobrecalentar; ahorra ~25 eyecciones ($300K) antes de lanzar |
+| SINGULARIDAD | `fresh_singularidad` (rama Simbiosis) | **1461 s** | ✅ termostato de ε (`eps_band`) + `blue_seal` |
+| MENTE COLMENA DISTRIBUIDA | `t1_mente_colmena` | ❌ **no cierra en 2.5 h** | **G8**: ver hallazgos |
+| COLAPSO DEPREDATORIO | `t2_depredador` (T2 tras Parasitismo) | **285 s** | ✅ Hiper frenética → Depredador (215 s) y dejarlo correr |
+| METABOLISMO OSCURO | `t2_met_oscuro` | **246 s** | ✅ en el Depredador deja de clickear y gasta todo (< $1000); `mo_seal_bio` |
+| DEPREDADOR DE REALIDADES | `t2_depredador_realidades` | **287 s** | ✅ llega con ~40 niveles (sólo click + Trabajo Manual) y no recompra |
 | ESCLEROCIO · AUTOFAGIA · NECROSIS · OMEGA-CERO · COLAPSO SINTÉTICO · REMISIÓN | ❌ | | paso 4 |
 | ASCESIS · DOMADOR · POLIMORFÍA · (REENCARNACIÓN) · COLAPSO CONTROLADO | ❌ | | paso 5 |
 
@@ -62,6 +66,9 @@ Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla
 | G5 | "Romper el Ayuno" tras >120 s sin clickear dispara la Trampa del Vacío al instante (la ráfaga suma +5 de biomasa). Es el diseño, y el panel avisa desde los 100 s; la cuenta regresiva de Parasitismo no aparece porque en Ayuno la biomasa está en ~0 | sin cambio (aviso existente) |
 | G6 | El panel de Ayuno tiene textos fijos en español (no pasan por `tr()`) | pendiente (localización) |
 | G7 | Huésped Soberano podía activarse sobre un Ayuno (Trampa del Vacío) y dejar las dos rutas vivas | ✅ `41898d4` |
+| G8 | **Mente Colmena es prácticamente inalcanzable.** El portal pide activo/pasivo 50 % ± 3 durante 100 s, pero se juega con Red Micelial activa (click ×0.5, pasivo ×2.5) y Red Micelial sólo se activa con el pasivo ya dominante. Comprando sólo upgrades de click, el activo sube de 24 % a 44 % en 2.5 h | **decisión del autor** |
+| G9 | Sello de Metabolismo Oscuro: los escalones de PL por biomasa estaban invertidos (< 50 daba 4 y 50–100 daba 2; el botón prometía 2 y 4) | ✅ |
+| G10 | Panspermia: al ritmo que permite el calor, la carga sube neto ~+2/s → un lanzamiento cuesta ~21 eyecciones (~$250K) y el juego no lo dice; el jugador lo descubre fallando | a considerar (mostrar el costo estimado) |
 
 Orden de trabajo propuesto (por dependencia de mecánicas del bot):
 1. T0/Tier 2 (Homeostasis, Simbiosis, Alostasis, Homeorresis) + arreglar perfiles ⚠️.

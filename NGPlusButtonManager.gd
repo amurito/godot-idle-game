@@ -518,11 +518,11 @@ func _on_met_oscuro_seal_pressed() -> void:
 	if RunManager.run_closed:
 		return
 	var bio := BiosphereEngine.biomasa
-	var pl_bonus := 0 if bio < 50.0 else (-2 if bio < 100.0 else 2)
-	if pl_bonus < 0:
-		LegacyManager.add_pl(-2)
-	elif pl_bonus > 0:
-		LegacyManager.add_pl(2)
+	# PL base de METABOLISMO OSCURO = 4 (Balance.PL_REWARDS): el escalón por biomasa lo lleva a 2 / 4 / 6
+	# como promete el botón. (Antes los dos primeros escalones estaban invertidos: <50 daba 4 y 50–100 daba 2.)
+	var pl_bonus := -2 if bio < 50.0 else (0 if bio < 100.0 else 2)
+	if pl_bonus != 0:
+		LegacyManager.add_pl(pl_bonus)
 	if is_instance_valid(_met_oscuro_seal_btn):
 		_met_oscuro_seal_btn.visible = false
 	var pl_total := 2 if bio < 50.0 else (4 if bio < 100.0 else 6)

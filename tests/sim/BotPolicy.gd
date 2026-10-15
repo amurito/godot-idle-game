@@ -34,6 +34,12 @@ extends RefCounted
 ##   green: {bio_min, push_cps, seal}  Rama verde (Colonización): empuja la frontera clickeando hasta
 ##                                 micelio ≥ 25, inicia el Primordio con biomasa ≥ bio_min, riega cuando la
 ##                                 integridad baja, y con la seta formada aprieta el final (ESPORULACIÓN)
+##   eps_band: [lo, hi, cps]       termostato de ε: clickea a `cps` si ε < lo, a cps/2 hasta la mitad de
+##                                 la banda y nada por encima (rige desde eps_band_on, mutación)
+##   eps_band_on: mutation         activa eps_band sólo con EvoManager.mutation_<m> (default: siempre)
+##   balance_ratio: bool           compra click si el activo es < 50 % y pasivo si es > 50 % (Mente Colmena)
+##   blue_seal: bool               rama azul: con el Núcleo de Conciencia aprieta el final (SINGULARIDAD)
+##   mo_seal_bio: float            Metabolismo Oscuro: sella con biomasa ≥ esto (-1 = nunca)
 ##   evo_seal: tier                aprieta "SELLAR FINAL" cuando ofrece este tier de Homeostasis
 ##                                 ("HOMEOSTASIS" | "ALLOSTASIS" | "HOMEORHESIS"), como el jugador
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
@@ -136,6 +142,15 @@ func _current_cps() -> float:
 	var hold: float = float(cfg.get("caos_hold_below", -1.0))
 	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
+	var band: Array = cfg.get("eps_band", [])
+	var band_on: String = str(cfg.get("eps_band_on", ""))
+	if band.size() == 3 and (band_on == "" or bool(EvoManager.get("mutation_" + band_on))):
+		var e: float = StructuralModel.epsilon_runtime
+		if e < float(band[0]):
+			return float(band[2])
+		if e < (float(band[0]) + float(band[1])) / 2.0:
+			return float(band[2]) * 0.5
+		return 0.0
 	var green: Dictionary = cfg.get("green", {})
 	if not green.is_empty() and EvoManager.mutation_red_micelial \
 			and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
@@ -174,6 +189,12 @@ func _buy(d: RefCounted) -> void:
 	for mut in ids_on:
 		if bool(EvoManager.get("mutation_" + str(mut))):
 			ids = ids_on[mut]
+	if cfg.get("balance_ratio", false) and EvoManager.mutation_red_micelial:
+		var ap: Dictionary = EconomyManager.get_active_passive_breakdown()
+		ids = ["click", "click_mult", "accounting"] if float(ap.activo) < 50.0 else ["auto", "auto_mult", "trueque", "trueque_net", "accounting"]
+	# Panspermia: con la seta formada se ahorra para el lanzamiento (no se compra nada).
+	if not cfg.get("green", {}).is_empty() and EvoManager.seta_formada and EvoManager.is_panspermia_window():
+		return
 	var max_passive: float = float(cfg.get("max_passive_pct", 100.0))
 	var uncap: String = str(cfg.get("uncap_passive_on", ""))
 	if uncap != "" and bool(EvoManager.get("mutation_" + uncap)):
@@ -275,7 +296,15 @@ func _route_keys(_d: RefCounted) -> void:
 	if not green.is_empty() and EvoManager.mutation_red_micelial \
 			and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		if EvoManager.seta_formada:
-			if green.get("seal", true):
+			if EvoManager.is_panspermia_window():
+				# Eyección: no pasar el calor máximo (misfire) y tener con qué pagar.
+				# Lanza con presupuesto para ~25 eyecciones: al ritmo que permite el calor la carga sube neto ~+2/s.
+				var budget_ok: bool = EvoManager.panspermia_charge > 0.0 \
+					or EconomyManager.money >= Balance.PANSPERMIA_PULSE_COST * 25.0
+				if budget_ok and EvoManager.panspermia_heat + Balance.PANSPERMIA_HEAT_PER_PULSE <= Balance.PANSPERMIA_HEAT_MAX \
+						and EconomyManager.money >= Balance.PANSPERMIA_PULSE_COST:
+					_press(_d, "_on_sporulation_final_pressed", "green:eyectar carga=%.0f" % EvoManager.panspermia_charge)
+			elif green.get("seal", true):
 				_press(_d, "_on_sporulation_final_pressed", "green:esporulacion")
 		elif EvoManager.primordio_active:
 			var hurt: bool = EvoManager.primordio_integrity <= Balance.PRIMORDIO_INTEGRITY_MAX - Balance.PRIMORDIO_REGAR_HEAL
@@ -284,6 +313,14 @@ func _route_keys(_d: RefCounted) -> void:
 				_press(_d, "_on_primordio_button_pressed", "green:regar int=%.0f" % EvoManager.primordio_integrity)
 		elif BiosphereEngine.micelio >= 25.0 and BiosphereEngine.biomasa >= float(green.get("bio_min", 16.0)):
 			_press(_d, "_on_primordio_button_pressed", "green:primordio bio=%.1f" % BiosphereEngine.biomasa)
+	if cfg.get("blue_seal", false) and EvoManager.nucleo_conciencia and EvoManager.mutation_red_micelial:
+		_press(_d, "_on_sporulation_final_pressed", "blue:singularidad")
+	var mo_bio: float = float(cfg.get("mo_seal_bio", -1.0))
+	if mo_bio >= 0.0 and EvoManager.mutation_met_oscuro and not EvoManager.mutation_autolisis \
+			and not EvoManager.mutation_necrosis and not EvoManager.mutation_omega_cero and not EvoManager.mutation_remision \
+			and BiosphereEngine.biomasa >= mo_bio:
+		UIManager._ng_buttons._on_met_oscuro_seal_pressed()
+		_log("seal:met_oscuro bio=%.0f" % BiosphereEngine.biomasa)
 	var evo: String = str(cfg.get("evo_seal", ""))
 	if evo != "" and RunManager.target_evolution == evo and is_instance_valid(RunManager.evolution_button) \
 			and RunManager.evolution_button.visible:

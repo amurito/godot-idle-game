@@ -67,6 +67,27 @@ const ALL := {
 			"mutation": "homeostasis", "evo_seal": "HOMEORHESIS"},
 		"max_t": 3600.0, "sample_every": 10.0,
 	},
+	"t2_depredador": {
+		"desc": "T2 tras PARASITISMO: Hiperasimilación frenética (10 clicks/s, sin Contabilidad) hasta el Depredador, y lo deja correr.",
+		"legacy": {"trascendencia_count": 2, "last_run_ending": "PARASITISMO", "endings": ["HIPERASIMILACION", "PARASITISMO"]},
+		"bot": {"click_cps": 10.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
+	"t2_depredador_realidades": {
+		"desc": "T2: Hiper frenética comprando sólo Mejorar click y Trabajo Manual → llega al Depredador con pocos niveles y, sin recomprar, se los devora todos → DEPREDADOR DE REALIDADES.",
+		"legacy": {"trascendencia_count": 2, "last_run_ending": "PARASITISMO", "endings": ["HIPERASIMILACION", "PARASITISMO"]},
+		"bot": {"click_cps": 10.0, "buy": "cheapest", "buy_ids": ["click", "auto"], "max_passive_pct": 15.0,
+			"buy_ids_on": {"depredador": []}},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
+	"t2_met_oscuro": {
+		"desc": "T2: Depredador; deja de clickear y gasta todo (plata < $1000) mientras la biomasa de los devorados sube → Metabolismo Oscuro; sella con biomasa ≥ 100.",
+		"legacy": {"trascendencia_count": 2, "last_run_ending": "PARASITISMO", "endings": ["HIPERASIMILACION", "PARASITISMO"]},
+		"bot": {"click_cps": 10.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
+			"stop_click_when": ["depredador"], "uncap_passive_on": "depredador", "unavoid_on": {"accounting": "depredador"},
+			"mo_seal_bio": 100.0},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
 	"fresh_red_micelial": {
 		"desc": "T0: clickea 4/s 7 min (ahorra Contabilidad), después sólo pasivo, elige Red Micelial y rama Colonización.",
 		"legacy": {},
@@ -75,7 +96,35 @@ const ALL := {
 			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
 			"mutation": "red_micelial", "branch": "colonization", "green": {"bio_min": 16.0, "push_cps": 4.0}},
 		"max_t": 3600.0, "sample_every": 10.0,
+	},	"t1_panspermia": {
+		"desc": "T1 tras ESPORULACIÓN: rama verde hasta la seta y eyecta sin sobrecalentar → PANSPERMIA NEGRA.",
+		"legacy": {"trascendencia_count": 1, "last_run_ending": "ESPORULACIÓN", "endings": ["ESPORULACIÓN"]},
+		"bot": {"click_schedule": [[0.0, 4.0], [420.0, 0.3]], "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
+			"mutation": "red_micelial", "branch": "colonization", "green": {"bio_min": 16.0, "push_cps": 4.0}},
+		"max_t": 3600.0, "sample_every": 10.0,
+	},	"fresh_singularidad": {
+		"desc": "T0: Red Micelial rama Simbiosis; sostiene ε en 0.10–0.22 con Contabilidad ≥ 3 hasta el Núcleo de Conciencia → SINGULARIDAD.",
+		"legacy": {},
+		"bot": {"click_schedule": [[0.0, 4.0], [420.0, 0.3]], "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
+			"mutation": "red_micelial", "branch": "symbiosis",
+			"eps_band": [0.12, 0.20, 3.0], "eps_band_on": "red_micelial", "blue_seal": true},
+		"max_t": 3600.0, "sample_every": 10.0,
 	},
+	"t1_mente_colmena": {
+		"desc": "T1 tras SINGULARIDAD: rama Simbiosis, equilibra activo/pasivo 50/50 comprando y sostiene ε 0.20–0.45 100 s → MENTE COLMENA.",
+		"legacy": {"trascendencia_count": 1, "last_run_ending": "SINGULARIDAD", "endings": ["SINGULARIDAD"]},
+		"bot": {"click_schedule": [[0.0, 4.0], [420.0, 0.3]], "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
+			"mutation": "red_micelial", "branch": "symbiosis",
+			"eps_band": [0.24, 0.40, 4.0], "eps_band_on": "red_micelial", "balance_ratio": true},
+		"max_t": 9000.0, "sample_every": 10.0,
+	},
+
 
 
 	# ── Transmutaciones (T3+) ───────────────────────────────────────────────────
