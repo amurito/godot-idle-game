@@ -31,6 +31,11 @@ extends RefCounted
 ##   mutation: "none" | "homeostasis" | "simbiosis" | "red_micelial"
 ##   branch: "none" | "colonization" | "symbiosis"      (sub-rama de Red Micelial)
 ##   allostasis: bool
+##   green: {bio_min, push_cps, seal}  Rama verde (Colonización): empuja la frontera clickeando hasta
+##                                 micelio ≥ 25, inicia el Primordio con biomasa ≥ bio_min, riega cuando la
+##                                 integridad baja, y con la seta formada aprieta el final (ESPORULACIÓN)
+##   evo_seal: tier                aprieta "SELLAR FINAL" cuando ofrece este tier de Homeostasis
+##                                 ("HOMEOSTASIS" | "ALLOSTASIS" | "HOMEORHESIS"), como el jugador
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
 ##   cps_when: {mutation: cps}     ritmo de clicks mientras EvoManager.mutation_<mutation> es true
 ##   caos_collapse_at: float       dispara [Q] Colapso Dirigido cuando ε ≥ esto (-1 = nunca)
@@ -45,6 +50,9 @@ extends RefCounted
 ##   fusion_cd_save_secs: float    ahorra para el próximo nivel de [W] si cuesta ≤ N s de ingreso
 ##   fusion_burst_limit: int       máximo de ráfagas que usa (jugador que se olvida de la Q)
 ##   ayuno_burst_at: float (-1 = nunca)  /  ayuno_ascesis / ayuno_seal: bool
+##   ayuno_streak_first: bool      no rompe el ayuno hasta tener la racha de silencio del sello
+##   ayuno_safe_burst: bool        clickea una vez antes de romper el ayuno si lleva >100 s sin clickear
+##                                 (el panel lo avisa: si no, Parasitismo entra → Trampa del Vacío)
 ##   micelio_plan: [ids]           Micelio Omnisciente: conecta (click derecho) en este orden, llenando
 ##                                 cada nodo antes de pasar al siguiente (salta los bloqueados)
 ##   micelio_swap: [from, to, t]   a los t s de Micelio, desconecta `from` entero y lo pasa a `to`
@@ -128,6 +136,14 @@ func _current_cps() -> float:
 	var hold: float = float(cfg.get("caos_hold_below", -1.0))
 	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
+	var green: Dictionary = cfg.get("green", {})
+	if not green.is_empty() and EvoManager.mutation_red_micelial \
+			and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+		if EvoManager.primordio_active or EvoManager.seta_formada:
+			return 0.0  # no sobrecalentar el embrión (ε)
+		if BiosphereEngine.micelio < 25.0:
+			return float(green.get("push_cps", 4.0))
+		return 0.3
 	for m in cfg.get("stop_click_when", []):
 		if bool(EvoManager.get("mutation_" + str(m))):
 			return 0.0
@@ -255,6 +271,24 @@ func _press(d: RefCounted, method: String, label: String) -> void:
 # ── Teclas de transmutación y sellos ────────────────────────────────────────────
 
 func _route_keys(_d: RefCounted) -> void:
+	var green: Dictionary = cfg.get("green", {})
+	if not green.is_empty() and EvoManager.mutation_red_micelial \
+			and EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
+		if EvoManager.seta_formada:
+			if green.get("seal", true):
+				_press(_d, "_on_sporulation_final_pressed", "green:esporulacion")
+		elif EvoManager.primordio_active:
+			var hurt: bool = EvoManager.primordio_integrity <= Balance.PRIMORDIO_INTEGRITY_MAX - Balance.PRIMORDIO_REGAR_HEAL
+			var hot: bool = StructuralModel.epsilon_runtime > Balance.PRIMORDIO_BAND_HI
+			if (hurt or hot) and BiosphereEngine.biomasa >= Balance.PRIMORDIO_REGAR_COST_BIO:
+				_press(_d, "_on_primordio_button_pressed", "green:regar int=%.0f" % EvoManager.primordio_integrity)
+		elif BiosphereEngine.micelio >= 25.0 and BiosphereEngine.biomasa >= float(green.get("bio_min", 16.0)):
+			_press(_d, "_on_primordio_button_pressed", "green:primordio bio=%.1f" % BiosphereEngine.biomasa)
+	var evo: String = str(cfg.get("evo_seal", ""))
+	if evo != "" and RunManager.target_evolution == evo and is_instance_valid(RunManager.evolution_button) \
+			and RunManager.evolution_button.visible:
+		RunManager._on_evolution_button_pressed()
+		_log("seal:" + evo.to_lower())
 	var tid: String = str(cfg.get("transmute", ""))
 	if tid != "" and TransmutationLogic.candidate() == tid and TransmutationLogic.is_visible():
 		# Mismo camino que el jugador: [T] abre la confirmación y se acepta.
@@ -312,7 +346,12 @@ func _route_keys(_d: RefCounted) -> void:
 			_log("seal:fusion")
 	elif EvoManager.mutation_ayuno_primordial:
 		var burst_at: float = float(cfg.get("ayuno_burst_at", -1.0))
-		if burst_at >= 0.0 and EvoManager.ayuno_silencio >= burst_at and not EvoManager.ayuno_burst_active:
+		var hold_streak: bool = cfg.get("ayuno_streak_first", false) \
+			and EvoManager.ayuno_longest_streak < Balance.AYUNO_SELLO_STREAK
+		if burst_at >= 0.0 and EvoManager.ayuno_silencio >= burst_at and not EvoManager.ayuno_burst_active and not hold_streak:
+			if cfg.get("ayuno_safe_burst", false) and EconomyManager.time_since_last_click > 100.0:
+				_d.click()
+				_log("click:ayuno_safe")
 			EvoManager.activate_ayuno_burst()
 			_after_key("key:Q ayuno_burst S=%.0f" % burst_at)
 		if cfg.get("ayuno_ascesis", false) and EvoManager.can_buy_ayuno_ascesis():

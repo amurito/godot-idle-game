@@ -34,24 +34,34 @@ alcanzabilidad). Faltan:
 | G3 | `SINGULARIDAD` no está en `PL_REWARDS`: OK, otorga 6 + bonus ε antes de `close_run` | ✅ sin cambio |
 | G4 | La regla de Escalado Alostático vivía en el tick de UI | ✅ `40451d9` |
 
-## A2 — Perfil "más rápido" por final (pendiente)
+## A2 — Perfil "más rápido" por final (en curso, retomada 2026-10-15)
 
-25 finales distintos en el código. Estado del bot:
+Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla 1337):
 
-| Final | Perfil | Notas |
+| Final | Perfil | Cierra a | Notas |
+|---|---|---:|---|
+| HIPERASIMILACIÓN | `fresh_hiper` | 180 s | |
+| PARASITISMO | `fresh_idle` · `fresh_buy_all` | 200 · 421 s | inactividad · Masa Crítica |
+| SIMBIOSIS | `fresh_simbiosis` | 427 s | |
+| HOMEOSTASIS | `fresh_homeostasis` | **603 s** | ✅ el bot no apretaba "SELLAR FINAL" (opción `evo_seal`) |
+| ALLOSTASIS | `t1_allostasis` (T1 tras Homeostasis) | **1282 s** | ✅ nuevo |
+| HOMEORHESIS | `t2_homeorhesis` (T2 tras Allostasis) | **1399 s** | ✅ nuevo |
+| ESPORULACIÓN | `fresh_red_micelial` | **714 s** | ✅ perfil roto (nunca llegaba a Red Micelial) + el bot aprendió la rama verde (`green`: empujar frontera, Primordio, Regar, final) |
+| AYUNO PRIMORDIAL | `ng_ayuno_player` | **500 s** (320 desde el ayuno) | ✅ caía en la Trampa del Vacío: rompía el ayuno tras >120 s sin clickear (`ayuno_safe_burst`) y nunca juntaba la racha de 180 s (`ayuno_streak_first`) |
+| PARASITISMO (Trampa del Vacío) | `ng_ayuno_trap_huesped` | 242 s | romper el ayuno sin clickear antes |
+| FUSIÓN CATABÓLICA | `ng_fusion_natural` | 1176 s | `ng_fusion_player` (golden) no sella: tope de pasivo 15 % toda la run — es a propósito |
+| CAOS · CORO · MICELIO · HUÉSPED | `ng_*_player` | 1297 · 874 · 1619 · 867 s | perfiles de la calibración R3–R6 |
+| PANSPERMIA NEGRA · SINGULARIDAD · MENTE COLMENA | ❌ | | paso 2 |
+| COLAPSO DEPREDATORIO · DEPREDADOR DE REALIDADES · METABOLISMO OSCURO | ❌ | | paso 3 |
+| ESCLEROCIO · AUTOFAGIA · NECROSIS · OMEGA-CERO · COLAPSO SINTÉTICO · REMISIÓN | ❌ | | paso 4 |
+| ASCESIS · DOMADOR · POLIMORFÍA · (REENCARNACIÓN) · COLAPSO CONTROLADO | ❌ | | paso 5 |
+
+### Hallazgos de A2
+| # | Hallazgo | Estado |
 |---|---|---|
-| HIPERASIMILACIÓN | ✅ `fresh_hiper` | 180 s |
-| PARASITISMO | ✅ `fresh_buy_all`, `fresh_idle` | 200–420 s |
-| FUSIÓN CATABÓLICA | ✅ `ng_fusion_natural` | ~18 min desde la activación |
-| AYUNO PRIMORDIAL | ⚠️ `ng_ayuno_player` termina en PARASITISMO a 230 s | revisar perfil |
-| HOMEOSTASIS | ⚠️ `fresh_homeostasis` no cierra en 40 min | revisar perfil / ruta |
-| ESPORULACIÓN | ⚠️ `fresh_red_micelial` termina en PARASITISMO | revisar perfil / ruta |
-| SIMBIOSIS · ALLOSTASIS · HOMEORHESIS | ❌ | el bot ya sabe elegir Homeostasis/Simbiosis/Alostasis |
-| PANSPERMIA NEGRA · SINGULARIDAD · MENTE COLMENA | ❌ | requieren legado previo (ESCLEROCIO, SINGULARIDAD) |
-| COLAPSO DEPREDATORIO · DEPREDADOR DE REALIDADES · METABOLISMO OSCURO | ❌ | bot no sabe Depredador |
-| ESCLEROCIO · AUTOFAGIA · NECROSIS · OMEGA-CERO · COLAPSO SINTÉTICO · REMISIÓN | ❌ | bot no sabe árbol oscuro |
-| ASCESIS · DOMADOR · POLIMORFÍA · (REENCARNACIÓN) | ❌ | bot no sabe rutas post-trascendencia |
-| COLAPSO CONTROLADO | ❌ | requiere buff cósmico |
+| G5 | "Romper el Ayuno" tras >120 s sin clickear dispara la Trampa del Vacío al instante (la ráfaga suma +5 de biomasa). Es el diseño, y el panel avisa desde los 100 s; la cuenta regresiva de Parasitismo no aparece porque en Ayuno la biomasa está en ~0 | sin cambio (aviso existente) |
+| G6 | El panel de Ayuno tiene textos fijos en español (no pasan por `tr()`) | pendiente (localización) |
+| G7 | Huésped Soberano podía activarse sobre un Ayuno (Trampa del Vacío) y dejar las dos rutas vivas | ✅ `41898d4` |
 
 Orden de trabajo propuesto (por dependencia de mecánicas del bot):
 1. T0/Tier 2 (Homeostasis, Simbiosis, Alostasis, Homeorresis) + arreglar perfiles ⚠️.

@@ -40,7 +40,7 @@ const ALL := {
 		"legacy": {},
 		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
 			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
-			"mutation": "homeostasis"},
+			"mutation": "homeostasis", "evo_seal": "HOMEOSTASIS"},
 		"max_t": 2400.0, "sample_every": 10.0,
 	},
 	"fresh_simbiosis": {
@@ -51,14 +51,32 @@ const ALL := {
 			"mutation": "simbiosis"},
 		"max_t": 2400.0, "sample_every": 10.0,
 	},
-	"fresh_red_micelial": {
-		"desc": "T0, pasivo: ahorra para Contabilidad, clickea poco, elige Red Micelial y rama Colonización.",
-		"legacy": {},
-		"bot": {"click_schedule": [[0.0, 2.0], [240.0, 0.3]], "buy": "cheapest",
+	"t1_allostasis": {
+		"desc": "T1 tras HOMEOSTASIS: juega Homeostasis, sobrevive perturbaciones y sella ALLOSTASIS (tier 2) con el botón.",
+		"legacy": {"trascendencia_count": 1, "last_run_ending": "HOMEOSTASIS", "endings": ["HOMEOSTASIS"]},
+		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
 			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
-			"mutation": "red_micelial", "branch": "colonization"},
-		"max_t": 2400.0, "sample_every": 10.0,
+			"mutation": "homeostasis", "evo_seal": "ALLOSTASIS"},
+		"max_t": 3600.0, "sample_every": 10.0,
 	},
+	"t2_homeorhesis": {
+		"desc": "T2 tras ALLOSTASIS: juega Homeostasis hasta el tier 3 (shock extremo, 10 min) y sella HOMEORHESIS.",
+		"legacy": {"trascendencia_count": 2, "last_run_ending": "ALLOSTASIS", "endings": ["HOMEOSTASIS", "ALLOSTASIS"]},
+		"bot": {"click_schedule": [[0.0, 3.0], [300.0, 0.3]], "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"mutation": "homeostasis", "evo_seal": "HOMEORHESIS"},
+		"max_t": 3600.0, "sample_every": 10.0,
+	},
+	"fresh_red_micelial": {
+		"desc": "T0: clickea 4/s 7 min (ahorra Contabilidad), después sólo pasivo, elige Red Micelial y rama Colonización.",
+		"legacy": {},
+		"bot": {"click_schedule": [[0.0, 4.0], [420.0, 0.3]], "buy": "cheapest",
+			"priority": ["accounting"], "save_for_priority": true, "save_from": 45.0,
+			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
+			"mutation": "red_micelial", "branch": "colonization", "green": {"bio_min": 16.0, "push_cps": 4.0}},
+		"max_t": 3600.0, "sample_every": 10.0,
+	},
+
 
 	# ── Transmutaciones (T3+) ───────────────────────────────────────────────────
 	"ng_ayuno_lazy": {
@@ -83,7 +101,7 @@ const ALL := {
 			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
 			"buffs": {"transmut_ayuno": 1}},
 		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest",
-			"ayuno_burst_at": 120.0, "ayuno_ascesis": true, "ayuno_seal": true},
+			"ayuno_burst_at": 120.0, "ayuno_streak_first": true, "ayuno_safe_burst": true, "ayuno_ascesis": true, "ayuno_seal": true},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
 	"ng_fusion_player": {
