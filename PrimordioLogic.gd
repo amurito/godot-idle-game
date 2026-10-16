@@ -102,6 +102,24 @@ static func is_panspermia_window() -> bool:
 		and EvoManager.seta_formada and not RunManager.run_closed \
 		and (LegacyManager.last_run_ending == "ESPORULACIÓN" or LegacyManager.last_run_ending == "PANSPERMIA NEGRA")
 
+## Eyecciones que faltan para la velocidad de escape si se eyecta al ritmo máximo que permite el
+## calor (simulación rápida desde la carga y el calor actuales). G10: el jugador lo descubría fallando.
+static func panspermia_launch_estimate() -> int:
+	var charge: float = EvoManager.panspermia_charge
+	var heat: float = EvoManager.panspermia_heat
+	var pulses := 0
+	var t := 0.0
+	while charge < Balance.PANSPERMIA_CHARGE_GOAL and pulses < 200 and t < 600.0:
+		if heat + Balance.PANSPERMIA_HEAT_PER_PULSE <= Balance.PANSPERMIA_HEAT_MAX:
+			charge += Balance.PANSPERMIA_CHARGE_GAIN
+			heat += Balance.PANSPERMIA_HEAT_PER_PULSE
+			pulses += 1
+		else:
+			charge = maxf(0.0, charge - Balance.PANSPERMIA_CHARGE_DECAY * 0.1)
+			heat = maxf(0.0, heat - Balance.PANSPERMIA_HEAT_DECAY * 0.1)
+			t += 0.1
+	return pulses
+
 static func panspermia_pulse_cost() -> float:
 	return Balance.PANSPERMIA_PULSE_COST
 

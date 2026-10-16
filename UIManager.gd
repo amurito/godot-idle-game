@@ -710,7 +710,12 @@ func update_fungal_cycle_bar() -> void:
 					if EvoManager.primordio_active:
 						_fungal_bar_label.text = tr("PRIMORDIO_BAR_LABEL") % [int(bar.value), int(EvoManager.primordio_integrity)]
 					else:
-						_fungal_bar_label.text = (tr("PANSPERMIA_BAR_LABEL") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat)]) if EvoManager.is_panspermia_window() else (tr("COLONIZ_BAR_LABEL") % int(bar.value))
+						if EvoManager.is_panspermia_window():
+							var n_pulses: int = PrimordioLogic.panspermia_launch_estimate()
+							_fungal_bar_label.text = tr("PANSPERMIA_BAR_LABEL") % [int(EvoManager.panspermia_charge), int(EvoManager.panspermia_heat),
+								n_pulses, format_compact(n_pulses * EvoManager.panspermia_pulse_cost())]
+						else:
+							_fungal_bar_label.text = tr("COLONIZ_BAR_LABEL") % int(bar.value)
 				if is_instance_valid(colonize_pulse_button):
 					colonize_pulse_button.visible = EvoManager.is_colonizacion_pushable()
 					if colonize_pulse_button.visible:

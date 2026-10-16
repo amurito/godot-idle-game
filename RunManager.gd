@@ -404,13 +404,13 @@ func check_symbiosis_final(_delta: float):
 
 func is_fractura_epistemica_available() -> bool:
 	# Rework v1.0.0.10 (profundidad): requiere HIPER ya mutada (solo posible en gate Depredador),
-	# ε > 0.90, run > 4min y biomasa mínima. Debe sostenerse 20s para disparar.
+	# ε > 0.90 y run > 4min. Debe sostenerse 20s para disparar. (G13, auditoría 2026-10: se quitó
+	# "biomasa > 5": Hiper se activa con biomasa > 4 y congela la biomasa, así que casi nunca se cumplía.)
 	return RouteManager.allows_bifurcation() and not run_closed \
 		and LegacyManager.has_cosmic_buff("fractura_epistemica") \
 		and EvoManager.mutation_hyperassimilation \
 		and StructuralModel.epsilon_runtime > 0.90 \
-		and run_time > 240.0 \
-		and BiosphereEngine.biomasa > 5.0
+		and run_time > 240.0
 
 func check_fractura_epistemica(dt: float):
 	# FRACTURA EPISTÉMICA (Banco Cósmico T3): cierra como COLAPSO CONTROLADO.

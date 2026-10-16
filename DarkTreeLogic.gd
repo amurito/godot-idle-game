@@ -8,6 +8,11 @@ const AUTOFAGIA_BURST_COOLDOWN := 60.0
 
 # ── MET. OSCURO ──────────────────────────────────────────────────────────────
 
+## Umbral de "recursos críticos" para entrar a Met. Oscuro: $1000 o MET_OSCURO_CRITICAL_SECS s de
+## ingreso, lo que sea mayor (G16). Con una economía chica es el $1000 de siempre.
+static func mo_critical_money() -> float:
+	return maxf(Balance.MET_OSCURO_CRITICAL_MONEY, EconomyManager.get_delta_total() * Balance.MET_OSCURO_CRITICAL_SECS)
+
 static func process_met_oscuro(dt: float) -> bool:
 	EvoManager._met_oscuro_active_time += dt
 	var income_rate := BiosphereEngine.biomasa * 0.8

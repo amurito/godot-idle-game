@@ -21,6 +21,8 @@ const MET_OSCURO_REQUIRED_TIME   := 15.0   # s de activación met. oscuro
 const MET_OSCURO_SEAL_COOLDOWN   := 120.0  # s de cooldown tras sellado
 const MET_OSCURO_DEVOURED_REQ    := 10     # devours necesarios para sellar MET.OSCURO
 const MET_OSCURO_BIO_REQ         := 50.0   # biomasa necesaria para sellar MET.OSCURO
+const MET_OSCURO_CRITICAL_MONEY  := 1000.0 # "recursos críticos": plata < max(esto, N s de ingreso)…
+const MET_OSCURO_CRITICAL_SECS   := 3.0    # …(G16: con legados de ingreso grandes, < $1000 era imposible)
 
 # ── ESCLEROCIO OSCURO (salida alternativa de Met. Oscuro) ────────
 # Gate lore-accurate (procesar la oscuridad, no esperar reloj): autofagia + masa + autorregulación.

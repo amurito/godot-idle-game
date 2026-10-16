@@ -77,10 +77,10 @@ Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla
 | G7 | Huésped Soberano podía activarse sobre un Ayuno (Trampa del Vacío) y dejar las dos rutas vivas | ✅ `41898d4` |
 | G8 | ✅ **(opción A del autor)** **Mente Colmena era prácticamente inalcanzable.** El portal pide activo/pasivo 50 % ± 3 durante 100 s, pero se juega con Red Micelial activa (click ×0.5, pasivo ×2.5) y Red Micelial sólo se activa con el pasivo ya dominante. Comprando sólo upgrades de click, el activo sube de 24 % a 44 % en 2.5 h | ✅ el portal mide el equilibrio sin los multiplicadores de Red Micelial → 949 s |
 | G9 | Sello de Metabolismo Oscuro: los escalones de PL por biomasa estaban invertidos (< 50 daba 4 y 50–100 daba 2; el botón prometía 2 y 4) | ✅ |
-| G10 | Panspermia: al ritmo que permite el calor, la carga sube neto ~+2/s → un lanzamiento cuesta ~21 eyecciones (~$250K) y el juego no lo dice; el jugador lo descubre fallando | a considerar (mostrar el costo estimado) |
+| G10 | Panspermia: al ritmo que permite el calor, la carga sube neto ~+2/s → un lanzamiento cuesta ~21 eyecciones (~$250K) y el juego no lo dice; el jugador lo descubre fallando | ✅ la barra de Panspermia muestra "lanzamiento ≈ N eyecciones ($X)" (`PrimordioLogic.panspermia_launch_estimate`, simula el ritmo máximo que permite el calor) |
 | G11 | En T3+ la economía del Depredador es grande: la plata no baja de $1000 sólo gastando (el "vuelto" de la compra más barata ya supera $1000). Se entra a Met. Oscuro con **Comprar tiempo** (biomasa): el Depredador devora más y la economía se achica. Pero así se llega a MO con Δ ≈ $130/s y **Necrosis pide Δ ≥ $200/s** dentro de MO (donde no se puede comprar). En T2 se llega a MO con la economía viva y Necrosis entra | ✅ **(decisión del autor)** el requisito se mide con el Δ$/s al ENTRAR a MO (`met_oscuro_entry_delta`) |
 | G12 | Necrosis sólo progresa clickeando (la Necromasa sale de los clicks); el panel lo dice ("sin clicks no hay progreso") | sin cambio |
-| G13 | **Colapso Controlado exige entrar a Hiper con biomasa > 5**, pero Hiper se activa sola apenas la biomasa pasa de 4 y, una vez activa, gasta los nutrientes y la biomasa queda congelada. Hay que frenar ε < 0.4 antes de Hiper hasta juntar biomasa; nada en el juego lo sugiere | a considerar: pista en el panel de Fractura Epistémica, o medir biomasa ≥ 4 |
+| G13 | **Colapso Controlado exige entrar a Hiper con biomasa > 5**, pero Hiper se activa sola apenas la biomasa pasa de 4 y, una vez activa, gasta los nutrientes y la biomasa queda congelada. Hay que frenar ε < 0.4 antes de Hiper hasta juntar biomasa; nada en el juego lo sugiere | ✅ se quitó el requisito oculto "biomasa > 5" (`RunManager.is_fractura_epistemica_available`). Textos del Codex y del legado corregidos: decían "Ω > 0.30" (nunca se chequeó; en Hiper Ω queda en 0.30) y ahora dicen ε > 0.90 sostenido 20 s con la run pasados 4 min, y avisan que con ε > 0.95 entra antes el Depredador |
 | G14 | **El Dios de las Moscas podía quedar imposible**: su lista dice "ESPORULACION"/"HIPERASIMILACION" sin tilde y el botón de la rama verde cierra como "ESPORULACIÓN"; el registro de finales no normaliza | ✅ la comparación del logro ignora tildes |
 | G15 | El simulador no registraba los logros desbloqueados en el arranque (iniciar ruta Vacío/Carnaval/Reencarnación) | ✅ (herramienta) |
 
@@ -97,12 +97,13 @@ código que la UI; se registra el tiempo mínimo, y los finales sin trayectoria 
 ## A3 — Logros difíciles ✅ (2026-10-16)
 
 Se corrieron todos los escenarios (≈ 60) y se cruzaron los logros desbloqueados con los 89 definidos.
-**83 de 89 salen jugando con algún perfil del bot.** Los 6 restantes:
+**85 de 89 salen jugando con algún perfil del bot.** Los 4 restantes son **de cuenta**, no de una run:
+Reino Subterráneo, Legado Absoluto, El Dios de las Moscas y Última Espora (todos los logros de un tier, todo el Banco,
+todos los finales, todos los logros). Se verificaron sus listas: El Dios de las Moscas tenía el problema de tildes de G14.
 
-| Logro | Por qué no lo saca el bot |
-|---|---|
-| Reino Subterráneo · Legado Absoluto · El Dios de las Moscas · Última Espora | **De cuenta**, no de una run (todos los logros de un tier, todo el Banco, todos los finales, todos los logros). Se verificaron las listas: el Dios de las Moscas tenía el problema de tildes de G14 (arreglado) |
-| Función Pura (Necrosis < 75 s) · Autofagia Perfecta (mejoras de Autofagia al máximo) | Piden una economía fuerte **dentro** de Met. Oscuro, pero para entrar a MO hay que bajar de $1000 (G16). Con poco legado se entra pero la economía queda chica (Necrosis tarda ~210 s, la Autofagia se come todo antes de maximizar); con legado de fin de juego (~$1.27M/s) no se baja de $1000 y termina en Colapso Depredatorio |
+Función Pura y Autofagia Perfecta salieron recién después de G16: piden una economía fuerte **dentro** de Met. Oscuro,
+y con legado de fin de juego no se podía entrar a MO. Ahora, con legado T6: Función Pura (Necrosis en 7 s) y
+Autofagia Perfecta (mejoras al máximo, 1500 s; `a3_*_late`).
 
 Perfiles nuevos de A3 (`tests/sim/Scenarios.gd`, prefijo `a3_`): Coloso Estructural (Fusión sellada con $1.200M, 2669 s),
 Ayuno Absoluto (7 ciclos), Singularidad Perfecta (Omega-Cero con Φ ≥ 500 y Ω ≤ 0.01), Reencarnación Consumada,
@@ -112,5 +113,6 @@ Maestro del Catalizador, Mano Ligera / Eficiencia Brutal / Sin Tocar (un click c
 ### Hallazgos de A3
 | # | Hallazgo | Estado |
 |---|---|---|
-| G16 | **Met. Oscuro choca con una economía grande.** La entrada pide plata < $1000 sostenida 15 s; con legados de ingreso (fin de juego) el ingreso supera $1000/s y no se puede, ni gastando ni comprando tiempo. La salida del jugador es apagar legados de ingreso en el Banco antes de la run (los toggles existen), pero el juego no lo sugiere | a considerar: medir "recursos críticos" relativo al ingreso (p. ej. plata < 5 s de ingreso), o una pista |
+| G16 | **Met. Oscuro choca con una economía grande.** La entrada pide plata < $1000 sostenida 15 s; con legados de ingreso (fin de juego) el ingreso supera $1000/s y no se puede, ni gastando ni comprando tiempo. La salida del jugador es apagar legados de ingreso en el Banco antes de la run (los toggles existen), pero el juego no lo sugiere | ✅ "recursos críticos" = plata < max($1000, 3 s de ingreso) (`DarkTreeLogic.mo_critical_money`, `Balance.MET_OSCURO_CRITICAL_*`); el panel muestra el umbral vigente |
+| G17 | La pista "MET.OSCURO DISPONIBLE" y el Codex mostraban requisitos viejos (3 devorados, biomasa 25, < $1k); el juego pide 10 y 50 | ✅ la pista lee las constantes de Balance; Codex corregido |
 

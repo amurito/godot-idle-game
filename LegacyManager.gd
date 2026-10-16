@@ -184,7 +184,7 @@ const COSMIC_DATA := {
 	},
 	"fractura_epistemica": {
 		"cost": 35, "name": "Fractura Epistémica",
-		"desc": "Desbloquea la ruta COLAPSO CONTROLADO: cuando ε > 0.90 y Ω > 0.30, podés cerrar la run con +6 PL.",
+		"desc": "Desbloquea la ruta COLAPSO CONTROLADO: con Hiperasimilación activa, ε > 0.90 sostenido 20 s (run > 4 min) cierra la run con +6 PL.",
 		"tier": 3,
 	},
 	"sustrato_cosmico": {

@@ -139,7 +139,7 @@ static func update_parasitismo(ctx: Dictionary) -> void:
 
 
 ## METABOLISMO OSCURO (Post-Depredador): bioquímica oscura tras recursos críticos.
-## Requiere: Depredador activo, dinero < $1000, ≥3 devours, biomasa ≥ 25.
+## Requiere: Depredador activo, dinero crítico (< max($1000, 3 s de ingreso)), ≥ 10 devours, biomasa ≥ 50.
 static func update_met_oscuro(ctx: Dictionary) -> void:
 	if EvoManager.mutation_met_oscuro:
 		EvoManager._set_genome_state("met_oscuro", "activo")
@@ -149,7 +149,7 @@ static func update_met_oscuro(ctx: Dictionary) -> void:
 		return
 
 	var devoured_ok: bool = EvoManager.met_oscuro_devoured_count >= Balance.MET_OSCURO_DEVOURED_REQ
-	var recursos_criticos: bool = EconomyManager.money < 1000.0
+	var recursos_criticos: bool = EconomyManager.money < DarkTreeLogic.mo_critical_money()
 	var bio_ok: bool = ctx.biomasa >= Balance.MET_OSCURO_BIO_REQ
 
 	if devoured_ok and recursos_criticos and bio_ok:

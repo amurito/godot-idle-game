@@ -171,6 +171,14 @@ const ALL := {
 			"pre_band": [0.2, 0.35, 6.0, 5.6], "eps_band": [0.91, 0.94, 10.0], "eps_band_on": "hyperassimilation"},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
+	"t3_colapso_controlado_simple": {
+		"desc": "Colapso Controlado sin frenar ε antes de Hiper (tras G13 no hace falta juntar biomasa > 5).",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "PARASITISMO", "endings": ["HIPERASIMILACION", "PARASITISMO"],
+			"cosmic": ["fractura_epistemica"]},
+		"bot": {"click_cps": 10.0, "buy": "cheapest", "avoid": ["accounting"], "max_passive_pct": 15.0,
+			"eps_band": [0.91, 0.94, 10.0], "eps_band_on": "hyperassimilation"},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
 	"a3_coloso": {
 		"desc": "A3 Coloso Estructural: Fusión jugada, pero sella recién con $1.200M generados (n ≥ 200 estructurales).",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",

@@ -237,6 +237,9 @@ func _buy(d: RefCounted) -> void:
 	if not dark_cfg.is_empty():
 		var droute: String = str(dark_cfg.get("route", ""))
 		if EvoManager.mutation_autolisis and droute == "autofagia_full":
+			# Con las dos mejoras al máximo, dejar que se coma todo (si no, se realimenta para siempre).
+			if DarkTreeLogic.autofagia_upgrade_cost("speed").maxed and DarkTreeLogic.autofagia_upgrade_cost("double").maxed:
+				return
 			# Ahorrar para las mejoras de Autofagia si la biomasa ya alcanza; si no, realimentar.
 			for kind in ["speed", "double"]:
 				var c: Dictionary = DarkTreeLogic.autofagia_upgrade_cost(kind)

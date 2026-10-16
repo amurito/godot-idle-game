@@ -952,12 +952,12 @@ const ENTRIES: Dictionary = {
 		"name_es": "Colapso Controlado", "name_en": "Controlled Collapse",
 		"body_es": (
 			"Final desbloqueado por la Fractura Epistémica (Banco Cósmico, Tier 3). Canaliza la Hiperasimilación en un colapso dirigido en vez de una implosión.\n\n"
-			+ "Disponible cuando ε > 0.90 y Ω > 0.30: cerrás la run de forma controlada con +6 PL y el reactor se vuelve dorado.\n\n"
+			+ "Con Hiperasimilación activa, sostené ε > 0.90 durante 20 s (con la run pasados los 4 min): cerrás la run de forma controlada con +6 PL y el reactor se vuelve dorado. Ojo: con ε > 0.95 sostenido 30 s entra el Depredador antes.\n\n"
 			+ "[i]\"La bioquímica no documentada se canaliza en colapso controlado. El reactor se volvió dorado.\"[/i]"
 		),
 		"body_en": (
 			"Ending unlocked by Epistemic Fracture (Cosmic Bank, Tier 3). Channels Hyperassimilation into a directed collapse instead of an implosion.\n\n"
-			+ "Available when ε > 0.90 and Ω > 0.30: you close the run in a controlled way for +6 LP and the reactor turns gold.\n\n"
+			+ "With Hyperassimilation active, hold ε > 0.90 for 20 s (with the run past 4 min): you close the run in a controlled way for +6 LP and the reactor turns gold. Careful: ε > 0.95 for 30 s brings the Predator first.\n\n"
 			+ "[i]\"Hyperassimilation channeled into a controlled collapse. The reactor turned gold.\"[/i]"
 		),
 		"unlock": {"type": "route_closed", "route": "COLAPSO CONTROLADO"},

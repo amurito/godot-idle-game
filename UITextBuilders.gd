@@ -968,7 +968,8 @@ static func build_mutation_status_text() -> String:
 		var bar: String = "█".repeat(filled) + "░".repeat(12 - filled)
 		var bar_color: String = "#00ff88" if ratio > 0.5 else ("#ffaa33" if ratio > 0.25 else "#ff3333")
 		t += "[color=%s]⏳ " % bar_color + TranslationServer.translate("MSTAT_DEP_INESTAB") % [bar, remaining] + "[/color]\n"
-		var seal_ok: bool = dev >= Balance.MET_OSCURO_DEVOURED_REQ and bio >= Balance.MET_OSCURO_BIO_REQ and money_now < 1000.0
+		var crit: float = DarkTreeLogic.mo_critical_money()
+		var seal_ok: bool = dev >= Balance.MET_OSCURO_DEVOURED_REQ and bio >= Balance.MET_OSCURO_BIO_REQ and money_now < crit
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("MSTAT_DEP_OUT_INTRO") + "[/color]\n"
 		t += "  [color=%s]" % ["#9955dd" if seal_ok else "#888888"] + TranslationServer.translate("MSTAT_DEP_OUT_SEAL") + "[/color]\n"
 		t += "  [color=#ff5577]" + TranslationServer.translate("MSTAT_DEP_OUT_CONSUME") + "[/color]\n"
@@ -976,7 +977,7 @@ static func build_mutation_status_text() -> String:
 		t += "\n[color=#aa66cc]" + TranslationServer.translate("MSTAT_DEP_ALT") + "[/color]\n"
 		t += "  [color=%s]" % ["#00ff88" if dev >= Balance.MET_OSCURO_DEVOURED_REQ else "#ff5555"] + TranslationServer.translate("MSTAT_DEP_DEVOURED") % dev + "[/color]\n"
 		t += "  [color=%s]" % ["#00ff88" if bio >= Balance.MET_OSCURO_BIO_REQ else "#ff5555"] + TranslationServer.translate("MSTAT_DEP_BIO25") % bio + "[/color]\n"
-		t += "  [color=%s]" % ["#00ff88" if money_now < 1000.0 else "#ff5555"] + TranslationServer.translate("MSTAT_DEP_MONEY") % money_now + "[/color]\n"
+		t += "  [color=%s]" % ["#00ff88" if money_now < crit else "#ff5555"] + TranslationServer.translate("MSTAT_DEP_MONEY") % [format_compact(crit), money_now] + "[/color]\n"
 		t += "  [color=#aaaaaa]" + TranslationServer.translate("MSTAT_DEP_SUSTAIN") + "[/color]\n"
 
 	if EvoManager.mutation_parasitism:
@@ -1185,14 +1186,16 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 			t += "\n\n🌑 MET.OSCURO [%s] %d%%" % [bar, int(pct * 100)]
 			t += "\nEstabilizando %.1f/%ds" % [mt, int(req)]
 		else:
-			var d_ok: bool = dev >= 3
-			var b_ok: bool = bio >= 25.0
-			var r_ok: bool = EconomyManager.money < 1000.0
+			# Requisitos reales de GenomeEvaluator.update_met_oscuro (antes decía 3 / 25 / <1k: G17).
+			var crit: float = DarkTreeLogic.mo_critical_money()
+			var d_ok: bool = dev >= Balance.MET_OSCURO_DEVOURED_REQ
+			var b_ok: bool = bio >= Balance.MET_OSCURO_BIO_REQ
+			var r_ok: bool = EconomyManager.money < crit
 			t += "\n\n🌑 MET.OSCURO DISPONIBLE"
-			t += "\nDev:%d/3%s · Bio:%.0f/25%s · $:%.0f<1k%s" % [
-				dev, " ✓" if d_ok else "",
-				bio, " ✓" if b_ok else "",
-				EconomyManager.money, " ✓" if r_ok else ""
+			t += "\nDev:%d/%d%s · Bio:%.0f/%.0f%s · $:%.0f<%s%s" % [
+				dev, Balance.MET_OSCURO_DEVOURED_REQ, " ✓" if d_ok else "",
+				bio, Balance.MET_OSCURO_BIO_REQ, " ✓" if b_ok else "",
+				EconomyManager.money, format_compact(crit), " ✓" if r_ok else ""
 			]
 	elif EvoManager.mutation_met_oscuro:
 		t += "\n\n🌑 MET.OSCURO ACTIVO"
