@@ -36,6 +36,8 @@ extends RefCounted
 ##                                 integridad baja, y con la seta formada aprieta el final (ESPORULACIÓN)
 ##   eps_band: [lo, hi, cps]       termostato de ε: clickea a `cps` si ε < lo, a cps/2 hasta la mitad de
 ##                                 la banda y nada por encima (rige desde eps_band_on, mutación)
+##   pre_band: [lo, hi, cps, bio]  antes de Hiper: termostato de ε hasta juntar `bio` de biomasa (Hiper
+##                                 congela la biomasa: entra con la que tengas)
 ##   eps_band_on: mutation         activa eps_band sólo con EvoManager.mutation_<m> (default: siempre)
 ##   balance_ratio: bool           compra click si el activo es < 50 % y pasivo si es > 50 % (Mente Colmena)
 ##   blue_seal: bool               rama azul: con el Núcleo de Conciencia aprieta el final (SINGULARIDAD)
@@ -44,6 +46,13 @@ extends RefCounted
 ##                                 devorados y después deja de clickear y gasta todo (< $1000 → Met. Oscuro);
 ##                                 en MO activa `route` ("esclerocio" | "autofagia" | "necrosis" | "omega" |
 ##                                 "omega_starve" | "remision") y juega su minijuego hasta el cierre
+##   click_every: s                un solo click cada `s` segundos (runs de pocos clicks; < 120 s evita
+##                                 Parasitismo por inactividad)
+##   fusion_seal_min_total: $      sella Fusión recién con este total generado (Coloso Estructural)
+##   ayuno_seal_min_cycles: int    sella Ayuno recién con estos ciclos (Ayuno Absoluto)
+##   dark.omega_seal_phi / dark.omega_seal_max_omega   condiciones del sello de Omega-Cero
+##   dark.catalyst: bool           Necrosis: compra Catalizador cuando alcanza (antes que agentes)
+##   dark.route "autofagia_full"   Autofagia ahorrando para maximizar velocidad y doble
 ##   evo_seal: tier                aprieta "SELLAR FINAL" cuando ofrece este tier de Homeostasis
 ##                                 ("HOMEOSTASIS" | "ALLOSTASIS" | "HOMEORHESIS"), como el jugador
 ##   transmute: id                 revierte A → A+ (TransmutationLogic) en la 1ª aparición del botón [T]
@@ -101,6 +110,9 @@ func _init(config: Dictionary) -> void:
 func act(d: RefCounted) -> void:
 	if RunManager.run_closed:
 		return
+	var every_s: float = float(cfg.get("click_every", -1.0))
+	if every_s > 0.0 and EconomyManager.time_since_last_click >= every_s:
+		d.click()
 	var acc: float = float(cfg.get("rhythm_accuracy", -1.0))
 	if acc >= 0.0 and EvoManager.mutation_coro_simbiotico and CoroSimbioticoLogic.period() > 0.0:
 		_rhythm(d, acc)
@@ -153,6 +165,17 @@ func _current_cps() -> float:
 		if EvoManager.mutation_met_oscuro:
 			return 0.0
 		return float(cfg.get("click_cps", 10.0)) if EvoManager.met_oscuro_devoured_count < int(dark.get("devour_target", 10)) else 0.0
+	var every: float = float(cfg.get("click_every", -1.0))
+	if every > 0.0:
+		return 0.0  # los clicks espaciados los hace act() (ver _click_every)
+	var pre: Array = cfg.get("pre_band", [])
+	if pre.size() == 4 and not EvoManager.mutation_hyperassimilation and BiosphereEngine.biomasa < float(pre[3]):
+		var e0: float = StructuralModel.epsilon_runtime
+		if e0 < float(pre[0]):
+			return float(pre[2])
+		if e0 < (float(pre[0]) + float(pre[1])) / 2.0:
+			return float(pre[2]) * 0.5
+		return 0.0
 	var band: Array = cfg.get("eps_band", [])
 	var band_on: String = str(cfg.get("eps_band_on", ""))
 	if band.size() == 3 and (band_on == "" or bool(EvoManager.get("mutation_" + band_on))):
@@ -212,7 +235,17 @@ func _buy(d: RefCounted) -> void:
 		max_passive = 100.0
 	var dark_cfg: Dictionary = cfg.get("dark", {})
 	if not dark_cfg.is_empty():
-		if EvoManager.mutation_autolisis or (EvoManager.mutation_omega_cero and str(dark_cfg.get("route", "")) != "omega"):
+		var droute: String = str(dark_cfg.get("route", ""))
+		if EvoManager.mutation_autolisis and droute == "autofagia_full":
+			# Ahorrar para las mejoras de Autofagia si la biomasa ya alcanza; si no, realimentar.
+			for kind in ["speed", "double"]:
+				var c: Dictionary = DarkTreeLogic.autofagia_upgrade_cost(kind)
+				if not c.maxed and BiosphereEngine.biomasa >= c.bio:
+					return
+			ids = DEFAULT_BUY_IDS
+			avoid = []
+			max_passive = 100.0
+		elif EvoManager.mutation_autolisis or (EvoManager.mutation_omega_cero and droute != "omega"):
 			return  # no recomprar: que se coma lo que hay (Omega-Cero normal SÍ realimenta el loop)
 		if EvoManager.mutation_omega_cero:
 			ids = DEFAULT_BUY_IDS
@@ -411,7 +444,8 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("fusion_cd", false) and EvoManager.can_buy_fusion_cd():
 			EvoManager.buy_fusion_cd()
 			_after_key("key:W fusion_cd")
-		if cfg.get("fusion_seal", false) and EvoManager.fusion_seal_ready():
+		if cfg.get("fusion_seal", false) and EvoManager.fusion_seal_ready() \
+				and EconomyManager.total_money_generated >= float(cfg.get("fusion_seal_min_total", 0.0)):
 			UIManager._ng_buttons._on_fusion_seal_pressed()
 			_log("seal:fusion")
 	elif EvoManager.mutation_ayuno_primordial:
@@ -427,7 +461,8 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("ayuno_ascesis", false) and EvoManager.can_buy_ayuno_ascesis():
 			EvoManager.buy_ayuno_ascesis()
 			_after_key("key:W ayuno_ascesis")
-		if cfg.get("ayuno_seal", false) and EvoManager.ayuno_seal_ready():
+		if cfg.get("ayuno_seal", false) and EvoManager.ayuno_seal_ready() \
+				and EvoManager.ayuno_cycles >= int(cfg.get("ayuno_seal_min_cycles", 0)):
 			UIManager._ng_buttons._on_ayuno_seal_pressed()
 			_log("seal:ayuno")
 
@@ -470,7 +505,7 @@ func _dark(route: String) -> void:
 					and StructuralModel.epsilon_runtime < Balance.ESCLEROCIO_EPS_MAX:
 				ng._on_esclerocio_pressed()
 				_log("dark:esclerocio")
-		"autofagia":
+		"autofagia", "autofagia_full":
 			if free and BiosphereEngine.biomasa >= Balance.AUTOLISIS_BIO_REQ \
 					and UpgradeManager.get_owned_levels_count() >= Balance.AUTOLISIS_UPGRADES_REQ:
 				EvoManager.activate_autolisis()
@@ -482,11 +517,14 @@ func _dark(route: String) -> void:
 						_log("dark:autofagia_" + kind)
 		"necrosis":
 			if free and BiosphereEngine.biomasa >= Balance.NECROSIS_BIO_REQ \
-					and EconomyManager.get_delta_total() >= Balance.NECROSIS_FLOW_REQ:
+					and DarkTreeLogic.necrosis_flow_ok():
 				EvoManager.activate_necrosis()
 				_log("dark:necrosis")
 			elif EvoManager.mutation_necrosis:
-				if EvoManager.necrosis_toxicidad > 0.55 and EvoManager.can_purge_necrosis():
+				if cfg.dark.get("catalyst", false) and DarkTreeLogic.can_buy_necrosis_catalyst():
+					DarkTreeLogic.buy_necrosis_catalyst()
+					_log("dark:necrosis_catalizador")
+				elif EvoManager.necrosis_toxicidad > 0.55 and EvoManager.can_purge_necrosis():
 					EvoManager.purge_necrosis()
 					_log("dark:necrosis_purga")
 				elif EvoManager.necrosis_toxicidad < 0.55 and EvoManager.can_buy_necrosis_agent():
@@ -496,7 +534,9 @@ func _dark(route: String) -> void:
 			if EvoManager.omega_cero_gate_ready():
 				ng._on_omega_cero_pressed()
 				_log("dark:omega_cero")
-			elif route == "omega" and EvoManager.mutation_omega_cero and EvoManager.omega_cero_can_seal():
+			elif route == "omega" and EvoManager.mutation_omega_cero and EvoManager.omega_cero_can_seal() \
+					and EvoManager.omega_cero_phi >= float(cfg.dark.get("omega_seal_phi", 0.0)) \
+					and EvoManager.omega_cero_omega <= float(cfg.dark.get("omega_seal_max_omega", 1.0)):
 				ng._on_omega_cero_seal_pressed()
 				_log("dark:omega_sello")
 		"remision":

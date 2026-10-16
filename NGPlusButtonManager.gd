@@ -845,7 +845,7 @@ func _update_necrosis_button() -> void:
 			_necrosis_btn.visible = false
 		return
 	var bio_ok: bool = BiosphereEngine.biomasa >= Balance.NECROSIS_BIO_REQ
-	var flow_ok: bool = EconomyManager.get_delta_total() >= Balance.NECROSIS_FLOW_REQ
+	var flow_ok: bool = DarkTreeLogic.necrosis_flow_ok()
 	if not (bio_ok and flow_ok):
 		if is_instance_valid(_necrosis_btn):
 			_necrosis_btn.visible = false

@@ -232,6 +232,7 @@ static func _define() -> Array:
 			_f("depredador_timer_buys", EvoManager, {"load_int": true}),
 			_f("met_oscuro_timer", EvoManager, {"save_sf": 0.0, "load_sf": [0.0, -INF]}),
 			_f("met_oscuro_devoured_count", EvoManager),
+			_f("met_oscuro_entry_delta", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			# Red Micelial / ciclo biológico
 			_f("red_micelial_phase", EvoManager),
 			_f("red_branch_selected", EvoManager),

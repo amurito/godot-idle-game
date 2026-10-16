@@ -486,10 +486,19 @@ const ALL_ENDINGS := [
 ]
 
 func _eval_dios_de_las_moscas(_s: Dictionary) -> bool:
+	# Se compara sin tildes (G14, auditoría 2026-10): el botón de la rama verde cierra como
+	# "ESPORULACIÓN" y la lista dice "ESPORULACION"; sin esto el logro podía quedar imposible.
+	var done := {}
+	for route in LegacyManager.endings_achieved:
+		if LegacyManager.endings_achieved[route]:
+			done[_sin_tildes(str(route))] = true
 	for route in ALL_ENDINGS:
-		if not LegacyManager.endings_achieved.get(route, false):
+		if not done.has(_sin_tildes(route)):
 			return false
 	return true
+
+static func _sin_tildes(t: String) -> String:
+	return t.replace("Á", "A").replace("É", "E").replace("Í", "I").replace("Ó", "O").replace("Ú", "U")
 
 # ──────────────────────── META-ACHIEVEMENTS ────────────────────────
 

@@ -125,6 +125,10 @@ func _connect_events() -> void:
 		purchases.append({"t": now(), "id": id, "level": UpgradeManager.level(id)}))
 	AchievementManager.achievement_unlocked.connect(func(id: String, _def: Dictionary) -> void:
 		events.append({"t": now(), "type": "achievement", "id": id}))
+	# Logros que se desbloquearon en el arranque, antes de conectar (p.ej. activar la ruta
+	# post-trascendencia en main._ready): se registran igual, en t = 0.
+	for id in AchievementManager.unlocked:
+		events.append({"t": now(), "type": "achievement", "id": str(id)})
 
 
 func now() -> float:

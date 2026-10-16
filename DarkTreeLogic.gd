@@ -192,6 +192,12 @@ static func autofagia_digest_burst() -> int:
 # ── NECROSIS CONTROLADA ───────────────────────────────────────────────────────
 
 ## Activa la sub-ruta. Necrosis toma control de Ω y abre la doble economía.
+## Requisito de economía de Necrosis: Δ$/s al ENTRAR a Met. Oscuro (o el actual, si es mayor).
+## Medirlo con el Δ de adentro de MO lo hacía casi imposible en T3+ (G11): para bajar de $1000 hay
+## que achicar la economía comprando tiempo, y adentro de MO no se puede comprar.
+static func necrosis_flow_ok() -> bool:
+	return maxf(EvoManager.met_oscuro_entry_delta, EconomyManager.get_delta_total()) >= Balance.NECROSIS_FLOW_REQ
+
 static func activate_necrosis() -> void:
 	if EvoManager.mutation_necrosis or EvoManager.mutation_autolisis or EvoManager.mutation_omega_cero or EvoManager.mutation_remision:
 		return

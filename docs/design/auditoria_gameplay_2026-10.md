@@ -59,11 +59,15 @@ Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla
 | DEPREDADOR DE REALIDADES | `t2_depredador_realidades` | **287 s** | ✅ llega con ~40 niveles (sólo click + Trabajo Manual) y no recompra |
 | ESCLEROCIO OSCURO | `t3_esclerocio` | **241 s** | ✅ bot `dark`: 30 devorados en el Depredador, "Comprar tiempo" con biomasa para bajar de $1000, ε < 0.25 |
 | AUTOFAGIA NECRÓTICA | `t3_autofagia` | **860 s** | ✅ compra velocidad/doble y no recompra hasta que se come todo |
-| NECROSIS CONTROLADA | `t2_necrosis` | **585 s** | ✅ T2 sin comprar tiempo; clickea para generar Necromasa, agentes con toxicidad < 55 %, depura (G11) |
+| NECROSIS CONTROLADA | `t2_necrosis` · `t3_necrosis` | **585 · 534 s** | ✅ clickea para generar Necromasa, agentes con toxicidad < 55 %, depura; en T3 tras el arreglo de G11 |
 | PROTOCOLO OMEGA-CERO | `t3_omega_cero` | **316 s** | ✅ recompra para realimentar el loop y sella con Φ ≥ 300 |
 | COLAPSO SINTÉTICO | `t3_colapso_sintetico` | **268 s** | ✅ Omega-Cero sin recomprar: inanición |
 | REMISIÓN METABÓLICA | `t3_remision` | **286 s** | ✅ sigue el centro de la banda con ± y sella |
-| ASCESIS · DOMADOR · POLIMORFÍA · (REENCARNACIÓN) · COLAPSO CONTROLADO | ❌ | | paso 5 |
+| ASCESIS PROFUNDA | `t1_ascesis` (ruta Vacío) | **623 s** | ✅ sólo clicks, termostato ε < 0.22, ahorra $10M |
+| DOMADOR DEL CAOS | `t1_domador` (ruta Carnaval) | **540 s** | ✅ invierte 6.5 min y ahorra hasta $1M de pico |
+| POLIMORFÍA TOTAL | `t1_polimorfia` (ruta Carnaval) | **720 s** | ✅ gasta todo para no pasar de $1M y ahorra desde la rotación 11 |
+| COLAPSO CONTROLADO | `t3_colapso_controlado` (cósmico Fractura) | **260 s** | ✅ frena ε < 0.35 hasta biomasa 5.6 antes de Hiper (G13) y sostiene ε 0.91–0.94 |
+| (Reencarnación Heredada) | `a3_reencarnacion` | — | no tiene final propio: es una ruta que arranca con los niveles del ciclo anterior |
 
 ### Hallazgos de A2
 | # | Hallazgo | Estado |
@@ -74,8 +78,11 @@ Finales con perfil de bot que cierra jugando (tiempos = segundos de run, semilla
 | G8 | ✅ **(opción A del autor)** **Mente Colmena era prácticamente inalcanzable.** El portal pide activo/pasivo 50 % ± 3 durante 100 s, pero se juega con Red Micelial activa (click ×0.5, pasivo ×2.5) y Red Micelial sólo se activa con el pasivo ya dominante. Comprando sólo upgrades de click, el activo sube de 24 % a 44 % en 2.5 h | ✅ el portal mide el equilibrio sin los multiplicadores de Red Micelial → 949 s |
 | G9 | Sello de Metabolismo Oscuro: los escalones de PL por biomasa estaban invertidos (< 50 daba 4 y 50–100 daba 2; el botón prometía 2 y 4) | ✅ |
 | G10 | Panspermia: al ritmo que permite el calor, la carga sube neto ~+2/s → un lanzamiento cuesta ~21 eyecciones (~$250K) y el juego no lo dice; el jugador lo descubre fallando | a considerar (mostrar el costo estimado) |
-| G11 | En T3+ la economía del Depredador es grande: la plata no baja de $1000 sólo gastando (el "vuelto" de la compra más barata ya supera $1000). Se entra a Met. Oscuro con **Comprar tiempo** (biomasa): el Depredador devora más y la economía se achica. Pero así se llega a MO con Δ ≈ $130/s y **Necrosis pide Δ ≥ $200/s** dentro de MO (donde no se puede comprar). En T2 se llega a MO con la economía viva y Necrosis entra | a considerar: medir Necrosis por la economía al entrar a MO, o bajar el requisito en T3+ |
+| G11 | En T3+ la economía del Depredador es grande: la plata no baja de $1000 sólo gastando (el "vuelto" de la compra más barata ya supera $1000). Se entra a Met. Oscuro con **Comprar tiempo** (biomasa): el Depredador devora más y la economía se achica. Pero así se llega a MO con Δ ≈ $130/s y **Necrosis pide Δ ≥ $200/s** dentro de MO (donde no se puede comprar). En T2 se llega a MO con la economía viva y Necrosis entra | ✅ **(decisión del autor)** el requisito se mide con el Δ$/s al ENTRAR a MO (`met_oscuro_entry_delta`) |
 | G12 | Necrosis sólo progresa clickeando (la Necromasa sale de los clicks); el panel lo dice ("sin clicks no hay progreso") | sin cambio |
+| G13 | **Colapso Controlado exige entrar a Hiper con biomasa > 5**, pero Hiper se activa sola apenas la biomasa pasa de 4 y, una vez activa, gasta los nutrientes y la biomasa queda congelada. Hay que frenar ε < 0.4 antes de Hiper hasta juntar biomasa; nada en el juego lo sugiere | a considerar: pista en el panel de Fractura Epistémica, o medir biomasa ≥ 4 |
+| G14 | **El Dios de las Moscas podía quedar imposible**: su lista dice "ESPORULACION"/"HIPERASIMILACION" sin tilde y el botón de la rama verde cierra como "ESPORULACIÓN"; el registro de finales no normaliza | ✅ la comparación del logro ignora tildes |
+| G15 | El simulador no registraba los logros desbloqueados en el arranque (iniciar ruta Vacío/Carnaval/Reencarnación) | ✅ (herramienta) |
 
 Orden de trabajo propuesto (por dependencia de mecánicas del bot):
 1. T0/Tier 2 (Homeostasis, Simbiosis, Alostasis, Homeorresis) + arreglar perfiles ⚠️.
@@ -87,7 +94,23 @@ Orden de trabajo propuesto (por dependencia de mecánicas del bot):
 Cada perfil: `Scenarios.gd` con legado mínimo necesario + acciones del bot por el mismo camino de
 código que la UI; se registra el tiempo mínimo, y los finales sin trayectoria golden ganan una.
 
-## A3 — Logros difíciles (pendiente)
-Un escenario por MYTHIC/ANCESTRAL/secreto con condición propia (ayuno_perfecto, autolisis_perfecta,
-funcion_pura, singularidad_perfecta, esclerocio_contingencia, coloso_estructural, trampa_del_vacio,
-…), o justificación de por qué no es simulable.
+## A3 — Logros difíciles ✅ (2026-10-16)
+
+Se corrieron todos los escenarios (≈ 60) y se cruzaron los logros desbloqueados con los 89 definidos.
+**83 de 89 salen jugando con algún perfil del bot.** Los 6 restantes:
+
+| Logro | Por qué no lo saca el bot |
+|---|---|
+| Reino Subterráneo · Legado Absoluto · El Dios de las Moscas · Última Espora | **De cuenta**, no de una run (todos los logros de un tier, todo el Banco, todos los finales, todos los logros). Se verificaron las listas: el Dios de las Moscas tenía el problema de tildes de G14 (arreglado) |
+| Función Pura (Necrosis < 75 s) · Autofagia Perfecta (mejoras de Autofagia al máximo) | Piden una economía fuerte **dentro** de Met. Oscuro, pero para entrar a MO hay que bajar de $1000 (G16). Con poco legado se entra pero la economía queda chica (Necrosis tarda ~210 s, la Autofagia se come todo antes de maximizar); con legado de fin de juego (~$1.27M/s) no se baja de $1000 y termina en Colapso Depredatorio |
+
+Perfiles nuevos de A3 (`tests/sim/Scenarios.gd`, prefijo `a3_`): Coloso Estructural (Fusión sellada con $1.200M, 2669 s),
+Ayuno Absoluto (7 ciclos), Singularidad Perfecta (Omega-Cero con Φ ≥ 500 y Ω ≤ 0.01), Reencarnación Consumada,
+Maestro del Catalizador, Mano Ligera / Eficiencia Brutal / Sin Tocar (un click cada 110 s; Sin Tocar con legado T6 a los
+113 s con 1 click), Escalado Alostático (prioridad de compra) y Economía de Guerra (legado T6, Masa Crítica con $15.5K/s).
+
+### Hallazgos de A3
+| # | Hallazgo | Estado |
+|---|---|---|
+| G16 | **Met. Oscuro choca con una economía grande.** La entrada pide plata < $1000 sostenida 15 s; con legados de ingreso (fin de juego) el ingreso supera $1000/s y no se puede, ni gastando ni comprando tiempo. La salida del jugador es apagar legados de ingreso en el Banco antes de la run (los toggles existen), pero el juego no lo sugiere | a considerar: medir "recursos críticos" relativo al ingreso (p. ej. plata < 5 s de ingreso), o una pista |
+

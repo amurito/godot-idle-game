@@ -91,6 +91,7 @@ var _hyper_active_timer: float = 0.0   # tiempo activo en hiperasimilación sin 
 
 # === NG+ METABOLISMO OSCURO (Post-Depredador) ===
 var mutation_met_oscuro := false
+var met_oscuro_entry_delta: float = 0.0  # Δ$/s al entrar a MO (requisito de Necrosis, G11)
 var met_oscuro_timer: float = 0.0  # Progreso de activación (0→15s)
 var met_oscuro_devoured_count: int = 0  # Upgrades devorados durante la run
 # Runtime process vars (fase activa)
@@ -428,6 +429,9 @@ func activate_depredador():
 func activate_met_oscuro():
 	if mutation_met_oscuro: return
 	if not mutation_depredador: return  # Solo post-Depredador
+	# Economía con la que se entra a MO (antes de sus nerfs): el requisito de Necrosis se mide con
+	# esto (G11) — adentro de MO no se puede comprar, así que la economía de adentro no se recupera.
+	met_oscuro_entry_delta = EconomyManager.get_delta_total()
 	mutation_met_oscuro = true
 	LogManager.add(tr("LOG_MO_ACTIVATED"))
 	LogManager.add(tr("LOG_MO_EFFECTS"))
