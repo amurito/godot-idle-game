@@ -77,6 +77,9 @@ extends RefCounted
 ##   micelio_swap: [from, to, t]   a los t s de Micelio, desconecta `from` entero y lo pasa a `to`
 ##                                 (jugador que corrige su plan → no saca el MYTHIC)
 ##   micelio_seal: bool
+##   micelio_reinforce: bool       compra [W] Reforzar apenas alcanza (rupturas)
+##   micelio_dodge: bool           al crujir un nodo, lo desconecta para salvar los puntos (cuenta como
+##                                 desconexión: no saca el MYTHIC) y lo reconecta después
 ##   huesped_feed_at: float        Huésped: alimenta cuando el hambre llega a esto
 ##   huesped_precraving: bool      durante el aviso de antojo, si el hambre llegaría alta, alimenta apenas
 ##                                 puede sin empacharlo (anticipa)
@@ -152,10 +155,12 @@ func _rhythm(d: RefCounted, acc: float) -> void:
 	var beat_t: float = EvoManager.coro_anchor + k * p
 	if beat_t > _rh_last_beat_time + 1.0e-6:
 		_rh_last_beat_time = beat_t
+		if not CoroSimbioticoLogic.is_downbeat(k):
+			return  # sólo se juzgan los acentos
 		if _rng.randf() < acc:
 			d.click()
 		else:
-			_rh_miss_at = beat_t + p * 0.5
+			_rh_miss_at = beat_t + p * 0.45  # dentro de la zona, fuera de la ventana
 	if _rh_miss_at >= 0.0 and t >= _rh_miss_at:
 		_rh_miss_at = -1.0
 		d.click()
@@ -232,6 +237,13 @@ func _current_cps() -> float:
 func _buy(d: RefCounted) -> void:
 	if str(cfg.get("buy", "cheapest")) == "none":
 		return
+	# Micelio: [W] Reforzar tiene prioridad (ahorra si cuesta ≤ 60 s de ingreso).
+	if cfg.get("micelio_reinforce", false) and MicelioOmniscienteLogic.is_active() 			and EvoManager.micelio_reinforce < Balance.MICELIO_REINFORCE_MAX:
+		if MicelioOmniscienteLogic.can_reinforce():
+			MicelioOmniscienteLogic.reinforce()
+			_after_key("key:W micelio_reinforce %d" % EvoManager.micelio_reinforce)
+		elif MicelioOmniscienteLogic.reinforce_cost() <= EconomyManager.get_delta_total() * 60.0:
+			return
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
 	var ids_from: Array = cfg.get("buy_ids_from", [])
@@ -516,8 +528,14 @@ func _micelio() -> void:
 		_log("rclick:micelio_swap %s→%s" % [swap[0], swap[1]])
 		_micelio_plan.erase(swap[1])
 		_micelio_plan.push_front(swap[1])
+	# Con la red completa no esquiva: desconectar corta el sello (mejor arriesgar).
+	var dodge: String = EvoManager.micelio_rupture_target if cfg.get("micelio_dodge", false) 		and MicelioOmniscienteLogic.full_nodes() < MicelioOmniscienteLogic.NODES.size() else ""
+	if dodge != "" and MicelioOmniscienteLogic.connection(dodge) > 0.0:
+		while MicelioOmniscienteLogic.unassign(dodge):
+			pass
+		_log("rclick:micelio_dodge " + dodge)
 	for id in _micelio_plan:
-		if not UpgradeManager.is_unlocked(id):
+		if not UpgradeManager.is_unlocked(id) or id == dodge:
 			continue
 		var n := 0
 		while EvoManager.micelio_pool >= Balance.MICELIO_NODE_STEP and MicelioOmniscienteLogic.assign(id):

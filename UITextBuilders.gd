@@ -504,6 +504,8 @@ static func build_evo_checklist(_main: Node) -> String:
 		# AYUNO PRIMORDIAL — Sombra por espejo: lo opuesto de Hiper (GenomeEvaluator.update_ayuno_espejo)
 		if LegacyManager.get_buff_level("transmut_ayuno") > 0:
 			t += "\n[b]" + TranslationServer.translate("EVO_AYUNO_TITLE") + "[/b]\n"
+			ch = ok_color + "[x] " if EvoManager.genome.get("hiperasimilacion", "") == "latente" else fail_color + "[ ] "
+			t += ch + TranslationServer.translate("EVO_AYUNO_HIPER_LATENT") + "[/color]\n"
 			var idle: float = EconomyManager.time_since_last_click
 			ch = ok_color + "[x] " if idle >= Balance.AYUNO_MIRROR_IDLE else fail_color + "[ ] "
 			t += ch + TranslationServer.translate("EVO_AYUNO_IDLE") % [int(minf(idle, Balance.AYUNO_MIRROR_IDLE)), int(Balance.AYUNO_MIRROR_IDLE)] + "[/color]\n"
@@ -1387,6 +1389,19 @@ static func build_micelio_omnisciente_panel_text() -> String:
 		t += TranslationServer.translate("MICELIO_PANEL_NODE") % [mark, TranslationServer.translate("UPG_" + id.to_upper()),
 			c, nmax, MicelioOmniscienteLogic.node_factor(id),
 			Balance.MICELIO_NODE_DISCOUNT * c * 100.0] + "\n"
+	# Rupturas
+	var tgt: String = EvoManager.micelio_rupture_target
+	var creak: String
+	if tgt != "":
+		creak = "[color=#ff8866]" + TranslationServer.translate("MICELIO_PANEL_CREAK_NOW") % [
+			TranslationServer.translate("UPG_" + tgt.to_upper()), MicelioOmniscienteLogic.rupture_in()] + "[/color]"
+	else:
+		creak = TranslationServer.translate("MICELIO_PANEL_CREAK") % MicelioOmniscienteLogic.rupture_in()
+	t += "\n" + creak + "\n"
+	t += TranslationServer.translate("MICELIO_PANEL_RUPTURE") % [MicelioOmniscienteLogic.rupture_chance() * 100.0,
+		MicelioOmniscienteLogic.rupture_damage() * 100.0, EvoManager.micelio_reinforce, Balance.MICELIO_REINFORCE_MAX] + "\n"
+	var broken_col: String = "#ff5c6a" if EvoManager.micelio_broken_full > 0 else "#aaaaaa"
+	t += "[color=%s]" % broken_col + TranslationServer.translate("MICELIO_PANEL_BROKEN") % [EvoManager.micelio_broken_full, Balance.MICELIO_COLLAPSE_FULL] + "[/color]\n"
 	t += "\n[color=#c08cff]" + TranslationServer.translate("MICELIO_PANEL_SEAL_HDR") + "[/color]\n"
 	var full: int = MicelioOmniscienteLogic.full_nodes()
 	var n_nodes: int = MicelioOmniscienteLogic.NODES.size()

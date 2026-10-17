@@ -150,6 +150,12 @@ static func _define() -> Array:
 			_f("coro_allegro_misses", EvoManager, {"default": 0, "load_int": true}),
 			# Micelio Omnisciente (transmutación de Red Micelial)
 			_f("mutation_micelio_omnisciente", EvoManager, {"default": false}),
+			_f("micelio_rupture_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_rupture_target", EvoManager, {"default": ""}),
+			_f("micelio_ruptures", EvoManager, {"default": 0, "load_int": true}),
+			_f("micelio_broken_full", EvoManager, {"default": 0, "load_int": true}),
+			_f("micelio_lost", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("micelio_reinforce", EvoManager, {"default": 0, "load_int": true}),
 			_f("micelio_pool", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("micelio_nodes", EvoManager, {"default": {}}),
 			_f("micelio_drift_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),

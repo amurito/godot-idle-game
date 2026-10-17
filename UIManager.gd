@@ -640,6 +640,27 @@ func _build_fusion_catabolica_panel_text() -> String:
 # PANEL DE BIFURCACIÓN Y BARRA DE CICLO FÚNGICO
 # =====================================================
 
+## "Decidir después": cierra el panel sin elegir. Se vuelve a abrir con el botón de mutación
+## (que queda visible mientras haya una elección pendiente: ver main.update_ui).
+func _ensure_bifurcation_later_button() -> void:
+	var vbox: Node = evo_choice_panel.get_node("Margin/VBox")
+	var btn := vbox.get_node_or_null("LaterButton") as Button
+	if btn == null:
+		btn = Button.new()
+		btn.name = "LaterButton"
+		btn.flat = true
+		btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
+		btn.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+		btn.pressed.connect(func():
+			evo_choice_panel.visible = false
+			var dim := scene.get_node_or_null("DimmerBackground")
+			if dim:
+				dim.visible = false
+		)
+		vbox.add_child(btn)
+	btn.text = tr("EVO_BTN_LATER")
+
 func update_bifurcation_panel() -> void:
 	if not is_instance_valid(evo_choice_panel) or not evo_choice_panel.visible:
 		return
@@ -647,6 +668,7 @@ func update_bifurcation_panel() -> void:
 	var data := UITextBuilders.build_bifurcation_data()
 
 	evo_choice_panel.get_node("Margin/VBox/TopBar/Header").text = data["header"]
+	_ensure_bifurcation_later_button()
 
 	# Icons (TextureRect) — Twemoji PNG según ruta/tier para que se vean en web.
 	var icon_home: TextureRect = opt_homeostasis.find_child("Icon") as TextureRect

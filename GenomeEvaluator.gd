@@ -52,8 +52,9 @@ static func build_eval_context() -> Dictionary:
 ## Hiper es clickear frenético; Ayuno es renunciar a clickear: con la llave transmut_ayuno, no
 ## clickear AYUNO_MIRROR_IDLE s teniendo pasivo propio (≥ AYUNO_MIRROR_PASSIVE_MIN $/s) y ε bajo.
 ## Avisa AYUNO_MIRROR_WARN s antes para que un AFK no entre por sorpresa (clickear lo evita).
-## Le gana al Parasitismo por inactividad (120 s): si te demorás dentro del ayuno, la trampa
-## del vacío sigue ahí.
+## Sólo con Hiperasimilación LATENTE (economía de click: venías hacia Hiper y frenaste en seco):
+## antes le ganaba a todo AFK y el Parasitismo por inactividad (120 s) quedaba inalcanzable con
+## la llave (decisión del autor 2026-10-17). Dentro del ayuno la trampa del vacío sigue ahí.
 static func update_ayuno_espejo(ctx: Dictionary) -> void:
 	if EvoManager.mutation_ayuno_primordial or LegacyManager.get_buff_level("transmut_ayuno") <= 0:
 		return
@@ -65,6 +66,7 @@ static func update_ayuno_espejo(ctx: Dictionary) -> void:
 		return
 	var idle: float = EconomyManager.time_since_last_click
 	var ready: bool = ctx.run_time >= Balance.AYUNO_MIRROR_MIN_RUN \
+		and EvoManager.genome.get("hiperasimilacion", "") == "latente" \
 		and ctx.epsilon < Balance.AYUNO_MIRROR_EPS_MAX \
 		and float(ctx.ap.passive_abs) >= Balance.AYUNO_MIRROR_PASSIVE_MIN
 	if not ready or idle < Balance.AYUNO_MIRROR_IDLE - Balance.AYUNO_MIRROR_WARN:

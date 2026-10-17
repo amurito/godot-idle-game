@@ -247,12 +247,14 @@ const TRANSMUT_LIFE_SIMBIOSIS    := 160.0  # vida estimada de Simbiosis para la 
 const CORO_DIGEST_COMBO          := 16     # digestión: combo inicial (se va si no lo sostenés)
 const CORO_TEMPOS                := [80.0, 95.0, 110.0]   # BPM por movimiento: I Andante · II Moderato · III Allegro
                                                           # (autor 2026-10-13: 90/110/130 con ±0.15 s se sentía muy difícil)
-const CORO_MOVEMENT_BARS         := [40, 60, 80]          # compases (4 golpes seguidos a tiempo) por movimiento
+const CORO_MOVEMENT_BARS         := [16, 20, 24]          # ACENTOS acertados por movimiento (antes 40/60/80
+                                                            # compases de 4 golpes: el autor lo sentía largo y tedioso)
+const CORO_ACCENT_COMBO          := 3      # combo por acento acertado (antes +1 por golpe, 4 por compás)
 const CORO_BEATS_PER_BAR         := 4
 const CORO_HIT_WINDOW            := 0.20   # s: ventana de acierto a cada lado del golpe (tolerante a latencia web)
 const CORO_COMBO_BONUS           := 0.04   # ingreso × (1 + 0.04 · combo)…
 const CORO_COMBO_CAP             := 64     # …tope ×3.56
-const CORO_SKIP_DECAY            := 4      # combo perdido por golpe salteado (no se arma y se suelta)
+const CORO_SKIP_DECAY            := 4      # combo perdido por acento salteado (no se arma y se suelta)
 const CORO_LEGACY_TEMPO          := 90.0   # legado Compás Interno: metrónomo suave en todas las runs…
 const CORO_LEGACY_BONUS          := 0.01   # …+1 % de click por golpe a tiempo seguido…
 const CORO_LEGACY_CAP            := 0.15   # …tope +15 %
@@ -271,6 +273,18 @@ const MICELIO_NODE_DISCOUNT      := 0.015  # −1.5 % de costo por punto conecta
 const MICELIO_DRIFT_INTERVAL     := 10.0   # s: 1 punto libre fluye solo al nodo más comprado
 const MICELIO_SEAL_HOLD          := 60.0   # s con los 9 nodos llenos para habilitar el sello
 const MICELIO_LATENT_MULT        := 1.25   # legado Nodo Latente: el primer nodo lleno, en todas las runs
+# Rupturas (pedido del autor 2026-10-17: "no tiene forma de perder"). Secuencia pseudoaleatoria fija
+# (reproducible para bot y goldens): cada intervalo el micelio cruje sobre un nodo conectado.
+const MICELIO_RUPTURE_INTERVALS  := [80.0, 65.0, 110.0, 75.0, 120.0, 90.0, 70.0, 100.0]  # > sello (60 s): con 40–80 s sellar era suerte
+const MICELIO_RUPTURE_WARN       := 4.0    # s de aviso (el nodo se puede salvar desconectándolo)
+const MICELIO_RUPTURE_CHANCE     := 0.50   # probabilidad base de que el crujido rompa
+const MICELIO_RUPTURE_DAMAGE     := 0.60   # fracción de la conexión del nodo que se pierde (no vuelve al pozo)
+const MICELIO_REINFORCE_MAX      := 4      # [W] Reforzar: niveles…
+const MICELIO_REINFORCE_CHANCE   := 0.20   # …−20 % de probabilidad por nivel…
+const MICELIO_REINFORCE_DAMAGE   := 0.15   # …−15 % de daño por nivel…
+const MICELIO_REINFORCE_SECS     := 15.0   # …cuesta 15 s de ingreso…
+const MICELIO_REINFORCE_GROWTH   := 1.6    # …× 1.6 por nivel
+const MICELIO_COLLAPSE_FULL      := 4      # nodos LLENOS rotos → la red colapsa (cierra como ESPORULACIÓN)
 
 # ── TRANSMUTACIÓN · HUÉSPED SOBERANO (revierte PARASITISMO) — HuespedSoberanoLogic ──
 # Verbo: DOMESTICAR. Spec §10.4 (2026-10-13); a calibrar con el simulador.

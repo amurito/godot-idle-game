@@ -7,11 +7,12 @@ class_name CoroSimbioticoLogic
 ##
 ##   · Metrónomo: el núcleo late a un tempo (BPM del movimiento actual). El reloj es
 ##     RunManager.run_time (avanza por frame: determinista en el simulador) desde coro_anchor.
-##   · Click en el golpe (±CORO_HIT_WINDOW s): combo +1. Fuera de tiempo (o dos veces en el mismo
-##     golpe): combo a la mitad. Golpe salteado: combo −CORO_SKIP_DECAY (no se puede armar y soltar).
-##   · Compás = CORO_BEATS_PER_BAR golpes seguidos a tiempo. La PARTITURA (sello) pide
-##     CORO_MOVEMENT_BARS compases en cada movimiento (I Andante, II Moderato, III Allegro); fallar
-##     corta el combo pero no borra los compases ya tocados.
+##   · SÓLO LOS ACENTOS (rework 2026-10-17, el autor lo sentía largo y tedioso): se juzga el primer
+##     golpe de cada compás (1 de CORO_BEATS_PER_BAR). Alrededor de cada acento hay una zona de ±medio
+##     golpe: el PRIMER click en la zona se juzga (±CORO_HIT_WINDOW s = acierto, combo +CORO_ACCENT_COMBO;
+##     si no, combo a la mitad). Fuera de las zonas se clickea libre. Acento salteado: −CORO_SKIP_DECAY.
+##   · La PARTITURA (sello) pide CORO_MOVEMENT_BARS acentos acertados en cada movimiento (I Andante,
+##     II Moderato, III Allegro); fallar corta el combo pero no borra los acentos ya tocados.
 ##   · Con Coro: ingreso × (1 + CORO_COMBO_BONUS · combo), combo tope CORO_COMBO_CAP.
 ##   · Legado Compás Interno (todas las runs, sin Coro): metrónomo suave a CORO_LEGACY_TEMPO;
 ##     cada golpe a tiempo seguido suma +CORO_LEGACY_BONUS al click (tope CORO_LEGACY_CAP).
@@ -77,28 +78,32 @@ static func _reanchor(t: float) -> void:
 	EvoManager.coro_bar_hits = 0
 
 
-## Cada click del jugador (main.on_reactor_click).
+## Golpe (índice) del acento más cercano a t.
+static func nearest_accent(t: float) -> int:
+	var bpb: int = Balance.CORO_BEATS_PER_BAR
+	return roundi(beat_pos(t) / float(bpb)) * bpb
+
+## Cada click del jugador (main.on_reactor_click). Sólo se juzga el primer click en la zona de un acento.
 static func on_click() -> void:
 	var p := period()
 	if p <= 0.0:
 		return
 	var t: float = RunManager.run_time
-	var k: int = roundi(beat_pos(t))
-	var off: float = t - (EvoManager.coro_anchor + k * p)
-	var hit: bool = absf(off) <= Balance.CORO_HIT_WINDOW and k > EvoManager.coro_last_hit_beat
+	var a: int = nearest_accent(t)
+	var off: float = t - (EvoManager.coro_anchor + a * p)
+	if absf(off) > p * 0.5 or a <= EvoManager.coro_last_hit_beat:
+		return  # fuera de la zona del acento, o este acento ya se juzgó: click libre
+	EvoManager.coro_last_hit_beat = a
+	var hit: bool = absf(off) <= Balance.CORO_HIT_WINDOW
 	last_judge_ms = Time.get_ticks_msec()
 	last_judge_hit = hit
 	if hit:
-		EvoManager.coro_bar_hits = EvoManager.coro_bar_hits + 1 if k == EvoManager.coro_last_hit_beat + 1 else 1
-		EvoManager.coro_last_hit_beat = k
-		EvoManager.coro_combo = mini(EvoManager.coro_combo + 1, Balance.CORO_COMBO_CAP)
+		EvoManager.coro_combo = mini(EvoManager.coro_combo + Balance.CORO_ACCENT_COMBO, Balance.CORO_COMBO_CAP)
 		EvoManager.coro_peak_combo = maxi(EvoManager.coro_peak_combo, EvoManager.coro_combo)
-		if EvoManager.mutation_coro_simbiotico and EvoManager.coro_bar_hits >= Balance.CORO_BEATS_PER_BAR:
-			EvoManager.coro_bar_hits = 0
-			_bar_done(EvoManager.coro_anchor + k * p)
+		if EvoManager.mutation_coro_simbiotico:
+			_bar_done(EvoManager.coro_anchor + a * p)
 	else:
 		EvoManager.coro_combo = int(EvoManager.coro_combo / 2.0)
-		EvoManager.coro_bar_hits = 0
 		if EvoManager.mutation_coro_simbiotico:
 			EvoManager.coro_misses += 1
 			if EvoManager.coro_movement == Balance.CORO_MOVEMENT_BARS.size() - 1:
@@ -124,19 +129,17 @@ static func _bar_done(beat_time: float) -> void:
 	UIManager.show_toast(TranslationServer.translate("TOAST_CORO_MOVEMENT") % [mov_name, int(tempo())])
 
 
-## Tick (fase de procesos de ruta): golpes que pasaron sin click.
+## Tick (fase de procesos de ruta): acentos cuya zona cerró sin ningún click.
 static func process(_dt: float) -> void:
 	var p := period()
 	if p <= 0.0:
 		return
-	var closed: int = floori((RunManager.run_time - EvoManager.coro_anchor - Balance.CORO_HIT_WINDOW) / p)
+	var closed: int = floori((RunManager.run_time - EvoManager.coro_anchor) / p - 0.5)
 	var first: int = maxi(EvoManager.coro_last_closed_beat + 1, closed - 64)
 	for k in range(first, closed + 1):
-		if k == EvoManager.coro_last_hit_beat:
+		if not is_downbeat(k) or k <= EvoManager.coro_last_hit_beat:
 			continue
 		EvoManager.coro_combo = maxi(EvoManager.coro_combo - Balance.CORO_SKIP_DECAY, 0)
-		if k > EvoManager.coro_last_hit_beat:
-			EvoManager.coro_bar_hits = 0
 	EvoManager.coro_last_closed_beat = maxi(EvoManager.coro_last_closed_beat, closed)
 
 

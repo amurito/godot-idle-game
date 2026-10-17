@@ -1577,21 +1577,21 @@ const ENTRIES: Dictionary = {
 			"Transmutación (A → A+) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (15 PL, tras cerrar Simbiosis). Con Simbiosis activa aparece el botón [b][T] Revertir[/b] (el pacto espera tu decisión: Simbiosis no cierra mientras el botón tenga apariciones). Al revertir, el pacto se [b]digiere[/b] en combo 16.\n\n"
 			+ "Renunciás al click ×2.5, al pasivo ×0.5 y al final Simbiosis. A cambio, [b]la cooperación se vuelve ritmo[/b]: no importa clickear rápido, importa clickear [b]a tiempo[/b].\n\n"
 			+ "• [b]Metrónomo[/b]: un aro se cierra sobre el núcleo y lo toca en el golpe (con un tick de sonido; volumen propio en Ajustes).\n"
-			+ "• [b]Golpe a tiempo[/b] (±0.20 s): combo +1. Cada punto de combo da [b]+4%[/b] a todo el ingreso (tope 64).\n"
-			+ "• [b]Fuera de tiempo[/b]: el combo se corta a la mitad. Golpe salteado: −4.\n"
-			+ "• [b]Compás[/b]: 4 golpes seguidos a tiempo.\n\n"
-			+ "[b]Sello — la partitura[/b]: I. Andante (80 BPM, 40 compases) → II. Moderato (95 BPM, 60) → III. Allegro (110 BPM, 80). Fallar corta el combo, pero los compases tocados no se pierden → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
-			+ "[b]Recompensa[/b]: [b]Legado: Compás Interno[/b] — en todas las runs suena un metrónomo suave; cada golpe a tiempo seguido suma +1% de click (máx. +15%)."
+			+ "• [b]Sólo los acentos[/b]: se juzga el primer golpe de cada compás (1 de cada 4, el tick más fuerte). Entre acentos clickeás libre.\n"
+			+ "• [b]Acento a tiempo[/b] (±0.20 s): combo +3. Cada punto de combo da [b]+4%[/b] a todo el ingreso (tope 64).\n"
+			+ "• [b]Fuera de tiempo[/b]: el primer click cerca del acento es el que cuenta; si no cae en la ventana, el combo se corta a la mitad. Acento salteado: −4.\n\n"
+			+ "[b]Sello — la partitura[/b]: I. Andante (80 BPM, 16 acentos) → II. Moderato (95 BPM, 20) → III. Allegro (110 BPM, 24). Fallar corta el combo, pero los acentos tocados no se pierden → [b]CORO SIMBIÓTICO[/b] (+9 PL base + bonus).\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado: Compás Interno[/b] — en todas las runs suena un metrónomo suave; cada acento a tiempo suma combo y el combo da +1% de click por punto (máx. +15%)."
 		),
 		"body_en": (
 			"Transmutation (A → A+) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (15 LP, after closing Symbiosis). With Symbiosis active the [b][T] Revert[/b] button appears (the pact waits for your decision: Symbiosis does not close while the button has appearances left). On reverting, the pact is [b]digested[/b] into combo 16.\n\n"
 			+ "You give up the ×2.5 click, the ×0.5 passive and the Symbiosis ending. In exchange, [b]cooperation becomes rhythm[/b]: clicking fast doesn't matter, clicking [b]on time[/b] does.\n\n"
 			+ "• [b]Metronome[/b]: a ring closes on the core and touches it on the beat (with a tick sound; its own volume in Settings).\n"
-			+ "• [b]On-beat hit[/b] (±0.20 s): combo +1. Each combo point gives [b]+4%[/b] to all income (cap 64).\n"
-			+ "• [b]Off-beat[/b]: the combo is cut in half. Skipped beat: −4.\n"
-			+ "• [b]Bar[/b]: 4 on-beat hits in a row.\n\n"
-			+ "[b]Seal — the score[/b]: I. Andante (80 BPM, 40 bars) → II. Moderato (95 BPM, 60) → III. Allegro (110 BPM, 80). Missing cuts the combo, but bars already played are kept → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
-			+ "[b]Reward[/b]: [b]Legacy: Inner Beat[/b] — a soft metronome plays in every run; each consecutive on-beat hit adds +1% click (max +15%)."
+			+ "• [b]Accents only[/b]: only the first beat of each bar is judged (1 in 4, the louder tick). Between accents you click freely.\n"
+			+ "• [b]On-time accent[/b] (±0.20 s): combo +3. Each combo point gives [b]+4%[/b] to all income (cap 64).\n"
+			+ "• [b]Off-beat[/b]: the first click near the accent is the one that counts; if it misses the window, the combo is cut in half. Skipped accent: −4.\n\n"
+			+ "[b]Seal — the score[/b]: I. Andante (80 BPM, 16 accents) → II. Moderato (95 BPM, 20) → III. Allegro (110 BPM, 24). Missing cuts the combo, but accents already played are kept → [b]SYMBIOTIC CHORUS[/b] (+9 LP base + bonus).\n\n"
+			+ "[b]Reward[/b]: [b]Legacy: Inner Beat[/b] — a soft metronome plays in every run; each on-time accent builds combo, and combo gives +1% click per point (max +15%)."
 		),
 		"unlock": {"type": "buff_owned", "id": "transmut_coro"},
 		"see_also": ["transmut_intro", "simbiosis", "transmut_caos"],
@@ -1654,7 +1654,7 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Ayuno Primordial", "name_en": "Primal Fast",
 		"body_es": (
-			"[b]Sombra[/b] (A → anti-A) de [b]Hiperasimilación[/b]. La llave se compra en el Banco Genético (20 PL). No hay botón: Hiperasimilación es clickear frenético, y el Ayuno es [b]renunciar a clickear[/b]. Con la llave, si dejás de clickear 60 s teniendo un pasivo propio (≥ 10/s) y ε < 0.10, el hongo empieza a ayunar (te avisa 10 s antes: un click lo evita).\n\n"
+			"[b]Sombra[/b] (A → anti-A) de [b]Hiperasimilación[/b]. La llave se compra en el Banco Genético (20 PL). No hay botón: Hiperasimilación es clickear frenético, y el Ayuno es [b]renunciar a clickear[/b]. Con la llave y [b]Hiperasimilación latente[/b] (economía de click > 60 %), si dejás de clickear 60 s teniendo un pasivo propio (≥ 10/s) y ε < 0.10, el hongo empieza a ayunar (te avisa 10 s antes: un click lo evita).\n\n"
 			+ "[b]Mecánica central:[/b] abandonás el consumo. La biomasa drena activamente (2/s + 20%/s). A cambio acumulás [b]Silencio (S)[/b] cuando B es bajo y ε es bajo. El pasivo vale ×(1 + S×0.01).\n\n"
 			+ "Botones activos:\n"
 			+ "• [b][Q] Romper el Ayuno[/b]: liberás todo el S como burst de producción (×(1+S/50) durante 15 s). Reset de S=0 y un spike de B+5.\n"
@@ -1667,7 +1667,7 @@ const ENTRIES: Dictionary = {
 			+ "[i]Cuidado: el parásito acecha a quien deja de moverse demasiado tiempo.[/i]"
 		),
 		"body_en": (
-			"[b]Shadow[/b] (A → anti-A) of [b]Hyperassimilation[/b]. The key is bought in the Genetic Bank (20 LP). There is no button: Hyperassimilation is frantic clicking, and the Fast is [b]giving up clicking[/b]. With the key, if you stop clicking for 60 s while having your own passive income (≥ 10/s) and ε < 0.10, the fungus begins to fast (you are warned 10 s before: one click prevents it).\n\n"
+			"[b]Shadow[/b] (A → anti-A) of [b]Hyperassimilation[/b]. The key is bought in the Genetic Bank (20 LP). There is no button: Hyperassimilation is frantic clicking, and the Fast is [b]giving up clicking[/b]. With the key and [b]Hyperassimilation latent[/b] (click economy > 60%), if you stop clicking for 60 s while having your own passive income (≥ 10/s) and ε < 0.10, the fungus begins to fast (you are warned 10 s before: one click prevents it).\n\n"
 			+ "[b]Core mechanic:[/b] you abandon consumption. Biomass drains actively (2/s + 20%/s). In return you accumulate [b]Silence (S)[/b] while B and ε are low. Passive income = ×(1 + S×0.01).\n\n"
 			+ "Active buttons:\n"
 			+ "• [b][Q] Break the Fast[/b]: release all S as a production burst (×(1+S/50) for 15 s). Resets S=0 and spikes B+5.\n"

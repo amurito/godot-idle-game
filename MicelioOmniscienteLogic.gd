@@ -14,6 +14,9 @@ class_name MicelioOmniscienteLogic
 ##   · Deriva: el micelio libre fluye solo, 1 punto cada MICELIO_DRIFT_INTERVAL s, al nodo más
 ##     comprado que no esté lleno (AFK funciona, peor que planificar).
 ##   · Sello: los 9 nodos llenos sostenidos MICELIO_SEAL_HOLD s.
+##   · Rupturas: cada MICELIO_RUPTURE_INTERVALS s el micelio cruje sobre un nodo conectado (aviso
+##     MICELIO_RUPTURE_WARN s antes): con MICELIO_RUPTURE_CHANCE se rompe y pierde su conexión (no vuelve
+##     al pozo). [W] Reforzar baja probabilidad y daño. MICELIO_COLLAPSE_FULL nodos llenos rotos → colapso.
 ##   · Legado Nodo Latente: el primer nodo que llenaste queda ×MICELIO_LATENT_MULT en todas las runs.
 
 ## Los 9 upgrades numerados (mismo orden que las teclas 1-9).
@@ -28,6 +31,7 @@ static func activate() -> void:
 	if EvoManager.mutation_micelio_omnisciente:
 		return
 	EvoManager.mutation_micelio_omnisciente = true
+	EvoManager.micelio_rupture_timer = _rupture_interval(0)
 	# Pierde la bifurcación de Red Micelial: la rama elegida (si hubo) se deshace.
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
 		EconomyManager.mutation_auto_factor /= 1.5
@@ -145,6 +149,86 @@ static func process(dt: float) -> void:
 		EvoManager.micelio_full_time += dt
 	else:
 		EvoManager.micelio_full_time = 0.0
+	_process_rupture(dt)
+
+
+# ── Rupturas ─────────────────────────────────────────────────────────────────
+
+static func _rupture_interval(n: int) -> float:
+	var seq: Array = Balance.MICELIO_RUPTURE_INTERVALS
+	return float(seq[posmod(n, seq.size())])
+
+## Pseudoaleatorio determinista en [0, 1) (reproducible: bot y goldens). Hash entero de 32 bits:
+## la versión con sin() repetía valores en n consecutivos.
+static func _roll(n: int, salt: int) -> float:
+	var h: int = ((n + 1) * 0x9E3779B1 + salt * 0x7F4A7C15) & 0xFFFFFFFF
+	h = ((h ^ (h >> 15)) * 0x85EBCA6B) & 0xFFFFFFFF
+	h = ((h ^ (h >> 13)) * 0xC2B2AE35) & 0xFFFFFFFF
+	h = h ^ (h >> 16)
+	return float(h) / 4294967296.0
+
+static func rupture_chance() -> float:
+	return Balance.MICELIO_RUPTURE_CHANCE * maxf(1.0 - Balance.MICELIO_REINFORCE_CHANCE * EvoManager.micelio_reinforce, 0.0)
+
+static func rupture_damage() -> float:
+	return Balance.MICELIO_RUPTURE_DAMAGE * maxf(1.0 - Balance.MICELIO_REINFORCE_DAMAGE * EvoManager.micelio_reinforce, 0.0)
+
+static func _pick_target() -> String:
+	var connected: Array = []
+	for id in NODES:
+		if connection(id) > 0.0:
+			connected.append(id)
+	if connected.is_empty():
+		return ""
+	return connected[int(_roll(EvoManager.micelio_ruptures, 1) * connected.size()) % connected.size()]
+
+static func _process_rupture(dt: float) -> void:
+	EvoManager.micelio_rupture_timer -= dt
+	if EvoManager.micelio_rupture_target == "" and EvoManager.micelio_rupture_timer <= Balance.MICELIO_RUPTURE_WARN:
+		EvoManager.micelio_rupture_target = _pick_target()
+		if EvoManager.micelio_rupture_target != "":
+			UIManager.show_toast(TranslationServer.translate("TOAST_MICELIO_CREAK") % [
+				TranslationServer.translate("UPG_" + EvoManager.micelio_rupture_target.to_upper()), Balance.MICELIO_RUPTURE_WARN])
+	if EvoManager.micelio_rupture_timer > 0.0:
+		return
+	var id: String = EvoManager.micelio_rupture_target
+	var n: int = EvoManager.micelio_ruptures
+	EvoManager.micelio_ruptures += 1
+	EvoManager.micelio_rupture_timer = _rupture_interval(EvoManager.micelio_ruptures)
+	EvoManager.micelio_rupture_target = ""
+	if id == "" or connection(id) <= 0.0 or _roll(n, 2) >= rupture_chance():
+		return  # crujió y aguantó (o el nodo ya estaba vacío: lo salvaste)
+	var was_full: bool = connection(id) >= Balance.MICELIO_NODE_MAX
+	var lost: float = connection(id) * rupture_damage()
+	EvoManager.micelio_nodes[id] = connection(id) - lost
+	EvoManager.micelio_lost += lost
+	UIManager.show_toast(TranslationServer.translate("TOAST_MICELIO_RUPTURE") % [
+		TranslationServer.translate("UPG_" + id.to_upper()), lost])
+	if was_full:
+		EvoManager.micelio_broken_full += 1
+		if EvoManager.micelio_broken_full >= Balance.MICELIO_COLLAPSE_FULL:
+			RunManager.close_run("ESPORULACIÓN", TranslationServer.translate("CLOSE_MICELIO_COLLAPSE"))
+
+## Segundos hasta el próximo crujido (para el panel).
+static func rupture_in() -> float:
+	return maxf(EvoManager.micelio_rupture_timer, 0.0)
+
+
+# ── [W] Reforzar ─────────────────────────────────────────────────────────────
+
+static func reinforce_cost() -> float:
+	return maxf(EconomyManager.get_delta_total(), 1.0) * Balance.MICELIO_REINFORCE_SECS \
+		* pow(Balance.MICELIO_REINFORCE_GROWTH, EvoManager.micelio_reinforce)
+
+static func can_reinforce() -> bool:
+	return is_active() and EvoManager.micelio_reinforce < Balance.MICELIO_REINFORCE_MAX \
+		and EconomyManager.money >= reinforce_cost()
+
+static func reinforce() -> void:
+	if not can_reinforce():
+		return
+	EconomyManager.money -= reinforce_cost()
+	EvoManager.micelio_reinforce += 1
 
 
 # ── Economía (UpgradeManager.value / cost, EconomyManager, StructuralModel) ──

@@ -1012,6 +1012,11 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif MicelioOmniscienteLogic.is_active():
+				if kc == KEY_W and MicelioOmniscienteLogic.can_reinforce():
+					MicelioOmniscienteLogic.reinforce()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif EndosimbiosisLogic.is_active():
 				if kc == KEY_Q and EndosimbiosisLogic.can_transfer():
 					EndosimbiosisLogic.transfer()
@@ -1261,10 +1266,14 @@ func update_ui():
 		else:
 			var any_tier1 = EvoManager.is_any_latent_tier1()
 			var any_tier2 = EvoManager.mutation_homeostasis and not EvoManager.mutation_allostasis and EvoManager.is_allostasis_ready()
+			# Red Micelial sin rama elegida (se cerró el panel o se tocó "Decidir después"): el botón
+			# queda para volver a abrir la bifurcación.
+			var branch_pending: bool = EvoManager.mutation_red_micelial and RouteManager.allows_bifurcation() \
+				and EvoManager.red_branch_selected == EvoManager.RedBranch.NONE
 
-			btn_evolve.visible = any_tier1 or any_tier2
+			btn_evolve.visible = any_tier1 or any_tier2 or branch_pending
 			btn_evolve.disabled = false
-			btn_evolve.text = EmojiToRichText.strip("🧬 " + tr("BTN_MUTATION_START"))
+			btn_evolve.text = EmojiToRichText.strip("🧬 " + (tr("BTN_CHOOSE_BRANCH") if branch_pending else tr("BTN_MUTATION_START")))
 			if any_tier2:
 				btn_evolve.modulate = Color(0, 1, 1) # Cyan para Allostasis
 			else:

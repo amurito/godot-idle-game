@@ -329,6 +329,13 @@ Es la transmutación más corta (~8 min) pero **toda activa**: el tiempo lo pone
   y p = 0.99 (MYTHIC). Sirve también de test de la ventana ±150 ms.
 - **Abierto:** ¿sonido de metrónomo (tick suave) además del visual? Recomiendo sí, con volumen propio.
 
+#### 10.2b Rework "sólo los acentos" (2026-10-17, feedback del autor: "muy largo y tedioso")
+- Se juzga sólo el **acento** (1 de cada 4 golpes). Alrededor de cada acento hay una zona de ±medio golpe: el
+  **primer** click en la zona se juzga (±0.20 s = acierto, combo +3; si no, combo a la mitad). Fuera de las zonas
+  se clickea libre (spamear no sirve: el primer click de la zona es el que cuenta). Acento salteado: −4.
+- Partitura: 16 / 20 / 24 acentos (antes 40 / 60 / 80 compases de 4 golpes).
+- Bot: 94 % → 2.7 min dentro de Coro (antes 7.8); 85 % → 3 min (antes 9.6); Fortissimo sigue saliendo al 99.95 %.
+
 ### 10.3 Micelio Omnisciente — **asignar** ✅ (R5, 2026-10-12) · código `MicelioOmniscienteLogic.gd`
 
 **Implementado como abajo, con dos cambios por el simulador:**
@@ -370,6 +377,15 @@ primeros 7 min y después sólo pasivo (`buy_ids_from`).
 - **MYTHIC — Ojo de la Red:** sellar sin desconectar nunca un nodo (cero reasignaciones).
 - Recordatorio medido: biomasa, micelio e hifas **no generan $** por sí solos (las hifas se recalculan
   cada tick desde el pasivo), por eso acá el micelio pasa a ser el recurso que mueve la economía.
+
+#### 10.3b Rupturas de micelio (2026-10-17, feedback del autor: "es trivial, no tiene forma de perder")
+- Cada 65–120 s (secuencia fija) el micelio **cruje** sobre un nodo conectado (pseudoaleatorio con hash: reproducible),
+  avisando 4 s antes con el nombre del nodo: desconectarlo salva los puntos (cuenta como desconexión para el MYTHIC).
+- Con 50 % se **rompe**: el nodo pierde el 60 % de su conexión (no vuelve al pozo).
+- **[W] Reforzar** (4 niveles, 15 s de ingreso × 1.6): −20 % de probabilidad y −15 % de daño por nivel.
+- **Colapso**: 4 nodos LLENOS rotos → la red colapsa → cierra como ESPORULACIÓN.
+- Bot: jugador completo (refuerza + esquiva) 25.8 min total (antes 16); refuerza sin esquivar 26.5; MYTHIC Ojo de la
+  Red 30.5 (sale); AFK colapsa a 38.8 (antes sellaba solo a 31.6).
 
 ### 10.4 Huésped Soberano — **domesticar** ✅ (R6, 2026-10-13) · `HuespedSoberanoLogic.gd`
 

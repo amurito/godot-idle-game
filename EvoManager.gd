@@ -205,6 +205,12 @@ var coro_allegro_misses: int = 0          # …durante el Allegro (MYTHIC Fortis
 
 # === MICELIO OMNISCIENTE (Transmutación de Red Micelial — MicelioOmniscienteLogic) ===
 var mutation_micelio_omnisciente := false
+var micelio_rupture_timer: float = 0.0       # s hasta el próximo crujido
+var micelio_rupture_target: String = ""      # nodo avisado ("" = sin aviso)
+var micelio_ruptures: int = 0                # crujidos ocurridos (índice de la secuencia)
+var micelio_broken_full: int = 0             # nodos llenos rotos (a MICELIO_COLLAPSE_FULL colapsa)
+var micelio_lost: float = 0.0                # micelio perdido en rupturas
+var micelio_reinforce: int = 0               # nivel de [W] Reforzar
 var micelio_pool: float = 0.0             # micelio libre (presupuesto para conectar)
 var micelio_nodes: Dictionary = {}        # upgrade_id → micelio conectado (0..MICELIO_NODE_MAX)
 var micelio_drift_timer: float = 0.0

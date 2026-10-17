@@ -57,6 +57,7 @@ var _batuta_btn: Button = null
 var _coro_seal_btn: Button = null        # Sello de Coro Simbiótico (partitura completa)
 var _metronome_ring: Control = null      # Anillo del metrónomo sobre el núcleo (Coro / Compás Interno)
 var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente
+var _micelio_reinforce_btn: Button = null # [W] Reforzar la red (rupturas)
 var _huesped_feed_btn: Button = null     # [Q] Alimentar (Huésped Soberano)
 var _mutualismo_pact_btn: Button = null   # ACEPTAR PACTO (entrada a Mutualismo desde Simbiosis)
 var _mutualismo_accept_btn: Button = null # [A] Aceptar oferta
@@ -174,7 +175,7 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
+	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _micelio_reinforce_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
 			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn,
 			_holo_enter_btn, _holo_seal_btn, _endo_engulf_btn, _endo_transfer_btn, _endo_feed_btn, _endo_seal_btn]:
 		if is_instance_valid(b):
@@ -185,6 +186,7 @@ func reset_ng_plus_buttons() -> void:
 	_coro_seal_btn = null
 	_metronome_ring = null
 	_micelio_seal_btn = null
+	_micelio_reinforce_btn = null
 	_huesped_feed_btn = null
 	_huesped_seal_btn = null
 	_mutualismo_pact_btn = null
@@ -417,6 +419,16 @@ func _on_huesped_seal_pressed() -> void:
 
 # ── MICELIO OMNISCIENTE: sello (el resto se juega con click derecho en los upgrades) ──
 func _update_micelio_buttons() -> void:
+	if MicelioOmniscienteLogic.is_active() and EvoManager.micelio_reinforce < Balance.MICELIO_REINFORCE_MAX:
+		if not is_instance_valid(_micelio_reinforce_btn):
+			_micelio_reinforce_btn = _make_rp_button(Color(0.78, 0.55, 1.0), 50, _on_micelio_reinforce_pressed, 0)
+		_micelio_reinforce_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_MICELIO_REINFORCE") % [
+			EvoManager.micelio_reinforce + 1, Balance.MICELIO_REINFORCE_MAX,
+			"$" + UITextBuilders.format_compact(MicelioOmniscienteLogic.reinforce_cost())])
+		_micelio_reinforce_btn.disabled = not MicelioOmniscienteLogic.can_reinforce()
+		_micelio_reinforce_btn.visible = true
+	elif is_instance_valid(_micelio_reinforce_btn):
+		_micelio_reinforce_btn.visible = false
 	if MicelioOmniscienteLogic.seal_ready():
 		if not is_instance_valid(_micelio_seal_btn):
 			_micelio_seal_btn = _make_rp_button(Color(0.78, 0.55, 1.0), 70, _on_micelio_seal_pressed, 0)
@@ -424,6 +436,10 @@ func _update_micelio_buttons() -> void:
 		_micelio_seal_btn.visible = true
 	elif is_instance_valid(_micelio_seal_btn):
 		_micelio_seal_btn.visible = false
+
+func _on_micelio_reinforce_pressed() -> void:
+	MicelioOmniscienteLogic.reinforce()
+	_update_micelio_buttons()
 
 func _on_micelio_seal_pressed() -> void:
 	if RunManager.run_closed or not MicelioOmniscienteLogic.seal_ready():

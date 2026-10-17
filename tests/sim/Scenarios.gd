@@ -341,6 +341,15 @@ const ALL := {
 		"bot": {"click_cps": 7.0, "click_until": 120.0, "buy": "cheapest", "transmute": "huesped", "ayuno_burst_at": 40.0},
 		"max_t": 1800.0, "sample_every": 10.0,
 	},
+	"ng_ayuno_afk_passive": {
+		"desc": "T3 + llave de AYUNO, jugador de pasivo que se va AFK: sin Hiper latente el espejo no dispara → PARASITISMO por inactividad (antes el Ayuno le ganaba siempre).",
+		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
+			"endings": ["HIPERASIMILACION", "PARASITISMO", "HOMEOSTASIS"],
+			"buffs": {"transmut_ayuno": 1}},
+		"bot": {"click_cps": 2.0, "click_until": 120.0, "buy": "cheapest",
+			"buy_ids": ["auto", "auto_mult", "trueque", "trueque_net", "specialization"]},
+		"max_t": 1800.0, "sample_every": 10.0,
+	},
 	"ng_ayuno_player": {
 		"desc": "T3 + AYUNO jugado (Sombra por espejo): clickea 2 min, deja de clickear → ayuno; rompe con S≥120, compra Ascesis y sella apenas puede.",
 		"legacy": {"trascendencia_count": 3, "last_run_ending": "HIPERASIMILACION",
@@ -539,7 +548,8 @@ const ALL := {
 			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
 			"buy_ids_on": {"micelio_omnisciente": ["click", "auto", "trueque", "click_mult", "auto_mult", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]},
 			"micelio_plan": ["auto", "auto_mult", "specialization", "trueque", "trueque_net", "cognitive", "accounting", "click_mult", "click"],
-			"micelio_swap": ["trueque", "cognitive", 120.0], "micelio_seal": true},
+			"micelio_swap": ["trueque", "cognitive", 120.0], "micelio_seal": true,
+			"micelio_reinforce": true, "micelio_dodge": true},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_micelio_planner": {
@@ -552,7 +562,8 @@ const ALL := {
 			"mutation": "red_micelial", "transmute": "micelio",
 			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
 			"buy_ids_on": {"micelio_omnisciente": ["click", "auto", "trueque", "click_mult", "auto_mult", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]},
-			"micelio_plan": ["auto", "auto_mult", "specialization", "trueque", "trueque_net", "cognitive", "accounting", "click_mult", "click"], "micelio_seal": true},
+			"micelio_plan": ["auto", "auto_mult", "specialization", "trueque", "trueque_net", "cognitive", "accounting", "click_mult", "click"], "micelio_seal": true,
+			"micelio_reinforce": true},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_micelio_ojo": {
@@ -565,7 +576,8 @@ const ALL := {
 			"mutation": "red_micelial", "transmute": "micelio",
 			"buy_ids_from": [240.0, ["auto", "auto_mult", "trueque", "trueque_net", "specialization", "cognitive", "accounting", "persistence"]],
 			"buy_ids_on": {"micelio_omnisciente": []},
-			"micelio_plan": ["trueque", "trueque_net", "auto", "auto_mult", "specialization", "accounting", "cognitive", "click", "click_mult"], "micelio_seal": true},
+			"micelio_plan": ["trueque", "trueque_net", "auto", "auto_mult", "specialization", "accounting", "cognitive", "click", "click_mult"], "micelio_seal": true,
+			"micelio_reinforce": true},
 		"max_t": 3600.0, "sample_every": 30.0,
 	},
 	"ng_micelio_afk": {
