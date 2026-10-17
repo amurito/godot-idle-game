@@ -296,6 +296,29 @@ const HUESPED_CRAVING_WARN       := 4.0    # s de aviso antes del antojo
 const HUESPED_CRAVING_HUNGER     := 15.0   # hambre que suma el antojo
 const HUESPED_PACT_CORROSION     := 0.5    # legado Pacto Soberano: corrosión de Parasitismo × 0.5
 
+# ── BIOLOGÍA · MUTUALISMO (tier 2 de SIMBIOSIS) — MutualismoLogic ──
+# Verbo: NEGOCIAR. Spec docs/design/biologia_mutualismo_endosimbiosis.md §4. Todo en SEGUNDOS DE
+# INGRESO (EconomyManager.get_delta_total()). A calibrar con el simulador.
+const MUTUALISMO_MIN_T           := 1      # se desbloquea con la 1ª trascendencia
+const MUTUALISMO_ENTRY_TIME      := 60.0   # s de run para el botón ACEPTAR PACTO (= botón de sellar Simbiosis)
+const MUTUALISMO_FIRST_OFFER     := 10.0   # s hasta la primera oferta
+const MUTUALISMO_OFFER_INTERVAL  := 25.0   # s entre ofertas
+const MUTUALISMO_DECIDE_TIME     := 10.0   # s para [A]/[R]; sin decidir = rechazar
+const MUTUALISMO_EXCHANGE_GIVE   := 15.0   # Intercambio: das 15 s de ingreso…
+const MUTUALISMO_EXCHANGE_MULT   := 1.5    # …y recibís ×1.5 al ingreso…
+const MUTUALISMO_EXCHANGE_SECS   := 30.0   # …durante 30 s (= 15 s de ingreso: trato justo)
+const MUTUALISMO_LOAN_GET        := 20.0   # Préstamo: recibís 20 s ya…
+const MUTUALISMO_LOAN_PAY        := 25.0   # …y el socio cobra 25 s…
+const MUTUALISMO_LOAN_TERM       := 40.0   # …a los 40 s (sin plata: incumplimiento, −3 confianza)
+const MUTUALISMO_AID_GIVE        := 20.0   # Auxilio: das 20 s sin nada a cambio…
+const MUTUALISMO_AID_RETURN      := 30.0   # …y a los 60 s la gratitud devuelve 30 s
+const MUTUALISMO_AID_GRATITUDE_TIME := 60.0
+const MUTUALISMO_TEMPT_GET       := 40.0   # Tentación: tomás 40 s gratis (−4 confianza)
+const MUTUALISMO_REJECT_STREAK   := 3      # rechazos seguidos (sin contar Tentación) → −1 confianza
+const MUTUALISMO_TRUST_SEAL      := 8      # confianza para sellar…
+const MUTUALISMO_FAIR_BAND       := 30.0   # …con |R| ≤ 30 s (banda justa)
+const MUTUALISMO_BREAK           := 60.0   # |R| ≥ 60: ruptura (R < 0 → PARASITISMO, R > 0 → SIMBIOSIS)
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -417,6 +440,7 @@ const PL_REWARDS: Dictionary = {
 	"ALLOSTASIS":                4,
 	"HOMEORHESIS":               8,
 	"SIMBIOSIS":                 4,
+	"MUTUALISMO":                6,
 	"ESPORULACION":              5,
 	"ESPORULACIÓN":              5,
 	"ESPORULACION TOTAL":        5,
@@ -453,6 +477,7 @@ const PL_REWARDS: Dictionary = {
 const NG_CAPS: Dictionary = {
 	"HOMEOSTASIS":               6,
 	"SIMBIOSIS":                 6,
+	"MUTUALISMO":                6,
 	"HIPERASIMILACION":          5,
 	"HIPERASIMILACIÓN":          5,
 	"PARASITISMO":               4,

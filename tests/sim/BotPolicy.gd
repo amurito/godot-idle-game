@@ -81,6 +81,11 @@ extends RefCounted
 ##   huesped_precraving: bool      durante el aviso de antojo, si el hambre llegaría alta, alimenta apenas
 ##                                 puede sin empacharlo (anticipa)
 ##   huesped_seal: bool
+##   mutualismo: {pact, policy, seal, react}  MUTUALISMO (tier 2 de Simbiosis):
+##       pact: bool     acepta el pacto apenas aparece
+##       policy: "fair" (acepta lo justo, rechaza la Tentación y cuida |R|) · "naive" (acepta todo menos
+##               la Tentación, sin mirar R) · "greedy" (acepta todo, Tentación incluida)
+##       seal: bool     sella apenas puede · react: s que tarda en decidir (default 2)
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
 	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
@@ -421,6 +426,9 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("huesped_seal", false) and HuespedSoberanoLogic.seal_ready():
 			UIManager._ng_buttons._on_huesped_seal_pressed()
 			_log("seal:huesped")
+	var mcfg: Dictionary = cfg.get("mutualismo", {})
+	if not mcfg.is_empty():
+		_mutualismo(mcfg)
 	if EvoManager.mutation_caos_orquestado:
 		if _caos_start < 0.0:
 			_caos_start = RunManager.run_time
@@ -565,3 +573,38 @@ func _after_key(label: String) -> void:
 
 func _log(label: String) -> void:
 	actions.append({"t": snappedf(RunManager.run_time, 0.001), "action": label})
+
+
+## MUTUALISMO: entra al pacto y decide cada oferta según la política.
+func _mutualismo(m: Dictionary) -> void:
+	if m.get("pact", false) and MutualismoLogic.can_enter():
+		UIManager._ng_buttons._on_mutualismo_pact_pressed()
+		_log("mutualismo:pact")
+	if not MutualismoLogic.is_active():
+		return
+	var offer: String = EvoManager.mutualismo_offer
+	if offer != "" and EvoManager.mutualismo_decide_timer <= Balance.MUTUALISMO_DECIDE_TIME - float(m.get("react", 2.0)):
+		var policy: String = str(m.get("policy", "fair"))
+		var r: float = EvoManager.mutualismo_r
+		var band: float = Balance.MUTUALISMO_FAIR_BAND
+		var take: bool
+		match policy:
+			"greedy":
+				take = true
+			"naive":
+				take = offer != "tentacion"
+			_:
+				match offer:
+					"tentacion": take = false
+					"prestamo": take = r - Balance.MUTUALISMO_LOAN_GET > -band  # que no deje R fuera de banda
+					"auxilio": take = r + Balance.MUTUALISMO_AID_GIVE < band
+					_: take = true
+		if take and MutualismoLogic.can_accept():
+			MutualismoLogic.accept()
+			_after_key("key:A mutualismo:%s r=%.0f" % [offer, EvoManager.mutualismo_r])
+		else:
+			MutualismoLogic.reject()
+			_after_key("key:R mutualismo:%s r=%.0f" % [offer, EvoManager.mutualismo_r])
+	if m.get("seal", false) and MutualismoLogic.seal_ready():
+		UIManager._ng_buttons._on_mutualismo_seal_pressed()
+		_log("seal:mutualismo")

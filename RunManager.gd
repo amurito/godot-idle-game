@@ -383,6 +383,9 @@ func check_symbiosis_final(_delta: float):
 	# de reversión [T] tenga apariciones pendientes (si no, Simbiosis podía cerrar antes del botón).
 	if TransmutationLogic.candidate() == "coro" and TransmutationLogic.appearances_left() > 0:
 		return
+	# MUTUALISMO: el pacto reemplaza los cierres de Simbiosis (se sella o se rompe por la reciprocidad).
+	if EvoManager.mutualismo_active:
+		return
 
 	var stable_band: bool = (
 		StructuralModel.epsilon_effective >= 0.12
@@ -856,6 +859,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
 	if EvoManager.mutation_allostasis:             return "ALLOSTASIS"
 	if EvoManager.mutation_homeostasis:            return "HOMEOSTASIS"
+	if EvoManager.mutualismo_active:               return "MUTUALISMO"
 	if EvoManager.mutation_symbiosis:              return "SIMBIOSIS"
 	if EvoManager.mutation_red_micelial:           return "ESPORULACIÓN"
 	if EvoManager.mutation_parasitism:             return "PARASITISMO"
@@ -1009,6 +1013,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "pico de combo {v} / 8 = {b} (cap {c})"},
 		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
+		"MUTUALISMO": {"value": func() -> Variant: return EvoManager.mutualismo_trust, "op": "div", "k": 2.0,
+			"vfmt": "%d", "log": "confianza {v} / 2 = {b} (cap {c})"},
 		"HUÉSPED SOBERANO": {"value": func() -> Variant: return EvoManager.huesped_trust, "op": "div", "k": 75.0,
 			"vfmt": "%.0f", "log": "confianza {v} / 75 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,

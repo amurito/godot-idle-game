@@ -1011,6 +1011,15 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif MutualismoLogic.is_active():
+				if kc == KEY_A and MutualismoLogic.can_accept():
+					MutualismoLogic.accept()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif kc == KEY_R and EvoManager.mutualismo_offer != "":
+					MutualismoLogic.reject()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_huesped_soberano:
 				if kc == KEY_Q and HuespedSoberanoLogic.can_feed():
 					HuespedSoberanoLogic.feed()

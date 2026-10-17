@@ -63,6 +63,8 @@ static func defs() -> Dictionary:
 			# Simbiosis cierra sola cuando ε entra en banda (impredecible): su cierre espera mientras
 			# queden apariciones del botón (RunManager.check_symbiosis_final).
 			"life": func() -> float: return Balance.TRANSMUT_LIFE_SIMBIOSIS,
+			# Aceptar el pacto de Mutualismo descarta la transmutación (son excluyentes en la run).
+			"blocked": func() -> bool: return EvoManager.mutualismo_active,
 		},
 		"micelio": {
 			"key": "transmut_micelio",

@@ -499,6 +499,34 @@ const ENTRIES: Dictionary = {
 		"lore_prefix": "LORE_SIMB",
 		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
 	},
+	"mutualismo": {
+		"cat": "mutaciones",
+		"name_es": "Mutualismo", "name_en": "Mutualism",
+		"body_es": (
+			"Segundo tier de [b]Simbiosis[/b] (desde la 1ª trascendencia). La micorriza: el hongo le da fósforo a la raíz y la raíz le paga con azúcar.\n\n"
+			+ "Con Simbiosis activa y la run pasado el minuto aparece [b]ACEPTAR PACTO[/b]. Al aceptarlo, Simbiosis deja de cerrarse sola y empezás a [b]negociar[/b] con la Raíz: cada 25 s te hace una oferta y tenés 10 s para [b][A] aceptar[/b] o [b][R] rechazar[/b] (no decidir = rechazar). Todo se mide en [b]segundos de ingreso[/b]:\n\n"
+			+ "• [b]Intercambio[/b]: das hasta 15 s; recibís ×1.5 al ingreso hasta 30 s (+1 confianza).\n"
+			+ "• [b]Préstamo[/b]: recibís 20 s ya y la Raíz cobra 25 s a los 40 s. Si no tenés la plata, incumplís (−3 confianza).\n"
+			+ "• [b]Auxilio[/b]: das hasta 20 s; a los 60 s su gratitud te devuelve 1.5× lo que diste (+2 confianza).\n"
+			+ "• [b]Tentación[/b]: tomás 40 s gratis (−4 confianza). Rechazarla no cuenta como desaire.\n\n"
+			+ "La [b]reciprocidad[/b] es lo que diste menos lo que recibiste. Tres rechazos seguidos ofenden a la Raíz (−1 confianza).\n\n"
+			+ "[b]Sello[/b]: confianza 8 con la reciprocidad dentro de ±30 → [b]MUTUALISMO[/b] (+6 PL base + bonus).\n"
+			+ "[b]Ruptura[/b]: si tomás de más (−60), el socio se vuelve presa y la run cierra como [b]Parasitismo[/b]; si das de más (+60), la Raíz se queda con todo y cierra como [b]Simbiosis[/b]."
+		),
+		"body_en": (
+			"Second tier of [b]Symbiosis[/b] (from the 1st transcendence). Mycorrhiza: the fungus gives the root phosphorus and the root pays in sugar.\n\n"
+			+ "With Symbiosis active and the run past the first minute, [b]ACCEPT PACT[/b] appears. Once accepted, Symbiosis stops closing on its own and you start [b]negotiating[/b] with the Root: every 25 s it makes an offer and you have 10 s to [b][A] accept[/b] or [b][R] reject[/b] (not deciding = rejecting). Everything is measured in [b]seconds of income[/b]:\n\n"
+			+ "• [b]Exchange[/b]: give up to 15 s; get ×1.5 income for up to 30 s (+1 trust).\n"
+			+ "• [b]Loan[/b]: get 20 s now and the Root collects 25 s after 40 s. Without the money, you default (−3 trust).\n"
+			+ "• [b]Aid[/b]: give up to 20 s; after 60 s its gratitude returns 1.5× what you gave (+2 trust).\n"
+			+ "• [b]Temptation[/b]: take 40 s for free (−4 trust). Rejecting it doesn't count as a snub.\n\n"
+			+ "[b]Reciprocity[/b] is what you gave minus what you got. Three rejections in a row offend the Root (−1 trust).\n\n"
+			+ "[b]Seal[/b]: trust 8 with reciprocity within ±30 → [b]MUTUALISM[/b] (+6 LP base + bonus).\n"
+			+ "[b]Break[/b]: take too much (−60) and the partner becomes prey: the run closes as [b]Parasitism[/b]; give too much (+60) and the Root keeps everything: it closes as [b]Symbiosis[/b]."
+		),
+		"unlock": {"type": "transcendence_count", "min": 1},
+		"see_also": ["simbiosis"],
+	},
 	"singularidad": {
 		"cat": "mutaciones",
 		"name_es": "Singularidad", "name_en": "Singularity",

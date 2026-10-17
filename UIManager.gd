@@ -551,7 +551,14 @@ func update_mutation_center_panel(main: Node = null) -> void:
 		if not is_instance_valid(genome_summary_label):
 			return
 	var t: String
-	if EvoManager.mutation_huesped_soberano:
+	if EvoManager.mutualismo_active:
+		if RunManager.run_closed and RunManager.final_route == "MUTUALISMO":
+			t = UITextBuilders.build_mutualismo_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_mutualismo_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_huesped_soberano:
 		if RunManager.run_closed and RunManager.final_route == "HUÉSPED SOBERANO":
 			t = UITextBuilders.build_huesped_soberano_closed_text()
 		elif not RunManager.run_closed:
@@ -1314,6 +1321,8 @@ func _live_reactor_color() -> Color:
 		return Color(0.66, 0.77, 1.0)  # celeste pálido
 	if EvoManager.mutation_red_micelial:
 		return Color(0.3, 1.0, 0.3)
+	if EvoManager.mutualismo_active:
+		return Color(1.0, 0.76, 0.66)  # durazno (Biología = naranja → rosa)
 	if EvoManager.mutation_symbiosis:
 		return Color(1.0, 0.56, 0.82)  # rosa orquídea (Biología = naranja → rosa)
 	return Color(0.15, 0.65, 1.0)

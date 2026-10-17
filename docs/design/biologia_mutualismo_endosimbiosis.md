@@ -97,6 +97,23 @@ depende de la escala de la run.
   (4 PL, sin bonus NG+).
 - Duración esperada: sello de Mutualismo hacia los **6–8 min** (≈ 12–16 ofertas).
 
+### 4.3b Implementado (B1, 2026-10-16) · `MutualismoLogic.gd`
+Cambios contra la propuesta, por calibración con bot:
+- **Pago parcial**: si no te alcanza, das lo que tengas; el retorno del Intercambio y la gratitud del Auxilio
+  (1.5× lo dado) se calculan sobre lo pagado de verdad. Exigir el monto entero dejaba afuera a quien gasta
+  todo en mejoras (la mitad de las ofertas quedaban inaceptables).
+- **Sello con confianza 8** (no 6): con 6 se sellaba en ~3 min de pacto.
+- Ofertas en secuencia fija (sin RNG): Intercambio, Préstamo, Intercambio, Auxilio, Tentación, … (como los antojos de Huésped).
+- Teclas [A] / [R]. El pacto bloquea el botón [T] de Coro (excluyentes).
+
+| Perfil (`tests/sim/Scenarios.gd`) | Resultado | Tiempo en Mutualismo |
+|---|---|---|
+| `t1_mutualismo_fair` (rechaza Tentaciones, cuida \|R\|) | MUTUALISMO a 640 s | 5.7 min |
+| `t1_mutualismo_naive` (acepta todo menos Tentación) | MUTUALISMO a 790 s, roza la ruptura (R −60) | 8.2 min |
+| `t1_mutualismo_greedy` (acepta todo) | rompe → PARASITISMO a 475 s | 3 min |
+
+Pendiente para B4: legado Micorriza y logros.
+
 ### 4.4 Por qué no es Huésped otra vez
 Huésped es un medidor que baja solo y se mantiene en banda. Acá no hay nada que se mueva solo:
 cada oferta es una **decisión discreta** con costo ahora y retorno después. La tensión es leer el
@@ -260,17 +277,14 @@ clave, MYTHIC no lo saca el bot normal).
 
 ---
 
-## 9. Preguntas para el autor
+## 9. Decisiones del autor (2026-10-16)
 
-1. **Mutualismo = negociar ofertas**: ¿te convence el verbo? Alternativa: un "mercado" donde vos ponés el
-   precio, aunque es más complejo de leer en un idle.
-2. **Abusar del socio → cierra como Parasitismo**: ¿te gusta el puente o preferís un final propio
-   ("Traición")?
-3. **Entrada a Endosimbiosis**: (a) botón **ENGULLIR** con `last_run` Parasitismo *(recomendado: decisión
-   explícita, mismo patrón que el Depredador)*, o (b) que entre sola si estás AFK durante Simbiosis.
-4. **Holobionte**: ¿4 socios con necesidades cruzadas, o preferís 3 (sin Levadura) para que sea más legible?
-5. **Gating**: todo en T1, ¿o Holobionte / Endosimbiosis en T2 junto al árbol oscuro para escalonar?
-6. **Simbiosis Agresiva**: ¿la dejamos como está o la reemplaza el legado Mitocondria?
+1. **Mutualismo = negociar ofertas** ✅.
+2. Abusar del socio (R ≤ −60) **cierra como PARASITISMO** ✅.
+3. Entrada a Endosimbiosis con el **botón ENGULLIR** (`last_run` Parasitismo o Huésped) ✅.
+4. Holobionte con **4 socios** (Raíz, Bacteria, Alga, Levadura) ✅.
+5. Gating: **Mutualismo en T1; Holobionte y Endosimbiosis en T2** (junto al árbol oscuro) ✅.
+6. **Simbiosis Agresiva queda como está** ✅.
 
 ---
 

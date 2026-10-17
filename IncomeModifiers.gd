@@ -16,7 +16,7 @@ class_name IncomeModifiers
 
 const CLICK_ORDER := [
 	"sincronia_total", "symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica",
-	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo",
+	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo", "mutualismo",
 	"homeostasis_banda", "met_oscuro", "necrosis", "apoptosis_heredada", "plasticidad_terminal",
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
@@ -25,7 +25,7 @@ const CLICK_ORDER := [
 
 const PASSIVE_ORDER := [
 	"symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica", "caos_fuel", "caos_burst",
-	"coro_rhythm", "coro_echo",
+	"coro_rhythm", "coro_echo", "mutualismo",
 	"ayuno_primordial",
 	"primicia_del_vacio", "homeostasis_banda", "parasitism_growth", "parasitism_corrosion",
 	"met_oscuro", "semilla_cosmica", "semilla_cosmica_oscura", "mente_colmena",
@@ -125,6 +125,9 @@ static func _build() -> Dictionary:
 	d["coro_rhythm"] = _row("Coro Simbiótico (ritmo)", "route", coro_rhythm, coro_rhythm)
 	var coro_echo := func() -> float: return CoroSimbioticoLogic.echo_mult()
 	d["coro_echo"] = _row("Compás Interno", "legacy", coro_echo, Callable())  # sólo click
+	# MUTUALISMO: retorno del Intercambio (×boost a todo el ingreso mientras dura).
+	var mutualismo := func() -> float: return MutualismoLogic.income_mult()
+	d["mutualismo"] = _row("Mutualismo (intercambio)", "route", mutualismo, mutualismo)
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

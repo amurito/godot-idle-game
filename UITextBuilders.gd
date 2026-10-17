@@ -1410,6 +1410,37 @@ static func build_micelio_omnisciente_closed_text() -> String:
 
 # ─── HUÉSPED SOBERANO (transmutación de Parasitismo) ─────────────────────────
 
+static func build_mutualismo_panel_text() -> String:
+	var T := func(k: String) -> String: return TranslationServer.translate(k)
+	var t: String = "[color=#ffc2a8]" + T.call("MUTUALISMO_PANEL_TITLE") + "[/color]\n"
+	var r: float = EvoManager.mutualismo_r
+	var band: float = Balance.MUTUALISMO_FAIR_BAND
+	var r_col: String = "green" if absf(r) <= band else ("#ff5c6a" if r < 0.0 else "#ffcc66")
+	t += T.call("MUTUALISMO_PANEL_R") % ["[color=%s]%+.0f[/color]" % [r_col, r], band, Balance.MUTUALISMO_BREAK] + "\n"
+	t += T.call("MUTUALISMO_PANEL_TRUST") % [EvoManager.mutualismo_trust, Balance.MUTUALISMO_TRUST_SEAL] + "\n"
+	var offer: String = EvoManager.mutualismo_offer
+	if offer != "":
+		t += "\n[color=#ffc2a8]" + T.call("MUTUALISMO_PANEL_OFFER") % [MutualismoLogic.offer_name(offer), EvoManager.mutualismo_decide_timer] + "[/color]\n"
+		t += MutualismoLogic.offer_desc(offer) + "\n"
+	else:
+		t += "\n" + T.call("MUTUALISMO_PANEL_NEXT") % EvoManager.mutualismo_offer_timer + "\n"
+	if EvoManager.mutualismo_loan_due > 0.0:
+		t += "[color=#ffcc66]" + T.call("MUTUALISMO_PANEL_LOAN") % ["$" + format_compact(MutualismoLogic.income() * Balance.MUTUALISMO_LOAN_PAY), EvoManager.mutualismo_loan_due] + "[/color]\n"
+	if EvoManager.mutualismo_gratitude_due > 0.0:
+		t += T.call("MUTUALISMO_PANEL_GRATITUDE") % EvoManager.mutualismo_gratitude_due + "\n"
+	if EvoManager.mutualismo_boost_timer > 0.0:
+		t += "[color=green]" + T.call("MUTUALISMO_PANEL_BOOST") % [Balance.MUTUALISMO_EXCHANGE_MULT, EvoManager.mutualismo_boost_timer] + "[/color]\n"
+	if MutualismoLogic.seal_ready():
+		t += "\n[color=#ffc2a8]" + T.call("MUTUALISMO_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.call("MUTUALISMO_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_mutualismo_closed_text() -> String:
+	var t := "[color=#ffc2a8]" + TranslationServer.translate("MUTUALISMO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("MUTUALISMO_CLOSED_LORE") + "[/i]"
+	return t
+
 static func build_huesped_soberano_panel_text() -> String:
 	var h: float = EvoManager.huesped_hunger
 	var t := "[color=#7aa8ff]" + TranslationServer.translate("HUESPED_PANEL_TITLE") + "[/color]\n"

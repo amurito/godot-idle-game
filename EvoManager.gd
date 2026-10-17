@@ -214,6 +214,24 @@ var micelio_disconnects: int = 0          # desconexiones manuales (MYTHIC Ojo d
 var micelio_first_full: String = ""       # primer nodo lleno (legado Nodo Latente)
 var micelio_manual_buys: int = 0          # compras a mano tras revertir (MYTHIC Ojo de la Red: 0)
 
+# === MUTUALISMO (tier 2 de Simbiosis — MutualismoLogic) ===
+var mutualismo_active := false
+var mutualismo_trust: int = 0
+var mutualismo_r: float = 0.0                 # reciprocidad: dado − recibido (s de ingreso)
+var mutualismo_offer: String = ""             # oferta abierta ("" = ninguna)
+var mutualismo_offer_timer: float = 0.0
+var mutualismo_decide_timer: float = 0.0
+var mutualismo_offers: int = 0                # ofertas cerradas (índice de la secuencia)
+var mutualismo_reject_streak: int = 0
+var mutualismo_boost_timer: float = 0.0       # retorno del Intercambio (×boost al ingreso)
+var mutualismo_loan_due: float = 0.0          # s hasta que el socio cobra el préstamo (0 = ninguno)
+var mutualismo_gratitude_due: float = 0.0     # s hasta la gratitud del Auxilio (0 = ninguna)
+var mutualismo_gratitude_secs: float = 0.0    # s de ingreso que devuelve la gratitud (1.5× lo dado)
+var mutualismo_accepted: int = 0
+var mutualismo_tempted: int = 0               # Tentaciones aceptadas (MYTHIC Sin Tentación: 0)
+var mutualismo_loans_paid: int = 0
+var mutualismo_defaulted: bool = false
+
 # === HUÉSPED SOBERANO (Transmutación de Parasitismo — HuespedSoberanoLogic) ===
 var mutation_huesped_soberano := false
 var huesped_hunger: float = 0.0
@@ -351,6 +369,7 @@ func tick_route_processes(dt: float) -> void:
 	CoroSimbioticoLogic.process(dt)  # metrónomo: golpes salteados (Coro o legado Compás Interno)
 	MicelioOmniscienteLogic.process(dt)  # se auto-gatea
 	HuespedSoberanoLogic.process(dt)  # se auto-gatea
+	MutualismoLogic.process(dt)  # se auto-gatea (tier 2 de Simbiosis)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el

@@ -58,6 +58,10 @@ var _coro_seal_btn: Button = null        # Sello de Coro Simbiótico (partitura 
 var _metronome_ring: Control = null      # Anillo del metrónomo sobre el núcleo (Coro / Compás Interno)
 var _micelio_seal_btn: Button = null     # Sello de Micelio Omnisciente
 var _huesped_feed_btn: Button = null     # [Q] Alimentar (Huésped Soberano)
+var _mutualismo_pact_btn: Button = null   # ACEPTAR PACTO (entrada a Mutualismo desde Simbiosis)
+var _mutualismo_accept_btn: Button = null # [A] Aceptar oferta
+var _mutualismo_reject_btn: Button = null # [R] Rechazar oferta
+var _mutualismo_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -164,7 +168,8 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_ayuno_seal_btn):
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
-	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn]:
+	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
+			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
@@ -175,6 +180,10 @@ func reset_ng_plus_buttons() -> void:
 	_micelio_seal_btn = null
 	_huesped_feed_btn = null
 	_huesped_seal_btn = null
+	_mutualismo_pact_btn = null
+	_mutualismo_accept_btn = null
+	_mutualismo_reject_btn = null
+	_mutualismo_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -211,7 +220,67 @@ func update_ng_plus_buttons() -> void:
 	_update_coro_buttons()
 	_update_micelio_buttons()
 	_update_huesped_buttons()
+	_update_mutualismo_buttons()
 	_update_batuta_button()
+
+# ── MUTUALISMO: pacto · [A] aceptar / [R] rechazar · sello ────────────────────
+func _update_mutualismo_buttons() -> void:
+	# Entrada: botón ACEPTAR PACTO mientras Simbiosis puede pasar a Mutualismo.
+	if MutualismoLogic.can_enter():
+		if not is_instance_valid(_mutualismo_pact_btn):
+			_mutualismo_pact_btn = _make_rp_button(Color(1.0, 0.76, 0.66), 60, _on_mutualismo_pact_pressed, 0)
+		_mutualismo_pact_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_MUTUALISMO_PACT"))
+		_mutualismo_pact_btn.visible = true
+	elif is_instance_valid(_mutualismo_pact_btn):
+		_mutualismo_pact_btn.visible = false
+	if not MutualismoLogic.is_active():
+		for b in [_mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	var offer: String = EvoManager.mutualismo_offer
+	if offer != "":
+		if not is_instance_valid(_mutualismo_reject_btn):
+			_mutualismo_reject_btn = _make_rp_button(Color(0.8, 0.7, 0.7), 44, _on_mutualismo_reject_pressed, 0)
+		if not is_instance_valid(_mutualismo_accept_btn):
+			_mutualismo_accept_btn = _make_rp_button(Color(1.0, 0.76, 0.66), 60, _on_mutualismo_accept_pressed, 0)
+		_mutualismo_accept_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_MUTUALISMO_ACCEPT") % [
+			MutualismoLogic.offer_name(offer), EvoManager.mutualismo_decide_timer])
+		_mutualismo_accept_btn.tooltip_text = MutualismoLogic.offer_desc(offer)
+		_mutualismo_accept_btn.disabled = not MutualismoLogic.can_accept()
+		_mutualismo_reject_btn.text = TranslationServer.translate("BTN_MUTUALISMO_REJECT")
+		_mutualismo_accept_btn.visible = true
+		_mutualismo_reject_btn.visible = true
+	else:
+		for b in [_mutualismo_accept_btn, _mutualismo_reject_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+	if MutualismoLogic.seal_ready():
+		if not is_instance_valid(_mutualismo_seal_btn):
+			_mutualismo_seal_btn = _make_rp_button(Color(1.0, 0.76, 0.66), 70, _on_mutualismo_seal_pressed, 0)
+		_mutualismo_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_MUTUALISMO_SEAL") % int(Balance.PL_REWARDS.get("MUTUALISMO", 6)))
+		_mutualismo_seal_btn.visible = true
+	elif is_instance_valid(_mutualismo_seal_btn):
+		_mutualismo_seal_btn.visible = false
+
+func _on_mutualismo_pact_pressed() -> void:
+	MutualismoLogic.enter()
+	update_ng_plus_buttons()
+
+func _on_mutualismo_accept_pressed() -> void:
+	MutualismoLogic.accept()
+	_update_mutualismo_buttons()
+
+func _on_mutualismo_reject_pressed() -> void:
+	MutualismoLogic.reject()
+	_update_mutualismo_buttons()
+
+func _on_mutualismo_seal_pressed() -> void:
+	if RunManager.run_closed or not MutualismoLogic.seal_ready():
+		return
+	if is_instance_valid(_mutualismo_seal_btn):
+		_mutualismo_seal_btn.visible = false
+	RunManager.close_run("MUTUALISMO", TranslationServer.translate("CLOSE_MUTUALISMO"))
 
 # ── HUÉSPED SOBERANO: [Q] Alimentar · sello ──────────────────────────────────
 func _update_huesped_buttons() -> void:
@@ -1460,7 +1529,7 @@ func _on_ayuno_seal_pressed() -> void:
 	RunManager.close_run("AYUNO PRIMORDIAL", TranslationServer.translate("CLOSE_AYUNO"))
 
 func _update_simbiosis_seal_button() -> void:
-	if RunManager.run_closed or not EvoManager.mutation_symbiosis:
+	if RunManager.run_closed or not EvoManager.mutation_symbiosis or EvoManager.mutualismo_active:
 		if is_instance_valid(_simbiosis_seal_btn):
 			_simbiosis_seal_btn.visible = false
 		return

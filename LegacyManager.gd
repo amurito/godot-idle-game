@@ -114,7 +114,7 @@ const ENDING_FAMILIES := {
 	"HOMEORHESIS": "orden", "SINGULARIDAD": "orden",
 	"ESPORULACION": "biologia", "ESPORULACIÓN": "biologia",
 	"ESPORULACION TOTAL": "biologia", "PARASITISMO": "biologia",
-	"SIMBIOSIS": "biologia", "PANSPERMIA NEGRA": "biologia",
+	"SIMBIOSIS": "biologia", "MUTUALISMO": "biologia", "PANSPERMIA NEGRA": "biologia",
 	"MENTE COLMENA DISTRIBUIDA": "biologia",
 	"HIPERASIMILACION": "colapso", "HIPERASIMILACIÓN": "colapso",
 	"DEPREDADOR DE REALIDADES": "colapso",
