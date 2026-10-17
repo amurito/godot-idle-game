@@ -1650,6 +1650,28 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "buff_owned", "id": "transmut_huesped"},
 		"see_also": ["transmut_intro", "transmut_micelio", "transmut_coro"],
 	},
+	"transmut_fracaso": {
+		"cat": "transmutaciones",
+		"name_es": "Fracasar una transmutación", "name_en": "Failing a transmutation",
+		"body_es": (
+			"Toda transmutación se puede perder. Si fracasa, el hongo [b]vuelve a la mutación original[/b] y la run cierra como ella (con sus PL, no los de la transmutación):\n\n"
+			+ "• [b]Fusión Catabólica[/b] → Hiperasimilación: durante el enfriamiento [Q] [b]fuerza[/b] la ráfaga, pero fatiga el motor; 3 forzadas seguidas lo funden. Una ráfaga respetando el enfriamiento resetea la fatiga.\n"
+			+ "• [b]Caos Orquestado[/b] → Homeostasis: 5 Grandes Colapsos fallidos (ε ≥ 1.8 sin llegar a $5M).\n"
+			+ "• [b]Coro Simbiótico[/b] → Simbiosis: 8 acentos seguidos sin acertar (avisa a los 5).\n"
+			+ "• [b]Huésped Soberano[/b] → Parasitismo: el hambre en 100 durante 15 s (te come).\n\n"
+			+ "[b]Micelio Omnisciente[/b] es la excepción: nunca formó una seta, así que no vuelve a Esporulación. Si se rompen 4 nodos llenos, la red queda [b]MICELIO FRAGMENTADO[/b] (final propio, +3 PL) y deja el [b]Legado: Cicatriz Micelial[/b]: en las próximas Micelio Omnisciente las rupturas son un 25 % menos probables."
+		),
+		"body_en": (
+			"Every transmutation can be lost. If it fails, the fungus [b]goes back to the original mutation[/b] and the run closes as it (with its LP, not the transmutation's):\n\n"
+			+ "• [b]Catabolic Fusion[/b] → Hyperassimilation: during the cooldown [Q] [b]forces[/b] the burst, but tires the engine; 3 forced in a row melt it. A burst that respects the cooldown resets the fatigue.\n"
+			+ "• [b]Orchestrated Chaos[/b] → Homeostasis: 5 failed Grand Collapses (ε ≥ 1.8 without reaching $5M).\n"
+			+ "• [b]Symbiotic Chorus[/b] → Symbiosis: 8 accents in a row without a hit (it warns at 5).\n"
+			+ "• [b]Sovereign Host[/b] → Parasitism: hunger at 100 for 15 s (it eats you).\n\n"
+			+ "[b]Omniscient Mycelium[/b] is the exception: it never formed a mushroom, so it doesn't go back to Sporulation. If 4 full nodes break, the network becomes [b]FRAGMENTED MYCELIUM[/b] (its own ending, +3 LP) and leaves the [b]Legacy: Mycelial Scar[/b]: in later Omniscient Mycelium runs ruptures are 25% less likely."
+		),
+		"unlock": {"type": "transcendence_count", "min": 3},
+		"see_also": ["transmut_intro", "transmut_micelio"],
+	},
 	"ayuno_primordial": {
 		"cat": "transmutaciones",
 		"name_es": "Ayuno Primordial", "name_en": "Primal Fast",

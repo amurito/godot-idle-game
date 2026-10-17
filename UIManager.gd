@@ -1278,6 +1278,8 @@ func get_reactor_color() -> Color:
 				return Color(0.66, 0.27, 0.18)  # coral profundo: el ritmo, en silencio
 			"MICELIO OMNISCIENTE":
 				return Color(0.42, 0.25, 0.78)  # violeta profundo: la red que ve, en reposo
+			"MICELIO FRAGMENTADO":
+				return Color(0.42, 0.29, 0.42)  # malva apagado: la red rota, en pedazos
 			"HUÉSPED SOBERANO":
 				return Color(0.12, 0.23, 0.56)  # índigo profundo: el pacto, en reposo
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,

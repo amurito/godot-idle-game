@@ -211,6 +211,9 @@ var micelio_ruptures: int = 0                # crujidos ocurridos (índice de la
 var micelio_broken_full: int = 0             # nodos llenos rotos (a MICELIO_COLLAPSE_FULL colapsa)
 var micelio_lost: float = 0.0                # micelio perdido en rupturas
 var micelio_reinforce: int = 0               # nivel de [W] Reforzar
+var fusion_forced_streak: int = 0            # ráfagas forzadas seguidas (FRACASO a FUSION_FORCED_MELT)
+var coro_fail_streak: int = 0                # acentos seguidos sin acertar (FRACASO a CORO_FAIL_STREAK)
+var huesped_starve_time: float = 0.0         # s con el hambre en 100 (FRACASO a HUESPED_STARVE_TIME)
 var micelio_pool: float = 0.0             # micelio libre (presupuesto para conectar)
 var micelio_nodes: Dictionary = {}        # upgrade_id → micelio conectado (0..MICELIO_NODE_MAX)
 var micelio_drift_timer: float = 0.0
@@ -522,7 +525,18 @@ func activate_fusion_catabolica():
 ## Dispara la ráfaga Metabolismo Híbrido (×2 a todo el ingreso) si no hay cooldown.
 func activate_fusion_burst() -> void:
 	if not mutation_fusion_catabolica or RunManager.run_closed: return
-	if fusion_burst_timer > 0.0 or fusion_burst_cooldown > 0.0: return
+	if fusion_burst_timer > 0.0: return
+	# Durante el cooldown la ráfaga se FUERZA: funciona igual, pero fatiga el motor. FUSION_FORCED_MELT
+	# forzadas seguidas lo funden (fracaso → HIPERASIMILACIÓN). Respetar el cooldown resetea la fatiga.
+	if fusion_burst_cooldown > 0.0:
+		fusion_forced_streak += 1
+		if fusion_forced_streak >= Balance.FUSION_FORCED_MELT:
+			RunManager.close_run("HIPERASIMILACION", tr("CLOSE_FUSION_MELT"))
+			return
+		fusion_burst_cooldown = 0.0
+		UIManager.show_toast(tr("TOAST_FUSION_FORCED") % [fusion_forced_streak, Balance.FUSION_FORCED_MELT])
+	else:
+		fusion_forced_streak = 0
 	fusion_burst_timer = Balance.FUSION_BURST_DURATION
 	fusion_burst_count += 1
 	_fusion_money_mark = EconomyManager.total_money_generated  # sólo cuenta lo generado desde ahora

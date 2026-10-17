@@ -98,6 +98,7 @@ static func on_click() -> void:
 	last_judge_ms = Time.get_ticks_msec()
 	last_judge_hit = hit
 	if hit:
+		EvoManager.coro_fail_streak = 0
 		EvoManager.coro_combo = mini(EvoManager.coro_combo + Balance.CORO_ACCENT_COMBO, Balance.CORO_COMBO_CAP)
 		EvoManager.coro_peak_combo = maxi(EvoManager.coro_peak_combo, EvoManager.coro_combo)
 		if EvoManager.mutation_coro_simbiotico:
@@ -105,6 +106,7 @@ static func on_click() -> void:
 	else:
 		EvoManager.coro_combo = int(EvoManager.coro_combo / 2.0)
 		if EvoManager.mutation_coro_simbiotico:
+			_fail_accent()
 			EvoManager.coro_misses += 1
 			if EvoManager.coro_movement == Balance.CORO_MOVEMENT_BARS.size() - 1:
 				EvoManager.coro_allegro_misses += 1
@@ -140,7 +142,20 @@ static func process(_dt: float) -> void:
 		if not is_downbeat(k) or k <= EvoManager.coro_last_hit_beat:
 			continue
 		EvoManager.coro_combo = maxi(EvoManager.coro_combo - Balance.CORO_SKIP_DECAY, 0)
+		if EvoManager.mutation_coro_simbiotico and not score_done():
+			_fail_accent()
 	EvoManager.coro_last_closed_beat = maxi(EvoManager.coro_last_closed_beat, closed)
+
+
+## FRACASO: CORO_FAIL_STREAK acentos seguidos sin acertar → el ritmo se rompe → vuelve a SIMBIOSIS.
+static func _fail_accent() -> void:
+	if RunManager.run_closed:
+		return
+	EvoManager.coro_fail_streak += 1
+	if EvoManager.coro_fail_streak == Balance.CORO_FAIL_STREAK - 3:
+		UIManager.show_toast(TranslationServer.translate("TOAST_CORO_FAIL_WARN") % (Balance.CORO_FAIL_STREAK - EvoManager.coro_fail_streak))
+	if EvoManager.coro_fail_streak >= Balance.CORO_FAIL_STREAK:
+		RunManager.close_run("SIMBIOSIS", TranslationServer.translate("CLOSE_CORO_FAIL"))
 
 
 # ── Economía (IncomeModifiers) ───────────────────────────────────────────────

@@ -1483,8 +1483,10 @@ func _update_fusion_burst_button() -> void:
 		_fusion_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_FUSION_ACTIVE") % EvoManager.fusion_burst_timer)
 		_fusion_burst_btn.disabled = true
 	elif EvoManager.fusion_burst_cooldown > 0.0:
-		_fusion_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_FUSION_COOLDOWN") % EvoManager.fusion_burst_cooldown)
-		_fusion_burst_btn.disabled = true
+		# Se puede FORZAR (fatiga el motor; a FUSION_FORCED_MELT seguidas se funde).
+		_fusion_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_FUSION_FORCE") % [
+			EvoManager.fusion_burst_cooldown, EvoManager.fusion_forced_streak + 1, Balance.FUSION_FORCED_MELT])
+		_fusion_burst_btn.disabled = false
 	else:
 		_fusion_burst_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_FUSION_READY") % Balance.FUSION_BURST_DURATION)
 		_fusion_burst_btn.disabled = false

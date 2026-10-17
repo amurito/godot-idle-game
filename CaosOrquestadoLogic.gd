@@ -157,6 +157,9 @@ static func _end_burst() -> void:
 		RunManager.close_run("CAOS ORQUESTADO", TranslationServer.translate("CLOSE_CAOS"))
 	else:
 		UIManager.show_toast(TranslationServer.translate("TOAST_CAOS_GRAND_FAIL") % [UIManager.format_compact(money), UIManager.format_compact(Balance.CAOS_GRAND_MONEY)])
+		# FRACASO: el caos dirigido se desordena → vuelve al orden de origen.
+		if EvoManager.caos_grand_attempts >= Balance.CAOS_GRAND_FAILS:
+			RunManager.close_run("HOMEOSTASIS", TranslationServer.translate("CLOSE_CAOS_FAIL"))
 
 ## Sin botón: el Gran Colapso sella solo al terminar su ráfaga.
 static func seal_ready() -> bool:

@@ -1055,7 +1055,7 @@ func _input(event):
 			elif EvoManager.mutation_fusion_catabolica:
 				match kc:
 					KEY_Q:
-						if EvoManager.fusion_burst_timer <= 0.0 and EvoManager.fusion_burst_cooldown <= 0.0:
+						if EvoManager.fusion_burst_timer <= 0.0:  # durante el cooldown, la fuerza (fatiga)
 							EvoManager.activate_fusion_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()

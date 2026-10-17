@@ -16,7 +16,7 @@ class_name MicelioOmniscienteLogic
 ##   · Sello: los 9 nodos llenos sostenidos MICELIO_SEAL_HOLD s.
 ##   · Rupturas: cada MICELIO_RUPTURE_INTERVALS s el micelio cruje sobre un nodo conectado (aviso
 ##     MICELIO_RUPTURE_WARN s antes): con MICELIO_RUPTURE_CHANCE se rompe y pierde su conexión (no vuelve
-##     al pozo). [W] Reforzar baja probabilidad y daño. MICELIO_COLLAPSE_FULL nodos llenos rotos → colapso.
+##     al pozo). [W] Reforzar baja probabilidad y daño. MICELIO_COLLAPSE_FULL nodos llenos rotos → colapso (MICELIO FRAGMENTADO).
 ##   · Legado Nodo Latente: el primer nodo que llenaste queda ×MICELIO_LATENT_MULT en todas las runs.
 
 ## Los 9 upgrades numerados (mismo orden que las teclas 1-9).
@@ -168,7 +168,8 @@ static func _roll(n: int, salt: int) -> float:
 	return float(h) / 4294967296.0
 
 static func rupture_chance() -> float:
-	return Balance.MICELIO_RUPTURE_CHANCE * maxf(1.0 - Balance.MICELIO_REINFORCE_CHANCE * EvoManager.micelio_reinforce, 0.0)
+	var scar: float = Balance.MICELIO_SCAR_CHANCE if LegacyManager.get_buff_value("legado_cicatriz_micelial") else 1.0
+	return Balance.MICELIO_RUPTURE_CHANCE * scar * maxf(1.0 - Balance.MICELIO_REINFORCE_CHANCE * EvoManager.micelio_reinforce, 0.0)
 
 static func rupture_damage() -> float:
 	return Balance.MICELIO_RUPTURE_DAMAGE * maxf(1.0 - Balance.MICELIO_REINFORCE_DAMAGE * EvoManager.micelio_reinforce, 0.0)
@@ -207,7 +208,7 @@ static func _process_rupture(dt: float) -> void:
 	if was_full:
 		EvoManager.micelio_broken_full += 1
 		if EvoManager.micelio_broken_full >= Balance.MICELIO_COLLAPSE_FULL:
-			RunManager.close_run("ESPORULACIÓN", TranslationServer.translate("CLOSE_MICELIO_COLLAPSE"))
+			RunManager.close_run("MICELIO FRAGMENTADO", TranslationServer.translate("CLOSE_MICELIO_COLLAPSE"))
 
 ## Segundos hasta el próximo crujido (para el panel).
 static func rupture_in() -> float:

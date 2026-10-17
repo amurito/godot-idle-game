@@ -201,6 +201,8 @@ const FUSION_PASSIVE_MULT     := 5.0        # pasivo ×5 (restaura el pasivo que
 const FUSION_BURST_MULT       := 2.0        # Metabolismo Híbrido: ×2 a TODO el ingreso mientras corre
 const FUSION_BURST_DURATION   := 30.0       # s que dura la ráfaga
 const FUSION_BURST_COOLDOWN   := 120.0      # s de cooldown tras la ráfaga
+const FUSION_FORCED_MELT      := 3          # FRACASO: ráfagas FORZADAS seguidas (durante el cooldown) que funden
+                                            # el motor → cierra como HIPERASIMILACIÓN (una ráfaga normal resetea)
 const FUSION_SEAL_MONEY       := 100_000_000.0 # $ generados para habilitar el sello del final
 const FUSION_SEAL_BURST_MONEY := 50_000_000.0 # $ generados DURANTE ráfagas: premia usar [Q] y hace útil [W].
                                               # Con cooldown base ~1/3 del ingreso cae en ráfaga: 50M queda por
@@ -237,6 +239,7 @@ const CAOS_RED_EPS               := 0.60   # zona roja (sello + "colapso con car
 # Sello = GRAN COLAPSO (§10.1): un Colapso cobrado con ε ≥ GRAND_EPS cuya ráfaga genere ≥ GRAND_MONEY
 # sella la ruta al terminar. Es la apuesta al extremo: esperar la carga larga y una economía grande.
 const CAOS_GRAND_EPS             := 1.8
+const CAOS_GRAND_FAILS        := 5          # FRACASO: Grandes Colapsos fallidos → cierra como HOMEOSTASIS (con 3 el jugador normal fracasaba)
 const CAOS_GRAND_MONEY           := 5_000_000.0  # simulador: ~15 min con [W], ~20 sin [W]
 
 # ── TRANSMUTACIÓN · CORO SIMBIÓTICO (revierte SIMBIOSIS) — CoroSimbioticoLogic ──
@@ -255,6 +258,7 @@ const CORO_HIT_WINDOW            := 0.20   # s: ventana de acierto a cada lado d
 const CORO_COMBO_BONUS           := 0.04   # ingreso × (1 + 0.04 · combo)…
 const CORO_COMBO_CAP             := 64     # …tope ×3.56
 const CORO_SKIP_DECAY            := 4      # combo perdido por acento salteado (no se arma y se suelta)
+const CORO_FAIL_STREAK           := 8      # FRACASO: acentos seguidos sin acertar → cierra como SIMBIOSIS
 const CORO_LEGACY_TEMPO          := 90.0   # legado Compás Interno: metrónomo suave en todas las runs…
 const CORO_LEGACY_BONUS          := 0.01   # …+1 % de click por golpe a tiempo seguido…
 const CORO_LEGACY_CAP            := 0.15   # …tope +15 %
@@ -284,7 +288,8 @@ const MICELIO_REINFORCE_CHANCE   := 0.20   # …−20 % de probabilidad por nive
 const MICELIO_REINFORCE_DAMAGE   := 0.15   # …−15 % de daño por nivel…
 const MICELIO_REINFORCE_SECS     := 15.0   # …cuesta 15 s de ingreso…
 const MICELIO_REINFORCE_GROWTH   := 1.6    # …× 1.6 por nivel
-const MICELIO_COLLAPSE_FULL      := 4      # nodos LLENOS rotos → la red colapsa (cierra como ESPORULACIÓN)
+const MICELIO_COLLAPSE_FULL      := 4      # FRACASO: nodos LLENOS rotos → la red colapsa → MICELIO FRAGMENTADO
+const MICELIO_SCAR_CHANCE        := 0.75   # legado Cicatriz Micelial: probabilidad de ruptura × 0.75
 
 # ── TRANSMUTACIÓN · HUÉSPED SOBERANO (revierte PARASITISMO) — HuespedSoberanoLogic ──
 # Verbo: DOMESTICAR. Spec §10.4 (2026-10-13); a calibrar con el simulador.
@@ -309,6 +314,7 @@ const HUESPED_CRAVING_INTERVALS  := [40.0, 30.0, 50.0, 35.0, 45.0]  # antojos (s
 const HUESPED_CRAVING_WARN       := 4.0    # s de aviso antes del antojo
 const HUESPED_CRAVING_HUNGER     := 15.0   # hambre que suma el antojo
 const HUESPED_PACT_CORROSION     := 0.5    # legado Pacto Soberano: corrosión de Parasitismo × 0.5
+const HUESPED_STARVE_TIME        := 15.0   # FRACASO: s con el hambre en 100 → te come → cierra como PARASITISMO
 
 # ── BIOLOGÍA · MUTUALISMO (tier 2 de SIMBIOSIS) — MutualismoLogic ──
 # Verbo: NEGOCIAR. Spec docs/design/biologia_mutualismo_endosimbiosis.md §4. Todo en SEGUNDOS DE
@@ -533,6 +539,7 @@ const PL_REWARDS: Dictionary = {
 	"CORO SIMBIÓTICO":           9,
 	"MICELIO OMNISCIENTE":       9,
 	"HUÉSPED SOBERANO":          9,
+	"MICELIO FRAGMENTADO":       3,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 }
@@ -573,6 +580,7 @@ const NG_CAPS: Dictionary = {
 	"CORO SIMBIÓTICO":           8,
 	"MICELIO OMNISCIENTE":       8,
 	"HUÉSPED SOBERANO":          8,
+	"MICELIO FRAGMENTADO":       3,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 }

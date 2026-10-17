@@ -126,6 +126,15 @@ static func process(dt: float) -> void:
 	var lvl := level()
 	if lvl > lvl_before:
 		UIManager.show_toast(TranslationServer.translate("TOAST_HUESPED_LEVEL") % lvl)
+	# FRACASO: con el hambre al tope el parásito deja de morder y te come → vuelve a PARASITISMO.
+	if EvoManager.huesped_hunger >= 100.0:
+		if EvoManager.huesped_starve_time == 0.0:
+			UIManager.show_toast(TranslationServer.translate("TOAST_HUESPED_STARVE") % Balance.HUESPED_STARVE_TIME)
+		EvoManager.huesped_starve_time += dt
+		if EvoManager.huesped_starve_time >= Balance.HUESPED_STARVE_TIME:
+			RunManager.close_run("PARASITISMO", TranslationServer.translate("CLOSE_HUESPED_FAIL"))
+	else:
+		EvoManager.huesped_starve_time = 0.0
 
 
 static func _gift() -> void:

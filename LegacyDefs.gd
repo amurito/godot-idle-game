@@ -543,6 +543,15 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "MICELIO OMNISCIENTE"},
 		"effect": {"type": "nodo_latente_active", "value": 1.0},
 	},
+	# Fracaso de Micelio Omnisciente: la red rota aprende a resistir (sólo rinde en Micelio).
+	"legado_cicatriz_micelial": {
+		"name": "Legado: Cicatriz Micelial",
+		"flavor": "La red se rompió una vez. Ahora cicatriza antes de romperse.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "MICELIO FRAGMENTADO"},
+		"unlock": {"type": "route_closed", "route": "MICELIO FRAGMENTADO"},
+		"effect": {"type": "micelio_rupture_scar", "value": 0.75},
+	},
 	# TRANSMUTACIÓN de Parasitismo (A → A+). Llave sin toggle: con Parasitismo activo aparece [T].
 	"transmut_huesped": {
 		"name": "Transmutación: Huésped Soberano",

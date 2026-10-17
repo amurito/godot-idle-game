@@ -218,6 +218,12 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_MICELIO_REWARD"))
 		LogManager.add(tr("LOG_MICELIO_REWARD") % tr("UPG_" + node_id.to_upper()))
 
+	# MICELIO FRAGMENTADO (fracaso de Micelio Omnisciente): legado Cicatriz Micelial (rupturas ×0.75).
+	if route == "MICELIO FRAGMENTADO":
+		if not LegacyManager.get_buff_value("legado_cicatriz_micelial"):
+			LegacyManager.grant_buff("legado_cicatriz_micelial")
+			UIManager.show_toast(tr("TOAST_MICELIO_SCAR"))
+
 	# HUÉSPED SOBERANO: legado Pacto Soberano (la corrosión de Parasitismo avanza a la mitad).
 	if route == "HUÉSPED SOBERANO":
 		if not LegacyManager.get_buff_value("legado_pacto_soberano"):
@@ -1024,6 +1030,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.0f", "log": "coherencia {v}s / 15 = {b} (cap {c})"},
 		"MUTUALISMO": {"value": func() -> Variant: return EvoManager.mutualismo_trust, "op": "div", "k": 2.0,
 			"vfmt": "%d", "log": "confianza {v} / 2 = {b} (cap {c})"},
+		"MICELIO FRAGMENTADO": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 60.0,
+			"vfmt": "%.0f", "log": "red conectada pico {v} / 60 = {b} (cap {c})"},
 		"HUÉSPED SOBERANO": {"value": func() -> Variant: return EvoManager.huesped_trust, "op": "div", "k": 75.0,
 			"vfmt": "%.0f", "log": "confianza {v} / 75 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
