@@ -842,54 +842,29 @@ func refresh_legacy_store() -> void:
 	for child in scene.legacy_list.get_children():
 		child.queue_free()
 
-	var col_groups: Array = [
-		["economia"],
-		["estructura"],
-		["biologia", "conocimiento"],
-		["ruta"],
-		["transmutaciones", "ng_plus", "secreto"],
-	]
-	var cat_colors: Dictionary = {
-		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
-		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
-		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
-		"transmutaciones": Color(0.2, 0.9, 0.75), "secreto": Color(0.5, 0.5, 0.5),
-	}
-
+	# Columnas parejas según el ancho disponible (LegacyBankLayout, compartido con MainMenu).
+	var avail: float = (scene.legacy_list.get_parent() as Control).size.x
+	if avail < 100.0:
+		avail = scene.get_viewport_rect().size.x * 0.8
+	var n_cols: int = LegacyBankLayout.column_count(avail)
+	var col_w: float = avail / float(n_cols)
 	var h_cols: HBoxContainer = HBoxContainer.new()
 	h_cols.add_theme_constant_override("separation", 10)
 	h_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scene.legacy_list.add_child(h_cols)
 
-	for group in col_groups:
+	for segs in LegacyBankLayout.distribute(n_cols, col_w):
 		var col: VBoxContainer = VBoxContainer.new()
-		col.custom_minimum_size.x = 300
+		col.custom_minimum_size.x = LegacyBankLayout.MIN_COL_W - 10.0
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 3)
-		var col_has_items: bool = false
-		for cat in group:
-			var cat_ids: Array = []
-			for id in LegacyManager.LEGACY_DEFS:
-				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
-				if def.get("cat", "") == cat and LegacyManager.is_revealed(id):
-					cat_ids.append(id)
-			if cat_ids.is_empty():
-				continue
-			if col_has_items:
+		col.add_theme_constant_override("separation", 2)
+		h_cols.add_child(col)
+		for seg in segs:
+			if col.get_child_count() > 0:
 				col.add_child(HSeparator.new())
-			var hdr: Label = Label.new()
-			hdr.text = "-- %s --" % tr("LEGACY_CAT_" + cat.to_upper())
-			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-			hdr.modulate = cat_colors.get(cat, Color.WHITE)
-			hdr.custom_minimum_size.y = 22
-			col.add_child(hdr)
-			for id in cat_ids:
+			col.add_child(LegacyBankLayout.header(seg.cat, seg.cont, AccessibilityManager.fs(11)))
+			for id in seg.ids:
 				col.add_child(_build_legacy_item(id))
-			col_has_items = true
-		if col_has_items:
-			h_cols.add_child(col)
-		else:
-			col.queue_free()
 
 func _build_legacy_item(id: String) -> Control:
 	var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
@@ -924,6 +899,11 @@ func _build_legacy_item(id: String) -> Control:
 
 	v.add_child(l_title)
 	v.add_child(l_desc)
+	# Fila compacta: los botones van a la derecha del texto (antes, debajo).
+	var right: VBoxContainer = VBoxContainer.new()
+	right.add_theme_constant_override("separation", 2)
+	var text_col: VBoxContainer = v
+	v = right
 
 	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno"
 	if lvl > 0 and is_key:
@@ -984,8 +964,11 @@ func _build_legacy_item(id: String) -> Control:
 		)
 		v.add_child(btn)
 
-	v.add_child(HSeparator.new())
-	return v
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.add_child(LegacyBankLayout.compact_row(text_col, right))
+	box.add_child(HSeparator.new())
+	return box
 
 func update_legacy_indicators() -> void:
 	var ind := scene.get_node_or_null("HeaderBar/HeaderContent/LegacyIndicators")

@@ -722,122 +722,30 @@ func _update_legacy_view():
 	call_deferred("_populate_legacy_items")
 
 func _populate_legacy_items():
-	var col_groups: Array = [
-		["economia"],
-		["estructura"],
-		["biologia", "conocimiento"],
-		["ruta"],
-		["transmutaciones", "ng_plus", "secreto"],
-	]
-	var cat_colors: Dictionary = {
-		"economia": Color(0.9, 0.85, 0.4), "estructura": Color(0.5, 0.8, 1.0),
-		"biologia": Color(0.4, 0.9, 0.5),  "conocimiento": Color(0.8, 0.6, 1.0),
-		"ruta": Color(1.0, 0.65, 0.2),     "ng_plus": Color(0.9, 0.3, 0.9),
-		"transmutaciones": Color(0.2, 0.9, 0.75), "secreto": Color(0.5, 0.5, 0.5),
-	}
-
+	# Columnas parejas según el ancho disponible (LegacyBankLayout); ítems compactos con el botón
+	# a la derecha del título para que el banco entre sin scroll eterno.
+	var avail: float = (legacy_list.get_parent() as Control).size.x
+	if avail < 100.0:
+		avail = get_viewport_rect().size.x * 0.9
+	var n_cols: int = LegacyBankLayout.column_count(avail)
+	var col_w: float = avail / float(n_cols)
 	var h_cols: HBoxContainer = HBoxContainer.new()
 	h_cols.add_theme_constant_override("separation", 10)
 	h_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	legacy_list.add_child(h_cols)
 
-	for group in col_groups:
+	for segs in LegacyBankLayout.distribute(n_cols, col_w):
 		var col: VBoxContainer = VBoxContainer.new()
-		col.custom_minimum_size.x = 300
+		col.custom_minimum_size.x = LegacyBankLayout.MIN_COL_W - 10.0
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 3)
-		var col_has_items: bool = false
-
-		for cat in group:
-			var cat_ids: Array = []
-			for id in LegacyManager.LEGACY_DEFS:
-				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
-				if def.get("cat", "") == cat and LegacyManager.is_revealed(id):
-					cat_ids.append(id)
-			if cat_ids.is_empty():
-				continue
-			if col_has_items:
+		col.add_theme_constant_override("separation", 2)
+		h_cols.add_child(col)
+		for seg in segs:
+			if col.get_child_count() > 0:
 				col.add_child(HSeparator.new())
-			var hdr: Label = Label.new()
-			hdr.text = "-- %s --" % tr("LEGACY_CAT_" + cat.to_upper())
-			hdr.add_theme_font_size_override("font_size", AccessibilityManager.fs(12))
-			hdr.modulate = cat_colors.get(cat, Color.WHITE)
-			hdr.custom_minimum_size.y = 26
-			col.add_child(hdr)
-
-			for id in cat_ids:
-				var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
-				var lvl: int = LegacyManager.get_buff_level(id)
-				var max_lvl: int = int(def.get("max_level", 1))
-				var is_maxed: bool = lvl >= max_lvl
-				var unlockable: bool = LegacyManager.is_unlockable(id)
-				var cost: int = LegacyManager.get_current_cost(id)
-				var affordable: bool = LegacyManager.legacy_points >= cost
-				var is_new: bool = lvl > 0 and not (LegacyManager.buffs.get(id, {}) as Dictionary).get("seen", true)
-
-				var container: VBoxContainer = VBoxContainer.new()
-				container.add_theme_constant_override("separation", 1)
-
-				var name_str: String = tr("LEGACY_" + id.to_upper() + "_NAME")
-				if max_lvl > 1:
-					name_str += "  [%d/%d]" % [lvl, max_lvl]
-				if is_new:
-					name_str += "  " + tr("ACH_BADGE_NEW")
-
-				var name_lbl: Label = Label.new()
-				name_lbl.text = EmojiToRichText.strip(name_str)
-				name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
-				name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				if is_maxed:
-					name_lbl.modulate = Color(0.3, 1.0, 0.5)
-				elif lvl > 0:
-					name_lbl.modulate = Color(0.6, 1.0, 0.7)
-				elif unlockable and affordable:
-					name_lbl.modulate = Color(1.0, 1.0, 0.6)
-				elif not unlockable:
-					name_lbl.modulate = Color(0.45, 0.45, 0.45)
-				else:
-					name_lbl.modulate = Color(0.65, 0.65, 0.65)
-
-				var flavor_lbl: Label = Label.new()
-				flavor_lbl.text = tr("LEGACY_" + id.to_upper() + "_FLAVOR")
-				flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				flavor_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
-				flavor_lbl.modulate = Color(0.55, 0.55, 0.55)
-
-				container.add_child(name_lbl)
-				container.add_child(flavor_lbl)
-
-				var buy_btn: Button = Button.new()
-				buy_btn.custom_minimum_size.y = 22
-				if is_maxed:
-					buy_btn.text = tr("BANK_BTN_MAX")
-					buy_btn.disabled = true
-				elif not unlockable:
-					buy_btn.text = EmojiToRichText.strip(LegacyManager.describe_unlock(id))
-					buy_btn.disabled = true
-					buy_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				elif lvl == 0:
-					buy_btn.text = tr("BANK_BTN_ACQUIRE") if def.get("cost", 0) == 0 else "%d PL" % cost
-					buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)
-				else:
-					buy_btn.text = tr("BANK_BTN_LEVEL") % [lvl + 1, cost]
-					buy_btn.disabled = not affordable
-				buy_btn.pressed.connect(_on_buy_legacy.bind(id))
-
-				container.add_child(buy_btn)
-				container.add_child(HSeparator.new())
-				col.add_child(container)
-
-				if is_new:
-					LegacyManager.mark_buff_seen(id)
-
-			col_has_items = true
-
-		if col_has_items:
-			h_cols.add_child(col)
-		else:
-			col.queue_free()
+			col.add_child(LegacyBankLayout.header(seg.cat, seg.cont, AccessibilityManager.fs(12)))
+			for id in seg.ids:
+				col.add_child(_build_bank_item(id))
 
 	var wip_lbl := Label.new()
 	wip_lbl.text = EmojiToRichText.strip(tr("BANK_WIP_NOTICE"))
@@ -845,6 +753,80 @@ func _populate_legacy_items():
 	wip_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(10))
 	wip_lbl.modulate = Color(0.5, 0.5, 0.6)
 	legacy_list.add_child(wip_lbl)
+
+func _build_bank_item(id: String) -> Control:
+	var def: Dictionary = LegacyManager.LEGACY_DEFS[id]
+	var lvl: int = LegacyManager.get_buff_level(id)
+	var max_lvl: int = int(def.get("max_level", 1))
+	var is_maxed: bool = lvl >= max_lvl
+	var unlockable: bool = LegacyManager.is_unlockable(id)
+	var cost: int = LegacyManager.get_current_cost(id)
+	var affordable: bool = LegacyManager.legacy_points >= cost
+	var is_new: bool = lvl > 0 and not (LegacyManager.buffs.get(id, {}) as Dictionary).get("seen", true)
+
+	var left: VBoxContainer = VBoxContainer.new()
+	left.add_theme_constant_override("separation", 0)
+
+	var name_str: String = tr("LEGACY_" + id.to_upper() + "_NAME")
+	if max_lvl > 1:
+		name_str += "  [%d/%d]" % [lvl, max_lvl]
+	if is_new:
+		name_str += "  " + tr("ACH_BADGE_NEW")
+	var name_lbl: Label = Label.new()
+	name_lbl.text = EmojiToRichText.strip(name_str)
+	name_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if is_maxed:
+		name_lbl.modulate = Color(0.3, 1.0, 0.5)
+	elif lvl > 0:
+		name_lbl.modulate = Color(0.6, 1.0, 0.7)
+	elif unlockable and affordable:
+		name_lbl.modulate = Color(1.0, 1.0, 0.6)
+	elif not unlockable:
+		name_lbl.modulate = Color(0.45, 0.45, 0.45)
+	else:
+		name_lbl.modulate = Color(0.65, 0.65, 0.65)
+	left.add_child(name_lbl)
+
+	var flavor_lbl: Label = Label.new()
+	flavor_lbl.text = tr("LEGACY_" + id.to_upper() + "_FLAVOR")
+	flavor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	flavor_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
+	flavor_lbl.modulate = Color(0.55, 0.55, 0.55)
+	left.add_child(flavor_lbl)
+
+	var buy_btn: Button = Button.new()
+	buy_btn.custom_minimum_size.y = 24
+	buy_btn.add_theme_font_size_override("font_size", AccessibilityManager.fs(11))
+	if is_maxed:
+		buy_btn.text = tr("BANK_BTN_MAX")
+		buy_btn.disabled = true
+	elif not unlockable:
+		# El requisito va como línea chica bajo la descripción; el botón sólo dice BLOQUEADO.
+		var req_lbl: Label = Label.new()
+		req_lbl.text = EmojiToRichText.strip(LegacyManager.describe_unlock(id))
+		req_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		req_lbl.add_theme_font_size_override("font_size", AccessibilityManager.fs(9))
+		req_lbl.modulate = Color(0.75, 0.55, 0.35)
+		left.add_child(req_lbl)
+		buy_btn.text = tr("GAME_BTN_LOCKED")
+		buy_btn.disabled = true
+	elif lvl == 0:
+		buy_btn.text = tr("BANK_BTN_ACQUIRE") if def.get("cost", 0) == 0 else "%d PL" % cost
+		buy_btn.disabled = (def.get("cost", 0) > 0 and not affordable)
+	else:
+		buy_btn.text = tr("BANK_BTN_LEVEL") % [lvl + 1, cost]
+		buy_btn.disabled = not affordable
+	buy_btn.pressed.connect(_on_buy_legacy.bind(id))
+
+	if is_new:
+		LegacyManager.mark_buff_seen(id)
+
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.add_child(LegacyBankLayout.compact_row(left, buy_btn))
+	box.add_child(HSeparator.new())
+	return box
 
 func _on_buy_legacy(id: String):
 	if LegacyManager.purchase_legacy(id):
