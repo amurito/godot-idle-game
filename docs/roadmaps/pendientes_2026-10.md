@@ -54,33 +54,65 @@ El Jardín Primigenio (subjuego) → Retorno al Origen (final).
 
 ### B1. Llaves de involución escalonadas por trascendencia
 Hoy **todas** las llaves (5 transmutaciones + Ayuno) se revelan en T ≥ 3, y se habilitan al cerrar la
-mutación base. Idea del autor: que cada trascendencia desbloquee caminos nuevos. Propuesta inicial:
+mutación base. **Decidido por el autor (2026-10-16)**: cada trascendencia abre una capa entera:
 
-| T | Se revela |
+| T | Se desbloquea |
 |---|---|
-| 1 | Fusión Catabólica (Hiper es la primera mutación que se aprende) |
-| 2 | Coro Simbiótico · Ayuno Primordial |
-| 3 | Caos Orquestado |
-| 4 | Micelio Omnisciente |
-| 5 | Huésped Soberano |
-| 6+ | Sombras nuevas, una por T |
+| 0 | Lo necesario para trascender: mutaciones base + sus ramas directas |
+| 1 | Post-trascendencia (lo que ya abre hoy: Panspermia, Mente Colmena…) + **Biología nueva** (Mutualismo → Holobionte, Endosimbiosis) |
+| 2 | Árbol oscuro: Depredador / Met. Oscuro y sus 5 sub-rutas (hoy Depredador sale con T > 1 o `last_run` Parasitismo) |
+| 3 | Las 5 transmutaciones (como hoy) |
+| 4 | Sombras, **Ayuno incluido** (sale de T3) |
+| 5 | Redenciones, **Remisión incluida** |
+| 6 | Fantasma / combos de 2 llaves |
 
-Hay que cruzarlo con lo que ya se desbloquea por T (Banco Cósmico en T1, Omega-Cero en T2, etc.) para que
-cada trascendencia traiga algo.
+A revisar al implementar: los `TRANSCENDENCE_MILESTONES` hoy sólo existen para T1–T3; Esclerocio pide T ≥ 1 y
+Omega-Cero T ≥ 2 (quedan dentro del árbol oscuro → pasan a T2); Hiper tarda 60 s en vez de 180 s con T > 2.
 
 ### B2. Rework visual del Banco Genético y del Banco Cósmico
-(Pedido del autor; falta definir qué molesta hoy: densidad, categorías, cómo se ven las llaves y los
-legados de transmutación, toggles.)
+Decidido por el autor (2026-10-16):
+- **Banco Genético**: se siente desordenado → ordenarlo **por familia del árbol** (Colapso, Oscuro, Biología,
+  Red, Orden, Transmutaciones, Sombras, Redenciones). **Implementar** los 3 legados de conocimiento que hoy no
+  hacen nada (ningún código los lee): `observatorio_genomico` (`unlock_hidden_achievements`),
+  `analisis_de_tension` (`show_epsilon_detail`), `predictor_estructural` (`warn_epsilon_threshold`).
+- **Banco Cósmico** (15 buffs en tiers 1–3, sin contenido nuevo hace mucho): las cuatro líneas — un tier por
+  cada T nueva, atajos de involución (p. ej. arrancar con una llave más avanzada), calidad de vida, y revisar
+  los 15 actuales.
 
 ---
 
 ## C. Visual
 
 ### C1. Paleta del núcleo / mutaciones
-Hoy varios colores se pisan (el autor lo marcó). Paso 1: sacar la tabla completa de colores de
-`UIManager.get_reactor_color()` (vivo + sellado de cada ruta) y medir distancias; paso 2: proponer una
-paleta por familia (Colapso, Oscuro, Biología, Red, Orden, Transmutaciones, Sombras, Post-trascendencia);
-paso 3: aplicarla también al árbol y al Codex.
+Hoy varios colores se pisan (el autor lo marcó). Paso 1 ✅: tabla de 40 colores de
+`UIManager.get_reactor_color()` / `_live_reactor_color()` y distancias ΔE (CIE76, Lab): **21 pares < 18**.
+Peores: Esclerocio ~ Colapso Sintético sellados (4.1), Depredador ~ Caos (6.6), Simbiosis ~ Homeostasis (10.5),
+Fractura ~ Fusión (11.8), Núcleo base ~ Huésped (13.9), racimo turquesa del Orden y racimo verde de la Red.
+
+Paso 2 (propuesta, **pendiente de aprobación**): cambian 19 colores y 21 quedan igual; todos los pares ≥ 20 salvo
+Depredador de Realidades ~ Autofagia sellados (17, ambos casi negros).
+
+| Ruta | Hoy | Propuesto | Por qué |
+|---|---|---|---|
+| Fractura Epistémica (destello) | `#ffd90d` | `#e6f4ff` blanco cristal | chocaba con Fusión (oro) |
+| Autofagia sellado | `#590014` | `#5c1408` vino-óxido | Depredador de Realidades / Caos sellados |
+| Esclerocio sellado | `#14002e` | `#3a2410` marrón (un esclerocio real es una masa marrón) | Colapso Sintético |
+| Omega-Cero | `#472e61` | `#a58ce0` lila pálido | Met. Oscuro sellado |
+| Colapso Sintético sellado | `#1a0d33` | `#003a30` verde petróleo | Esclerocio |
+| Remisión | `#14b87a` | `#fff1d6` marfil (familia Redención = luz) | Homeostasis |
+| Simbiosis | `#66e6b2` | `#ff8fd0` rosa orquídea (Biología = naranja→rosa) | Homeostasis |
+| Colonización | `#73ff0d` | `#b0ff1a` lima | Red Micelial |
+| Esporulación | `#b2ff66` | `#c8ffa0` verde pálido | Seta |
+| Seta formada | `#a6ff33` | `#e0b070` beige de sombrero | Colonización |
+| Núcleo de Conciencia | `#3380ff` | `#a8c4ff` celeste pálido | Núcleo base / Huésped |
+| Allostasis | `#33ffe0` | `#00a88a` turquesa profundo | Homeostasis / Homeorresis |
+| Homeorresis | `#8cffeb` | `#b5fff0` menta casi blanca | Allostasis |
+| Caos Orquestado (vivo / sellado) | `#ff1f61` / `#6b0d2e` | `#ff2bd0` / `#6b0a5a` fucsia | Depredador |
+| Coro sellado | `#73241c` | `#a8452e` | Autofagia sellado |
+| Micelio sellado | `#4c2175` | `#6a40c8` | Met. Oscuro (vivo y sellado) |
+| Huésped (vivo / sellado) | `#5999ff` / `#1a2e6b` | `#4a52ff` / `#1f3a8f` índigo | Núcleo base / Omega-Cero |
+
+Paso 3: aplicarla también al árbol, al botón [T] (`TRANSMUT_BTN_COLORS`) y al Codex.
 
 ### C2. Árbol de evoluciones (artifact) desactualizado
 Ej.: Colapso Controlado todavía dice «ε > 0.90 y Ω > 0.30» (corregido en el juego en `b151c82`).
