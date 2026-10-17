@@ -220,6 +220,22 @@ La ventana de ritmo queda entre ~25 y ~40 s por gen. Además, cada gen baja la a
 ATP, así que los últimos genes cuestan más y entran más lento: hay que meter **[F] Alimentar** en el momento justo.
 - **SELLAR ENDOSIMBIOSIS** (+8 PL): los 6 genes transferidos. Duración esperada **10–13 min**.
 
+### 6.4b Implementado (B3, 2026-10-17) · `EndosimbiosisLogic.gd`
+Cambios contra la propuesta, por calibración con bot:
+- **ATP en unidades fijas** (0.8/s a autonomía 100; genes desde 12 ATP × 1.35): no depende de la escala de la run.
+- **50 ATP al engullir** (lo que había robado el parásito): alcanza para 3 genes seguidos. Sin esto el ATP
+  marcaba solo el ritmo y apurarse no tenía riesgo (el rechazo nunca pasaba de 39).
+- **Rechazo +35 por gen, Genoma incluido**; si llega a 100 al transferir, expulsión en el acto. Autonomía +0.4/s.
+  Ritmo sano: ~35–50 s por gen.
+- **[W] Alimentar** (en vez de [F], patrón Q/W) con 10 s de enfriamiento: sin él se compraban los 6 genes en un minuto.
+- Genes en orden fijo; [Q] transfiere el siguiente.
+
+| Perfil | Resultado |
+|---|---|
+| `t2_endo_paced` (transfiere con rechazo ≤ 35, alimenta si falta ATP y autonomía ≥ 75) | ENDOSIMBIOSIS a 628 s (engulle a 328: 5 min) |
+| `t2_endo_lazy` (dosifica igual, nunca alimenta) | ENDOSIMBIOSIS a 650 s: [W] ayuda, no es obligatorio |
+| `t2_endo_rush` (transfiere apenas alcanza) | 3 genes seguidos → expulsado → PARASITISMO a 329 s |
+
 ### 6.5 Por qué no es Coro
 Coro es reflejo (±0.20 s sobre un metrónomo). Acá el ritmo es de decisiones cada medio minuto, con dos
 riesgos opuestos a la vista y una segunda moneda que administrar.

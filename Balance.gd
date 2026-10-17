@@ -343,6 +343,31 @@ const HOLO_ALGA_OMEGA            := 0.10   #   da Ω +0.10
 const HOLO_LEVADURA_BUY_EVERY    := 60.0   # Levadura: una compra cada 60 s
 const HOLO_LEVADURA_DISCOUNT     := 0.90   #   da mejoras −10 %
 
+# ── BIOLOGÍA · ENDOSIMBIOSIS (cruce Parasitismo × Simbiosis) — EndosimbiosisLogic ──
+# Verbo: DOSIFICAR. Spec §6. ATP en unidades fijas (no depende de la escala de la run). A calibrar.
+const ENDOSIMBIOSIS_MIN_T        := 2      # árbol de T2 (decisión del autor 2026-10-16)
+const ENDO_WINDOW_START          := 30.0   # s de Simbiosis elegible hasta que aparece ENGULLIR…
+const ENDO_WINDOW_LEN            := 20.0   # …y cuánto dura el botón
+const ENDO_ATP_RATE              := 0.8    # ATP/s a autonomía 100 (escala con la autonomía)
+const ENDO_ATP_START             := 50.0   # ATP al engullir (lo que había robado el parásito): alcanza para 3
+                                           # genes seguidos → la tentación de apurarse (sin esto el ATP marcaba solo el ritmo)
+const ENDO_GENE_COST             := 12.0   # ATP del 1er gen…
+const ENDO_GENE_COST_GROWTH      := 1.35   # …× 1.35 por gen
+const ENDO_AUTONOMY_START        := 60.0
+const ENDO_AUTONOMY_REGEN        := 0.4    # autonomía /s (a 100 se escapa): sin genes, ~50 s por gen como máximo
+const ENDO_TRANSFER_AUTONOMY     := 20.0   # autonomía que quita cada gen
+const ENDO_TRANSFER_REJECTION    := 35.0   # rechazo que suma cada gen, Genoma incluido (a 100 lo expulsa):
+                                           # tres genes seguidos = expulsión; sostenido, ~35 s por gen
+const ENDO_REJECTION_DECAY       := 1.0    # rechazo /s que se disipa
+const ENDO_DRAIN                 := 0.10   # sin Membrana drena el 10 % del ingreso
+const ENDO_FEED_SECS             := 10.0   # [W] Alimentar: hasta 10 s de ingreso…
+const ENDO_FEED_ATP              := 8.0    # …→ 8 ATP (en proporción a lo pagado)
+const ENDO_FEED_COOLDOWN         := 10.0   # s entre alimentaciones (sin esto se compraban todos los genes en 1 min)
+const ENDO_RESPIRACION_MULT      := 1.5    # gen 1: pasivo ×1.5
+const ENDO_REPLICACION_MULT      := 1.5    # gen 3: click ×1.5
+const ENDO_SENALIZACION_OMEGA    := 0.10   # gen 4: Ω +0.10
+const ENDO_METABOLISMO_DISCOUNT  := 0.85   # gen 5: mejoras −15 %
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -466,6 +491,7 @@ const PL_REWARDS: Dictionary = {
 	"SIMBIOSIS":                 4,
 	"MUTUALISMO":                6,
 	"HOLOBIONTE":                8,
+	"ENDOSIMBIOSIS":             8,
 	"ESPORULACION":              5,
 	"ESPORULACIÓN":              5,
 	"ESPORULACION TOTAL":        5,
@@ -504,6 +530,7 @@ const NG_CAPS: Dictionary = {
 	"SIMBIOSIS":                 6,
 	"MUTUALISMO":                6,
 	"HOLOBIONTE":                8,
+	"ENDOSIMBIOSIS":             8,
 	"HIPERASIMILACION":          5,
 	"HIPERASIMILACIÓN":          5,
 	"PARASITISMO":               4,

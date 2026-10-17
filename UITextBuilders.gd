@@ -1436,6 +1436,34 @@ static func build_mutualismo_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + T.call("MUTUALISMO_PANEL_TIP") + "[/color]"
 	return t
 
+static func build_endosimbiosis_panel_text() -> String:
+	var T := func(k: String) -> String: return TranslationServer.translate(k)
+	var t: String = "[color=#ff9a5c]" + T.call("ENDO_PANEL_TITLE") + "[/color]\n"
+	if EndosimbiosisLogic.is_organelle():
+		t += "[color=#ff9a5c]" + T.call("ENDO_PANEL_ORGANELLE") + "[/color]\n"
+		return t
+	var rej: float = EvoManager.endo_rejection
+	var aut: float = EvoManager.endo_autonomy
+	var rej_col: String = "green" if rej < 50.0 else ("#ffcc66" if rej < 75.0 else "#ff5c6a")
+	var aut_col: String = "green" if aut < 70.0 else ("#ffcc66" if aut < 85.0 else "#ff5c6a")
+	t += T.call("ENDO_PANEL_REJECTION") % ["[color=%s]%.0f[/color]" % [rej_col, rej], Balance.ENDO_REJECTION_DECAY] + "\n"
+	t += T.call("ENDO_PANEL_AUTONOMY") % ["[color=%s]%.0f[/color]" % [aut_col, aut], Balance.ENDO_AUTONOMY_REGEN] + "\n"
+	t += T.call("ENDO_PANEL_ATP") % [EvoManager.endo_atp, EndosimbiosisLogic.gene_cost(), EndosimbiosisLogic.atp_rate()] + "\n"
+	t += "\n" + T.call("ENDO_PANEL_GENES") % [EvoManager.endo_genes, EndosimbiosisLogic.GENES.size()] + "\n"
+	for i in EndosimbiosisLogic.GENES.size():
+		var id: String = EndosimbiosisLogic.GENES[i]
+		var mark: String = "●" if i < EvoManager.endo_genes else ("▶" if i == EvoManager.endo_genes else "·")
+		t += "%s %s — %s\n" % [mark, EndosimbiosisLogic.gene_name(id), T.call("ENDO_GENE_" + id.to_upper() + "_FX")]
+	if not EndosimbiosisLogic.has_gene("membrana"):
+		t += "[color=#ff8866]" + T.call("ENDO_PANEL_DRAIN") % (Balance.ENDO_DRAIN * 100.0) + "[/color]\n"
+	t += "\n[color=#aaaaaa]" + T.call("ENDO_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_endosimbiosis_closed_text() -> String:
+	var t := "[color=#ff9a5c]" + TranslationServer.translate("ENDO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("ENDO_CLOSED_LORE") + "[/i]"
+	return t
+
 static func build_holobionte_panel_text() -> String:
 	var T := func(k: String) -> String: return TranslationServer.translate(k)
 	var t: String = "[color=#e8578f]" + T.call("HOLO_PANEL_TITLE") + "[/color]\n"

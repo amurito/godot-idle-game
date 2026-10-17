@@ -86,6 +86,10 @@ extends RefCounted
 ##       policy: "fair" (acepta lo justo, rechaza la Tentación y cuida |R|) · "naive" (acepta todo menos
 ##               la Tentación, sin mirar R) · "greedy" (acepta todo, Tentación incluida)
 ##       seal: bool     sella apenas puede · react: s que tarda en decidir (default 2)
+##   endosimbiosis: {engulf, seal, max_rej, feed, feed_aut}  ENDOSIMBIOSIS:
+##       engulf: aprieta ENGULLIR · seal: sella con el orgánulo
+##       max_rej: transfiere sólo si el rechazo quedaría ≤ esto (default: sin mirar)
+##       feed: "never" · "smart" (alimenta si falta ATP y la autonomía ≥ feed_aut, default 75) · "always"
 ##   holobionte: {enter, seal, care, cps_hi, cps_lo, eps_hi}  HOLOBIONTE (tier 3, requiere mutualismo):
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       care: atiende las necesidades (compra pasivo si la Raíz lo pide; clickea a cps_hi con
@@ -438,6 +442,9 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("huesped_seal", false) and HuespedSoberanoLogic.seal_ready():
 			UIManager._ng_buttons._on_huesped_seal_pressed()
 			_log("seal:huesped")
+	var ecfg: Dictionary = cfg.get("endosimbiosis", {})
+	if not ecfg.is_empty():
+		_endosimbiosis(ecfg)
 	var hcfg: Dictionary = cfg.get("holobionte", {})
 	if hcfg.get("enter", false) and HolobionteLogic.can_enter():
 		UIManager._ng_buttons._on_holo_enter_pressed()
@@ -627,3 +634,27 @@ func _mutualismo(m: Dictionary) -> void:
 	if m.get("seal", false) and MutualismoLogic.seal_ready():
 		UIManager._ng_buttons._on_mutualismo_seal_pressed()
 		_log("seal:mutualismo")
+
+
+## ENDOSIMBIOSIS: engulle, transfiere genes respetando el techo de rechazo y alimenta según la política.
+func _endosimbiosis(e: Dictionary) -> void:
+	if e.get("engulf", false) and EndosimbiosisLogic.can_engulf():
+		UIManager._ng_buttons._on_endo_engulf_pressed()
+		_log("endo:engulf")
+	if not EndosimbiosisLogic.is_active():
+		return
+	if e.get("seal", false) and EndosimbiosisLogic.seal_ready():
+		UIManager._ng_buttons._on_endo_seal_pressed()
+		_log("seal:endosimbiosis")
+		return
+	var max_rej: float = float(e.get("max_rej", 1.0e9))
+	if EndosimbiosisLogic.can_transfer() and EvoManager.endo_rejection + Balance.ENDO_TRANSFER_REJECTION <= max_rej:
+		EndosimbiosisLogic.transfer()
+		_after_key("key:Q endo:gen%d rej=%.0f aut=%.0f" % [EvoManager.endo_genes, EvoManager.endo_rejection, EvoManager.endo_autonomy])
+		return
+	var feed: String = str(e.get("feed", "smart"))
+	var short: bool = EvoManager.endo_atp < EndosimbiosisLogic.gene_cost()
+	var want_feed: bool = feed == "always" or (feed == "smart" and short and EvoManager.endo_autonomy >= float(e.get("feed_aut", 75.0)))
+	if want_feed and EndosimbiosisLogic.can_feed() and short:
+		EndosimbiosisLogic.feed()
+		_after_key("key:W endo:feed atp=%.1f aut=%.0f" % [EvoManager.endo_atp, EvoManager.endo_autonomy])

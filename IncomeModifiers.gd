@@ -16,7 +16,7 @@ class_name IncomeModifiers
 
 const CLICK_ORDER := [
 	"sincronia_total", "symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica",
-	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo", "mutualismo", "holo_bacteria",
+	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo", "mutualismo", "holo_bacteria", "endo_replicacion",
 	"homeostasis_banda", "met_oscuro", "necrosis", "apoptosis_heredada", "plasticidad_terminal",
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
@@ -25,7 +25,7 @@ const CLICK_ORDER := [
 
 const PASSIVE_ORDER := [
 	"symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica", "caos_fuel", "caos_burst",
-	"coro_rhythm", "coro_echo", "mutualismo", "holo_raiz",
+	"coro_rhythm", "coro_echo", "mutualismo", "holo_raiz", "endo_respiracion",
 	"ayuno_primordial",
 	"primicia_del_vacio", "homeostasis_banda", "parasitism_growth", "parasitism_corrosion",
 	"met_oscuro", "semilla_cosmica", "semilla_cosmica_oscura", "mente_colmena",
@@ -131,6 +131,9 @@ static func _build() -> Dictionary:
 	# HOLOBIONTE: la Bacteria potencia el click y la Raíz el pasivo, mientras viven.
 	d["holo_bacteria"] = _row("Holobionte: Bacteria", "route", func() -> float: return HolobionteLogic.click_mult(), none)
 	d["holo_raiz"] = _row("Holobionte: Raíz", "route", none, func() -> float: return HolobionteLogic.passive_mult())
+	# ENDOSIMBIOSIS: genes transferidos del endosimbionte.
+	d["endo_replicacion"] = _row("Endosimbiosis: Replicación", "route", func() -> float: return EndosimbiosisLogic.click_mult(), none)
+	d["endo_respiracion"] = _row("Endosimbiosis: Respiración", "route", none, func() -> float: return EndosimbiosisLogic.passive_mult())
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

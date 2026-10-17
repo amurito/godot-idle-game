@@ -185,6 +185,17 @@ static func _define() -> Array:
 			_f("holo_coherence_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("holo_deaths", EvoManager, {"default": 0, "load_int": true}),
 			_f("holo_all90", EvoManager, {"default": false}),
+			# Endosimbiosis (cruce Parasitismo × Simbiosis)
+			_f("endosimbiosis_active", EvoManager, {"default": false}),
+			_f("endo_window_t", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_atp", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_autonomy", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_rejection", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_genes", EvoManager, {"default": 0, "load_int": true}),
+			_f("endo_engulf_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_peak_rejection", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("endo_feeds", EvoManager, {"default": 0, "load_int": true}),
+			_f("endo_feed_cd", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			# Huésped Soberano (transmutación de Parasitismo)
 			_f("mutation_huesped_soberano", EvoManager, {"default": false}),
 			_f("huesped_hunger", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),

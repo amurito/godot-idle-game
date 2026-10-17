@@ -243,6 +243,18 @@ var holo_coherence_time: float = 0.0          # s seguidos con los 4 socios ≥ 
 var holo_deaths: int = 0                      # MYTHIC Nadie Muere: 0
 var holo_all90: bool = false                  # los 4 socios ≥ 90 a la vez (logro Todos a Bordo)
 
+# === ENDOSIMBIOSIS (cruce Parasitismo × Simbiosis — EndosimbiosisLogic) ===
+var endosimbiosis_active := false
+var endo_window_t: float = 0.0                # s de Simbiosis elegible (ventana del botón ENGULLIR)
+var endo_atp: float = 0.0
+var endo_autonomy: float = 0.0                # a 100 se escapa
+var endo_rejection: float = 0.0               # a 100 la célula lo expulsa
+var endo_genes: int = 0                       # genes transferidos (6 = orgánulo)
+var endo_engulf_time: float = 0.0             # run_time al engullir (logro Contrarreloj)
+var endo_peak_rejection: float = 0.0          # MYTHIC Huésped Perfecto: ≤ 50
+var endo_feeds: int = 0
+var endo_feed_cd: float = 0.0                 # enfriamiento de [W] Alimentar
+
 # === HUÉSPED SOBERANO (Transmutación de Parasitismo — HuespedSoberanoLogic) ===
 var mutation_huesped_soberano := false
 var huesped_hunger: float = 0.0
@@ -382,6 +394,7 @@ func tick_route_processes(dt: float) -> void:
 	HuespedSoberanoLogic.process(dt)  # se auto-gatea
 	MutualismoLogic.process(dt)  # se auto-gatea (tier 2 de Simbiosis)
 	HolobionteLogic.process(dt)  # se auto-gatea (tier 3 de Simbiosis)
+	EndosimbiosisLogic.process(dt)  # se auto-gatea (cruce Parasitismo × Simbiosis)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el

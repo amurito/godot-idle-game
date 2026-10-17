@@ -1012,6 +1012,15 @@ func _input(event):
 							EvoManager.autofagia_digest_burst()
 							UIManager.update_ng_plus_buttons()
 							get_viewport().set_input_as_handled()
+			elif EndosimbiosisLogic.is_active():
+				if kc == KEY_Q and EndosimbiosisLogic.can_transfer():
+					EndosimbiosisLogic.transfer()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif kc == KEY_W and EndosimbiosisLogic.can_feed():
+					EndosimbiosisLogic.feed()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif MutualismoLogic.is_active():
 				if kc == KEY_A and MutualismoLogic.can_accept():
 					MutualismoLogic.accept()

@@ -343,7 +343,7 @@ func update_runtime() -> void:
 	if control_omega_offset != 0.0:
 		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
 	# HOLOBIONTE: el Alga (fotobionte) estabiliza Ω mientras vive.
-	var holo_omega: float = HolobionteLogic.omega_bonus()
+	var holo_omega: float = HolobionteLogic.omega_bonus() + EndosimbiosisLogic.omega_bonus()  # + gen Señalización
 	if holo_omega != 0.0:
 		omega = minf(omega + holo_omega, 1.0)
 
@@ -397,7 +397,7 @@ func resolve_omega() -> void:
 	if control_omega_offset != 0.0:
 		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
 	# HOLOBIONTE: el Alga (fotobionte) estabiliza Ω mientras vive.
-	var holo_omega: float = HolobionteLogic.omega_bonus()
+	var holo_omega: float = HolobionteLogic.omega_bonus() + EndosimbiosisLogic.omega_bonus()  # + gen Señalización
 	if holo_omega != 0.0:
 		omega = minf(omega + holo_omega, 1.0)
 

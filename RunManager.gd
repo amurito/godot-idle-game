@@ -383,8 +383,11 @@ func check_symbiosis_final(_delta: float):
 	# de reversión [T] tenga apariciones pendientes (si no, Simbiosis podía cerrar antes del botón).
 	if TransmutationLogic.candidate() == "coro" and TransmutationLogic.appearances_left() > 0:
 		return
-	# MUTUALISMO: el pacto reemplaza los cierres de Simbiosis (se sella o se rompe por la reciprocidad).
-	if EvoManager.mutualismo_active:
+	# MUTUALISMO / ENDOSIMBIOSIS reemplazan los cierres de Simbiosis (tienen sello y rupturas propias).
+	if EvoManager.mutualismo_active or EvoManager.endosimbiosis_active:
+		return
+	# Con la ventana de ENGULLIR por delante, Simbiosis espera la decisión (como con el botón [T]).
+	if EndosimbiosisLogic.eligible() and EvoManager.endo_window_t < Balance.ENDO_WINDOW_START + Balance.ENDO_WINDOW_LEN:
 		return
 
 	var stable_band: bool = (
@@ -859,6 +862,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
 	if EvoManager.mutation_allostasis:             return "ALLOSTASIS"
 	if EvoManager.mutation_homeostasis:            return "HOMEOSTASIS"
+	if EvoManager.endosimbiosis_active:            return "ENDOSIMBIOSIS"
 	if EvoManager.holobionte_active:               return "HOLOBIONTE"
 	if EvoManager.mutualismo_active:               return "MUTUALISMO"
 	if EvoManager.mutation_symbiosis:              return "SIMBIOSIS"
@@ -1014,6 +1018,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "pico de combo {v} / 8 = {b} (cap {c})"},
 		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
+		"ENDOSIMBIOSIS": {"value": func() -> Variant: return 100.0 - EvoManager.endo_peak_rejection, "op": "div", "k": 12.5,
+			"vfmt": "%.0f", "log": "100 − rechazo pico = {v} / 12.5 = {b} (cap {c})"},
 		"HOLOBIONTE": {"value": func() -> Variant: return EvoManager.holo_coherence_time, "op": "div", "k": 15.0,
 			"vfmt": "%.0f", "log": "coherencia {v}s / 15 = {b} (cap {c})"},
 		"MUTUALISMO": {"value": func() -> Variant: return EvoManager.mutualismo_trust, "op": "div", "k": 2.0,

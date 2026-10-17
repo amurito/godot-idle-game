@@ -527,6 +527,30 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "transcendence_count", "min": 1},
 		"see_also": ["simbiosis", "holobionte"],
 	},
+	"endosimbiosis": {
+		"cat": "mutaciones",
+		"name_es": "Endosimbiosis", "name_en": "Endosymbiosis",
+		"body_es": (
+			"Cruce de [b]Parasitismo[/b] y [b]Simbiosis[/b] (desde la 2ª trascendencia). Hace dos mil millones de años una célula se tragó una bacteria y no la pudo digerir: hoy se llama mitocondria.\n\n"
+			+ "Si la run anterior cerró en [b]Parasitismo[/b] (o Huésped Soberano), a los 30 s de entrar a Simbiosis el parásito vuelve y aparece [b]ENGULLIR[/b] durante 20 s. Excluye al pacto de Mutualismo.\n\n"
+			+ "Al engullirlo te quedás con 50 [b]ATP[/b] (lo que había robado) y el endosimbionte produce más (cuanto más autónomo, más) y, hasta que le saques la Membrana, drena el 10 % del ingreso. Con ATP, [b][Q] transferís[/b] sus 6 genes al núcleo, en orden:\n"
+			+ "Respiración (pasivo ×1.5) · Membrana (corta el drenaje) · Replicación (click ×1.5) · Señalización (Ω +0.10) · Metabolismo (mejoras −15 %) · Genoma (lo vuelve orgánulo).\n"
+			+ "[b][W] Alimentar[/b] convierte hasta 10 s de ingreso en 8 ATP (cada 10 s), para cuando la autonomía baja y el ATP no alcanza.\n\n"
+			+ "[b]Dosificar[/b]: cada gen suma [b]rechazo[/b] (+35, baja 1/s; el Genoma también) y quita [b]autonomía[/b] (−20, sube 0.4/s). Rechazo a 100: la célula lo expulsa. Autonomía a 100: se escapa. Las dos cierran como [b]Parasitismo[/b].\n\n"
+			+ "[b]Sello[/b]: el Genoma transferido → [b]ENDOSIMBIOSIS[/b] (+8 PL base + bonus)."
+		),
+		"body_en": (
+			"Cross of [b]Parasitism[/b] and [b]Symbiosis[/b] (from the 2nd transcendence). Two billion years ago a cell swallowed a bacterium and couldn't digest it: today it's called a mitochondrion.\n\n"
+			+ "If the previous run closed in [b]Parasitism[/b] (or Sovereign Host), 30 s after entering Symbiosis the parasite returns and [b]ENGULF[/b] appears for 20 s. It excludes the Mutualism pact.\n\n"
+			+ "Engulfing it leaves you with 50 [b]ATP[/b] (what it had stolen) and the endosymbiont produces more (the more autonomous, the more) and, until you take its Membrane, drains 10% of income. With ATP you [b][Q] transfer[/b] its 6 genes to the nucleus, in order:\n"
+			+ "Respiration (passive ×1.5) · Membrane (stops the drain) · Replication (click ×1.5) · Signaling (Ω +0.10) · Metabolism (upgrades −15%) · Genome (makes it an organelle).\n"
+			+ "[b][W] Feed[/b] turns up to 10 s of income into 8 ATP (every 10 s), for when autonomy drops and ATP falls short.\n\n"
+			+ "[b]Dosing[/b]: each gene adds [b]rejection[/b] (+35, falls 1/s; Genome too) and removes [b]autonomy[/b] (−20, rises 0.4/s). Rejection at 100: the cell expels it. Autonomy at 100: it escapes. Both close as [b]Parasitism[/b].\n\n"
+			+ "[b]Seal[/b]: Genome transferred → [b]ENDOSYMBIOSIS[/b] (+8 LP base + bonus)."
+		),
+		"unlock": {"type": "transcendence_count", "min": 2},
+		"see_also": ["simbiosis", "mutualismo"],
+	},
 	"holobionte": {
 		"cat": "mutaciones",
 		"name_es": "Holobionte", "name_en": "Holobiont",

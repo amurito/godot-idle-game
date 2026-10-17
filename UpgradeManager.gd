@@ -203,6 +203,8 @@ func cost(id: String) -> float:
 	base_cost *= MicelioOmniscienteLogic.cost_factor(id)
 	# HOLOBIONTE: la Levadura abarata las mejoras mientras vive (1.0 fuera de la ruta).
 	base_cost *= HolobionteLogic.cost_factor()
+	# ENDOSIMBIOSIS: gen Metabolismo transferido (1.0 fuera de la ruta).
+	base_cost *= EndosimbiosisLogic.cost_factor()
 
 	return base_cost
 

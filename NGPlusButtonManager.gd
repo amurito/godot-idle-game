@@ -64,6 +64,10 @@ var _mutualismo_reject_btn: Button = null # [R] Rechazar oferta
 var _mutualismo_seal_btn: Button = null
 var _holo_enter_btn: Button = null        # PRESENTAR SOCIOS (Mutualismo → Holobionte)
 var _holo_seal_btn: Button = null
+var _endo_engulf_btn: Button = null       # ENGULLIR (Simbiosis → Endosimbiosis)
+var _endo_transfer_btn: Button = null     # [Q] Transferir gen
+var _endo_feed_btn: Button = null         # [W] Alimentar
+var _endo_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -172,7 +176,7 @@ func reset_ng_plus_buttons() -> void:
 		_ayuno_seal_btn = null
 	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
 			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn,
-			_holo_enter_btn, _holo_seal_btn]:
+			_holo_enter_btn, _holo_seal_btn, _endo_engulf_btn, _endo_transfer_btn, _endo_feed_btn, _endo_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
@@ -189,6 +193,10 @@ func reset_ng_plus_buttons() -> void:
 	_mutualismo_seal_btn = null
 	_holo_enter_btn = null
 	_holo_seal_btn = null
+	_endo_engulf_btn = null
+	_endo_transfer_btn = null
+	_endo_feed_btn = null
+	_endo_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -226,7 +234,65 @@ func update_ng_plus_buttons() -> void:
 	_update_micelio_buttons()
 	_update_huesped_buttons()
 	_update_mutualismo_buttons()
+	_update_endo_buttons()
 	_update_batuta_button()
+
+# ── ENDOSIMBIOSIS: ENGULLIR · [Q] transferir gen · [W] alimentar · sello ───────
+func _update_endo_buttons() -> void:
+	if EndosimbiosisLogic.can_engulf():
+		if not is_instance_valid(_endo_engulf_btn):
+			_endo_engulf_btn = _make_rp_button(Color(1.0, 0.6, 0.36), 60, _on_endo_engulf_pressed, 0)
+		var left: float = Balance.ENDO_WINDOW_START + Balance.ENDO_WINDOW_LEN - EvoManager.endo_window_t
+		_endo_engulf_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_ENDO_ENGULF") % left)
+		_endo_engulf_btn.visible = true
+	elif is_instance_valid(_endo_engulf_btn):
+		_endo_engulf_btn.visible = false
+	if not EndosimbiosisLogic.is_active():
+		for b in [_endo_transfer_btn, _endo_feed_btn, _endo_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	if EndosimbiosisLogic.seal_ready():
+		for b in [_endo_transfer_btn, _endo_feed_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		if not is_instance_valid(_endo_seal_btn):
+			_endo_seal_btn = _make_rp_button(Color(1.0, 0.6, 0.36), 70, _on_endo_seal_pressed, 0)
+		_endo_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_ENDO_SEAL") % int(Balance.PL_REWARDS.get("ENDOSIMBIOSIS", 8)))
+		_endo_seal_btn.visible = true
+		return
+	if not is_instance_valid(_endo_feed_btn):
+		_endo_feed_btn = _make_rp_button(Color(0.9, 0.7, 0.5), 44, _on_endo_feed_pressed, 0)
+	if not is_instance_valid(_endo_transfer_btn):
+		_endo_transfer_btn = _make_rp_button(Color(1.0, 0.6, 0.36), 60, _on_endo_transfer_pressed, 0)
+	_endo_transfer_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_ENDO_TRANSFER") % [
+		EndosimbiosisLogic.gene_name(EndosimbiosisLogic.next_gene()), EndosimbiosisLogic.gene_cost()])
+	_endo_transfer_btn.disabled = not EndosimbiosisLogic.can_transfer()
+	_endo_transfer_btn.visible = true
+	_endo_feed_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_ENDO_FEED") % [
+		"$" + UITextBuilders.format_compact(EndosimbiosisLogic.feed_cost()), Balance.ENDO_FEED_ATP,
+		(" (%.0f s)" % EvoManager.endo_feed_cd) if EvoManager.endo_feed_cd > 0.0 else ""])
+	_endo_feed_btn.disabled = not EndosimbiosisLogic.can_feed()
+	_endo_feed_btn.visible = true
+
+func _on_endo_engulf_pressed() -> void:
+	EndosimbiosisLogic.engulf()
+	update_ng_plus_buttons()
+
+func _on_endo_transfer_pressed() -> void:
+	EndosimbiosisLogic.transfer()
+	_update_endo_buttons()
+
+func _on_endo_feed_pressed() -> void:
+	EndosimbiosisLogic.feed()
+	_update_endo_buttons()
+
+func _on_endo_seal_pressed() -> void:
+	if RunManager.run_closed or not EndosimbiosisLogic.seal_ready():
+		return
+	if is_instance_valid(_endo_seal_btn):
+		_endo_seal_btn.visible = false
+	RunManager.close_run("ENDOSIMBIOSIS", TranslationServer.translate("CLOSE_ENDOSIMBIOSIS"))
 
 # ── MUTUALISMO: pacto · [A] aceptar / [R] rechazar · sello ────────────────────
 func _update_mutualismo_buttons() -> void:
@@ -1560,7 +1626,7 @@ func _on_ayuno_seal_pressed() -> void:
 	RunManager.close_run("AYUNO PRIMORDIAL", TranslationServer.translate("CLOSE_AYUNO"))
 
 func _update_simbiosis_seal_button() -> void:
-	if RunManager.run_closed or not EvoManager.mutation_symbiosis or EvoManager.mutualismo_active:
+	if RunManager.run_closed or not EvoManager.mutation_symbiosis or EvoManager.mutualismo_active or EvoManager.endosimbiosis_active:
 		if is_instance_valid(_simbiosis_seal_btn):
 			_simbiosis_seal_btn.visible = false
 		return

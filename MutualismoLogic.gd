@@ -28,6 +28,7 @@ static func can_enter() -> bool:
 	return LegacyManager.trascendencia_count >= Balance.MUTUALISMO_MIN_T \
 		and RouteManager.allows_bifurcation() and not RunManager.run_closed \
 		and EvoManager.mutation_symbiosis and not EvoManager.mutualismo_active \
+		and not EvoManager.endosimbiosis_active \
 		and not EvoManager.mutation_coro_simbiotico \
 		and EvoManager.red_branch_selected != EvoManager.RedBranch.SYMBIOSIS \
 		and RunManager.run_time >= Balance.MUTUALISMO_ENTRY_TIME
