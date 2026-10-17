@@ -373,10 +373,10 @@ func _on_batuta_pressed() -> void:
 const TRANSMUT_BTN_D := 46.0
 const TRANSMUT_BTN_COLORS := {
 	"fusion": Color(0.97, 0.76, 0.05),
-	"caos": Color(1.0, 0.25, 0.5),
+	"caos": Color(1.0, 0.25, 0.85),
 	"coro": Color(1.0, 0.5, 0.42),
 	"micelio": Color(0.72, 0.45, 1.0),
-	"huesped": Color(0.4, 0.65, 1.0),
+	"huesped": Color(0.35, 0.4, 1.0),
 }
 var _transmut_secs_lbl: Label = null
 

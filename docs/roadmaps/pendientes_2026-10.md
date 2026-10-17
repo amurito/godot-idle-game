@@ -89,7 +89,7 @@ Hoy varios colores se pisan (el autor lo marcó). Paso 1 ✅: tabla de 40 colore
 Peores: Esclerocio ~ Colapso Sintético sellados (4.1), Depredador ~ Caos (6.6), Simbiosis ~ Homeostasis (10.5),
 Fractura ~ Fusión (11.8), Núcleo base ~ Huésped (13.9), racimo turquesa del Orden y racimo verde de la Red.
 
-Paso 2 (propuesta, **pendiente de aprobación**): cambian 19 colores y 21 quedan igual; todos los pares ≥ 20 salvo
+Paso 2 ✅ (aprobada y aplicada en `UIManager.get_reactor_color()` / `_live_reactor_color()` y `TRANSMUT_BTN_COLORS`): cambian 19 colores y 21 quedan igual; todos los pares ≥ 20 salvo
 Depredador de Realidades ~ Autofagia sellados (17, ambos casi negros).
 
 | Ruta | Hoy | Propuesto | Por qué |
@@ -112,7 +112,7 @@ Depredador de Realidades ~ Autofagia sellados (17, ambos casi negros).
 | Micelio sellado | `#4c2175` | `#6a40c8` | Met. Oscuro (vivo y sellado) |
 | Huésped (vivo / sellado) | `#5999ff` / `#1a2e6b` | `#4a52ff` / `#1f3a8f` índigo | Núcleo base / Omega-Cero |
 
-Paso 3: aplicarla también al árbol, al botón [T] (`TRANSMUT_BTN_COLORS`) y al Codex.
+Paso 3: el juego no tiene otros colores por ruta (el Codex no usa color por ruta). Falta el árbol del artifact del autor (C2).
 
 ### C2. Árbol de evoluciones (artifact) desactualizado
 Ej.: Colapso Controlado todavía dice «ε > 0.90 y Ω > 0.30» (corregido en el juego en `b151c82`).

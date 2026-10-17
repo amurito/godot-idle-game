@@ -1227,9 +1227,9 @@ func get_reactor_color() -> Color:
 	if RunManager.run_closed:
 		match RunManager.final_route:
 			"ESCLEROCIO OSCURO":
-				return Color(0.08, 0.0, 0.18)
+				return Color(0.23, 0.14, 0.06)  # marrón: un esclerocio real es una masa dura y oscura
 			"AUTOFAGIA NECRÓTICA":
-				return Color(0.35, 0.0, 0.08)
+				return Color(0.36, 0.08, 0.03)  # vino-óxido
 			"NECROSIS CONTROLADA":
 				return Color(0.1, 0.28, 0.02)
 			"METABOLISMO OSCURO":
@@ -1237,23 +1237,23 @@ func get_reactor_color() -> Color:
 			"DEPREDADOR DE REALIDADES":
 				return Color(0.25, 0.0, 0.04)
 			"COLAPSO SINTÉTICO":
-				return Color(0.1, 0.05, 0.2)
+				return Color(0.0, 0.23, 0.19)  # verde petróleo
 			"COLAPSO DEPREDATORIO":
 				return Color(0.12, 0.0, 0.02)
 			"REMISIÓN METABÓLICA":
-				return Color(0.08, 0.72, 0.48)
+				return Color(1.0, 0.95, 0.84)  # marfil: la familia Redención es luz
 			"FUSIÓN CATABÓLICA":
 				return Color(0.45, 0.30, 0.01)  # ámbar oscuro: oro metabolico, distinto del teal de Homeostasis
 			"AYUNO PRIMORDIAL":
 				return Color(0.55, 0.62, 0.70)  # plateado frío: el silencio grabado en el genoma
 			"CAOS ORQUESTADO":
-				return Color(0.42, 0.05, 0.18)  # rojo-rosado profundo: el caos dirigido, en reposo
+				return Color(0.42, 0.04, 0.35)  # fucsia profundo: el caos dirigido, en reposo
 			"CORO SIMBIÓTICO":
-				return Color(0.45, 0.14, 0.11)  # coral profundo: el ritmo, en silencio
+				return Color(0.66, 0.27, 0.18)  # coral profundo: el ritmo, en silencio
 			"MICELIO OMNISCIENTE":
-				return Color(0.30, 0.13, 0.46)  # violeta profundo: la red que ve, en reposo
+				return Color(0.42, 0.25, 0.78)  # violeta profundo: la red que ve, en reposo
 			"HUÉSPED SOBERANO":
-				return Color(0.10, 0.18, 0.42)  # azul profundo: el pacto, en reposo
+				return Color(0.12, 0.23, 0.56)  # índigo profundo: el pacto, en reposo
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
 		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
 		return _live_reactor_color().darkened(0.45)
@@ -1263,9 +1263,9 @@ func get_reactor_color() -> Color:
 ## Color del núcleo mientras la run está abierta (también base del color de cierre por defecto).
 func _live_reactor_color() -> Color:
 	if EvoManager.mutation_omega_cero:
-		return Color(0.28, 0.18, 0.38)  # gris oscuro-violáceo (síntesis del árbol oscuro)
+		return Color(0.65, 0.55, 0.88)  # lila pálido (síntesis del árbol oscuro)
 	if EvoManager.mutation_remision:
-		return Color(0.08, 0.72, 0.48)  # verde-agua vivo (floración)
+		return Color(1.0, 0.95, 0.84)  # marfil (floración; familia Redención = luz)
 	if EvoManager.mutation_autolisis:
 		return Color(0.65, 0.04, 0.18)
 	if EvoManager.mutation_necrosis:
@@ -1277,19 +1277,19 @@ func _live_reactor_color() -> Color:
 	if RouteManager.is_active("vacio"):
 		return Color(0.75, 0.2, 1.0)
 	if EvoManager.seta_formada:
-		return Color(0.65, 1.2, 0.2)
+		return Color(0.88, 0.69, 0.44)  # beige de sombrero
 	if EvoManager.mutation_sporulation:
-		return Color(0.7, 1.0, 0.4)
+		return Color(0.78, 1.0, 0.63)
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.COLONIZATION:
-		return Color(0.45, 1.0, 0.05)
+		return Color(0.69, 1.0, 0.1)  # lima
 	if EvoManager.red_branch_selected == EvoManager.RedBranch.SYMBIOSIS:
 		return Color(0.0, 0.9, 1.0)
-	# TRANSMUTACIONES: complemento de su evolución, separado para distinguirse (paleta 2026-10-12).
+	# TRANSMUTACIONES: complemento de su evolución, separado para distinguirse (paleta 2026-10-16).
 	if EvoManager.mutation_huesped_soberano:
 		if EvoManager.huesped_hunger > Balance.HUESPED_BAND_HI:
 			return Color(0.85, 0.3, 0.45)  # muerde: el azul se enrojece
-		# azul apagado → vivo según el nivel de confianza
-		return Color(0.15, 0.28, 0.6).lerp(Color(0.35, 0.6, 1.0), clampf(HuespedSoberanoLogic.level() / 5.0, 0.0, 1.0))
+		# índigo apagado → vivo según el nivel de confianza
+		return Color(0.14, 0.15, 0.5).lerp(Color(0.29, 0.32, 1.0), clampf(HuespedSoberanoLogic.level() / 5.0, 0.0, 1.0))
 	if EvoManager.mutation_micelio_omnisciente:
 		if MicelioOmniscienteLogic.full_nodes() >= MicelioOmniscienteLogic.NODES.size():
 			return Color(0.95, 0.8, 1.25)  # lila casi blanco: la red completa
@@ -1303,9 +1303,9 @@ func _live_reactor_color() -> Color:
 		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(float(EvoManager.coro_combo) / Balance.CORO_COMBO_CAP, 0.0, 1.0))
 	if EvoManager.mutation_caos_orquestado:
 		if EvoManager.caos_burst_timer > 0.0:
-			return Color(1.2, 0.3, 0.6)  # rosa encendido: el colapso dirigido
-		# rojo-rosado apagado → encendido según ε: se ve cuánto caos tenés cargado
-		return Color(0.55, 0.12, 0.28).lerp(Color(1.0, 0.12, 0.38), clampf(StructuralModel.epsilon_runtime, 0.0, 1.0))
+			return Color(1.2, 0.4, 1.0)  # fucsia encendido: el colapso dirigido
+		# fucsia apagado → encendido según ε: se ve cuánto caos tenés cargado
+		return Color(0.5, 0.08, 0.42).lerp(Color(1.0, 0.17, 0.82), clampf(StructuralModel.epsilon_runtime, 0.0, 1.0))
 	if EvoManager.mutation_fusion_catabolica:
 		if EvoManager.fusion_burst_timer > 0.0:
 			return Color(1.1, 0.92, 0.12)  # oro brillante durante ráfaga
@@ -1317,20 +1317,20 @@ func _live_reactor_color() -> Color:
 	if EvoManager.mutation_hyperassimilation:
 		if RunManager._fractura_carga_timer > 0.0:
 			var t := clampf(RunManager._fractura_carga_timer / RunManager.FRACTURA_CARGA_DURATION, 0.0, 1.0)
-			return Color(0.95, 0.05, 0.05).lerp(Color(1.1, 0.85, 0.05), t)
+			return Color(0.95, 0.05, 0.05).lerp(Color(0.9, 0.96, 1.05), t)  # destello blanco cristal
 		return Color(0.95, 0.05, 0.05)
 	if EvoManager.mutation_homeorhesis:
-		return Color(0.55, 1.0, 0.92)
+		return Color(0.71, 1.0, 0.94)  # menta casi blanca
 	if EvoManager.mutation_allostasis:
-		return Color(0.2, 1.0, 0.88)
+		return Color(0.0, 0.66, 0.54)  # turquesa profundo
 	if EvoManager.mutation_homeostasis:
 		return Color(0.05, 0.88, 0.68)
 	if EvoManager.mutation_parasitism:
 		return Color(1.0, 0.45, 0.0)
 	if EvoManager.nucleo_conciencia:
-		return Color(0.2, 0.5, 1.0)
+		return Color(0.66, 0.77, 1.0)  # celeste pálido
 	if EvoManager.mutation_red_micelial:
 		return Color(0.3, 1.0, 0.3)
 	if EvoManager.mutation_symbiosis:
-		return Color(0.4, 0.9, 0.7)
+		return Color(1.0, 0.56, 0.82)  # rosa orquídea (Biología = naranja → rosa)
 	return Color(0.15, 0.65, 1.0)
