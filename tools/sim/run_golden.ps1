@@ -25,7 +25,9 @@ param(
     [string[]]$Suites = @("economy", "save", "close_run", "actions", "tick", "trajectory"),
     # Rutas que se recorren dentro de la ventana: Hiper, trampa de Masa Critica (ejercita
     # close_run), Ayuno (incluye Parasitismo hibrido) y Fusion Catabolica.
-    [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player", "ng_caos_player", "ng_coro_player", "ng_micelio_player", "ng_huesped_player"),
+    # Biologia: "escenario@segundos" corre ese escenario hasta su sello (la ventana por defecto no llega).
+    [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player", "ng_caos_player", "ng_coro_player", "ng_micelio_player", "ng_huesped_player",
+        "t1_mutualismo_fair@700", "t2_holobionte_care@1000", "t2_endo_paced@650"),
     [int]$TrajectorySeconds = 450,
     [string]$Instance = "golden"
 )
@@ -58,8 +60,11 @@ function Invoke-GoldenScene([string]$Label, [string[]]$SceneArgs) {
 
 foreach ($suite in $Suites) {
     if ($suite -eq "trajectory") {
-        foreach ($sc in $TrajectoryScenarios) {
-            $code = Invoke-GoldenScene ("trajectory " + $sc) @("--suite=trajectory", "--scenario=$sc", "--t=$TrajectorySeconds")
+        foreach ($entry in $TrajectoryScenarios) {
+            $sc = $entry
+            $secs = $TrajectorySeconds
+            if ($entry -match '^(.+)@(\d+)$') { $sc = $Matches[1]; $secs = [int]$Matches[2] }
+            $code = Invoke-GoldenScene ("trajectory " + $sc) @("--suite=trajectory", "--scenario=$sc", "--t=$secs")
             $results += [pscustomobject]@{ Suite = "trajectory:$sc"; Exit = $code }
         }
     } else {

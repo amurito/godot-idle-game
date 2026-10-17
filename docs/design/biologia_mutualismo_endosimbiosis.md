@@ -312,11 +312,11 @@ Sellados = el color vivo apagado (fallback actual de `get_reactor_color()`), sal
 
 | Paso | Qué | Archivos principales |
 |---|---|---|
-| B1 | **Mutualismo**: `MutualismoLogic.gd` (ofertas, R, confianza), botones A/R, panel, entrada desde Simbiosis, sellos y fracasos | MutualismoLogic (nuevo), EvoManager, RunManager.check_symbiosis_final, NGPlusButtonManager, UITextBuilders, Balance, SaveSchema |
-| B2 | **Holobionte**: 4 socios con salud, coherencia, sello | MutualismoLogic (o HolobionteLogic), IncomeModifiers |
-| B3 | **Endosimbiosis**: `EndosimbiosisLogic.gd` (ATP, genes, rechazo/autonomía), ENGULLIR, [F] | EndosimbiosisLogic (nuevo), EvoManager, IncomeModifiers, EconomyManager |
-| B4 | Legados, logros, Codex ES/EN, colores, PL/NG caps, gating T1 | LegacyDefs, AchievementDefs, CodexDefs, LocaleManager, UIManager, Balance |
-| B5 | Bot: perfiles `bio_mutualismo`, `bio_holobionte`, `bio_endosimbiosis` (+ MYTHIC), goldens de trayectoria | tests/sim/*, run_golden.ps1 |
+| B1 ✅ | **Mutualismo**: `MutualismoLogic.gd` (ofertas, R, confianza), botones A/R, panel, entrada desde Simbiosis, sellos y fracasos | MutualismoLogic (nuevo), EvoManager, RunManager.check_symbiosis_final, NGPlusButtonManager, UITextBuilders, Balance, SaveSchema |
+| B2 ✅ | **Holobionte**: 4 socios con salud, coherencia, sello | MutualismoLogic (o HolobionteLogic), IncomeModifiers |
+| B3 ✅ | **Endosimbiosis**: `EndosimbiosisLogic.gd` (ATP, genes, rechazo/autonomía), ENGULLIR, [F] | EndosimbiosisLogic (nuevo), EvoManager, IncomeModifiers, EconomyManager |
+| B4 ✅ | Legados, logros, Codex ES/EN, colores, PL/NG caps, gating T1 | LegacyDefs, AchievementDefs, CodexDefs, LocaleManager, UIManager, Balance |
+| B5 ✅ | Bot: perfiles `bio_mutualismo`, `bio_holobionte`, `bio_endosimbiosis` (+ MYTHIC), goldens de trayectoria | tests/sim/*, run_golden.ps1 |
 
 Cada paso con CI verde antes del siguiente. Calibración con bot igual que R3–R6 (con/sin el recurso
 clave, MYTHIC no lo saca el bot normal).
