@@ -90,6 +90,8 @@ static func transfer() -> void:
 	EvoManager.endo_genes += 1
 	if is_organelle():
 		UIManager.show_toast(TranslationServer.translate("TOAST_ENDO_ORGANELLE"))
+		if RunManager.run_time - EvoManager.endo_engulf_time < Balance.ACH_CONTRARRELOJ_SECS:
+			AchievementManager.unlock("contrarreloj")
 		return
 	EvoManager.endo_autonomy = maxf(EvoManager.endo_autonomy - Balance.ENDO_TRANSFER_AUTONOMY, 0.0)
 	UIManager.show_toast(TranslationServer.translate("TOAST_ENDO_GENE") % gene_name(gene))

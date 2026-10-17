@@ -142,6 +142,8 @@ static func reject() -> void:
 		return
 	# Rechazar la Tentación es lo correcto: no cuenta como desaire.
 	if EvoManager.mutualismo_offer != "tentacion":
+		if EvoManager.holobionte_active:
+			EvoManager.holo_rejects += 1  # MYTHIC Nadie Muere: no rechazar nada en el ecosistema
 		EvoManager.mutualismo_reject_streak += 1
 		if EvoManager.mutualismo_reject_streak >= Balance.MUTUALISMO_REJECT_STREAK:
 			EvoManager.mutualismo_reject_streak = 0
@@ -172,6 +174,8 @@ static func process(dt: float) -> void:
 			var paid: float = _pay(Balance.MUTUALISMO_LOAN_PAY)
 			if paid >= Balance.MUTUALISMO_LOAN_PAY - 0.01:
 				EvoManager.mutualismo_loans_paid += 1
+				if EvoManager.mutualismo_loans_paid >= Balance.ACH_BUEN_PAGADOR_LOANS:
+					AchievementManager.unlock("buen_pagador")
 				UIManager.show_toast(TranslationServer.translate("TOAST_MUTUALISMO_LOAN_PAID"))
 			else:
 				_trust(-3)

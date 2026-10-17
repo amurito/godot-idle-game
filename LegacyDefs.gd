@@ -543,6 +543,31 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "MICELIO OMNISCIENTE"},
 		"effect": {"type": "nodo_latente_active", "value": 1.0},
 	},
+	# BIOLOGÍA (B4): recompensa de sellar cada ruta nueva. Se otorgan al cerrar (RunManager.close_run).
+	"legado_micorriza": {
+		"name": "Legado: Micorriza",
+		"flavor": "El pacto con la raíz quedó en el sustrato: pasivo ×1.10 en todas las runs.",
+		"cat": "biologia", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "MUTUALISMO"},
+		"unlock": {"type": "route_closed", "route": "MUTUALISMO"},
+		"effect": {"type": "micorriza_passive", "value": 1.10},
+	},
+	"legado_microbioma": {
+		"name": "Legado: Microbioma",
+		"flavor": "Los socios del holobionte siguen adentro: los shocks de Homeostasis y la corrosión parasitaria pegan un 25 % menos.",
+		"cat": "biologia", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "HOLOBIONTE"},
+		"unlock": {"type": "route_closed", "route": "HOLOBIONTE"},
+		"effect": {"type": "microbioma_dampen", "value": 0.75},
+	},
+	"legado_mitocondria": {
+		"name": "Legado: Mitocondria",
+		"flavor": "El parásito tragado respira para vos: click y pasivo ×1.15 mientras ε < 0.30, en todas las runs.",
+		"cat": "biologia", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "ENDOSIMBIOSIS"},
+		"unlock": {"type": "route_closed", "route": "ENDOSIMBIOSIS"},
+		"effect": {"type": "mitocondria_mult", "value": 1.15},
+	},
 	# Fracaso de Micelio Omnisciente: la red rota aprende a resistir (sólo rinde en Micelio).
 	"legado_cicatriz_micelial": {
 		"name": "Legado: Cicatriz Micelial",

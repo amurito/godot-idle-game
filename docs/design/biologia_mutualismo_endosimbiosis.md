@@ -138,7 +138,7 @@ Las necesidades **se contradicen a propósito**:
 | Socio | Necesita | Da mientras está vivo |
 |---|---|---|
 | **Raíz** (planta) | pasivo ≥ 50 % del ingreso total | pasivo ×1.5 |
-| **Bacteria** (fijadora) | ≥ 1 click/s de promedio en los últimos 10 s | click ×1.5 |
+| **Bacteria** (fijadora) | ≥ 1 click/s de promedio en los últimos 10 s | todo el ingreso ×1.2 (era click ×1.5: hundía el pasivo y la Raíz moría siempre) |
 | **Alga** (fotobionte) | ε ≤ 0.30 (luz estable) | Ω +0.10 |
 | **Levadura** | comprar una mejora cada 60 s (que circule la plata) | mejoras −10 % |
 
@@ -291,6 +291,22 @@ Gama Biología naranja → rosa:
 Sellados = el color vivo apagado (fallback actual de `get_reactor_color()`), salvo que haga falta uno propio.
 
 ---
+
+### 7.5 Implementado (B4, 2026-10-17)
+- **Legados** (familia Biología del Banco, se otorgan al sellar): Micorriza (pasivo ×1.10), Microbioma (shocks de
+  Homeostasis y corrosión parasitaria ×0.75, se combina con Pacto Soberano), Mitocondria (click y pasivo ×1.15 con ε < 0.30).
+- **Logros** (9): Micorriza · Comercio Justo (|R| ≤ 5) · Buen Pagador (5 préstamos en una run, sale en la run) ·
+  **Sin Tentación** (MYTHIC: sin Tentaciones ni incumplir) · Ecosistema · Todos a Bordo (4 socios ≥ 90, sale en la run) ·
+  **Nadie Muere** (MYTHIC: sin muertes y sin rechazar ofertas de la Raíz en el ecosistema, salvo Tentaciones) ·
+  Mitocondria · Contrarreloj (6 genes < 4 min) · **Huésped Perfecto** (MYTHIC: rechazo pico ≤ 50).
+- Cambios de calibración:
+  - **Bacteria: todo el ingreso ×1.2** (era click ×1.5). El premio de un socio no puede sabotear la necesidad
+    de otro: con click ×1.5 el pasivo caía del 45 % al 25 % y la Raíz moría siempre (Nadie Muere era imposible).
+  - **Nadie Muere** empezó como "sin muertes" y como "ningún socio < 40 / < 55": el bot normal que atiende a los
+    socios lo sacaba igual. Ahora pide además no rechazar ofertas de la Raíz durante el ecosistema.
+- Escenarios A3 (todos sacan su logro): `a3_mutualismo_mythic` (Sin Tentación + Comercio Justo), `a3_buen_pagador`,
+  `a3_holobionte_mythic` (Nadie Muere + Todos a Bordo), `a3_endo_mythic` (Huésped Perfecto), `a3_endo_contrarreloj`.
+  Con la Bacteria nueva, `t2_holobionte_care` sella a 980 s sin muertes (antes 1197 s perdiendo la Raíz 2 veces).
 
 ## 8. Plan de implementación
 

@@ -574,6 +574,18 @@ func on_run_closed(route: String) -> void:
 	# Ojo de la Red: sin desconectar nunca un nodo ni comprar a mano tras revertir (la red compra por vos).
 	if route == "MICELIO OMNISCIENTE" and EvoManager.micelio_disconnects == 0 and EvoManager.micelio_manual_buys == 0:
 		unlock("ojo_de_la_red")
+	# ── BIOLOGÍA (B4) ──
+	if route == "MUTUALISMO":
+		if absf(EvoManager.mutualismo_r) <= Balance.ACH_COMERCIO_JUSTO_R:
+			unlock("comercio_justo")
+		if EvoManager.mutualismo_tempted == 0 and not EvoManager.mutualismo_defaulted:
+			unlock("sin_tentacion")
+	# Nadie Muere: sin muertes y sin rechazar ninguna oferta de la Raíz (salvo Tentaciones) en el
+	# ecosistema. Sólo "sin muertes" lo sacaba el bot normal que atiende a los socios.
+	if route == "HOLOBIONTE" and EvoManager.holo_deaths == 0 and EvoManager.holo_rejects == 0:
+		unlock("nadie_muere")
+	if route == "ENDOSIMBIOSIS" and EvoManager.endo_peak_rejection <= Balance.ACH_HUESPED_PERFECTO_REJ:
+		unlock("huesped_perfecto")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
 	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:

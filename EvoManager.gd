@@ -251,6 +251,7 @@ var holo_since_buy: float = 0.0               # s desde la última compra (Levad
 var holo_coherence_time: float = 0.0          # s seguidos con los 4 socios ≥ HOLO_SEAL_HEALTH
 var holo_deaths: int = 0                      # MYTHIC Nadie Muere: 0
 var holo_all90: bool = false                  # los 4 socios ≥ 90 a la vez (logro Todos a Bordo)
+var holo_rejects: int = 0                     # ofertas de la Raíz rechazadas en Holobionte (salvo Tentaciones; MYTHIC)
 
 # === ENDOSIMBIOSIS (cruce Parasitismo × Simbiosis — EndosimbiosisLogic) ===
 var endosimbiosis_active := false

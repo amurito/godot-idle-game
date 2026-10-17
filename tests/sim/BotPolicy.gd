@@ -89,12 +89,16 @@ extends RefCounted
 ##       policy: "fair" (acepta lo justo, rechaza la Tentación y cuida |R|) · "naive" (acepta todo menos
 ##               la Tentación, sin mirar R) · "greedy" (acepta todo, Tentación incluida)
 ##       seal: bool     sella apenas puede · react: s que tarda en decidir (default 2)
+##       loan_safe: bool  no compra mientras hay un préstamo pendiente (no incumple)
+##       seal_r: float    sella sólo con |R| ≤ esto (default: la banda justa)
 ##   endosimbiosis: {engulf, seal, max_rej, feed, feed_aut}  ENDOSIMBIOSIS:
 ##       engulf: aprieta ENGULLIR · seal: sella con el orgánulo
 ##       max_rej: transfiere sólo si el rechazo quedaría ≤ esto (default: sin mirar)
 ##       feed: "never" · "smart" (alimenta si falta ATP y la autonomía ≥ feed_aut, default 75) · "always"
 ##   holobionte: {enter, seal, care, cps_hi, cps_lo, eps_hi}  HOLOBIONTE (tier 3, requiere mutualismo):
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
+##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
+##             (default 0.36) → la Raíz no se muere al llegar
 ##       care: atiende las necesidades (compra pasivo si la Raíz lo pide; clickea a cps_hi con
 ##             ε < eps_hi y a cps_lo por encima, para no dejar sin luz al Alga ni sin clicks a la Bacteria)
 
@@ -237,6 +241,9 @@ func _current_cps() -> float:
 func _buy(d: RefCounted) -> void:
 	if str(cfg.get("buy", "cheapest")) == "none":
 		return
+	var mcfg_b: Dictionary = cfg.get("mutualismo", {})
+	if mcfg_b.get("loan_safe", false) and MutualismoLogic.is_active() and EvoManager.mutualismo_loan_due > 0.0:
+		return  # junta la plata del préstamo
 	# Micelio: [W] Reforzar tiene prioridad (ahorra si cuesta ≤ 60 s de ingreso).
 	if cfg.get("micelio_reinforce", false) and MicelioOmniscienteLogic.is_active() 			and EvoManager.micelio_reinforce < Balance.MICELIO_REINFORCE_MAX:
 		if MicelioOmniscienteLogic.can_reinforce():
@@ -253,14 +260,17 @@ func _buy(d: RefCounted) -> void:
 	for mut in ids_on:
 		if bool(EvoManager.get("mutation_" + str(mut))):
 			ids = ids_on[mut]
+	var hcfg_b: Dictionary = cfg.get("holobionte", {})
+	if hcfg_b.get("prep", false) and MutualismoLogic.is_active() and not EvoManager.holobionte_active:
+		ids = PASSIVE_IDS  # prepara el pasivo para la Raíz antes de presentar socios
 	if cfg.get("balance_ratio", false) and EvoManager.mutation_red_micelial:
 		# Mismo ratio que mide el portal de Mente Colmena (sin los multiplicadores de Red Micelial).
 		ids = ["click", "click_mult", "accounting"] if RunManager.mente_colmena_ratio() < 0.5 else ["auto", "auto_mult", "trueque", "trueque_net", "accounting"]
 	# Panspermia: con la seta formada se ahorra para el lanzamiento (no se compra nada).
 	if not cfg.get("green", {}).is_empty() and EvoManager.seta_formada and EvoManager.is_panspermia_window():
 		return
-	if cfg.get("holobionte", {}).get("care", false) and HolobionteLogic.alive("raiz") \
-			and not HolobionteLogic.need_met("raiz"):
+	if cfg.get("holobionte", {}).get("care", false) and HolobionteLogic.is_active() \
+			and not HolobionteLogic.need_met("raiz"):  # también con la Raíz muerta: para que vuelva
 		ids = PASSIVE_IDS
 	var max_passive: float = float(cfg.get("max_passive_pct", 100.0))
 	var uncap: String = str(cfg.get("uncap_passive_on", ""))
@@ -458,7 +468,8 @@ func _route_keys(_d: RefCounted) -> void:
 	if not ecfg.is_empty():
 		_endosimbiosis(ecfg)
 	var hcfg: Dictionary = cfg.get("holobionte", {})
-	if hcfg.get("enter", false) and HolobionteLogic.can_enter():
+	if hcfg.get("enter", false) and HolobionteLogic.can_enter() \
+			and (not hcfg.get("prep", false) or HolobionteLogic.passive_share() >= float(hcfg.get("enter_share", 0.36))):
 		UIManager._ng_buttons._on_holo_enter_pressed()
 		_log("holobionte:enter")
 	var mcfg: Dictionary = cfg.get("mutualismo", {})
@@ -629,12 +640,21 @@ func _mutualismo(m: Dictionary) -> void:
 	var offer: String = EvoManager.mutualismo_offer
 	if offer != "" and EvoManager.mutualismo_decide_timer <= Balance.MUTUALISMO_DECIDE_TIME - float(m.get("react", 2.0)):
 		var policy: String = str(m.get("policy", "fair"))
+		if EvoManager.holobionte_active and m.has("holo_policy"):
+			policy = str(m.get("holo_policy"))
 		var r: float = EvoManager.mutualismo_r
 		var band: float = Balance.MUTUALISMO_FAIR_BAND
 		var take: bool
 		match policy:
 			"greedy":
 				take = true
+			"precise":
+				# Acepta lo que acerca R a 0 (Tentación nunca): préstamo si R ≥ 0, auxilio si R ≤ 0.
+				match offer:
+					"tentacion": take = false
+					"prestamo": take = r >= 0.0 and EvoManager.mutualismo_gratitude_due <= 0.0
+					"auxilio": take = r <= 0.0
+					_: take = true
 			"naive":
 				take = offer != "tentacion"
 			_:
@@ -649,7 +669,8 @@ func _mutualismo(m: Dictionary) -> void:
 		else:
 			MutualismoLogic.reject()
 			_after_key("key:R mutualismo:%s r=%.0f" % [offer, EvoManager.mutualismo_r])
-	if m.get("seal", false) and MutualismoLogic.seal_ready():
+	if m.get("seal", false) and MutualismoLogic.seal_ready() \
+			and absf(EvoManager.mutualismo_r) <= float(m.get("seal_r", Balance.MUTUALISMO_FAIR_BAND)):
 		UIManager._ng_buttons._on_mutualismo_seal_pressed()
 		_log("seal:mutualismo")
 

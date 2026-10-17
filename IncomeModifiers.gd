@@ -20,18 +20,19 @@ const CLICK_ORDER := [
 	"homeostasis_banda", "met_oscuro", "necrosis", "apoptosis_heredada", "plasticidad_terminal",
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
-	"simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio",
+	"simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio", "mitocondria",
 ]
 
 const PASSIVE_ORDER := [
 	"symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica", "caos_fuel", "caos_burst",
-	"coro_rhythm", "coro_echo", "mutualismo", "holo_raiz", "endo_respiracion",
+	"coro_rhythm", "coro_echo", "mutualismo", "holo_raiz", "holo_bacteria", "endo_respiracion",
 	"ayuno_primordial",
 	"primicia_del_vacio", "homeostasis_banda", "parasitism_growth", "parasitism_corrosion",
 	"met_oscuro", "semilla_cosmica", "semilla_cosmica_oscura", "mente_colmena",
 	"metabolismo_glitch", "entropia_domesticada", "convergencia_ciclica", "apoptosis_heredada",
 	"plasticidad_terminal", "sintesis_vital", "control_omega", "colonization",
 	"glitch_persistente", "simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio",
+	"micorriza", "mitocondria",
 ]
 
 ## Fuente de cada fila: "route" (mutación/rama de la run), "legacy" (banco de legado),
@@ -129,7 +130,8 @@ static func _build() -> Dictionary:
 	var mutualismo := func() -> float: return MutualismoLogic.income_mult()
 	d["mutualismo"] = _row("Mutualismo (intercambio)", "route", mutualismo, mutualismo)
 	# HOLOBIONTE: la Bacteria potencia el click y la Raíz el pasivo, mientras viven.
-	d["holo_bacteria"] = _row("Holobionte: Bacteria", "route", func() -> float: return HolobionteLogic.click_mult(), none)
+	var bacteria := func() -> float: return HolobionteLogic.bacteria_mult()
+	d["holo_bacteria"] = _row("Holobionte: Bacteria", "route", bacteria, bacteria)
 	d["holo_raiz"] = _row("Holobionte: Raíz", "route", none, func() -> float: return HolobionteLogic.passive_mult())
 	# ENDOSIMBIOSIS: genes transferidos del endosimbionte.
 	d["endo_replicacion"] = _row("Endosimbiosis: Replicación", "route", func() -> float: return EndosimbiosisLogic.click_mult(), none)
@@ -218,6 +220,11 @@ static func _build() -> Dictionary:
 			return 1.15
 		return 1.0
 	d["simbiosis_agresiva"] = _row("Simbiosis Agresiva", "legacy", agresiva, agresiva)
+	# BIOLOGÍA (B4): Micorriza (pasivo, siempre) y Mitocondria (ambos canales, con ε bajo).
+	d["micorriza"] = _row("Micorriza", "legacy", none,
+		func() -> float: return Balance.MICORRIZA_PASSIVE if _buff("legado_micorriza") else 1.0)
+	var mito := func() -> float: return Balance.MITOCONDRIA_MULT if _buff("legado_mitocondria") and StructuralModel.epsilon_runtime < Balance.MITOCONDRIA_EPS_MAX else 1.0
+	d["mitocondria"] = _row("Mitocondria", "legacy", mito, mito)
 	# ECO PRIMORDIAL / MOTOR FUNDIDO: +X% a todos los ingresos
 	var eco := func() -> float:
 		var v: float = LegacyManager.get_effect_value("all_income_mult")

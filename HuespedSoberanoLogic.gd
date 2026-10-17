@@ -156,7 +156,11 @@ static func trueque_mult() -> float:
 
 ## Legado Pacto Soberano: la corrosión de Parasitismo avanza más lento en todas las runs.
 static func corrosion_rate_mult() -> float:
-	return Balance.HUESPED_PACT_CORROSION if LegacyManager.get_buff_value("legado_pacto_soberano") else 1.0
+	var k: float = Balance.HUESPED_PACT_CORROSION if LegacyManager.get_buff_value("legado_pacto_soberano") else 1.0
+	# Legado Microbioma (Holobionte): la corrosión avanza ×0.75 (se combina con Pacto Soberano).
+	if LegacyManager.get_buff_value("legado_microbioma"):
+		k *= Balance.MICROBIOMA_DAMPEN
+	return k
 
 
 # ── Sello ────────────────────────────────────────────────────────────────────

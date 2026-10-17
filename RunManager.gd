@@ -218,6 +218,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_MICELIO_REWARD"))
 		LogManager.add(tr("LOG_MICELIO_REWARD") % tr("UPG_" + node_id.to_upper()))
 
+	# BIOLOGÍA (B4): cada ruta nueva sellada deja su legado.
+	var bio_legacy: String = {"MUTUALISMO": "legado_micorriza", "HOLOBIONTE": "legado_microbioma",
+		"ENDOSIMBIOSIS": "legado_mitocondria"}.get(route, "")
+	if bio_legacy != "" and not LegacyManager.get_buff_value(bio_legacy):
+		LegacyManager.grant_buff(bio_legacy)
+		UIManager.show_toast(tr("TOAST_BIO_LEGACY") % tr("LEGACY_" + bio_legacy.to_upper() + "_NAME"))
+
 	# MICELIO FRAGMENTADO (fracaso de Micelio Omnisciente): legado Cicatriz Micelial (rupturas ×0.75).
 	if route == "MICELIO FRAGMENTADO":
 		if not LegacyManager.get_buff_value("legado_cicatriz_micelial"):
@@ -577,6 +584,9 @@ func trigger_disturbance():
 	else:
 		LogManager.add(tr("LOG_SHOCK_NORMAL") % str(snapped(shock, 0.01)))
 
+	# Legado Microbioma: los socios amortiguan el shock (×0.75).
+	if LegacyManager.get_buff_value("legado_microbioma"):
+		shock *= Balance.MICROBIOMA_DAMPEN
 	StructuralModel.epsilon_runtime += shock
 	_shock_peak_epsilon = StructuralModel.epsilon_runtime  # pico real para logro presion_adaptativa
 	is_recovering_from_shock = true

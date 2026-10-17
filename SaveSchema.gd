@@ -194,6 +194,7 @@ static func _define() -> Array:
 			_f("holo_coherence_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("holo_deaths", EvoManager, {"default": 0, "load_int": true}),
 			_f("holo_all90", EvoManager, {"default": false}),
+			_f("holo_rejects", EvoManager, {"default": 0, "load_int": true}),
 			# Endosimbiosis (cruce Parasitismo × Simbiosis)
 			_f("endosimbiosis_active", EvoManager, {"default": false}),
 			_f("endo_window_t", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),

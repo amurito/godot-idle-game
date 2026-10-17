@@ -339,6 +339,17 @@ const MUTUALISMO_TRUST_SEAL      := 8      # confianza para sellar…
 const MUTUALISMO_FAIR_BAND       := 30.0   # …con |R| ≤ 30 s (banda justa)
 const MUTUALISMO_BREAK           := 60.0   # |R| ≥ 60: ruptura (R < 0 → PARASITISMO, R > 0 → SIMBIOSIS)
 
+# Legados de Biología (B4): sirven también fuera de la Biología.
+const MICORRIZA_PASSIVE          := 1.10   # Legado Micorriza (sellar Mutualismo): pasivo ×1.10 en todas las runs
+const MICROBIOMA_DAMPEN          := 0.75   # Legado Microbioma (sellar Holobionte): shocks y corrosión ×0.75
+const MITOCONDRIA_MULT           := 1.15   # Legado Mitocondria (sellar Endosimbiosis): click y pasivo ×1.15…
+const MITOCONDRIA_EPS_MAX        := 0.30   # …mientras ε < 0.30
+# Logros de Biología (B4)
+const ACH_COMERCIO_JUSTO_R       := 5.0    # sellar Mutualismo con |R| ≤ 5
+const ACH_BUEN_PAGADOR_LOANS     := 5      # préstamos pagados en una run
+const ACH_CONTRARRELOJ_SECS      := 240.0  # Endosimbiosis: los 6 genes en < 4 min desde ENGULLIR
+const ACH_HUESPED_PERFECTO_REJ   := 50.0   # Endosimbiosis MYTHIC: rechazo pico ≤ 50
+
 # ── BIOLOGÍA · HOLOBIONTE (tier 3 de SIMBIOSIS) — HolobionteLogic ──
 # Verbo: SOSTENER UN ECOSISTEMA. Spec §5. A calibrar con el simulador.
 const HOLOBIONTE_MIN_T           := 2      # árbol de T2 (decisión del autor 2026-10-16)
@@ -357,7 +368,8 @@ const HOLO_RAIZ_PASSIVE_SHARE    := 0.33   # Raíz: pasivo ≥ 1/3 del ingreso (
                                            # Simbiosis deja el ingreso ~75 % activo; comprando sólo pasivo ~37 %)
 const HOLO_RAIZ_MULT             := 1.5    #   da pasivo ×1.5
 const HOLO_BACTERIA_CPS          := 1.0    # Bacteria: ≥ 1 click/s de media
-const HOLO_BACTERIA_MULT         := 1.5    #   da click ×1.5
+const HOLO_BACTERIA_MULT         := 1.2    #   da TODO el ingreso ×1.2 (con click ×1.5 hundía el pasivo
+                                           #   y la Raíz moría siempre: los premios no deben sabotearse)
 const HOLO_ALGA_EPS              := 0.30   # Alga: ε ≤ 0.30
 const HOLO_ALGA_OMEGA            := 0.10   #   da Ω +0.10
 const HOLO_LEVADURA_BUY_EVERY    := 60.0   # Levadura: una compra cada 60 s

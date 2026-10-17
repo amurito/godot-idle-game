@@ -153,8 +153,9 @@ static func process(dt: float) -> void:
 		for id in PARTNERS:
 			if health(id) < 90.0:
 				all90 = false
-		if all90:
+		if all90 and not EvoManager.holo_all90:
 			EvoManager.holo_all90 = true
+			AchievementManager.unlock("todos_a_bordo")
 	if coherence() >= Balance.HOLO_SEAL_HEALTH:
 		EvoManager.holo_coherence_time += dt
 	else:
@@ -174,7 +175,8 @@ static func _die(id: String) -> void:
 
 # ── Economía ─────────────────────────────────────────────────────────────────
 
-static func click_mult() -> float:
+## Bacteria: todo el ingreso (click y pasivo por igual, para no desplazar la proporción de la Raíz).
+static func bacteria_mult() -> float:
 	return Balance.HOLO_BACTERIA_MULT if alive("bacteria") and is_active() else 1.0
 
 static func passive_mult() -> float:
