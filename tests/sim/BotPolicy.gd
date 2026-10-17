@@ -86,6 +86,10 @@ extends RefCounted
 ##       policy: "fair" (acepta lo justo, rechaza la Tentación y cuida |R|) · "naive" (acepta todo menos
 ##               la Tentación, sin mirar R) · "greedy" (acepta todo, Tentación incluida)
 ##       seal: bool     sella apenas puede · react: s que tarda en decidir (default 2)
+##   holobionte: {enter, seal, care, cps_hi, cps_lo, eps_hi}  HOLOBIONTE (tier 3, requiere mutualismo):
+##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
+##       care: atiende las necesidades (compra pasivo si la Raíz lo pide; clickea a cps_hi con
+##             ε < eps_hi y a cps_lo por encima, para no dejar sin luz al Alga ni sin clicks a la Bacteria)
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
 	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
@@ -163,6 +167,11 @@ func _current_cps() -> float:
 	var hold: float = float(cfg.get("caos_hold_below", -1.0))
 	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
+	var holo: Dictionary = cfg.get("holobionte", {})
+	if holo.get("care", false) and HolobionteLogic.is_active():
+		var hi: float = float(holo.get("cps_hi", 3.0))
+		var lo: float = float(holo.get("cps_lo", 1.2))
+		return hi if StructuralModel.epsilon_runtime < float(holo.get("eps_hi", 0.25)) else lo
 	var dark: Dictionary = cfg.get("dark", {})
 	if not dark.is_empty() and (EvoManager.mutation_depredador or EvoManager.mutation_met_oscuro):
 		if EvoManager.mutation_necrosis:
@@ -234,6 +243,9 @@ func _buy(d: RefCounted) -> void:
 	# Panspermia: con la seta formada se ahorra para el lanzamiento (no se compra nada).
 	if not cfg.get("green", {}).is_empty() and EvoManager.seta_formada and EvoManager.is_panspermia_window():
 		return
+	if cfg.get("holobionte", {}).get("care", false) and HolobionteLogic.alive("raiz") \
+			and not HolobionteLogic.need_met("raiz"):
+		ids = PASSIVE_IDS
 	var max_passive: float = float(cfg.get("max_passive_pct", 100.0))
 	var uncap: String = str(cfg.get("uncap_passive_on", ""))
 	if uncap != "" and bool(EvoManager.get("mutation_" + uncap)):
@@ -426,9 +438,16 @@ func _route_keys(_d: RefCounted) -> void:
 		if cfg.get("huesped_seal", false) and HuespedSoberanoLogic.seal_ready():
 			UIManager._ng_buttons._on_huesped_seal_pressed()
 			_log("seal:huesped")
+	var hcfg: Dictionary = cfg.get("holobionte", {})
+	if hcfg.get("enter", false) and HolobionteLogic.can_enter():
+		UIManager._ng_buttons._on_holo_enter_pressed()
+		_log("holobionte:enter")
 	var mcfg: Dictionary = cfg.get("mutualismo", {})
 	if not mcfg.is_empty():
 		_mutualismo(mcfg)
+	if hcfg.get("seal", false) and HolobionteLogic.seal_ready():
+		UIManager._ng_buttons._on_holo_seal_pressed()
+		_log("seal:holobionte")
 	if EvoManager.mutation_caos_orquestado:
 		if _caos_start < 0.0:
 			_caos_start = RunManager.run_time

@@ -72,8 +72,10 @@ static func can_accept() -> bool:
 	return is_active() and EvoManager.mutualismo_offer != "" \
 		and (offer_give_secs() <= 0.0 or EconomyManager.money > 0.0)
 
+## Pacto sellable (también es la puerta a Holobionte). En Holobionte se sella el ecosistema, no el pacto.
 static func seal_ready() -> bool:
-	return is_active() and EvoManager.mutualismo_trust >= Balance.MUTUALISMO_TRUST_SEAL \
+	return is_active() and not EvoManager.holobionte_active \
+		and EvoManager.mutualismo_trust >= Balance.MUTUALISMO_TRUST_SEAL \
 		and absf(EvoManager.mutualismo_r) <= Balance.MUTUALISMO_FAIR_BAND
 
 
@@ -98,6 +100,11 @@ static func _trust(delta: int) -> void:
 
 static func accept() -> void:
 	if not can_accept():
+		return
+	if EvoManager.mutualismo_offer.begins_with("socio_"):
+		HolobionteLogic.accept_recruit(EvoManager.mutualismo_offer)
+		EvoManager.mutualismo_reject_streak = 0
+		_close_offer(false)
 		return
 	match EvoManager.mutualismo_offer:
 		"intercambio":
@@ -128,6 +135,10 @@ static func accept() -> void:
 static func reject() -> void:
 	if not is_active() or EvoManager.mutualismo_offer == "":
 		return
+	if EvoManager.mutualismo_offer.begins_with("socio_"):
+		HolobionteLogic.reject_recruit(EvoManager.mutualismo_offer)
+		_close_offer(false)
+		return
 	# Rechazar la Tentación es lo correcto: no cuenta como desaire.
 	if EvoManager.mutualismo_offer != "tentacion":
 		EvoManager.mutualismo_reject_streak += 1
@@ -137,11 +148,13 @@ static func reject() -> void:
 			UIManager.show_toast(TranslationServer.translate("TOAST_MUTUALISMO_SNUB"))
 	_close_offer()
 
-static func _close_offer() -> void:
+## `advance`: las ofertas de socio (Holobionte) no avanzan la secuencia de la Raíz.
+static func _close_offer(advance: bool = true) -> void:
 	EvoManager.mutualismo_offer = ""
 	EvoManager.mutualismo_decide_timer = 0.0
-	EvoManager.mutualismo_offers += 1
-	EvoManager.mutualismo_offer_timer = Balance.MUTUALISMO_OFFER_INTERVAL
+	if advance:
+		EvoManager.mutualismo_offers += 1
+	EvoManager.mutualismo_offer_timer = Balance.HOLO_OFFER_INTERVAL if EvoManager.holobionte_active else Balance.MUTUALISMO_OFFER_INTERVAL
 
 
 ## Tick (fase de procesos de ruta).
@@ -168,13 +181,17 @@ static func process(dt: float) -> void:
 		EvoManager.mutualismo_gratitude_due -= dt
 		if EvoManager.mutualismo_gratitude_due <= 0.0:
 			EvoManager.mutualismo_gratitude_due = 0.0
+			# La gratitud salda lo dado en la reciprocidad; el 0.5× extra es premio, no deuda
+			# (calibración 2026-10-16: contarlo entero hacía derivar R hacia la ruptura en runs largas).
 			_receive(EvoManager.mutualismo_gratitude_secs)
+			EvoManager.mutualismo_r += EvoManager.mutualismo_gratitude_secs - EvoManager.mutualismo_gratitude_secs * Balance.MUTUALISMO_AID_GIVE / Balance.MUTUALISMO_AID_RETURN
 			UIManager.show_toast(TranslationServer.translate("TOAST_MUTUALISMO_GRATITUDE"))
 	# Ofertas.
 	if EvoManager.mutualismo_offer == "":
 		EvoManager.mutualismo_offer_timer -= dt
 		if EvoManager.mutualismo_offer_timer <= 0.0:
-			EvoManager.mutualismo_offer = next_offer_kind()
+			var recruit: String = HolobionteLogic.pending_recruit_offer()
+			EvoManager.mutualismo_offer = recruit if recruit != "" else next_offer_kind()
 			EvoManager.mutualismo_decide_timer = Balance.MUTUALISMO_DECIDE_TIME
 			UIManager.show_toast(TranslationServer.translate("TOAST_MUTUALISMO_OFFER") % offer_name(EvoManager.mutualismo_offer))
 	else:
@@ -204,11 +221,16 @@ static func income_mult() -> float:
 # ── Textos ───────────────────────────────────────────────────────────────────
 
 static func offer_name(kind: String) -> String:
+	if kind.begins_with("socio_"):
+		return TranslationServer.translate("HOLO_OFFER_RECRUIT") % HolobionteLogic.partner_name(kind.trim_prefix("socio_"))
 	return TranslationServer.translate("MUTUALISMO_OFFER_" + kind.to_upper())
 
 ## Descripción corta de la oferta: lo que das / lo que recibís, en $ actuales.
 static func offer_desc(kind: String) -> String:
 	var f := func(secs: float) -> String: return "$" + UITextBuilders.format_compact(income() * secs)
+	if kind.begins_with("socio_"):
+		var id: String = kind.trim_prefix("socio_")
+		return TranslationServer.translate("HOLO_DESC_" + id.to_upper())
 	match kind:
 		"intercambio":
 			return TranslationServer.translate("MUTUALISMO_DESC_INTERCAMBIO") % [f.call(Balance.MUTUALISMO_EXCHANGE_GIVE), Balance.MUTUALISMO_EXCHANGE_MULT, Balance.MUTUALISMO_EXCHANGE_SECS]

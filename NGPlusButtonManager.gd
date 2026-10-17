@@ -62,6 +62,8 @@ var _mutualismo_pact_btn: Button = null   # ACEPTAR PACTO (entrada a Mutualismo 
 var _mutualismo_accept_btn: Button = null # [A] Aceptar oferta
 var _mutualismo_reject_btn: Button = null # [R] Rechazar oferta
 var _mutualismo_seal_btn: Button = null
+var _holo_enter_btn: Button = null        # PRESENTAR SOCIOS (Mutualismo → Holobionte)
+var _holo_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -169,7 +171,8 @@ func reset_ng_plus_buttons() -> void:
 		_ayuno_seal_btn.queue_free()
 		_ayuno_seal_btn = null
 	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
-			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn]:
+			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn,
+			_holo_enter_btn, _holo_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
 	_caos_collapse_btn = null
@@ -184,6 +187,8 @@ func reset_ng_plus_buttons() -> void:
 	_mutualismo_accept_btn = null
 	_mutualismo_reject_btn = null
 	_mutualismo_seal_btn = null
+	_holo_enter_btn = null
+	_holo_seal_btn = null
 	if is_instance_valid(_transmut_btn):
 		_transmut_btn.queue_free()
 		_transmut_btn = null
@@ -234,7 +239,7 @@ func _update_mutualismo_buttons() -> void:
 	elif is_instance_valid(_mutualismo_pact_btn):
 		_mutualismo_pact_btn.visible = false
 	if not MutualismoLogic.is_active():
-		for b in [_mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn]:
+		for b in [_mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn, _holo_enter_btn, _holo_seal_btn]:
 			if is_instance_valid(b):
 				b.visible = false
 		return
@@ -262,6 +267,32 @@ func _update_mutualismo_buttons() -> void:
 		_mutualismo_seal_btn.visible = true
 	elif is_instance_valid(_mutualismo_seal_btn):
 		_mutualismo_seal_btn.visible = false
+	# HOLOBIONTE: en vez de sellar el pacto, la Raíz presenta a sus socios (T ≥ 2).
+	if HolobionteLogic.can_enter():
+		if not is_instance_valid(_holo_enter_btn):
+			_holo_enter_btn = _make_rp_button(Color(0.91, 0.34, 0.56), 60, _on_holo_enter_pressed, 0)
+		_holo_enter_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_HOLO_ENTER"))
+		_holo_enter_btn.visible = true
+	elif is_instance_valid(_holo_enter_btn):
+		_holo_enter_btn.visible = false
+	if HolobionteLogic.seal_ready():
+		if not is_instance_valid(_holo_seal_btn):
+			_holo_seal_btn = _make_rp_button(Color(0.91, 0.34, 0.56), 70, _on_holo_seal_pressed, 0)
+		_holo_seal_btn.text = EmojiToRichText.strip(TranslationServer.translate("BTN_HOLO_SEAL") % int(Balance.PL_REWARDS.get("HOLOBIONTE", 8)))
+		_holo_seal_btn.visible = true
+	elif is_instance_valid(_holo_seal_btn):
+		_holo_seal_btn.visible = false
+
+func _on_holo_enter_pressed() -> void:
+	HolobionteLogic.enter()
+	update_ng_plus_buttons()
+
+func _on_holo_seal_pressed() -> void:
+	if RunManager.run_closed or not HolobionteLogic.seal_ready():
+		return
+	if is_instance_valid(_holo_seal_btn):
+		_holo_seal_btn.visible = false
+	RunManager.close_run("HOLOBIONTE", TranslationServer.translate("CLOSE_HOLOBIONTE"))
 
 func _on_mutualismo_pact_pressed() -> void:
 	MutualismoLogic.enter()

@@ -1436,6 +1436,42 @@ static func build_mutualismo_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + T.call("MUTUALISMO_PANEL_TIP") + "[/color]"
 	return t
 
+static func build_holobionte_panel_text() -> String:
+	var T := func(k: String) -> String: return TranslationServer.translate(k)
+	var t: String = "[color=#e8578f]" + T.call("HOLO_PANEL_TITLE") + "[/color]\n"
+	for id in HolobionteLogic.PARTNERS:
+		var pname: String = HolobionteLogic.partner_name(id)
+		if HolobionteLogic.alive(id):
+			var h: float = HolobionteLogic.health(id)
+			var ok: bool = HolobionteLogic.need_met(id)
+			var col: String = "green" if h >= Balance.HOLO_SEAL_HEALTH else ("#ffcc66" if h >= 30.0 else "#ff5c6a")
+			var arrow: String = "▲" if ok else "▼"
+			t += "[color=%s]%s %3.0f[/color]  %s %s\n" % [col, pname, h, arrow, HolobionteLogic.need_text(id)]
+		elif EvoManager.holo_respawn.has(id):
+			t += "[color=#888888]" + T.call("HOLO_PANEL_DEAD") % [pname, float(EvoManager.holo_respawn[id])] + "[/color]\n"
+		else:
+			t += "[color=#888888]" + T.call("HOLO_PANEL_WAITING") % pname + "[/color]\n"
+	t += "\n" + T.call("HOLO_PANEL_COHERENCE") % [HolobionteLogic.coherence(), Balance.HOLO_SEAL_HEALTH,
+		EvoManager.holo_coherence_time, Balance.HOLO_SEAL_HOLD] + "\n"
+	if EvoManager.holo_deaths > 0:
+		t += "[color=#ff8866]" + T.call("HOLO_PANEL_DEATHS") % [EvoManager.holo_deaths, Balance.HOLO_COLLAPSE_DEATHS] + "[/color]\n"
+	t += T.call("MUTUALISMO_PANEL_R") % ["%+.0f" % EvoManager.mutualismo_r, Balance.MUTUALISMO_FAIR_BAND, Balance.MUTUALISMO_BREAK]
+	t += "  ·  " + T.call("MUTUALISMO_PANEL_TRUST") % [EvoManager.mutualismo_trust, Balance.MUTUALISMO_TRUST_SEAL] + "\n"
+	var offer: String = EvoManager.mutualismo_offer
+	if offer != "":
+		t += "\n[color=#ffc2a8]" + T.call("MUTUALISMO_PANEL_OFFER") % [MutualismoLogic.offer_name(offer), EvoManager.mutualismo_decide_timer] + "[/color]\n"
+		t += MutualismoLogic.offer_desc(offer) + "\n"
+	if HolobionteLogic.seal_ready():
+		t += "\n[color=#e8578f]" + T.call("HOLO_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.call("HOLO_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_holobionte_closed_text() -> String:
+	var t := "[color=#e8578f]" + TranslationServer.translate("HOLO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("HOLO_CLOSED_LORE") + "[/i]"
+	return t
+
 static func build_mutualismo_closed_text() -> String:
 	var t := "[color=#ffc2a8]" + TranslationServer.translate("MUTUALISMO_CLOSED_TITLE") + "[/color]\n\n"
 	t += "[i]" + TranslationServer.translate("MUTUALISMO_CLOSED_LORE") + "[/i]"

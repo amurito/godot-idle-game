@@ -319,6 +319,30 @@ const MUTUALISMO_TRUST_SEAL      := 8      # confianza para sellar…
 const MUTUALISMO_FAIR_BAND       := 30.0   # …con |R| ≤ 30 s (banda justa)
 const MUTUALISMO_BREAK           := 60.0   # |R| ≥ 60: ruptura (R < 0 → PARASITISMO, R > 0 → SIMBIOSIS)
 
+# ── BIOLOGÍA · HOLOBIONTE (tier 3 de SIMBIOSIS) — HolobionteLogic ──
+# Verbo: SOSTENER UN ECOSISTEMA. Spec §5. A calibrar con el simulador.
+const HOLOBIONTE_MIN_T           := 2      # árbol de T2 (decisión del autor 2026-10-16)
+const HOLO_OFFER_INTERVAL        := 40.0   # s entre ofertas de la Raíz dentro de Holobionte
+const HOLO_RECRUIT_INTERVAL      := 45.0   # s entre llegadas de socios (y tras un rechazo)
+const HOLO_RESPAWN               := 60.0   # s hasta que un socio muerto vuelve a ofrecerse
+const HOLO_JOIN_HEALTH           := 60.0   # salud al sumarse
+const HOLO_HEAL                  := 1.0    # salud /s con la necesidad cumplida
+const HOLO_HURT                  := 2.0    # salud /s perdida sin la necesidad
+const HOLO_DEATH_TRUST           := 3      # confianza perdida cuando muere un socio
+const HOLO_COLLAPSE_DEATHS       := 5      # muertes que desarman el ecosistema (cierra como MUTUALISMO)
+const HOLO_SEAL_HEALTH           := 70.0   # sello: los 4 socios ≥ 70…
+const HOLO_SEAL_HOLD             := 90.0   # …durante 90 s seguidos
+const HOLO_CPS_TAU               := 10.0   # s de la media móvil de clicks (Bacteria)
+const HOLO_RAIZ_PASSIVE_SHARE    := 0.33   # Raíz: pasivo ≥ 1/3 del ingreso (con 50 % era inalcanzable:
+                                           # Simbiosis deja el ingreso ~75 % activo; comprando sólo pasivo ~37 %)
+const HOLO_RAIZ_MULT             := 1.5    #   da pasivo ×1.5
+const HOLO_BACTERIA_CPS          := 1.0    # Bacteria: ≥ 1 click/s de media
+const HOLO_BACTERIA_MULT         := 1.5    #   da click ×1.5
+const HOLO_ALGA_EPS              := 0.30   # Alga: ε ≤ 0.30
+const HOLO_ALGA_OMEGA            := 0.10   #   da Ω +0.10
+const HOLO_LEVADURA_BUY_EVERY    := 60.0   # Levadura: una compra cada 60 s
+const HOLO_LEVADURA_DISCOUNT     := 0.90   #   da mejoras −10 %
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -441,6 +465,7 @@ const PL_REWARDS: Dictionary = {
 	"HOMEORHESIS":               8,
 	"SIMBIOSIS":                 4,
 	"MUTUALISMO":                6,
+	"HOLOBIONTE":                8,
 	"ESPORULACION":              5,
 	"ESPORULACIÓN":              5,
 	"ESPORULACION TOTAL":        5,
@@ -478,6 +503,7 @@ const NG_CAPS: Dictionary = {
 	"HOMEOSTASIS":               6,
 	"SIMBIOSIS":                 6,
 	"MUTUALISMO":                6,
+	"HOLOBIONTE":                8,
 	"HIPERASIMILACION":          5,
 	"HIPERASIMILACIÓN":          5,
 	"PARASITISMO":               4,

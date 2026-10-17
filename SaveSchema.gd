@@ -175,6 +175,16 @@ static func _define() -> Array:
 			_f("mutualismo_tempted", EvoManager, {"default": 0, "load_int": true}),
 			_f("mutualismo_loans_paid", EvoManager, {"default": 0, "load_int": true}),
 			_f("mutualismo_defaulted", EvoManager, {"default": false}),
+			# Holobionte (tier 3 de Simbiosis)
+			_f("holobionte_active", EvoManager, {"default": false}),
+			_f("holo_health", EvoManager, {"default": {}}),
+			_f("holo_respawn", EvoManager, {"default": {}}),
+			_f("holo_recruit_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("holo_cps", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("holo_since_buy", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("holo_coherence_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("holo_deaths", EvoManager, {"default": 0, "load_int": true}),
+			_f("holo_all90", EvoManager, {"default": false}),
 			# Huésped Soberano (transmutación de Parasitismo)
 			_f("mutation_huesped_soberano", EvoManager, {"default": false}),
 			_f("huesped_hunger", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),

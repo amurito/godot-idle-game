@@ -342,6 +342,10 @@ func update_runtime() -> void:
 	# Inerte en sub-rutas oscuras (el offset queda en 0: el empuje está bloqueado ahí).
 	if control_omega_offset != 0.0:
 		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
+	# HOLOBIONTE: el Alga (fotobionte) estabiliza Ω mientras vive.
+	var holo_omega: float = HolobionteLogic.omega_bonus()
+	if holo_omega != 0.0:
+		omega = minf(omega + holo_omega, 1.0)
 
 	if epsilon_debug:
 		print("e breakdown: act=", epsilon_active, " pas=", epsilon_passive, " cmp=", epsilon_complex, " O=", omega)
@@ -392,6 +396,10 @@ func resolve_omega() -> void:
 	# 5. Control de Ω
 	if control_omega_offset != 0.0:
 		omega = clampf(omega + control_omega_offset, 0.0, 1.0)
+	# HOLOBIONTE: el Alga (fotobionte) estabiliza Ω mientras vive.
+	var holo_omega: float = HolobionteLogic.omega_bonus()
+	if holo_omega != 0.0:
+		omega = minf(omega + holo_omega, 1.0)
 
 ## CAOS ORQUESTADO: la carga de caos (crece sola, CaosOrquestadoLogic.process) es piso de ε.
 ## Sin esto ε converge a su equilibrio estructural (~0.56 al dominar el pasivo) y la ruta se

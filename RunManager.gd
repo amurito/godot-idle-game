@@ -859,6 +859,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
 	if EvoManager.mutation_allostasis:             return "ALLOSTASIS"
 	if EvoManager.mutation_homeostasis:            return "HOMEOSTASIS"
+	if EvoManager.holobionte_active:               return "HOLOBIONTE"
 	if EvoManager.mutualismo_active:               return "MUTUALISMO"
 	if EvoManager.mutation_symbiosis:              return "SIMBIOSIS"
 	if EvoManager.mutation_red_micelial:           return "ESPORULACIÓN"
@@ -1013,6 +1014,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "pico de combo {v} / 8 = {b} (cap {c})"},
 		"MICELIO OMNISCIENTE": {"value": func() -> Variant: return EvoManager.micelio_peak_network, "op": "div", "k": 20.0,
 			"vfmt": "%.0f", "log": "red conectada pico {v} / 20 = {b} (cap {c})"},
+		"HOLOBIONTE": {"value": func() -> Variant: return EvoManager.holo_coherence_time, "op": "div", "k": 15.0,
+			"vfmt": "%.0f", "log": "coherencia {v}s / 15 = {b} (cap {c})"},
 		"MUTUALISMO": {"value": func() -> Variant: return EvoManager.mutualismo_trust, "op": "div", "k": 2.0,
 			"vfmt": "%d", "log": "confianza {v} / 2 = {b} (cap {c})"},
 		"HUÉSPED SOBERANO": {"value": func() -> Variant: return EvoManager.huesped_trust, "op": "div", "k": 75.0,

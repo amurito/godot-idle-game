@@ -232,6 +232,17 @@ var mutualismo_tempted: int = 0               # Tentaciones aceptadas (MYTHIC Si
 var mutualismo_loans_paid: int = 0
 var mutualismo_defaulted: bool = false
 
+# === HOLOBIONTE (tier 3 de Simbiosis — HolobionteLogic) ===
+var holobionte_active := false
+var holo_health: Dictionary = {}              # socio vivo → salud 0–100
+var holo_respawn: Dictionary = {}             # socio muerto → s hasta volver a ofrecerse
+var holo_recruit_timer: float = 0.0           # s hasta que el próximo socio pueda llegar
+var holo_cps: float = 0.0                     # media móvil de clicks/s (Bacteria)
+var holo_since_buy: float = 0.0               # s desde la última compra (Levadura)
+var holo_coherence_time: float = 0.0          # s seguidos con los 4 socios ≥ HOLO_SEAL_HEALTH
+var holo_deaths: int = 0                      # MYTHIC Nadie Muere: 0
+var holo_all90: bool = false                  # los 4 socios ≥ 90 a la vez (logro Todos a Bordo)
+
 # === HUÉSPED SOBERANO (Transmutación de Parasitismo — HuespedSoberanoLogic) ===
 var mutation_huesped_soberano := false
 var huesped_hunger: float = 0.0
@@ -370,6 +381,7 @@ func tick_route_processes(dt: float) -> void:
 	MicelioOmniscienteLogic.process(dt)  # se auto-gatea
 	HuespedSoberanoLogic.process(dt)  # se auto-gatea
 	MutualismoLogic.process(dt)  # se auto-gatea (tier 2 de Simbiosis)
+	HolobionteLogic.process(dt)  # se auto-gatea (tier 3 de Simbiosis)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el

@@ -154,6 +154,20 @@ oferta de entrada a los 60 s.
   como una barra de "coherencia" (el mínimo de las cuatro saludes).
 - Duración esperada: **14–18 min** en total.
 
+### 5.3b Implementado (B2, 2026-10-16) · `HolobionteLogic.gd`
+Cambios contra la propuesta, por calibración con bot:
+- **Raíz: pasivo ≥ 1/3** (no 50 %): Simbiosis deja el ingreso ~75 % activo; comprando sólo pasivo el bot llega a ~37 %.
+- **Gratitud del Auxilio**: en la reciprocidad salda lo dado (el 0.5× extra es premio). Contarla entera hacía
+  derivar R −10 por ciclo y en runs largas terminaba en traición sin que el jugador hiciera nada malo.
+- **Colapso**: 5 muertes desarman el ecosistema → la run cierra como MUTUALISMO (sin esto quien no atiende quedaba trabado).
+- Los socios llegan como ofertas del sistema de Mutualismo ("Nuevo socio: X", [A] para sumarlo); las ofertas de la Raíz siguen cada 40 s.
+- Entrada: PRESENTAR SOCIOS aparece cuando el pacto es sellable (confianza 8, |R| ≤ 30) y T ≥ 2.
+
+| Perfil | Resultado |
+|---|---|
+| `t2_holobionte_care` (compra pasivo si la Raíz lo pide, clickea medido según ε) | HOLOBIONTE a 1197 s (entra a 640: ~9 min de ecosistema; la Raíz muere 2 veces al principio) |
+| `t2_holobionte_careless` (compra lo más barato, 4 cps) | el Alga muere en loop → colapso → MUTUALISMO a 1335 s |
+
 ### 5.4 Panel
 Cuatro mini barras con el ícono de cada socio y su necesidad en una línea ("Bacteria: 0.6/1 cps ▼").
 El núcleo late con un color por socio en rotación; un socio en peligro parpadea.

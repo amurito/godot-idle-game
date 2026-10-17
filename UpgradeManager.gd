@@ -201,6 +201,8 @@ func cost(id: String) -> float:
 
 	# MICELIO OMNISCIENTE: el nodo conectado se abarata (1.0 fuera de la ruta).
 	base_cost *= MicelioOmniscienteLogic.cost_factor(id)
+	# HOLOBIONTE: la Levadura abarata las mejoras mientras vive (1.0 fuera de la ruta).
+	base_cost *= HolobionteLogic.cost_factor()
 
 	return base_cost
 
@@ -283,6 +285,7 @@ func purchase_upgrade(id: String) -> void:
 			LogManager.add("Comprado: " + get_def(id).label)
 			apply_bought_effects(id)
 			MicelioOmniscienteLogic.on_purchase()
+			HolobionteLogic.on_purchase()
 			upgrade_bought.emit(id)
 
 func apply_bought_effects(id: String) -> void:

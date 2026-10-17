@@ -16,7 +16,7 @@ class_name IncomeModifiers
 
 const CLICK_ORDER := [
 	"sincronia_total", "symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica",
-	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo", "mutualismo",
+	"caos_fuel", "caos_burst", "coro_rhythm", "coro_echo", "mutualismo", "holo_bacteria",
 	"homeostasis_banda", "met_oscuro", "necrosis", "apoptosis_heredada", "plasticidad_terminal",
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
@@ -25,7 +25,7 @@ const CLICK_ORDER := [
 
 const PASSIVE_ORDER := [
 	"symbiosis", "red_micelial", "hyperassimilation", "fusion_catabolica", "caos_fuel", "caos_burst",
-	"coro_rhythm", "coro_echo", "mutualismo",
+	"coro_rhythm", "coro_echo", "mutualismo", "holo_raiz",
 	"ayuno_primordial",
 	"primicia_del_vacio", "homeostasis_banda", "parasitism_growth", "parasitism_corrosion",
 	"met_oscuro", "semilla_cosmica", "semilla_cosmica_oscura", "mente_colmena",
@@ -128,6 +128,9 @@ static func _build() -> Dictionary:
 	# MUTUALISMO: retorno del Intercambio (×boost a todo el ingreso mientras dura).
 	var mutualismo := func() -> float: return MutualismoLogic.income_mult()
 	d["mutualismo"] = _row("Mutualismo (intercambio)", "route", mutualismo, mutualismo)
+	# HOLOBIONTE: la Bacteria potencia el click y la Raíz el pasivo, mientras viven.
+	d["holo_bacteria"] = _row("Holobionte: Bacteria", "route", func() -> float: return HolobionteLogic.click_mult(), none)
+	d["holo_raiz"] = _row("Holobionte: Raíz", "route", none, func() -> float: return HolobionteLogic.passive_mult())
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

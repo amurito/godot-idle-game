@@ -408,6 +408,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 		EvoManager.add_necromasa_from_click(power)
 	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
 	CoroSimbioticoLogic.on_click()  # golpe del metrónomo (Coro Simbiótico / legado Compás Interno)
+	HolobionteLogic.on_click()  # Bacteria: media de clicks/s
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
 

@@ -507,7 +507,7 @@ const ENTRIES: Dictionary = {
 			+ "Con Simbiosis activa y la run pasado el minuto aparece [b]ACEPTAR PACTO[/b]. Al aceptarlo, Simbiosis deja de cerrarse sola y empezás a [b]negociar[/b] con la Raíz: cada 25 s te hace una oferta y tenés 10 s para [b][A] aceptar[/b] o [b][R] rechazar[/b] (no decidir = rechazar). Todo se mide en [b]segundos de ingreso[/b]:\n\n"
 			+ "• [b]Intercambio[/b]: das hasta 15 s; recibís ×1.5 al ingreso hasta 30 s (+1 confianza).\n"
 			+ "• [b]Préstamo[/b]: recibís 20 s ya y la Raíz cobra 25 s a los 40 s. Si no tenés la plata, incumplís (−3 confianza).\n"
-			+ "• [b]Auxilio[/b]: das hasta 20 s; a los 60 s su gratitud te devuelve 1.5× lo que diste (+2 confianza).\n"
+			+ "• [b]Auxilio[/b]: das hasta 20 s; a los 60 s su gratitud te devuelve 1.5× lo que diste (+2 confianza). En la reciprocidad la gratitud salda lo dado: el extra es premio.\n"
 			+ "• [b]Tentación[/b]: tomás 40 s gratis (−4 confianza). Rechazarla no cuenta como desaire.\n\n"
 			+ "La [b]reciprocidad[/b] es lo que diste menos lo que recibiste. Tres rechazos seguidos ofenden a la Raíz (−1 confianza).\n\n"
 			+ "[b]Sello[/b]: confianza 8 con la reciprocidad dentro de ±30 → [b]MUTUALISMO[/b] (+6 PL base + bonus).\n"
@@ -518,14 +518,42 @@ const ENTRIES: Dictionary = {
 			+ "With Symbiosis active and the run past the first minute, [b]ACCEPT PACT[/b] appears. Once accepted, Symbiosis stops closing on its own and you start [b]negotiating[/b] with the Root: every 25 s it makes an offer and you have 10 s to [b][A] accept[/b] or [b][R] reject[/b] (not deciding = rejecting). Everything is measured in [b]seconds of income[/b]:\n\n"
 			+ "• [b]Exchange[/b]: give up to 15 s; get ×1.5 income for up to 30 s (+1 trust).\n"
 			+ "• [b]Loan[/b]: get 20 s now and the Root collects 25 s after 40 s. Without the money, you default (−3 trust).\n"
-			+ "• [b]Aid[/b]: give up to 20 s; after 60 s its gratitude returns 1.5× what you gave (+2 trust).\n"
+			+ "• [b]Aid[/b]: give up to 20 s; after 60 s its gratitude returns 1.5× what you gave (+2 trust). In reciprocity the gratitude settles what you gave: the extra is a reward.\n"
 			+ "• [b]Temptation[/b]: take 40 s for free (−4 trust). Rejecting it doesn't count as a snub.\n\n"
 			+ "[b]Reciprocity[/b] is what you gave minus what you got. Three rejections in a row offend the Root (−1 trust).\n\n"
 			+ "[b]Seal[/b]: trust 8 with reciprocity within ±30 → [b]MUTUALISM[/b] (+6 LP base + bonus).\n"
 			+ "[b]Break[/b]: take too much (−60) and the partner becomes prey: the run closes as [b]Parasitism[/b]; give too much (+60) and the Root keeps everything: it closes as [b]Symbiosis[/b]."
 		),
 		"unlock": {"type": "transcendence_count", "min": 1},
-		"see_also": ["simbiosis"],
+		"see_also": ["simbiosis", "holobionte"],
+	},
+	"holobionte": {
+		"cat": "mutaciones",
+		"name_es": "Holobionte", "name_en": "Holobiont",
+		"body_es": (
+			"Tercer tier de [b]Simbiosis[/b] (desde la 2ª trascendencia). Ningún organismo es uno solo: el holobionte es el hongo más todo lo que vive en él.\n\n"
+			+ "Cuando el pacto de [b]Mutualismo[/b] se puede sellar, aparece [b]PRESENTAR SOCIOS[/b]. En vez de sellar, la Raíz te presenta a tres socios más; cada uno llega como una oferta ([A] para sumarlo). Las ofertas de la Raíz siguen, cada 40 s.\n\n"
+			+ "Cada socio tiene [b]salud[/b] (0–100): con su necesidad cumplida cura +1/s, sin ella pierde −2/s. A 0 [b]muere[/b]: perdés su bonus y 3 de confianza, y vuelve a ofrecerse a los 60 s. Las necesidades se contradicen a propósito:\n\n"
+			+ "• [b]Raíz[/b]: pasivo ≥ 1/3 del ingreso → pasivo ×1.5.\n"
+			+ "• [b]Bacteria[/b]: ≥ 1 click/s de media → click ×1.5.\n"
+			+ "• [b]Alga[/b]: ε ≤ 0.30 → Ω +0.10.\n"
+			+ "• [b]Levadura[/b]: una compra cada 60 s → mejoras −10 %.\n\n"
+			+ "[b]Sello[/b]: los 4 socios con salud ≥ 70 durante 90 s seguidos → [b]HOLOBIONTE[/b] (+8 PL base + bonus).\n"
+			+ "[b]Colapso[/b]: si mueren 5 socios, el ecosistema se desarma y la run cierra como [b]Mutualismo[/b]."
+		),
+		"body_en": (
+			"Third tier of [b]Symbiosis[/b] (from the 2nd transcendence). No organism is ever just one: the holobiont is the fungus plus everything living in it.\n\n"
+			+ "When the [b]Mutualism[/b] pact can be sealed, [b]INTRODUCE PARTNERS[/b] appears. Instead of sealing, the Root introduces three more partners; each arrives as an offer ([A] to add it). The Root's offers keep coming, every 40 s.\n\n"
+			+ "Each partner has [b]health[/b] (0–100): with its need met it heals +1/s, without it it loses −2/s. At 0 it [b]dies[/b]: you lose its bonus and 3 trust, and it offers itself again after 60 s. The needs contradict each other on purpose:\n\n"
+			+ "• [b]Root[/b]: passive ≥ 1/3 of income → passive ×1.5.\n"
+			+ "• [b]Bacterium[/b]: ≥ 1 click/s on average → click ×1.5.\n"
+			+ "• [b]Alga[/b]: ε ≤ 0.30 → Ω +0.10.\n"
+			+ "• [b]Yeast[/b]: a purchase every 60 s → upgrades −10%.\n\n"
+			+ "[b]Seal[/b]: all 4 partners with health ≥ 70 for 90 s straight → [b]HOLOBIONT[/b] (+8 LP base + bonus).\n"
+			+ "[b]Collapse[/b]: if 5 partners die, the ecosystem falls apart and the run closes as [b]Mutualism[/b]."
+		),
+		"unlock": {"type": "transcendence_count", "min": 2},
+		"see_also": ["mutualismo", "simbiosis"],
 	},
 	"singularidad": {
 		"cat": "mutaciones",
