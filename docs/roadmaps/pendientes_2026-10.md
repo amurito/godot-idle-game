@@ -30,6 +30,8 @@ de la franja Biología están vacías. Ideas para llenarlo (a definir con el aut
 - **Tiers de Simbiosis** (como Homeostasis → Allostasis → Homeorresis): p. ej. Mutualismo → Holobionte.
 - Con eso, la Biología tendría su propia **Redención** más adelante.
 
+**Spec para revisión:** `docs/design/biologia_mutualismo_endosimbiosis.md` (Mutualismo = negociar, Holobionte = sostener 4 socios, Endosimbiosis = dosificar genes; 6 preguntas abiertas en §9).
+
 ### A2. Sombras (anti-A) — 1 de 5 hecha
 Hecha: Ayuno Primordial (anti-Hiper). Pendientes (spec en `involucion_transmutaciones.md` §6, disparador espejo):
 Autosuficiencia (anti-Parasitismo), Autarquía (anti-Simbiosis), Núcleo Aislado (anti-Red Micelial),
