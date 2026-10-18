@@ -1036,6 +1036,12 @@ func _input(event):
 					MutualismoLogic.reject()
 					UIManager.update_ng_plus_buttons()
 					get_viewport().set_input_as_handled()
+			elif AntibiosisLogic.is_active():
+				var _ab: String = {KEY_Q: "beta", KEY_W: "macro", KEY_E: "tetra"}.get(kc, "")
+				if _ab != "" and AntibiosisLogic.can_shoot(_ab):
+					AntibiosisLogic.shoot(_ab)
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif ProcariotaLogic.is_active():
 				if kc == KEY_Q and ProcariotaLogic.can_harvest():
 					ProcariotaLogic.harvest()

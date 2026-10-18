@@ -99,6 +99,12 @@ extends RefCounted
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
 ##             (default 0.36) → la Raíz no se muere al llegar
+##   antibiosis: {push, rotate, react, afk, seal}  ANTIBIOSIS (Sombra de Simbiosis):
+##       push: con Simbiosis vista y Contabilidad, compra click y clickea fuerte (abre el espejo)
+##       rotate: true = elige el antibiótico de más daño · false = siempre el mismo (genera resistencia)
+##       react: s que espera desde que llega un rival antes de disparar (default 0) · afk: no dispara
+##       reserve_shots: no compra mejoras si la plata no cubre N disparos
+##       max_res: no dispara un antibiótico que pasaría esta resistencia (salvo con 2 rivales vivos)
 ##   procariota: {quorum_at, plasmid, harvest_below, afk, seal}  PROCARIOTA (Sombra de Endosimbiosis;
 ##       el bot entra dejando pasar ENGULLIR: endosimbiosis.engulf = false):
 ##       quorum_at: dispara el quorum con la colonia ≥ esto (default 0.8) · plasmid: cicla hasta este
@@ -137,6 +143,7 @@ var _swapped := false
 var _micelio_plan: Array = []
 var _next_decision_frame: int = 0
 var _inest_prog_total: float = -1.0
+var _anti_seen_t: float = -1.0
 var _inest_prog_t: float = 0.0
 
 
@@ -195,6 +202,11 @@ func _current_cps() -> float:
 	var until: float = float(cfg.get("click_until", -1.0))
 	if until >= 0.0 and t >= until:
 		return 0.0
+	var acfg_c: Dictionary = cfg.get("antibiosis", {})
+	if acfg_c.get("push", false) and EvoManager.anti_simb_seen and not EvoManager.mutation_antibiosis \
+			and UpgradeManager.level("accounting") >= 1:
+		# Competir: termostato de ε alto clickeando (como el empuje de Inestabilidad).
+		return 8.0 if StructuralModel.epsilon_runtime < 0.5 else 4.0
 	var icfg: Dictionary = cfg.get("inest", {})
 	if not icfg.is_empty():
 		if InestabilidadLogic.is_active():
@@ -293,10 +305,18 @@ func _buy(d: RefCounted) -> void:
 	# hoard_struct: junta plata hasta revelar el Lema de la estructura y lo resuelve de golpe.
 	if icfg_b.get("hoard_struct", false) and InestabilidadLogic.is_active() and not InestabilidadLogic.is_revealed("estructura"):
 		return
+	# Antibiosis: guarda plata para N disparos (reserve_shots) antes de comprar mejoras.
+	var acfg_r: Dictionary = cfg.get("antibiosis", {})
+	if AntibiosisLogic.is_active() and acfg_r.has("reserve_shots"):
+		keep = maxf(keep, AntibiosisLogic.shot_cost() * float(acfg_r.reserve_shots))
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
 	if inest_struct:
 		ids = STRUCT_IDS
+	# Antibiosis (push): con Simbiosis vista, sólo click para que domine (abre el espejo).
+	var acfg_b: Dictionary = cfg.get("antibiosis", {})
+	if acfg_b.get("push", false) and EvoManager.anti_simb_seen and not EvoManager.mutation_antibiosis:
+		ids = ["click", "click_mult", "accounting", "cognitive"]
 	var ids_from: Array = cfg.get("buy_ids_from", [])
 	if ids_from.size() == 2 and RunManager.run_time >= float(ids_from[0]):
 		ids = ids_from[1]
@@ -501,6 +521,9 @@ func _route_keys(_d: RefCounted) -> void:
 	var pcfg: Dictionary = cfg.get("procariota", {})
 	if not pcfg.is_empty() and ProcariotaLogic.is_active() and not pcfg.get("afk", false):
 		_procariota_keys(pcfg)
+	var acfg: Dictionary = cfg.get("antibiosis", {})
+	if not acfg.is_empty() and AntibiosisLogic.is_active() and not acfg.get("afk", false):
+		_antibiosis_keys(acfg)
 	if EvoManager.mutation_huesped_soberano:
 		var feed_at: float = float(cfg.get("huesped_feed_at", -1.0))
 		var h_at: float = EvoManager.huesped_hunger + HuespedSoberanoLogic.hunger_rate() * HuespedSoberanoLogic.craving_in()
@@ -669,6 +692,42 @@ func _dark(route: String) -> void:
 						ng._on_remision_up_pressed()
 					elif EvoManager.remision_omega > c + 0.01:
 						ng._on_remision_down_pressed()
+
+
+func _antibiosis_keys(a: Dictionary) -> void:
+	if a.get("seal", false) and AntibiosisLogic.seal_ready():
+		UIManager._ng_buttons._on_anti_seal_pressed()
+		_log("seal:antibiosis")
+		return
+	if AntibiosisLogic.alive() == 0:
+		_anti_seen_t = -1.0
+		return
+	if _anti_seen_t < 0.0:
+		_anti_seen_t = RunManager.run_time
+	if RunManager.run_time - _anti_seen_t < float(a.get("react", 0.0)):
+		return
+	# max_res: entre los antibióticos que no pasarían esa resistencia, el de más daño (si ninguno,
+	# espera; salvo con 2 rivales vivos y sin strict).
+	var mr: float = float(a.get("max_res", 9.0))
+	var force: bool = not a.get("strict", false) and AntibiosisLogic.alive() >= Balance.ANTI_OVERRUN - 1
+	var ab: String = ""
+	if a.get("rotate", true):
+		var best: float = -1.0
+		for x in AntibiosisLogic.ABS:
+			var ok: bool = force or float(EvoManager.anti_resist.get(x, 0.0)) + Balance.ANTI_RES_PER_USE <= mr + 0.0001
+			if ok and AntibiosisLogic.damage(x) > best:
+				best = AntibiosisLogic.damage(x)
+				ab = x
+	else:
+		ab = "beta"
+	if ab == "":
+		return
+	if AntibiosisLogic.can_shoot(ab):
+		var k: int = AntibiosisLogic.alive()
+		AntibiosisLogic.shoot(ab)
+		_after_key("key:%s anti %s alive=%d" % [{"beta": "Q", "macro": "W", "tetra": "E"}[ab], ab, k])
+		if AntibiosisLogic.alive() < k:
+			_anti_seen_t = -1.0
 
 
 func _procariota_keys(p: Dictionary) -> void:

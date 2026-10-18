@@ -1780,6 +1780,32 @@ const ENTRIES: Dictionary = {
 		"unlock": {"type": "buff_owned", "id": "sombra_procariota"},
 		"see_also": ["endosimbiosis", "inestabilidad_consciente", "transmut_intro"],
 	},
+	"antibiosis": {
+		"cat": "transmutaciones",
+		"name_es": "Antibiosis", "name_en": "Antibiosis",
+		"body_es": (
+			"[b]Sombra[/b] (A → anti-A) de [b]Simbiosis[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Simbiosis). No hay botón: Simbiosis es cooperar con orden; la Antibiosis es [b]competir[/b]. Con la llave, si en la run Simbiosis fue elegible, con hifas ≥ 5, el [b]click dominando[/b] y [b]ε ≥ 0.40[/b] (competir en vez de cooperar con orden), acumular [b]45 s[/b] la abre (un bajón descuenta a la mitad, no reinicia; el panel de ε muestra el progreso y avisa 10 s antes).\n\n"
+			+ "• [b]Rivales[/b]: a los 10 s llega el primero y después uno cada 30 s (1 s menos por cada eliminado, piso 16 s). Cada rival vivo deja tu ingreso en ×0.8. Nacen resistentes a un antibiótico (−60 %), y el panel muestra cuál.\n"
+			+ "• [b][Q] β-lactámico · [W] macrólido · [E] tetraciclina[/b]: 60 de daño al rival más viejo (cooldown 2 s, cuestan 4 s de ingreso; eliminar uno devuelve 8 s). Cada uso suma +25 % de resistencia a ese antibiótico, que se degrada 1 %/s: [b]hay que rotar[/b].\n"
+			+ "• Cada rival eliminado hace que el próximo tenga +8 de vida.\n\n"
+			+ "[b]Sello[/b]: 15 rivales → [b]ANTIBIOSIS[/b] (+9 PL + bonus si nunca se te juntaron rivales).\n"
+			+ "[b]Fracaso[/b] (vuelve a Simbiosis): 3 rivales vivos a la vez.\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado Penicilina[/b] — en todas las runs, el panel de ε muestra cuánto falta para que entre el parásito (inactividad, Masa Crítica) y su corrosión.\n\n"
+			+ "[i]La penicilina sale de un hongo: Fleming, 1928.[/i]"
+		),
+		"body_en": (
+			"[b]Shadow[/b] (A → anti-A) of [b]Symbiosis[/b]. The key is bought in the Genetic Bank (20 LP, after closing Symbiosis). There is no button: Symbiosis is cooperating with order; Antibiosis is [b]competing[/b]. With the key, if Symbiosis was eligible during the run, with hyphae ≥ 5, [b]click dominant[/b] and [b]ε ≥ 0.40[/b] (competing instead of cooperating with order), accumulating [b]45 s[/b] opens it (a dip counts down at half speed, it does not reset; the ε panel shows the progress and warns 10 s before).\n\n"
+			+ "• [b]Rivals[/b]: the first arrives at 10 s, then one every 30 s (1 s less per elimination, floor 16 s). Each living rival leaves your income at ×0.8. They are born resistant to one antibiotic (−60%), and the panel shows which.\n"
+			+ "• [b][Q] β-lactam · [W] macrolide · [E] tetracycline[/b]: 60 damage to the oldest rival (2 s cooldown, cost 4 s of income; eliminating one returns 8 s). Each use adds +25% resistance to that antibiotic, fading 1%/s: [b]rotate[/b].\n"
+			+ "• Each eliminated rival gives the next one +8 health.\n\n"
+			+ "[b]Seal[/b]: 15 rivals → [b]ANTIBIOSIS[/b] (+9 LP + bonus if rivals never piled up).\n"
+			+ "[b]Failure[/b] (back to Symbiosis): 3 rivals alive at once.\n\n"
+			+ "[b]Reward[/b]: [b]Legacy Penicillin[/b] — in every run, the ε panel shows how close the parasite is (idle time, Critical Mass) and its corrosion.\n\n"
+			+ "[i]Penicillin comes from a fungus: Fleming, 1928.[/i]"
+		),
+		"unlock": {"type": "buff_owned", "id": "sombra_antibiosis"},
+		"see_also": ["simbiosis", "procariota", "inestabilidad_consciente"],
+	},
 
 	# ── VALORES (hojas de referencia rápida; números reales de Balance.gd) ──────
 	"ref_umbrales": {

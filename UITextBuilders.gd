@@ -1167,6 +1167,14 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 	if InestabilidadLogic.mirror_open():
 		t += "\n" + TranslationServer.translate("STICKY_INEST_MIRROR") % [Balance.INEST_MIRROR_EPS,
 			EvoManager.inest_mirror_time, Balance.INEST_MIRROR_TIME]
+	# ANTIBIOSIS: progreso del espejo (colonia grande y agresiva).
+	if AntibiosisLogic.mirror_open():
+		t += "\n" + TranslationServer.translate("STICKY_ANTI_MIRROR") % [Balance.ANTI_MIRROR_EPS,
+			EvoManager.anti_mirror_time, Balance.ANTI_MIRROR_TIME]
+	# LEGADO PENICILINA: cuánto falta para que entre el parásito.
+	if LegacyManager.get_buff_value("legado_penicilina"):
+		for _l in AntibiosisLogic.penicilina_lines():
+			t += "\n" + str(_l)
 	# ANÁLISIS DE TENSIÓN (recompensa de Inestabilidad Consciente): de dónde viene ε.
 	if LegacyManager.get_buff_value("analisis_de_tension"):
 		t += "\n" + TranslationServer.translate("STICKY_EPS_DETAIL") % [StructuralModel.epsilon_active, StructuralModel.epsilon_passive, StructuralModel.epsilon_complex]
@@ -1326,6 +1334,40 @@ static func build_fusion_catabolica_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t
 
+
+# ─── ANTIBIOSIS (Sombra de Simbiosis) ────────────────────────────────────────
+
+static func build_antibiosis_panel_text() -> String:
+	var T := TranslationServer
+	var t := "[color=#5fd3c4]" + T.translate("ANTI_PANEL_TITLE") + "[/color]\n"
+	t += T.translate("ANTI_PANEL_KILLS") % [EvoManager.anti_kills, Balance.ANTI_SEAL_KILLS] + "\n"
+	t += T.translate("ANTI_PANEL_NEXT") % [EvoManager.anti_spawn_timer, AntibiosisLogic.alive(), Balance.ANTI_OVERRUN] + "\n"
+	t += T.translate("ANTI_PANEL_STEAL") % AntibiosisLogic.steal_mult() + "\n"
+	t += "\n[color=yellow]" + T.translate("ANTI_PANEL_RIVALS_HDR") + "[/color]\n"
+	if AntibiosisLogic.alive() == 0:
+		t += "[color=#aaaaaa]  " + T.translate("ANTI_PANEL_NO_RIVALS") + "[/color]\n"
+	for i in AntibiosisLogic.alive():
+		var r: Dictionary = EvoManager.anti_rivals[i]
+		var line: String = "  %s%d  %s  %.0f/%.0f  ·  " % ["> " if i == 0 else "   ", i + 1, _bar(float(r["hp"]) / float(r["max"]), 10), float(r["hp"]), float(r["max"])]
+		var parts: PackedStringArray = []
+		for ab in AntibiosisLogic.ABS:
+			parts.append("%s %d%%" % [T.translate("ANTI_AB_SHORT_" + ab.to_upper()), int(AntibiosisLogic.resistance(r, ab) * 100.0)])
+		t += ("[color=#ff8a7a]" if i == 0 else "[color=#cccccc]") + line + " · ".join(parts) + "[/color]\n"
+	t += "\n" + T.translate("ANTI_PANEL_RESIST_HDR") + "\n"
+	for ab in AntibiosisLogic.ABS:
+		t += "  %s: %d%% · %s\n" % [T.translate("ANTI_AB_" + ab.to_upper()), int(float(EvoManager.anti_resist.get(ab, 0.0)) * 100.0),
+			T.translate("ANTI_PANEL_DMG") % AntibiosisLogic.damage(ab)]
+	if AntibiosisLogic.seal_ready():
+		t += "\n[color=#5fd3c4]" + T.translate("ANTI_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.translate("ANTI_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_antibiosis_closed_text() -> String:
+	var t := "[color=#5fd3c4]" + TranslationServer.translate("ANTI_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("ANTI_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#5fd3c4]" + TranslationServer.translate("ANTI_CLOSED_REWARD") + "[/color]"
+	return t
 
 # ─── PROCARIOTA (Sombra de Endosimbiosis) ────────────────────────────────────
 

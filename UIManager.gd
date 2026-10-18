@@ -607,6 +607,13 @@ func update_mutation_center_panel(main: Node = null) -> void:
 			t = _build_fusion_catabolica_panel_text()
 		else:
 			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_antibiosis:
+		if RunManager.run_closed and RunManager.final_route == "ANTIBIOSIS":
+			t = UITextBuilders.build_antibiosis_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_antibiosis_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
 	elif EvoManager.mutation_procariota:
 		if RunManager.run_closed and RunManager.final_route == "PROCARIOTA":
 			t = UITextBuilders.build_procariota_closed_text()
@@ -962,7 +969,7 @@ func _build_legacy_item(id: String) -> Control:
 	var text_col: VBoxContainer = v
 	v = right
 
-	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno" or id == "sombra_inestabilidad" or id == "sombra_procariota"
+	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno" or id == "sombra_inestabilidad" or id == "sombra_procariota" or id == "sombra_antibiosis"
 	if lvl > 0 and is_key:
 		# Llave de involución comprada: permanente y sin interruptor (la decisión es en la run).
 		var key_lbl: Button = Button.new()
@@ -1300,6 +1307,8 @@ func get_reactor_color() -> Color:
 				return Color(0.3, 0.22, 0.55)  # índigo-violeta: la ecuación demostrada, quieta
 			"PROCARIOTA":
 				return Color(0.42, 0.5, 0.18)  # oliva: el caldo primordial, quieto
+			"ANTIBIOSIS":
+				return Color(0.22, 0.4, 0.42)  # verde azulado: Penicillium en reposo
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
 		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
 		return _live_reactor_color().darkened(0.45)
@@ -1347,6 +1356,9 @@ func _live_reactor_color() -> Color:
 			return Color(1.25, 0.72, 0.62)  # coral casi blanco: partitura completa
 		# coral apagado → coral vivo según el combo
 		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(float(EvoManager.coro_combo) / Balance.CORO_COMBO_CAP, 0.0, 1.0))
+	if EvoManager.mutation_antibiosis:
+		# Sombra de Simbiosis (rosa): verde-azul de Penicillium que se enrojece con cada rival vivo.
+		return Color(0.3, 0.75, 0.7).lerp(Color(1.0, 0.3, 0.3), clampf(float(AntibiosisLogic.alive()) / Balance.ANTI_OVERRUN, 0.0, 1.0))
 	if EvoManager.mutation_procariota:
 		# Sombra de Endosimbiosis (mandarina): verde bacteriano que crece con la colonia; ámbar con toxinas.
 		if EvoManager.proc_quorum_timer > 0.0:

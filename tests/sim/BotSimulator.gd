@@ -244,6 +244,17 @@ func _transmutation_metrics() -> Dictionary:
 			"cd_level": EvoManager.get("caos_cd_level"),
 			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("caos_money_mark") if EvoManager.get("caos_money_mark") != null else 0.0),
 		},
+		"anti": {
+			"active": EvoManager.get("mutation_antibiosis"),
+			"simb_seen": EvoManager.get("anti_simb_seen"),
+			"mirror_time": EvoManager.get("anti_mirror_time"),
+			"kills": EvoManager.get("anti_kills"),
+			"alive": (EvoManager.get("anti_rivals") as Array).size() if EvoManager.get("anti_rivals") != null else 0,
+			"peak_alive": EvoManager.get("anti_peak_alive"),
+			"peak_resist": EvoManager.get("anti_peak_resist"),
+			"shots": EvoManager.get("anti_shots"),
+			"resist": EvoManager.get("anti_resist"),
+		},
 		"proc": {
 			"active": EvoManager.get("mutation_procariota"),
 			"n": EvoManager.get("proc_n"),

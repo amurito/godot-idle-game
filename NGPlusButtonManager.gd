@@ -76,6 +76,8 @@ var _proc_harvest_btn: Button = null     # [Q] Cosechar (Procariota)
 var _proc_quorum_btn: Button = null      # [W] Quorum
 var _proc_plasmid_btn: Button = null     # [E] Plásmido
 var _proc_seal_btn: Button = null
+var _anti_btns: Dictionary = {}          # antibiótico → botón [Q]/[W]/[E] (Antibiosis)
+var _anti_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -189,6 +191,13 @@ func reset_ng_plus_buttons() -> void:
 			_proc_harvest_btn, _proc_quorum_btn, _proc_plasmid_btn, _proc_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
+	for b in _anti_btns.values():
+		if is_instance_valid(b):
+			b.queue_free()
+	_anti_btns = {}
+	if is_instance_valid(_anti_seal_btn):
+		_anti_seal_btn.queue_free()
+	_anti_seal_btn = null
 	_proc_harvest_btn = null
 	_proc_quorum_btn = null
 	_proc_plasmid_btn = null
@@ -255,7 +264,49 @@ func update_ng_plus_buttons() -> void:
 	_update_endo_buttons()
 	_update_inest_buttons()
 	_update_proc_buttons()
+	_update_anti_buttons()
 	_update_batuta_button()
+
+# ── ANTIBIOSIS: [Q] β-lactámico · [W] macrólido · [E] tetraciclina · sello ───────
+const _ANTI_KEYS := {"beta": "Q", "macro": "W", "tetra": "E"}
+func _update_anti_buttons() -> void:
+	if not AntibiosisLogic.is_active():
+		for b in _anti_btns.values():
+			if is_instance_valid(b):
+				b.visible = false
+		if is_instance_valid(_anti_seal_btn):
+			_anti_seal_btn.visible = false
+		return
+	var T := TranslationServer
+	var idx := 0
+	for ab in AntibiosisLogic.ABS:
+		var b: Button = _anti_btns.get(ab)
+		if not is_instance_valid(b):
+			b = _make_rp_button(Color(0.37, 0.83, 0.77), 44, _on_anti_pressed.bind(ab), idx)
+			_anti_btns[ab] = b
+		b.text = EmojiToRichText.strip(T.translate("BTN_ANTI_SHOT") % [_ANTI_KEYS[ab], T.translate("ANTI_AB_" + ab.to_upper()),
+			AntibiosisLogic.damage(ab), UITextBuilders.format_compact(AntibiosisLogic.shot_cost())])
+		b.disabled = not AntibiosisLogic.can_shoot(ab)
+		b.visible = true
+		idx += 1
+	if AntibiosisLogic.seal_ready():
+		if not is_instance_valid(_anti_seal_btn):
+			_anti_seal_btn = _make_rp_button(Color(0.4, 1.0, 0.85), 70, _on_anti_seal_pressed, 0)
+		_anti_seal_btn.text = EmojiToRichText.strip(T.translate("BTN_ANTI_SEAL") % int(Balance.PL_REWARDS.get("ANTIBIOSIS", 9)))
+		_anti_seal_btn.visible = true
+	elif is_instance_valid(_anti_seal_btn):
+		_anti_seal_btn.visible = false
+
+func _on_anti_pressed(ab: String) -> void:
+	AntibiosisLogic.shoot(ab)
+	_update_anti_buttons()
+
+func _on_anti_seal_pressed() -> void:
+	if RunManager.run_closed or not AntibiosisLogic.seal_ready():
+		return
+	if is_instance_valid(_anti_seal_btn):
+		_anti_seal_btn.visible = false
+	RunManager.close_run("ANTIBIOSIS", TranslationServer.translate("CLOSE_ANTI"))
 
 # ── PROCARIOTA: [Q] cosechar · [W] quorum · [E] plásmido · sello ─────────────
 func _update_proc_buttons() -> void:

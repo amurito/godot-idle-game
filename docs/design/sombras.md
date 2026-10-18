@@ -26,7 +26,7 @@
 | Hiperasimilación | **Ayuno Primordial** | renunciar a clickear | Silencio | ✅ |
 | Homeostasis | **Inestabilidad Consciente** | observar | OBSERVAR: leer la propia ecuación (lore matemático) | ✅ (§9) |
 | Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | ✅ (§10) |
-| Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | spec |
+| Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | ✅ (§11) |
 | Parasitismo | **Autosuficiencia** | cultivar | mejoras hechas con biomasa, sin mercado | spec |
 | Red Micelial | **Hifa Pionera** *(ex Núcleo Aislado)* | explorar | mapa del sustrato, avance sin ramificar | spec |
 
@@ -261,3 +261,38 @@ Calibrada con bot; los números de abajo son los finales.
 | `t3_proc_afk` | 3 lisis → SIMBIOSIS a 757 s |
 | `t3_proc_harvest` (cosecha sin parar) | extinción → SIMBIOSIS |
 | `t3_endo_key_engulf` (con la llave, engulle) | Endosimbiosis normal: la Sombra no entra |
+
+## 11. Antibiosis — implementada (2026-10-18) ✅
+
+`AntibiosisLogic.gd`, estado `anti_*` en EvoManager, constantes `ANTI_*` en Balance. Concreta §5.
+
+- **Llave** `sombra_antibiosis` (20 PL, se revela en T3 y se desbloquea tras cerrar SIMBIOSIS).
+- **Espejo**: con la llave, habiendo tenido **Simbiosis elegible** en la run, con hifas ≥ 5, el **click dominando**
+  y **ε ≥ 0.40**: **45 s acumulados** (un bajón descuenta a la mitad; el panel de ε muestra el progreso).
+  - **Cambio respecto de §5**: "Ω < 0.25 (o 0.35) con el pasivo dominando" era imposible: sin clicks ε cae casi a 0
+    y Ω sube (además tiene un piso que crece en la run). El espejo pasó a ser competir con agresividad en lugar de
+    cooperar con orden.
+  - Con las llaves de Inestabilidad y Antibiosis a la vez, ambos espejos pueden correr: entra el que se llena
+    primero (cada uno muestra su progreso).
+- **Rivales**: el primero a los 10 s; después cada 30 s (−1.5 s por eliminado, piso 14 s). Cada vivo deja el ingreso
+  en ×0.8. Vida 100 (+8 por eliminado). Nacen resistentes a un antibiótico (−60 %): el panel lo muestra.
+- **[Q] β-lactámico · [W] macrólido · [E] tetraciclina**: 60 de daño al rival más viejo, cooldown 2 s, cuestan 4 s de
+  ingreso (eliminar uno devuelve 8 s). Cada uso: +20 % de resistencia global a ese antibiótico, que baja 2 %/s.
+- **Sello**: 15 rivales → ANTIBIOSIS (+9 PL; NG+: 8 − 2·(pico de rivales vivos − 1)).
+- **Fracaso** (→ SIMBIOSIS): 3 rivales vivos a la vez.
+- **Recompensa**: **Legado Penicilina** — en todas las runs, el panel de ε muestra cuánto falta para que entre el
+  parásito: inactividad (s sin clickear / 120), Masa Crítica (bio / ε / tiempo) y, con Parasitismo activo, su
+  corrosión.
+- **Logros**: Penicillium (ANCESTRAL, sellar) · Rotación Perfecta (FRUTO: 12 disparos seguidos sin repetir el
+  anterior) · **Dosis Mínima** (MYTHIC: sellar sin que ningún antibiótico pase del 50 % de resistencia). El MYTHIC
+  empezó como "nunca 2 rivales vivos", pero al final del ritmo ninguna estrategia lo lograba.
+
+**Bot (escenarios `t3_anti_*`, `a3_anti_dosis`, controles `t3_simb_anti_key`, `t3_red_anti_key`):**
+
+| Escenario | Resultado |
+|---|---|
+| `t3_anti_player` (elige el de más daño, reacción 1.5 s) | entra a 346 s · sella a 660 s (~5 min de ruta) · resistencia pico 60 % |
+| `a3_anti_dosis` (no dispara lo que pasaría del 50 %) | sella con pico 48 % → MYTHIC |
+| `t3_anti_mono` (siempre β-lactámico) | resistencia 88 % → 3 rivales → SIMBIOSIS |
+| `t3_anti_afk` | 3 rivales → SIMBIOSIS a los 70 s |
+| controles (elige Simbiosis / juega pasivo hacia Red) | no entran a la Sombra |

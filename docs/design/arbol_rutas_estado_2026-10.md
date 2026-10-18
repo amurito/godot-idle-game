@@ -78,6 +78,7 @@ Legados al sellar: Motor Fundido (Fusión), Batuta (Caos), Compás Interno (Coro
 - **Ayuno Primordial** (anti-Hiper, 8): con la llave y **Hiperasimilación latente**, 60 s sin clickear con pasivo ≥ 10/s y ε < 0.10. Si entra Parasitismo durante el ayuno → Trampa del Vacío (cierra PARASITISMO).
 - **Inestabilidad Consciente** (anti-Homeostasis, 9; lore matemático): con la llave, habiendo tenido Homeostasis elegible y Contabilidad ≥ 1, acumular 45 s con ε ≥ 0.45 (un bajón descuenta, no reinicia). [Q] OBSERVAR revela lemas (P +0.20, y cada lema abierto sigue empujando), [W] INTEGRAR baja P. Sello **Q.E.D.**: 5 lemas (impulso, Lyapunov, inercia, estructura, elasticidad). Fracaso → HOMEOSTASIS: diverge (ε > 1.2 10 s) o converge (ε < 0.35 60 s). Recompensa: los 3 legados de conocimiento + Lema de Lyapunov. Spec `docs/design/sombras.md` §9.
 - **Procariota** (anti-Endosimbiosis, 9): con la llave, dejar pasar ENGULLIR sin engullir. Colonia logística (ingreso ×0.3 → ×2.0); toxinas desde el 90 % → lisis. [W] Quorum desde el 80 % (× 1 + 4·N/K), [Q] cosechar, [E] plásmido (resistencia / virulencia / metabólico). Sello: 8 quorums. Fracaso → SIMBIOSIS: 3 lisis o extinción. Recompensa: Legado Plásmido (expresión génica de los legados). Spec §10.
+- **Antibiosis** (anti-Simbiosis, 9; ex Autarquía): con la llave, Simbiosis elegible antes, hifas ≥ 5, click dominante y ε ≥ 0.40, 45 s acumulados. Rivales que roban ingreso (×0.8 cada uno, nacen resistentes a un antibiótico); [Q] [W] [E] antibióticos con resistencia global: hay que rotar. Sello: 15 rivales. Fracaso → SIMBIOSIS: 3 rivales vivos. Recompensa: Legado Penicilina (el parásito, a la vista en el panel de ε). Spec §11.
 
 ## 5. Estructura por trascendencia (plan decidido 2026-10-16; hoy todas las llaves se revelan en T ≥ 3)
 
@@ -93,7 +94,7 @@ Legados al sellar: Motor Fundido (Fusión), Batuta (Caos), Compás Interno (Coro
 
 ## 6. Huecos y plan (no implementado)
 
-- **Sombras** pendientes (spec `docs/design/sombras.md`): Antibiosis (anti-Simbiosis, ex Autarquía), Autosuficiencia (anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado; fracaso → final propio HIFA EXTRAVIADA).
+- **Sombras** pendientes (spec `docs/design/sombras.md`): Autosuficiencia (anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado; fracaso → final propio HIFA EXTRAVIADA).
 - **Redenciones**: Redención de la Red (tras Esporulación / Panspermia; candidata a salir de Micelio Fragmentado), Redención del Orden (tras Singularidad / Mente Colmena), Redención de la Biología.
 - **Fantasma** (2 llaves): Dualidad Corrosiva (Fusión + Huésped), Eco Silencioso (Micelio + Caos).
 - **Secretas**: Glitch Supremo, El Susurro (0 PL, desde MO), El Origen.

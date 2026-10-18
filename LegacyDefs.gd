@@ -630,6 +630,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "lema_lyapunov_active", "value": 1.0},
 	},
+	# SOMBRA de Simbiosis (A → anti-A). Llave sin toggle: entra por espejo (colonia grande y agresiva).
+	"sombra_antibiosis": {
+		"name": "Sombra: Antibiosis",
+		"flavor": "Lo contrario de la simbiosis: organismos que se dañan. Los hongos la inventaron — la penicilina sale de uno.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "SIMBIOSIS"},
+		"effect": {"type": "sombra_antibiosis_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Antibiosis: visibilidad (el parásito, a la vista).
+	"legado_penicilina": {
+		"name": "Legado: Penicilina",
+		"flavor": "Quien venció a sus rivales reconoce al parásito antes de que llegue: el panel de ε muestra cuánto falta para que entre Parasitismo, en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "ANTIBIOSIS"},
+		"unlock": {"type": "route_closed", "route": "ANTIBIOSIS"},
+		"effect": {"type": "penicilina_active", "value": 1.0},
+	},
 	# SOMBRA de Endosimbiosis (A → anti-A). Llave sin toggle: entra por espejo (dejar pasar ENGULLIR).
 	"sombra_procariota": {
 		"name": "Sombra: Procariota",

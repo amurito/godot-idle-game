@@ -463,6 +463,34 @@ const PROC_PLASMID_QUORUM        := 2.0    # virulencia: quorum +2·N/K
 const PROC_PLASMID_GROWTH        := 1.5    # metabólico: crecimiento ×1.5
 const ACH_PROC_ABSOLUTE_FRAC     := 0.95   # MYTHIC Quorum Absoluto: todos los quorums con N ≥ 95 % de K
 
+# ── SOMBRA · ANTIBIOSIS (anti-Simbiosis) — AntibiosisLogic ──
+# Verbo: COMPETIR. Spec docs/design/sombras.md §5 y §11. Calibrado con el simulador.
+const ANTI_MIRROR_HIFAS          := 5.0    # espejo: colonia grande (hifas ≥ 5)…
+const ANTI_MIRROR_EPS            := 0.40   # …agresiva: click dominante y ε ≥ esto (con pasivo dominante y
+                                           # Ω < 0.35 era imposible: sin clicks ε cae y Ω sube con su piso)
+const ANTI_MIRROR_TIME           := 45.0   # …acumulados estos s (un bajón descuenta, no reinicia)
+const ANTI_MIRROR_DECAY          := 0.5
+const ANTI_FIRST_SPAWN           := 10.0   # el primer rival llega a los 10 s
+const ANTI_SPAWN                 := 30.0   # un rival cada 30 s…
+const ANTI_SPAWN_STEP            := 1.5    # …1.5 s menos por cada eliminado…
+const ANTI_SPAWN_MIN             := 14.0   # …con piso
+const ANTI_STEAL                 := 0.80   # cada rival vivo: ingreso × 0.8
+const ANTI_HP                    := 100.0  # vida del rival…
+const ANTI_HP_STEP               := 8.0    # …+8 por cada eliminado (con +10 y piso 12 s el final quedaba al límite)
+const ANTI_DMG                   := 60.0   # daño base de un antibiótico
+const ANTI_INNATE_RES            := 0.6    # cada rival nace resistente a uno (−60 % de daño)
+const ANTI_RES_PER_USE           := 0.20   # cada uso suma resistencia global a ese antibiótico…
+const ANTI_RES_DECAY             := 0.02   # …que se degrada 0.02/s
+const ANTI_RES_CAP               := 0.9
+const ANTI_SHOT_CD               := 2.0
+const ANTI_SHOT_SECS             := 4.0    # cada disparo cuesta 4 s de ingreso…
+const ANTI_KILL_SECS             := 8.0    # …y eliminar un rival devuelve 8 s
+const ANTI_SEAL_KILLS            := 15     # sello: 15 rivales
+const ANTI_OVERRUN               := 3      # FRACASO: 3 rivales vivos a la vez → SIMBIOSIS
+const ACH_ANTI_ROTATION          := 12     # FRUTO Rotación Perfecta: 12 disparos seguidos sin repetir
+const ACH_ANTI_MAX_RES           := 0.5    # MYTHIC Dosis Mínima: ningún antibiótico pasa del 50 % de resistencia
+                                           # ("nunca 2 rivales vivos" era imposible: al final llegan cada 12 s)
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -619,6 +647,7 @@ const PL_REWARDS: Dictionary = {
 	"AYUNO PRIMORDIAL":          8,
 	"INESTABILIDAD CONSCIENTE":  9,
 	"PROCARIOTA":                9,
+	"ANTIBIOSIS":                9,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -662,4 +691,5 @@ const NG_CAPS: Dictionary = {
 	"AYUNO PRIMORDIAL":          8,
 	"INESTABILIDAD CONSCIENTE":  8,
 	"PROCARIOTA":                8,
+	"ANTIBIOSIS":                8,
 }

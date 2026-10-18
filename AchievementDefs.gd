@@ -698,6 +698,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "demostracion_elegante",
 	},
+	# ── SOMBRA · ANTIBIOSIS ──
+	"ruta_antibiosis": {
+		"name": "Penicillium",
+		"desc": "Sellar Antibiosis: el hongo despejó su sustrato de competidores.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "ANTIBIOSIS"}],
+	},
+	"rotacion_perfecta": {
+		"name": "Rotación Perfecta",
+		"desc": "Disparar 12 antibióticos seguidos sin repetir nunca el anterior.",
+		"tier": Tier.FRUTO, "secret": true,
+		"trigger": "custom", "evaluator": "rotacion_perfecta",
+	},
+	"dosis_minima": {
+		"name": "Dosis Mínima",
+		"desc": "Sellar Antibiosis sin que ningún antibiótico pase nunca del 50 % de resistencia.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "dosis_minima",
+	},
 	# ── SOMBRA · PROCARIOTA ──
 	"ruta_procariota": {
 		"name": "Fisión Binaria",

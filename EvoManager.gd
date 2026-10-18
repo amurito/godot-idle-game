@@ -161,6 +161,23 @@ var proc_plasmid_cd: float = 0.0
 var proc_plasmid_swaps: int = 0
 var proc_plasmids_used: Dictionary = {}  # logro Conjugación: los 3
 var _proc_window_warned: bool = false    # aviso de la ventana de ENGULLIR con la llave
+
+# === ANTIBIOSIS (Sombra de Simbiosis — AntibiosisLogic) ===
+var mutation_antibiosis := false
+var anti_simb_seen: bool = false         # Simbiosis elegible esta run (condición del espejo)
+var anti_mirror_time: float = 0.0
+var anti_rivals: Array = []              # [{hp, max, innate}] — el primero es el blanco
+var anti_spawn_timer: float = 0.0
+var anti_spawned: int = 0
+var anti_kills: int = 0                  # sello a ANTI_SEAL_KILLS
+var anti_resist: Dictionary = {}         # antibiótico → resistencia global generada
+var anti_shot_cd: float = 0.0
+var anti_shots: int = 0
+var anti_last_ab: String = ""
+var anti_rotation: int = 0               # disparos seguidos sin repetir (FRUTO Rotación Perfecta)
+var anti_peak_alive: int = 0             # NG+: control (pico de rivales vivos)
+var anti_peak_resist: float = 0.0        # MYTHIC Dosis Mínima: ≤ ACH_ANTI_MAX_RES
+var _anti_mirror_countdown_last: int = -1
 var _predictor_warned_idx: int = -1      # legado Predictor Estructural: último umbral avisado
 
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
@@ -331,7 +348,7 @@ const TRANSIENT_VARS := [
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
 	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
-	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx", "_proc_window_warned",
+	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx", "_proc_window_warned", "_anti_mirror_countdown_last",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -370,7 +387,7 @@ func update_genome():
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
 	# SOMBRAS (Inestabilidad, Procariota): la run ya eligió; ninguna otra mutación base.
-	if mutation_inestabilidad or mutation_procariota:
+	if mutation_inestabilidad or mutation_procariota or mutation_antibiosis:
 		for g in ["hiperasimilacion", "parasitismo", "simbiosis", "homeostasis", "red_micelial", "esporulacion"]:
 			_set_genome_state(g, "bloqueado")
 		return
@@ -383,6 +400,7 @@ func update_genome():
 	GenomeEvaluator.update_simbiosis(ctx)
 	GenomeEvaluator.update_homeostasis(ctx)
 	InestabilidadLogic.update_mirror(ctx)  # Sombra de Homeostasis (espejo: sostener ε alto)
+	AntibiosisLogic.update_mirror(ctx)  # Sombra de Simbiosis (espejo: colonia grande, rígida, pasiva)
 	GenomeEvaluator.update_allostasis(ctx)
 	GenomeEvaluator.update_homeorhesis(ctx)
 	GenomeEvaluator.update_red_micelial(ctx)
@@ -454,6 +472,7 @@ func tick_route_processes(dt: float) -> void:
 	EndosimbiosisLogic.process(dt)  # se auto-gatea (cruce Parasitismo × Simbiosis)
 	InestabilidadLogic.process(dt)  # se auto-gatea (Sombra de Homeostasis)
 	ProcariotaLogic.process(dt)  # se auto-gatea (Sombra de Endosimbiosis)
+	AntibiosisLogic.process(dt)  # se auto-gatea (Sombra de Simbiosis)
 	InestabilidadLogic.tick_predictor()  # legado Predictor Estructural (cualquier run)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
