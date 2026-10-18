@@ -1708,7 +1708,7 @@ const ENTRIES: Dictionary = {
 		"cat": "transmutaciones",
 		"name_es": "Inestabilidad Consciente", "name_en": "Conscious Instability",
 		"body_es": (
-			"[b]Sombra[/b] (A → anti-A) de [b]Homeostasis[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Homeostasis). No hay botón: Homeostasis es reducir ε, y la Inestabilidad es [b]sostenerlo[/b]. Con la llave, si en la run Homeostasis fue elegible (tuviste el equilibrio al alcance), con Contabilidad ≥ 1 y sin otra mutación, sostener [b]ε ≥ 0.50 durante 60 s[/b] la abre (avisa 10 s antes: bajar ε lo evita).\n\n"
+			"[b]Sombra[/b] (A → anti-A) de [b]Homeostasis[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Homeostasis). No hay botón: Homeostasis es reducir ε, y la Inestabilidad es [b]sostenerlo[/b]. Con la llave, si en la run Homeostasis fue elegible (tuviste el equilibrio al alcance), con Contabilidad ≥ 1 y sin otra mutación, acumular [b]45 s con ε ≥ 0.45[/b] la abre (un bajón descuenta a la mitad de velocidad, no reinicia; el panel de ε muestra el progreso y avisa 10 s antes).\n\n"
 			+ "El hongo deja de reducir ε y empieza a [b]medirlo[/b]. Descubre que es una ecuación, y que mirarla la cambia:\n\n"
 			+ "• [b][Q] OBSERVAR[/b] (6 s): revela el próximo [b]lema[/b] y suma +0.20 a la [b]perturbación P[/b], que empuja ε hacia arriba (efecto del observador). Cada lema a la vista y sin demostrar [b]sigue perturbando[/b] (+0.002/s): observar de más da opciones pero ε deriva.\n"
 			+ "• [b][W] INTEGRAR[/b] (20 s, cuesta 10 s de ingreso): P −0.25. Puede quedar negativa y amortiguar el ε natural.\n"
@@ -1726,7 +1726,7 @@ const ENTRIES: Dictionary = {
 			+ "[i]Homeostasis es estabilidad de Lyapunov: toda perturbación vuelve al equilibrio. Su opuesto es un exponente de Lyapunov positivo.[/i]"
 		),
 		"body_en": (
-			"[b]Shadow[/b] (A → anti-A) of [b]Homeostasis[/b]. The key is bought in the Genetic Bank (20 LP, after closing Homeostasis). There is no button: Homeostasis is reducing ε, and Instability is [b]sustaining it[/b]. With the key, if Homeostasis was eligible during the run (balance was within reach), with Accounting ≥ 1 and no other mutation, holding [b]ε ≥ 0.50 for 60 s[/b] opens it (10 s warning: lowering ε avoids it).\n\n"
+			"[b]Shadow[/b] (A → anti-A) of [b]Homeostasis[/b]. The key is bought in the Genetic Bank (20 LP, after closing Homeostasis). There is no button: Homeostasis is reducing ε, and Instability is [b]sustaining it[/b]. With the key, if Homeostasis was eligible during the run (balance was within reach), with Accounting ≥ 1 and no other mutation, accumulating [b]45 s with ε ≥ 0.45[/b] opens it (a dip counts down at half speed, it does not reset; the ε panel shows the progress and warns 10 s before).\n\n"
 			+ "The fungus stops reducing ε and starts [b]measuring[/b] it. It discovers it is an equation, and that looking at it changes it:\n\n"
 			+ "• [b][Q] OBSERVE[/b] (6 s): reveals the next [b]lemma[/b] and adds +0.20 to the [b]perturbation P[/b], which pushes ε up (observer effect). Every visible unproven lemma [b]keeps perturbing[/b] (+0.002/s): observing ahead gives options but ε drifts.\n"
 			+ "• [b][W] INTEGRATE[/b] (20 s, costs 10 s of income): P −0.25. It can go negative and dampen the natural ε.\n"

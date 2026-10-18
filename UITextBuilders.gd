@@ -1163,6 +1163,10 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 	else:
 		t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
 	t += "Presión = %s" % snapped(StructuralModel.get_structural_pressure(), 1)
+	# INESTABILIDAD CONSCIENTE: progreso del espejo (cuánto ε alto llevás acumulado).
+	if InestabilidadLogic.mirror_open():
+		t += "\n" + TranslationServer.translate("STICKY_INEST_MIRROR") % [Balance.INEST_MIRROR_EPS,
+			EvoManager.inest_mirror_time, Balance.INEST_MIRROR_TIME]
 	# ANÁLISIS DE TENSIÓN (recompensa de Inestabilidad Consciente): de dónde viene ε.
 	if LegacyManager.get_buff_value("analisis_de_tension"):
 		t += "\n" + TranslationServer.translate("STICKY_EPS_DETAIL") % [StructuralModel.epsilon_active, StructuralModel.epsilon_passive, StructuralModel.epsilon_complex]

@@ -56,10 +56,14 @@ static func update_mirror(ctx: Dictionary) -> void:
 		EvoManager.inest_homeo_seen = true
 	if EvoManager.mutation_inestabilidad or LegacyManager.get_buff_level("sombra_inestabilidad") <= 0:
 		return
-	var ready: bool = not _route_taken() and EvoManager.inest_homeo_seen \
-		and int(ctx.accounting) >= 1 and float(ctx.epsilon) >= Balance.INEST_MIRROR_EPS
-	if not ready:
+	if not mirror_open(int(ctx.accounting)):
 		EvoManager.inest_mirror_time = 0.0
+		EvoManager._inest_mirror_countdown_last = -1
+		return
+	# El tiempo con ε alto se ACUMULA: un bajón no lo reinicia, lo descuenta a la mitad de velocidad
+	# (ε oscila con cada click; exigir 60 s seguidos era injugable — feedback del autor 2026-10-18).
+	if float(ctx.epsilon) < Balance.INEST_MIRROR_EPS:
+		EvoManager.inest_mirror_time = maxf(EvoManager.inest_mirror_time - RunManager.LOGIC_TICK * Balance.INEST_MIRROR_DECAY, 0.0)
 		EvoManager._inest_mirror_countdown_last = -1
 		return
 	EvoManager.inest_mirror_time += RunManager.LOGIC_TICK
@@ -74,6 +78,14 @@ static func update_mirror(ctx: Dictionary) -> void:
 	if secs_left != EvoManager._inest_mirror_countdown_last:
 		EvoManager._inest_mirror_countdown_last = secs_left
 		UIManager.show_toast(TranslationServer.translate("TOAST_INEST_MIRROR_WARN") % secs_left)
+
+
+## El espejo puede correr (todo menos ε): llave, Homeostasis elegible antes, Contabilidad, ninguna ruta.
+static func mirror_open(accounting: int = -1) -> bool:
+	if accounting < 0:
+		accounting = UpgradeManager.level("accounting")
+	return not EvoManager.mutation_inestabilidad and LegacyManager.get_buff_level("sombra_inestabilidad") > 0 \
+		and not _route_taken() and EvoManager.inest_homeo_seen and accounting >= 1 and not RunManager.run_closed
 
 
 # ── Estado ───────────────────────────────────────────────────────────────────

@@ -180,7 +180,9 @@ Calibrada con bot; los números de abajo son los finales.
 - **Llave** `sombra_inestabilidad` (20 PL, se revela en T3 y se desbloquea tras cerrar HOMEOSTASIS).
 - **Espejo**: con la llave, sin ninguna mutación base activa, **habiendo tenido Homeostasis elegible en la run**
   (su botón habilitado o su gen latente: tuviste el equilibrio al alcance y lo soltaste) y Contabilidad ≥ 1:
-  **ε ≥ 0.50 durante 60 s** → entra. Aviso con cuenta regresiva 10 s antes; bajar ε lo evita.
+  **45 s acumulados con ε ≥ 0.45** → entra (con ε por debajo el acumulado baja a la mitad de velocidad, no se
+  reinicia; el panel de ε muestra «Inestabilidad: ε ≥ 0.45 · 23/45 s»). Aviso con cuenta regresiva 10 s antes.
+  - Feedback del autor (18/10): 0.50 sostenido 60 s seguidos era muy difícil (ε oscila con cada click).
   - Calibración: con 0.60 el bot visual se quedaba oscilando en 0.51–0.60 sin entrar (el borde de lo que se
     alcanza clickeando). 0.50 sigue lejos de las bandas de Homeostasis (≤ 0.25) y Simbiosis (≤ 0.45).
   - Calibración: "Homeostasis latente" casi nunca se veía (el gen salta de dormido a activo), por eso se mide

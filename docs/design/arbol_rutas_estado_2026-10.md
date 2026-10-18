@@ -76,7 +76,7 @@ Legados al sellar: Motor Fundido (Fusión), Batuta (Caos), Compás Interno (Coro
 
 **Sombras (A → anti-A)** — disparador espejo, no hay botón:
 - **Ayuno Primordial** (anti-Hiper, 8): con la llave y **Hiperasimilación latente**, 60 s sin clickear con pasivo ≥ 10/s y ε < 0.10. Si entra Parasitismo durante el ayuno → Trampa del Vacío (cierra PARASITISMO).
-- **Inestabilidad Consciente** (anti-Homeostasis, 9; lore matemático): con la llave, habiendo tenido Homeostasis elegible y Contabilidad ≥ 1, sostener ε ≥ 0.50 60 s. [Q] OBSERVAR revela lemas (P +0.20, y cada lema abierto sigue empujando), [W] INTEGRAR baja P. Sello **Q.E.D.**: 5 lemas (impulso, Lyapunov, inercia, estructura, elasticidad). Fracaso → HOMEOSTASIS: diverge (ε > 1.2 10 s) o converge (ε < 0.35 60 s). Recompensa: los 3 legados de conocimiento + Lema de Lyapunov. Spec `docs/design/sombras.md` §9.
+- **Inestabilidad Consciente** (anti-Homeostasis, 9; lore matemático): con la llave, habiendo tenido Homeostasis elegible y Contabilidad ≥ 1, acumular 45 s con ε ≥ 0.45 (un bajón descuenta, no reinicia). [Q] OBSERVAR revela lemas (P +0.20, y cada lema abierto sigue empujando), [W] INTEGRAR baja P. Sello **Q.E.D.**: 5 lemas (impulso, Lyapunov, inercia, estructura, elasticidad). Fracaso → HOMEOSTASIS: diverge (ε > 1.2 10 s) o converge (ε < 0.35 60 s). Recompensa: los 3 legados de conocimiento + Lema de Lyapunov. Spec `docs/design/sombras.md` §9.
 
 ## 5. Estructura por trascendencia (plan decidido 2026-10-16; hoy todas las llaves se revelan en T ≥ 3)
 

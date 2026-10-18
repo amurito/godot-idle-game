@@ -402,8 +402,9 @@ const ENDO_METABOLISMO_DISCOUNT  := 0.85   # gen 5: mejoras −15 %
 
 # ── SOMBRA · INESTABILIDAD CONSCIENTE (anti-Homeostasis) — InestabilidadLogic ──
 # Verbo: OBSERVAR (lore matemático). Spec docs/design/sombras.md §9. Calibrado con el simulador.
-const INEST_MIRROR_EPS           := 0.50   # espejo: ε ≥ esto… (0.60 quedaba en el borde de lo alcanzable clickeando)
-const INEST_MIRROR_TIME          := 60.0   # …sostenido estos s (con Homeostasis latente antes y Contabilidad ≥ 1)
+const INEST_MIRROR_EPS           := 0.45   # espejo: ε ≥ esto… (0.60 y 0.50 costaban sostenerlas jugando: feedback del autor)
+const INEST_MIRROR_TIME          := 45.0   # …acumulados estos s (con Homeostasis elegible antes y Contabilidad ≥ 1)
+const INEST_MIRROR_DECAY         := 0.5    # con ε por debajo el acumulado baja a esta velocidad (no se reinicia)
 const INEST_MIRROR_WARN          := 10.0   # aviso previo con cuenta regresiva
 const INEST_OBSERVE_P            := 0.20   # [Q] OBSERVAR: perturbación que suma al objetivo de ε
 const INEST_OBSERVE_CD           := 6.0
