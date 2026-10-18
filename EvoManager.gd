@@ -142,6 +142,25 @@ var inest_converge_time: float = 0.0     # s con ε < INEST_CONVERGE_EPS (FRACAS
 var inest_peak_eps: float = 0.0
 var inest_all_revealed_at_once: bool = false  # logro Principio de Incertidumbre ya evaluado
 var _inest_mirror_countdown_last: int = -1
+
+# === PROCARIOTA (Sombra de Endosimbiosis — ProcariotaLogic) ===
+var mutation_procariota := false
+var proc_n: float = 0.0                  # población de la colonia (0–PROC_K)
+var proc_peak_n: float = 0.0
+var proc_toxin: float = 0.0              # toxinas de saturación (lisis a PROC_TOXIN_LYSIS)
+var proc_lyses: int = 0                  # FRACASO a PROC_LYSIS_FAIL
+var proc_quorums: int = 0                # sello a PROC_SEAL_QUORUMS
+var proc_quorum_timer: float = 0.0
+var proc_quorum_mult: float = 1.0
+var proc_best_quorum_mult: float = 0.0   # NG+
+var proc_quorum_all_high: bool = true    # MYTHIC Quorum Absoluto: todos con N ≥ 95 % de K
+var proc_harvests: int = 0
+var proc_harvest_cd: float = 0.0
+var proc_plasmid: String = ""            # "" | resistencia | virulencia | metabolico
+var proc_plasmid_cd: float = 0.0
+var proc_plasmid_swaps: int = 0
+var proc_plasmids_used: Dictionary = {}  # logro Conjugación: los 3
+var _proc_window_warned: bool = false    # aviso de la ventana de ENGULLIR con la llave
 var _predictor_warned_idx: int = -1      # legado Predictor Estructural: último umbral avisado
 
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
@@ -312,7 +331,7 @@ const TRANSIENT_VARS := [
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
 	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
-	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx",
+	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx", "_proc_window_warned",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -350,8 +369,8 @@ func update_genome():
 		return
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
-	# INESTABILIDAD CONSCIENTE: la run ya eligió (negó Homeostasis); ninguna otra mutación base.
-	if mutation_inestabilidad:
+	# SOMBRAS (Inestabilidad, Procariota): la run ya eligió; ninguna otra mutación base.
+	if mutation_inestabilidad or mutation_procariota:
 		for g in ["hiperasimilacion", "parasitismo", "simbiosis", "homeostasis", "red_micelial", "esporulacion"]:
 			_set_genome_state(g, "bloqueado")
 		return
@@ -434,6 +453,7 @@ func tick_route_processes(dt: float) -> void:
 	HolobionteLogic.process(dt)  # se auto-gatea (tier 3 de Simbiosis)
 	EndosimbiosisLogic.process(dt)  # se auto-gatea (cruce Parasitismo × Simbiosis)
 	InestabilidadLogic.process(dt)  # se auto-gatea (Sombra de Homeostasis)
+	ProcariotaLogic.process(dt)  # se auto-gatea (Sombra de Endosimbiosis)
 	InestabilidadLogic.tick_predictor()  # legado Predictor Estructural (cualquier run)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 

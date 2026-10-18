@@ -589,6 +589,9 @@ func on_run_closed(route: String) -> void:
 	# Demostración Elegante: Q.E.D. integrando lo mínimo (de a un lema, rápido: la deriva no se acumula).
 	if route == "INESTABILIDAD CONSCIENTE" and EvoManager.inest_integrations <= Balance.ACH_INEST_ELEGANT_MAX:
 		unlock("demostracion_elegante")
+	# Quorum Absoluto: cada quorum esperó a la colonia casi llena (rozando la lisis).
+	if route == "PROCARIOTA" and EvoManager.proc_quorum_all_high:
+		unlock("quorum_absoluto")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
 	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:

@@ -118,6 +118,7 @@ static func process(dt: float) -> void:
 	# Ventana de ENGULLIR: cuenta desde que la Simbiosis es elegible.
 	if eligible():
 		EvoManager.endo_window_t += dt
+		ProcariotaLogic.on_engulf_window(EvoManager.endo_window_t)  # Sombra: dejar pasar ENGULLIR
 	if not is_active() or is_organelle():
 		return
 	EvoManager.endo_atp += atp_rate() * dt

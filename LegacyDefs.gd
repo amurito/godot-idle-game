@@ -630,6 +630,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "lema_lyapunov_active", "value": 1.0},
 	},
+	# SOMBRA de Endosimbiosis (A → anti-A). Llave sin toggle: entra por espejo (dejar pasar ENGULLIR).
+	"sombra_procariota": {
+		"name": "Sombra: Procariota",
+		"flavor": "El hongo expulsa sus orgánulos y vuelve a ser lo que fue antes de ser hongo: una colonia que se divide.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "ENDOSIMBIOSIS"},
+		"effect": {"type": "sombra_procariota_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Procariota: visibilidad (expresión génica de los legados).
+	"legado_plasmido": {
+		"name": "Legado: Plásmido",
+		"flavor": "La colonia aprendió a leer sus genes: el panel de Buffs activos muestra cuánto multiplica cada legado tu click y tu pasivo, en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "PROCARIOTA"},
+		"unlock": {"type": "route_closed", "route": "PROCARIOTA"},
+		"effect": {"type": "plasmido_active", "value": 1.0},
+	},
 	# Recompensa de SELLAR Ayuno Primordial (otorgada vía grant_buff, cost 0, no comprable).
 	"legado_primicia_del_vacio": {
 		"name": "Legado: Primicia del Vacío",

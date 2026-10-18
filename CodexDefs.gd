@@ -1744,7 +1744,41 @@ const ENTRIES: Dictionary = {
 			+ "[i]Homeostasis is Lyapunov stability: every perturbation returns to equilibrium. Its opposite is a positive Lyapunov exponent.[/i]"
 		),
 		"unlock": {"type": "buff_owned", "id": "sombra_inestabilidad"},
-		"see_also": ["ayuno_primordial", "transmut_caos", "transmut_intro"],
+		"see_also": ["ayuno_primordial", "transmut_caos", "transmut_intro", "procariota"],
+	},
+	"procariota": {
+		"cat": "transmutaciones",
+		"name_es": "Procariota", "name_en": "Prokaryote",
+		"body_es": (
+			"[b]Sombra[/b] (A → anti-A) de [b]Endosimbiosis[/b], la primera de una ruta de segundo nivel. La llave se compra en el Banco Genético (20 PL, tras sellar Endosimbiosis). No hay botón: Endosimbiosis es [b]incorporar[/b]; Procariota es no incorporar. Con la llave, si aparece [b]ENGULLIR[/b] y dejás pasar la ventana sin engullir, el hongo expulsa sus orgánulos (un aviso lo anuncia al abrirse la ventana).\n\n"
+			+ "Reemplaza a la Simbiosis de la run: pierde sus efectos y sus cierres. Ahora sos una [b]colonia[/b] de 0 a 100:\n\n"
+			+ "• [b]Fisión binaria[/b]: la colonia se duplica cada 20 s lejos de su capacidad y frena al acercarse (logística).\n"
+			+ "• El ingreso escala con la colonia: ×0.3 vacía → ×2.0 llena.\n"
+			+ "• [b]Toxinas[/b]: desde el 90 % se acumulan (+1/s; −0.5/s por debajo). A 30, [b]lisis[/b]: la colonia revienta y queda al 25 %.\n"
+			+ "• [b][W] Quorum[/b] (desde el 80 %): ráfaga ×(1 + 4·colonia) 10 s y la colonia queda al 40 %. Esperar más cerca de la capacidad rinde más, pero rozás la lisis.\n"
+			+ "• [b][Q] Cosechar[/b]: la mitad de la colonia → plata (una colonia llena = 30 s de ingreso). Cosechar con menos de 2 células la extingue.\n"
+			+ "• [b][E] Plásmido[/b] (cuesta el 20 % de la colonia): resistencia (toxinas ×0.5) → virulencia (quorum +2) → metabólico (crecimiento ×1.5). Una procariota no tiene herencia fija.\n\n"
+			+ "[b]Sello[/b]: 8 quorums → [b]PROCARIOTA[/b] (+9 PL + bonus por el mejor quorum).\n"
+			+ "[b]Fracaso[/b] (vuelve a Simbiosis): 3 lisis o extinguir la colonia.\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado Plásmido[/b] — en todas las runs, el panel de Buffs activos muestra cuánto multiplica cada legado tu click y tu pasivo.\n\n"
+			+ "[i]Antes de los hongos y de las mitocondrias sólo había colonias que se dividían y se hablaban por química (quorum sensing).[/i]"
+		),
+		"body_en": (
+			"[b]Shadow[/b] (A → anti-A) of [b]Endosymbiosis[/b], the first one of a second-level route. The key is bought in the Genetic Bank (20 LP, after sealing Endosymbiosis). There is no button: Endosymbiosis is [b]incorporating[/b]; Prokaryote is not incorporating. With the key, if [b]ENGULF[/b] appears and you let the window pass, the fungus expels its organelles (a warning announces it when the window opens).\n\n"
+			+ "It replaces the run's Symbiosis: you lose its effects and endings. Now you are a [b]colony[/b] from 0 to 100:\n\n"
+			+ "• [b]Binary fission[/b]: the colony doubles every 20 s far from capacity and slows down near it (logistic).\n"
+			+ "• Income scales with the colony: ×0.3 empty → ×2.0 full.\n"
+			+ "• [b]Toxins[/b]: from 90% they build up (+1/s; −0.5/s below). At 30, [b]lysis[/b]: the colony bursts down to 25%.\n"
+			+ "• [b][W] Quorum[/b] (from 80%): burst ×(1 + 4·colony) for 10 s and the colony drops to 40%. Waiting closer to capacity pays more, but you brush lysis.\n"
+			+ "• [b][Q] Harvest[/b]: half the colony → money (a full colony = 30 s of income). Harvesting with fewer than 2 cells makes it extinct.\n"
+			+ "• [b][E] Plasmid[/b] (costs 20% of the colony): resistance (toxins ×0.5) → virulence (quorum +2) → metabolic (growth ×1.5). A prokaryote has no fixed inheritance.\n\n"
+			+ "[b]Seal[/b]: 8 quorums → [b]PROKARYOTE[/b] (+9 LP + bonus from the best quorum).\n"
+			+ "[b]Failure[/b] (back to Symbiosis): 3 lyses or making the colony extinct.\n\n"
+			+ "[b]Reward[/b]: [b]Legacy Plasmid[/b] — in every run, the Active Buffs panel shows how much each legacy multiplies your click and passive.\n\n"
+			+ "[i]Before fungi and mitochondria there were only colonies that divided and talked through chemistry (quorum sensing).[/i]"
+		),
+		"unlock": {"type": "buff_owned", "id": "sombra_procariota"},
+		"see_also": ["endosimbiosis", "inestabilidad_consciente", "transmut_intro"],
 	},
 
 	# ── VALORES (hojas de referencia rápida; números reales de Balance.gd) ──────

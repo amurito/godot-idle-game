@@ -25,7 +25,7 @@
 |---|---|---|---|---|
 | Hiperasimilación | **Ayuno Primordial** | renunciar a clickear | Silencio | ✅ |
 | Homeostasis | **Inestabilidad Consciente** | observar | OBSERVAR: leer la propia ecuación (lore matemático) | ✅ (§9) |
-| Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | spec (nueva) |
+| Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | ✅ (§10) |
 | Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | spec |
 | Parasitismo | **Autosuficiencia** | cultivar | mejoras hechas con biomasa, sin mercado | spec |
 | Red Micelial | **Hifa Pionera** *(ex Núcleo Aislado)* | explorar | mapa del sustrato, avance sin ramificar | spec |
@@ -224,3 +224,40 @@ Calibrada con bot; los números de abajo son los finales.
 | `t3_inest_greedy` (observa todo, clickea sin mirar ε) | diverge en ~25 s → HOMEOSTASIS |
 | `t3_inest_afk` (entra y se va) | converge a los 60 s → HOMEOSTASIS |
 | `t3_homeo_key` / `t3_hiper_key` / `t3_simbiosis_key` | con la llave juegan su ruta normal: ninguno entra a la Sombra |
+
+## 10. Procariota — implementada (2026-10-18) ✅
+
+`ProcariotaLogic.gd`, estado `proc_*` en EvoManager, constantes `PROC_*` en Balance. Concreta §4.
+
+- **Llave** `sombra_procariota` (20 PL, se revela en T3 y se desbloquea tras sellar ENDOSIMBIOSIS).
+- **Espejo**: con la llave, si aparece **ENGULLIR** y dejás pasar la ventana sin engullir, el hongo expulsa sus
+  orgánulos. Al abrirse la ventana un aviso lo anuncia. Reemplaza a la Simbiosis de la run (efectos, sello y
+  cierres).
+- **Colonia** N de 0 a 100: crecimiento logístico (se duplica cada 20 s lejos de la capacidad). El ingreso escala
+  ×0.3 (vacía) → ×2.0 (llena).
+- **Toxinas** (en lugar de un AFK eterno): desde el 90 % se acumulan +1/s (−0.5/s por debajo); a 30, **lisis**:
+  la colonia queda al 25 %.
+- **[W] Quorum** desde el 80 %: ráfaga × (1 + 4·N/K) 10 s y la colonia queda al 40 %. Esperar más cerca de K
+  rinde más pero roza la lisis.
+- **[Q] Cosechar**: la mitad de la colonia → plata (una colonia llena = 30 s de ingreso). Con N < 2 la extingue.
+- **[E] Plásmido** (−20 % de la colonia, cooldown 10 s): resistencia (toxinas ×0.5) → virulencia (quorum +2·N/K)
+  → metabólico (crecimiento ×1.5).
+  - **Cambio respecto de §4**: la spec pedía "apagar un legado y prender otro 60 s", pero los legados ya se
+    prenden y apagan gratis en el Banco en cualquier momento: no aportaba nada. El plásmido pasa a ser un gen
+    de la colonia, dentro de la run.
+- **Sello**: 8 quorums → PROCARIOTA (+9 PL; NG+: el mejor quorum, tope 8).
+- **Fracaso** (→ SIMBIOSIS): 3 lisis o extinguir la colonia cosechando.
+- **Recompensa** (también cambia respecto de §4, por lo mismo): **Legado Plásmido** — el panel de Buffs activos
+  muestra la *expresión génica*: cuánto multiplica cada legado y buff cósmico tu click y tu pasivo, en vivo.
+- **Logros**: Fisión Binaria (ANCESTRAL, sellar) · Conjugación (FRUTO: los 3 plásmidos en una run) ·
+  **Quorum Absoluto** (MYTHIC: todos los quorums con la colonia ≥ 95 %).
+
+**Bot (escenarios `t3_proc_*`, `a3_proc_absoluto`, control `t3_endo_key_engulf`):**
+
+| Escenario | Resultado |
+|---|---|
+| `t3_proc_player` (quorum al 80 %, virulencia) | entra a 347 s · sella a 838 s (8 min de ruta) · sin lisis |
+| `a3_proc_absoluto` (quorum al 96 %, resistencia) | sella a 1238 s → MYTHIC |
+| `t3_proc_afk` | 3 lisis → SIMBIOSIS a 757 s |
+| `t3_proc_harvest` (cosecha sin parar) | extinción → SIMBIOSIS |
+| `t3_endo_key_engulf` (con la llave, engulle) | Endosimbiosis normal: la Sombra no entra |

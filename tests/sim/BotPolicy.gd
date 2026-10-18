@@ -99,6 +99,11 @@ extends RefCounted
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
 ##             (default 0.36) → la Raíz no se muere al llegar
+##   procariota: {quorum_at, plasmid, harvest_below, afk, seal}  PROCARIOTA (Sombra de Endosimbiosis;
+##       el bot entra dejando pasar ENGULLIR: endosimbiosis.engulf = false):
+##       quorum_at: dispara el quorum con la colonia ≥ esto (default 0.8) · plasmid: cicla hasta este
+##       plásmido apenas puede · harvest_below: cosecha si la plata es < esto × costo de la mejora más barata
+##       (default: nunca) · harvest_spam: cosecha apenas puede (prueba de extinción) · afk: no toca nada
 ##   inest: {push_band, observe_below, max_open, integrate_above, no_integrate, impulso_cps, seal}
 ##       INESTABILIDAD CONSCIENTE (Sombra de Homeostasis):
 ##       push_band: [lo, hi, cps]  con Homeostasis vista y Contabilidad, termostato de ε alto (abre el espejo)
@@ -493,6 +498,9 @@ func _route_keys(_d: RefCounted) -> void:
 	var icfg: Dictionary = cfg.get("inest", {})
 	if not icfg.is_empty() and InestabilidadLogic.is_active() and not icfg.get("afk", false):
 		_inest_keys(icfg)
+	var pcfg: Dictionary = cfg.get("procariota", {})
+	if not pcfg.is_empty() and ProcariotaLogic.is_active() and not pcfg.get("afk", false):
+		_procariota_keys(pcfg)
 	if EvoManager.mutation_huesped_soberano:
 		var feed_at: float = float(cfg.get("huesped_feed_at", -1.0))
 		var h_at: float = EvoManager.huesped_hunger + HuespedSoberanoLogic.hunger_rate() * HuespedSoberanoLogic.craving_in()
@@ -661,6 +669,24 @@ func _dark(route: String) -> void:
 						ng._on_remision_up_pressed()
 					elif EvoManager.remision_omega > c + 0.01:
 						ng._on_remision_down_pressed()
+
+
+func _procariota_keys(p: Dictionary) -> void:
+	var want: String = str(p.get("plasmid", ""))
+	if want != "" and EvoManager.proc_plasmid != want and ProcariotaLogic.can_swap_plasmid() \
+			and ProcariotaLogic.frac() >= 0.5:
+		ProcariotaLogic.swap_plasmid()
+		_after_key("key:E proc_plasmid %s" % EvoManager.proc_plasmid)
+	if ProcariotaLogic.can_quorum() and ProcariotaLogic.frac() >= float(p.get("quorum_at", 0.8)):
+		var f: float = ProcariotaLogic.frac()
+		ProcariotaLogic.quorum()
+		_after_key("key:W proc_quorum f=%.2f x%.2f" % [f, EvoManager.proc_quorum_mult])
+	if p.get("harvest_spam", false) and ProcariotaLogic.can_harvest():
+		ProcariotaLogic.harvest()
+		_after_key("key:Q proc_harvest n=%.1f" % EvoManager.proc_n)
+	if p.get("seal", false) and ProcariotaLogic.seal_ready():
+		UIManager._ng_buttons._on_proc_seal_pressed()
+		_log("seal:procariota")
 
 
 ## INESTABILIDAD: el lema que el bot persigue ahora (impulso → inercia → Lyapunov → elasticidad). La

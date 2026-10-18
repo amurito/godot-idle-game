@@ -21,7 +21,7 @@ const CLICK_ORDER := [
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
 	"simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio", "mitocondria",
-	"inest_teoremas",
+	"inest_teoremas", "proc_colonia",
 ]
 
 const PASSIVE_ORDER := [
@@ -33,7 +33,7 @@ const PASSIVE_ORDER := [
 	"metabolismo_glitch", "entropia_domesticada", "convergencia_ciclica", "apoptosis_heredada",
 	"plasticidad_terminal", "sintesis_vital", "control_omega", "colonization",
 	"glitch_persistente", "simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio",
-	"micorriza", "mitocondria", "inest_teoremas",
+	"micorriza", "mitocondria", "inest_teoremas", "proc_colonia",
 ]
 
 ## Fuente de cada fila: "route" (mutación/rama de la run), "legacy" (banco de legado),
@@ -140,6 +140,9 @@ static func _build() -> Dictionary:
 	# INESTABILIDAD CONSCIENTE (Sombra de Homeostasis): cada lema demostrado es un teorema (+10 %).
 	var inest_t := func() -> float: return InestabilidadLogic.theorem_mult()
 	d["inest_teoremas"] = _row("Inestabilidad: teoremas", "route", inest_t, inest_t)
+	# PROCARIOTA (Sombra de Endosimbiosis): la colonia es la economía (× N/K) + ráfaga del quorum.
+	var proc_c := func() -> float: return ProcariotaLogic.colony_mult()
+	d["proc_colonia"] = _row("Procariota: colonia", "route", proc_c, proc_c)
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

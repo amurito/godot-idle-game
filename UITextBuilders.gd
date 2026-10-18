@@ -1327,6 +1327,42 @@ static func build_fusion_catabolica_panel_text() -> String:
 	return t
 
 
+# ─── PROCARIOTA (Sombra de Endosimbiosis) ────────────────────────────────────
+
+static func _bar(f: float, w: int = 20) -> String:
+	var n: int = clampi(int(round(f * w)), 0, w)
+	return "█".repeat(n) + "░".repeat(w - n)
+
+static func build_procariota_panel_text() -> String:
+	var T := TranslationServer
+	var f: float = ProcariotaLogic.frac()
+	var t := "[color=#9be05a]" + T.translate("PROC_PANEL_TITLE") + "[/color]\n"
+	var col: String = "#ffcc66" if f >= Balance.PROC_TOXIN_FRAC else ("#00ff88" if f >= Balance.PROC_QUORUM_FRAC else "#cccccc")
+	t += T.translate("PROC_PANEL_N") % [EvoManager.proc_n, Balance.PROC_K] + "\n"
+	t += "[color=%s]%s[/color]  %d%%\n" % [col, _bar(f), int(f * 100.0)]
+	t += T.translate("PROC_PANEL_INCOME") % ProcariotaLogic.colony_mult() + "\n"
+	if EvoManager.proc_toxin > 0.0:
+		t += "[color=#ffaa44]" + T.translate("PROC_PANEL_TOXIN") % [EvoManager.proc_toxin, Balance.PROC_TOXIN_LYSIS] + "[/color]\n"
+	t += T.translate("PROC_PANEL_LYSES") % [EvoManager.proc_lyses, Balance.PROC_LYSIS_FAIL] + "\n"
+	t += "\n[color=yellow]" + T.translate("PROC_PANEL_QUORUM_HDR") % [EvoManager.proc_quorums, Balance.PROC_SEAL_QUORUMS] + "[/color]\n"
+	if EvoManager.proc_quorum_timer > 0.0:
+		t += T.translate("PROC_PANEL_QUORUM_ACTIVE") % [EvoManager.proc_quorum_mult, EvoManager.proc_quorum_timer] + "\n"
+	else:
+		t += T.translate("PROC_PANEL_QUORUM_NEXT") % [Balance.PROC_QUORUM_FRAC * 100.0, 1.0 + ProcariotaLogic.quorum_k() * f] + "\n"
+	var pl: String = T.translate("PROC_PLASMID_" + EvoManager.proc_plasmid.to_upper()) if EvoManager.proc_plasmid != "" else T.translate("PROC_PLASMID_NONE")
+	t += "\n" + T.translate("PROC_PANEL_PLASMID") % pl + "\n"
+	if ProcariotaLogic.seal_ready():
+		t += "\n[color=#9be05a]" + T.translate("PROC_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.translate("PROC_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_procariota_closed_text() -> String:
+	var t := "[color=#9be05a]" + TranslationServer.translate("PROC_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("PROC_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#9be05a]" + TranslationServer.translate("PROC_CLOSED_REWARD") + "[/color]"
+	return t
+
 # ─── INESTABILIDAD CONSCIENTE (Sombra de Homeostasis) ────────────────────────
 
 ## Coeficientes de los lemas: "?" hasta demostrar el lema.

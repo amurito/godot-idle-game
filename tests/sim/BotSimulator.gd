@@ -244,6 +244,17 @@ func _transmutation_metrics() -> Dictionary:
 			"cd_level": EvoManager.get("caos_cd_level"),
 			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("caos_money_mark") if EvoManager.get("caos_money_mark") != null else 0.0),
 		},
+		"proc": {
+			"active": EvoManager.get("mutation_procariota"),
+			"n": EvoManager.get("proc_n"),
+			"toxin": EvoManager.get("proc_toxin"),
+			"lyses": EvoManager.get("proc_lyses"),
+			"quorums": EvoManager.get("proc_quorums"),
+			"best_quorum": EvoManager.get("proc_best_quorum_mult"),
+			"all_high": EvoManager.get("proc_quorum_all_high"),
+			"harvests": EvoManager.get("proc_harvests"),
+			"plasmid": EvoManager.get("proc_plasmid"),
+		},
 		"inest": {
 			"active": EvoManager.get("mutation_inestabilidad"),
 			"homeo_seen": EvoManager.get("inest_homeo_seen"),

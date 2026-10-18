@@ -435,6 +435,34 @@ const INEST_NG_BASE              := 8      # NG+: elegancia = 8 − integracione
 const ACH_INEST_ELEGANT_MAX      := 5      # MYTHIC Demostración Elegante: ≤ 5 integraciones (bot experto 5, jugador normal 7)
 const PREDICTOR_MARGIN           := 0.05   # legado Predictor Estructural: avisa a esta distancia de un umbral de ε
 
+# ── SOMBRA · PROCARIOTA (anti-Endosimbiosis) — ProcariotaLogic ──
+# Verbo: DIVIDIRSE. Spec docs/design/sombras.md §4 y §10. Calibrado con el simulador.
+const PROC_K                     := 100.0  # capacidad de la colonia
+const PROC_N_START               := 10.0
+const PROC_DOUBLING              := 20.0   # s para duplicarse lejos de K (logística)
+const PROC_INCOME_MIN            := 0.3    # ingreso × 0.3 con la colonia vacía…
+const PROC_INCOME_MAX            := 2.0    # …× 2.0 con la colonia llena
+const PROC_TOXIN_FRAC            := 0.90   # con N ≥ 90 % de K se acumulan toxinas…
+const PROC_TOXIN_RATE            := 1.0    # …1/s…
+const PROC_TOXIN_DECAY           := 0.5    # …y se degradan 0.5/s por debajo
+const PROC_TOXIN_LYSIS           := 30.0   # LISIS: la colonia revienta…
+const PROC_LYSIS_KEEP            := 0.25   # …y queda el 25 %
+const PROC_LYSIS_FAIL            := 3      # FRACASO: 3 lisis → SIMBIOSIS (el AFK no traba la run)
+const PROC_HARVEST_SECS          := 60.0   # [Q] cosechar la mitad de una colonia llena = 30 s de ingreso
+const PROC_HARVEST_CD            := 5.0
+const PROC_EXTINCT_N             := 2.0    # FRACASO: cosechar con N < 2 la extingue → SIMBIOSIS
+const PROC_QUORUM_FRAC           := 0.80   # [W] Quorum con N ≥ 80 % de K…
+const PROC_QUORUM_K              := 4.0    # …ráfaga × (1 + 4·N/K): esperar más cerca de K rinde más…
+const PROC_QUORUM_DURATION       := 10.0
+const PROC_QUORUM_AFTER          := 0.40   # …y la colonia queda en el 40 %
+const PROC_SEAL_QUORUMS          := 8      # sello: 8 quorums
+const PROC_PLASMID_COST          := 0.20   # [E] cambiar de plásmido cuesta el 20 % de N
+const PROC_PLASMID_CD            := 10.0
+const PROC_PLASMID_TOXIN         := 0.5    # resistencia: toxinas ×0.5
+const PROC_PLASMID_QUORUM        := 2.0    # virulencia: quorum +2·N/K
+const PROC_PLASMID_GROWTH        := 1.5    # metabólico: crecimiento ×1.5
+const ACH_PROC_ABSOLUTE_FRAC     := 0.95   # MYTHIC Quorum Absoluto: todos los quorums con N ≥ 95 % de K
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -590,6 +618,7 @@ const PL_REWARDS: Dictionary = {
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
 	"INESTABILIDAD CONSCIENTE":  9,
+	"PROCARIOTA":                9,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -632,4 +661,5 @@ const NG_CAPS: Dictionary = {
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
 	"INESTABILIDAD CONSCIENTE":  8,
+	"PROCARIOTA":                8,
 }

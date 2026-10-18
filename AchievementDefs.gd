@@ -698,6 +698,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "demostracion_elegante",
 	},
+	# ── SOMBRA · PROCARIOTA ──
+	"ruta_procariota": {
+		"name": "Fisión Binaria",
+		"desc": "Sellar Procariota: el hongo volvió a ser una colonia que se divide.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "PROCARIOTA"}],
+	},
+	"conjugacion": {
+		"name": "Conjugación",
+		"desc": "Expresar los 3 plásmidos en una misma Procariota.",
+		"tier": Tier.FRUTO, "secret": true,
+		"trigger": "custom", "evaluator": "conjugacion",
+	},
+	"quorum_absoluto": {
+		"name": "Quorum Absoluto",
+		"desc": "Sellar Procariota con todos los quorums disparados con la colonia al 95 % o más.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "quorum_absoluto",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

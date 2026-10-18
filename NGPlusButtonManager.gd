@@ -72,6 +72,10 @@ var _endo_seal_btn: Button = null
 var _inest_observe_btn: Button = null    # [Q] OBSERVAR (Inestabilidad Consciente)
 var _inest_integrate_btn: Button = null  # [W] INTEGRAR
 var _inest_seal_btn: Button = null       # Q.E.D.
+var _proc_harvest_btn: Button = null     # [Q] Cosechar (Procariota)
+var _proc_quorum_btn: Button = null      # [W] Quorum
+var _proc_plasmid_btn: Button = null     # [E] Plásmido
+var _proc_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -181,9 +185,14 @@ func reset_ng_plus_buttons() -> void:
 	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _micelio_reinforce_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
 			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn,
 			_holo_enter_btn, _holo_seal_btn, _endo_engulf_btn, _endo_transfer_btn, _endo_feed_btn, _endo_seal_btn,
-			_inest_observe_btn, _inest_integrate_btn, _inest_seal_btn]:
+			_inest_observe_btn, _inest_integrate_btn, _inest_seal_btn,
+			_proc_harvest_btn, _proc_quorum_btn, _proc_plasmid_btn, _proc_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
+	_proc_harvest_btn = null
+	_proc_quorum_btn = null
+	_proc_plasmid_btn = null
+	_proc_seal_btn = null
 	_inest_observe_btn = null
 	_inest_integrate_btn = null
 	_inest_seal_btn = null
@@ -245,7 +254,65 @@ func update_ng_plus_buttons() -> void:
 	_update_mutualismo_buttons()
 	_update_endo_buttons()
 	_update_inest_buttons()
+	_update_proc_buttons()
 	_update_batuta_button()
+
+# ── PROCARIOTA: [Q] cosechar · [W] quorum · [E] plásmido · sello ─────────────
+func _update_proc_buttons() -> void:
+	if not ProcariotaLogic.is_active():
+		for b in [_proc_harvest_btn, _proc_quorum_btn, _proc_plasmid_btn, _proc_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	var T := TranslationServer
+	if not is_instance_valid(_proc_quorum_btn):
+		_proc_quorum_btn = _make_rp_button(Color(0.7, 1.0, 0.4), 50, _on_proc_quorum_pressed, 0)
+	if EvoManager.proc_quorum_timer > 0.0:
+		_proc_quorum_btn.text = T.translate("BTN_PROC_QUORUM_ACTIVE") % [EvoManager.proc_quorum_mult, EvoManager.proc_quorum_timer]
+	elif ProcariotaLogic.can_quorum():
+		_proc_quorum_btn.text = T.translate("BTN_PROC_QUORUM") % (1.0 + ProcariotaLogic.quorum_k() * ProcariotaLogic.frac())
+	else:
+		_proc_quorum_btn.text = T.translate("BTN_PROC_QUORUM_WAIT") % [ProcariotaLogic.frac() * 100.0, Balance.PROC_QUORUM_FRAC * 100.0]
+	_proc_quorum_btn.text = EmojiToRichText.strip(_proc_quorum_btn.text)
+	_proc_quorum_btn.disabled = not ProcariotaLogic.can_quorum()
+	_proc_quorum_btn.visible = true
+	if not is_instance_valid(_proc_harvest_btn):
+		_proc_harvest_btn = _make_rp_button(Color(0.97, 0.82, 0.3), 46, _on_proc_harvest_pressed, 1)
+	_proc_harvest_btn.text = EmojiToRichText.strip(T.translate("BTN_PROC_HARVEST") % UITextBuilders.format_compact(ProcariotaLogic.harvest_value()))
+	_proc_harvest_btn.disabled = not ProcariotaLogic.can_harvest()
+	_proc_harvest_btn.visible = true
+	if not is_instance_valid(_proc_plasmid_btn):
+		_proc_plasmid_btn = _make_rp_button(Color(0.55, 0.85, 1.0), 46, _on_proc_plasmid_pressed, 2)
+	_proc_plasmid_btn.text = EmojiToRichText.strip(T.translate("BTN_PROC_PLASMID") % [
+		T.translate("PROC_PLASMID_" + ProcariotaLogic.next_plasmid().to_upper()), int(Balance.PROC_PLASMID_COST * 100.0)])
+	_proc_plasmid_btn.disabled = not ProcariotaLogic.can_swap_plasmid()
+	_proc_plasmid_btn.visible = true
+	if ProcariotaLogic.seal_ready():
+		if not is_instance_valid(_proc_seal_btn):
+			_proc_seal_btn = _make_rp_button(Color(0.6, 1.0, 0.35), 70, _on_proc_seal_pressed, 0)
+		_proc_seal_btn.text = EmojiToRichText.strip(T.translate("BTN_PROC_SEAL") % int(Balance.PL_REWARDS.get("PROCARIOTA", 9)))
+		_proc_seal_btn.visible = true
+	elif is_instance_valid(_proc_seal_btn):
+		_proc_seal_btn.visible = false
+
+func _on_proc_harvest_pressed() -> void:
+	ProcariotaLogic.harvest()
+	_update_proc_buttons()
+
+func _on_proc_quorum_pressed() -> void:
+	ProcariotaLogic.quorum()
+	_update_proc_buttons()
+
+func _on_proc_plasmid_pressed() -> void:
+	ProcariotaLogic.swap_plasmid()
+	_update_proc_buttons()
+
+func _on_proc_seal_pressed() -> void:
+	if RunManager.run_closed or not ProcariotaLogic.seal_ready():
+		return
+	if is_instance_valid(_proc_seal_btn):
+		_proc_seal_btn.visible = false
+	RunManager.close_run("PROCARIOTA", TranslationServer.translate("CLOSE_PROC"))
 
 # ── INESTABILIDAD CONSCIENTE: [Q] observar · [W] integrar · Q.E.D. ─────────────
 func _update_inest_buttons() -> void:
@@ -1449,6 +1516,12 @@ func _toggle_run_buffs_panel() -> void:
 	var txt := "[b]✦ " + TranslationServer.translate("RUN_BUFFS_TITLE") + "[/b]\n\n"
 	for b in LegacyManager.active_run_buffs:
 		txt += "• " + str(b) + "\n"
+	# LEGADO PLÁSMIDO (recompensa de Procariota): cuánto multiplica cada legado ahora mismo.
+	if LegacyManager.get_buff_value("legado_plasmido"):
+		txt += "\n[b]" + TranslationServer.translate("RUN_BUFFS_EXPRESSION") + "[/b]\n"
+		for ch in ["click", "passive"]:
+			for m in IncomeModifiers.active(ch, ["legacy", "cosmic"]):
+				txt += "• %s  [color=#9be05a]%s ×%.2f[/color]\n" % [m.name, TranslationServer.translate("RUN_BUFFS_CH_" + ch.to_upper()), m.factor]
 	body.append_text(EmojiToRichText.rich(txt))
 	vb.add_child(body)
 	var close := Button.new()

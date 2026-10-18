@@ -1036,6 +1036,19 @@ func _input(event):
 					MutualismoLogic.reject()
 					UIManager.update_ng_plus_buttons()
 					get_viewport().set_input_as_handled()
+			elif ProcariotaLogic.is_active():
+				if kc == KEY_Q and ProcariotaLogic.can_harvest():
+					ProcariotaLogic.harvest()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif kc == KEY_W and ProcariotaLogic.can_quorum():
+					ProcariotaLogic.quorum()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif kc == KEY_E and ProcariotaLogic.can_swap_plasmid():
+					ProcariotaLogic.swap_plasmid()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif InestabilidadLogic.is_active():
 				if kc == KEY_Q and InestabilidadLogic.can_observe():
 					InestabilidadLogic.observe()

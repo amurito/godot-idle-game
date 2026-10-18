@@ -253,6 +253,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 		UIManager.show_toast(tr("TOAST_INEST_REWARD"))
 		LogManager.add(tr("LOG_INEST_REWARD"))
 
+	# PROCARIOTA: legado Plásmido (el panel de Buffs activos muestra cuánto multiplica cada legado).
+	if route == "PROCARIOTA":
+		if not LegacyManager.get_buff_value("legado_plasmido"):
+			LegacyManager.grant_buff("legado_plasmido")
+			UIManager.show_toast(tr("TOAST_PROC_REWARD"))
+			LogManager.add(tr("LOG_PROC_REWARD"))
+
 	# NECROSIS CONTROLADA: primera vez que cierra → desbloquear Apoptosis Heredada.
 	if route == "NECROSIS CONTROLADA":
 		if not LegacyManager.get_buff_value("apoptosis_heredada"):
@@ -882,6 +889,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_micelio_omnisciente:    return "MICELIO OMNISCIENTE"
 	if EvoManager.mutation_huesped_soberano:       return "HUÉSPED SOBERANO"
 	if EvoManager.mutation_inestabilidad:          return "INESTABILIDAD CONSCIENTE"
+	if EvoManager.mutation_procariota:             return "PROCARIOTA"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -948,6 +956,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = int(floor(EvoManager.ayuno_silencio_peak / Balance.AYUNO_NG_PEAK_DIV))
 		"INESTABILIDAD CONSCIENTE":
 			raw = maxi(Balance.INEST_NG_BASE - EvoManager.inest_integrations, 0)
+		"PROCARIOTA":
+			raw = int(floor(EvoManager.proc_best_quorum_mult))
 	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
@@ -1059,6 +1069,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
 		"INESTABILIDAD CONSCIENTE": {"value": func() -> Variant: return maxi(Balance.INEST_NG_BASE - EvoManager.inest_integrations, 0), "op": "id", "k": 1.0,
 			"vfmt": "%d", "log": "elegancia {v} = 8 − integraciones (cap {c})"},
+		"PROCARIOTA": {"value": func() -> Variant: return EvoManager.proc_best_quorum_mult, "op": "div", "k": 1.0,
+			"vfmt": "%.2f", "log": "mejor quorum ×{v} = {b} (cap {c})"},
 	}
 	# Alias históricos (con/sin tilde, nombres viejos) → misma regla.
 	var aliases := {

@@ -27,7 +27,7 @@ param(
     # close_run), Ayuno (incluye Parasitismo hibrido) y Fusion Catabolica.
     # Biologia: "escenario@segundos" corre ese escenario hasta su sello (la ventana por defecto no llega).
     [string[]]$TrajectoryScenarios = @("fresh_hiper", "fresh_buy_all", "ng_ayuno_player", "ng_fusion_player", "ng_caos_player", "ng_coro_player", "ng_micelio_player", "ng_huesped_player",
-        "t1_mutualismo_fair@700", "t2_holobionte_care@1000", "t2_endo_paced@650", "t3_inest_player@800"),
+        "t1_mutualismo_fair@700", "t2_holobionte_care@1000", "t2_endo_paced@650", "t3_inest_player@800", "t3_proc_player@850"),
     [int]$TrajectorySeconds = 450,
     [string]$Instance = "golden"
 )
