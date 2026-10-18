@@ -122,6 +122,28 @@ var ayuno_burst_timer: float = 0.0       # s restantes del burst
 var ayuno_ascesis_level: int = 0         # niveles del upgrade ASCESIS [W]
 var _ayuno_burst_saved_mult: float = 1.0 # mult fijado al activar el burst (1 + S/50 al momento)
 
+# === INESTABILIDAD CONSCIENTE (Sombra de Homeostasis — InestabilidadLogic) ===
+var mutation_inestabilidad := false
+var inest_homeo_seen: bool = false       # Homeostasis estuvo latente esta run (condición del espejo)
+var inest_mirror_time: float = 0.0       # s con el espejo cumplido (ε ≥ 0.60)
+var inest_perturb: float = 0.0           # P: perturbación del observador, suma al objetivo de ε
+var inest_revealed: int = 0              # lemas revelados por [Q] OBSERVAR (orden fijo)
+var inest_progress: Dictionary = {}      # lema → s de demostración acumulados
+var inest_proven: Dictionary = {}        # lema → true
+var inest_struct_mark: int = 0           # n al revelar el Lema de la estructura
+var inest_elastic_min: float = 1.0       # Ω mínimo desde que se reveló el Lema de la elasticidad
+var inest_cps: float = 0.0               # media móvil de clicks/s
+var inest_observe_cd: float = 0.0
+var inest_integrate_cd: float = 0.0
+var inest_observations: int = 0
+var inest_integrations: int = 0          # MYTHIC Demostración Elegante: 0 · NG+: 8 − esto
+var inest_diverge_time: float = 0.0      # s con ε > INEST_DIVERGE_EPS (FRACASO)
+var inest_converge_time: float = 0.0     # s con ε < INEST_CONVERGE_EPS (FRACASO)
+var inest_peak_eps: float = 0.0
+var inest_all_revealed_at_once: bool = false  # logro Principio de Incertidumbre ya evaluado
+var _inest_mirror_countdown_last: int = -1
+var _predictor_warned_idx: int = -1      # legado Predictor Estructural: último umbral avisado
+
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
 var mutation_autolisis := false
 var autolisis_devour_count: int = 0
@@ -290,7 +312,7 @@ const TRANSIENT_VARS := [
 	"_met_oscuro_countdown_last", "_parasitismo_countdown_last", "_hyper_active_timer",
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
 	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
-	"_ayuno_mirror_countdown_last",
+	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -328,6 +350,11 @@ func update_genome():
 		return
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
+	# INESTABILIDAD CONSCIENTE: la run ya eligió (negó Homeostasis); ninguna otra mutación base.
+	if mutation_inestabilidad:
+		for g in ["hiperasimilacion", "parasitismo", "simbiosis", "homeostasis", "red_micelial", "esporulacion"]:
+			_set_genome_state(g, "bloqueado")
+		return
 	var ctx := GenomeEvaluator.build_eval_context()
 	GenomeEvaluator.update_ayuno_espejo(ctx)
 	GenomeEvaluator.update_hiperasimilacion(ctx)
@@ -336,6 +363,7 @@ func update_genome():
 	GenomeEvaluator.update_depredador(ctx)
 	GenomeEvaluator.update_simbiosis(ctx)
 	GenomeEvaluator.update_homeostasis(ctx)
+	InestabilidadLogic.update_mirror(ctx)  # Sombra de Homeostasis (espejo: sostener ε alto)
 	GenomeEvaluator.update_allostasis(ctx)
 	GenomeEvaluator.update_homeorhesis(ctx)
 	GenomeEvaluator.update_red_micelial(ctx)
@@ -405,6 +433,8 @@ func tick_route_processes(dt: float) -> void:
 	MutualismoLogic.process(dt)  # se auto-gatea (tier 2 de Simbiosis)
 	HolobionteLogic.process(dt)  # se auto-gatea (tier 3 de Simbiosis)
 	EndosimbiosisLogic.process(dt)  # se auto-gatea (cruce Parasitismo × Simbiosis)
+	InestabilidadLogic.process(dt)  # se auto-gatea (Sombra de Homeostasis)
+	InestabilidadLogic.tick_predictor()  # legado Predictor Estructural (cualquier run)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 
 ## ALOSTASIS (desde Homeostasis, botón del panel de mutación): activa la mutación y aplica el

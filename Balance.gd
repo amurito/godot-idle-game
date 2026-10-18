@@ -400,6 +400,40 @@ const ENDO_REPLICACION_MULT      := 1.5    # gen 3: click ×1.5
 const ENDO_SENALIZACION_OMEGA    := 0.10   # gen 4: Ω +0.10
 const ENDO_METABOLISMO_DISCOUNT  := 0.85   # gen 5: mejoras −15 %
 
+# ── SOMBRA · INESTABILIDAD CONSCIENTE (anti-Homeostasis) — InestabilidadLogic ──
+# Verbo: OBSERVAR (lore matemático). Spec docs/design/sombras.md §9. Calibrado con el simulador.
+const INEST_MIRROR_EPS           := 0.50   # espejo: ε ≥ esto… (0.60 quedaba en el borde de lo alcanzable clickeando)
+const INEST_MIRROR_TIME          := 60.0   # …sostenido estos s (con Homeostasis latente antes y Contabilidad ≥ 1)
+const INEST_MIRROR_WARN          := 10.0   # aviso previo con cuenta regresiva
+const INEST_OBSERVE_P            := 0.20   # [Q] OBSERVAR: perturbación que suma al objetivo de ε
+const INEST_OBSERVE_CD           := 6.0
+const INEST_P_MAX                := 1.5
+const INEST_P_MIN                := -0.30  # integrar de más amortigua el ε natural
+const INEST_INTEGRATE_P          := 0.25   # [W] INTEGRAR: P −= esto…
+const INEST_INTEGRATE_CD         := 20.0
+const INEST_INTEGRATE_SECS       := 10.0   # …y cuesta 10 s de ingreso
+const INEST_INTEGRATE_MIN_COST   := 100.0
+const INEST_LEMMA_HOLD := {"impulso": 40.0, "lyapunov": 60.0, "inercia": 40.0, "elasticidad": 30.0}  # s de demostración
+const INEST_PROGRESS_DECAY       := 0.5    # el progreso baja a la mitad de velocidad si la condición se rompe
+const INEST_CPS_TAU              := 5.0    # media móvil de clicks/s (Lema del impulso)
+const INEST_IMPULSO_CPS          := 3.0    # a: ≥ 3 clicks/s
+const INEST_LYAPUNOV_LO          := 0.90   # ε: al borde…
+const INEST_LYAPUNOV_HI          := 1.10   # …sin caer
+const INEST_INERCIA_IDLE         := 3.0    # d: sin clickear (s)…
+const INEST_INERCIA_EPS          := 0.60   # …con ε ≥ esto (sin clicks ε ≈ P + pasivo: pide ≥ 4 observaciones)
+const INEST_STRUCT_UPGRADES      := 5      # n: mejoras estructurales desde que se reveló
+const INEST_ELASTIC_RATIO        := 1.75   # Ω ≥ ×1.75 su mínimo desde que se reveló: estirarse y recuperarse
+                                           # (relativo: Ω absoluto depende de n y con muchas mejoras pedía ε < 0.35)
+const INEST_OPEN_DRIFT           := 0.002  # P/s por cada lema revelado sin demostrar (lo observado sigue perturbando)
+const INEST_THEOREM_BONUS        := 0.10   # ingreso × (1 + 0.10 · lemas demostrados)
+const INEST_DIVERGE_EPS          := 1.20   # FRACASO: ε > esto…
+const INEST_DIVERGE_TIME         := 10.0   # …durante estos s → HOMEOSTASIS (la ecuación diverge)
+const INEST_CONVERGE_EPS         := 0.35   # FRACASO: ε < esto…
+const INEST_CONVERGE_TIME        := 60.0   # …durante estos s → HOMEOSTASIS (converge sola: el AFK no traba la run)
+const INEST_NG_BASE              := 8      # NG+: elegancia = 8 − integraciones
+const ACH_INEST_ELEGANT_MAX      := 5      # MYTHIC Demostración Elegante: ≤ 5 integraciones (bot experto 5, jugador normal 7)
+const PREDICTOR_MARGIN           := 0.05   # legado Predictor Estructural: avisa a esta distancia de un umbral de ε
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -554,6 +588,7 @@ const PL_REWARDS: Dictionary = {
 	"MICELIO FRAGMENTADO":       3,
 	"FUSION CATABOLICA":         9,
 	"AYUNO PRIMORDIAL":          8,
+	"INESTABILIDAD CONSCIENTE":  9,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -595,4 +630,5 @@ const NG_CAPS: Dictionary = {
 	"MICELIO FRAGMENTADO":       3,
 	"FUSION CATABOLICA":         8,
 	"AYUNO PRIMORDIAL":          8,
+	"INESTABILIDAD CONSCIENTE":  8,
 }

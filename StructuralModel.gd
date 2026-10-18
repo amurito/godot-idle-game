@@ -283,6 +283,8 @@ func update_runtime() -> void:
 	if epsilon_effective < epsilon_runtime and epsilon_runtime > 0.1:
 		bio_absorption = clamp(epsilon_effective / epsilon_runtime, 0.4, 1.0)
 	var eps_target := epsilon_raw * bio_absorption
+	# INESTABILIDAD CONSCIENTE: observar perturba (P suma al objetivo; integrar la vuelve negativa).
+	eps_target = maxf(eps_target + InestabilidadLogic.perturbation(), 0.0)
 	if RunManager.is_memoria_oscura_active() and eps_target > epsilon_runtime:
 		eps_target = epsilon_runtime + (eps_target - epsilon_runtime) * Balance.MEMORIA_OSCURA_EPS_RISE_DAMP
 	epsilon_runtime = lerp(epsilon_runtime, eps_target, 0.045)
@@ -383,8 +385,13 @@ func resolve_omega() -> void:
 		omega = EvoManager.omega_cero_omega
 		omega_min = min(omega_min, EvoManager.omega_cero_omega)
 
+	# INESTABILIDAD CONSCIENTE: negar Homeostasis es perder sus pisos de Ω (el Lema de la elasticidad pide
+	# subirla bajando ε: con el piso heredado sería gratis).
+	if EvoManager.mutation_inestabilidad:
+		omega_min = minf(omega_min, omega)
+
 	# 4. Pisos de legado
-	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro:
+	if not EvoManager.mutation_parasitism and not EvoManager.mutation_met_oscuro and not EvoManager.mutation_inestabilidad:
 		omega = max(omega, omega_min)
 		if EvoManager.mutation_allostasis:
 			omega = max(omega, 0.60)

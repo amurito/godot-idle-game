@@ -76,6 +76,7 @@ Legados al sellar: Motor Fundido (Fusión), Batuta (Caos), Compás Interno (Coro
 
 **Sombras (A → anti-A)** — disparador espejo, no hay botón:
 - **Ayuno Primordial** (anti-Hiper, 8): con la llave y **Hiperasimilación latente**, 60 s sin clickear con pasivo ≥ 10/s y ε < 0.10. Si entra Parasitismo durante el ayuno → Trampa del Vacío (cierra PARASITISMO).
+- **Inestabilidad Consciente** (anti-Homeostasis, 9; lore matemático): con la llave, habiendo tenido Homeostasis elegible y Contabilidad ≥ 1, sostener ε ≥ 0.50 60 s. [Q] OBSERVAR revela lemas (P +0.20, y cada lema abierto sigue empujando), [W] INTEGRAR baja P. Sello **Q.E.D.**: 5 lemas (impulso, Lyapunov, inercia, estructura, elasticidad). Fracaso → HOMEOSTASIS: diverge (ε > 1.2 10 s) o converge (ε < 0.35 60 s). Recompensa: los 3 legados de conocimiento + Lema de Lyapunov. Spec `docs/design/sombras.md` §9.
 
 ## 5. Estructura por trascendencia (plan decidido 2026-10-16; hoy todas las llaves se revelan en T ≥ 3)
 
@@ -91,7 +92,7 @@ Legados al sellar: Motor Fundido (Fusión), Batuta (Caos), Compás Interno (Coro
 
 ## 6. Huecos y plan (no implementado)
 
-- **Sombras** pendientes: Autosuficiencia (anti-Parasitismo), Autarquía (anti-Simbiosis), Núcleo Aislado (anti-Red Micelial), Inestabilidad Consciente (anti-Homeostasis, botón OBSERVAR).
+- **Sombras** pendientes (spec `docs/design/sombras.md`): Procariota (anti-Endosimbiosis, extinción → SIMBIOSIS), Antibiosis (anti-Simbiosis, ex Autarquía), Autosuficiencia (anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado; fracaso → final propio HIFA EXTRAVIADA).
 - **Redenciones**: Redención de la Red (tras Esporulación / Panspermia; candidata a salir de Micelio Fragmentado), Redención del Orden (tras Singularidad / Mente Colmena), Redención de la Biología.
 - **Fantasma** (2 llaves): Dualidad Corrosiva (Fusión + Huésped), Eco Silencioso (Micelio + Caos).
 - **Secretas**: Glitch Supremo, El Susurro (0 PL, desde MO), El Origen.

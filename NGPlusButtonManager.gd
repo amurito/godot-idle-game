@@ -69,6 +69,9 @@ var _endo_engulf_btn: Button = null       # ENGULLIR (Simbiosis → Endosimbiosi
 var _endo_transfer_btn: Button = null     # [Q] Transferir gen
 var _endo_feed_btn: Button = null         # [W] Alimentar
 var _endo_seal_btn: Button = null
+var _inest_observe_btn: Button = null    # [Q] OBSERVAR (Inestabilidad Consciente)
+var _inest_integrate_btn: Button = null  # [W] INTEGRAR
+var _inest_seal_btn: Button = null       # Q.E.D.
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -177,9 +180,13 @@ func reset_ng_plus_buttons() -> void:
 		_ayuno_seal_btn = null
 	for b in [_caos_collapse_btn, _caos_cd_btn, _batuta_btn, _coro_seal_btn, _micelio_seal_btn, _micelio_reinforce_btn, _metronome_ring, _huesped_feed_btn, _huesped_seal_btn,
 			_mutualismo_pact_btn, _mutualismo_accept_btn, _mutualismo_reject_btn, _mutualismo_seal_btn,
-			_holo_enter_btn, _holo_seal_btn, _endo_engulf_btn, _endo_transfer_btn, _endo_feed_btn, _endo_seal_btn]:
+			_holo_enter_btn, _holo_seal_btn, _endo_engulf_btn, _endo_transfer_btn, _endo_feed_btn, _endo_seal_btn,
+			_inest_observe_btn, _inest_integrate_btn, _inest_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
+	_inest_observe_btn = null
+	_inest_integrate_btn = null
+	_inest_seal_btn = null
 	_caos_collapse_btn = null
 	_caos_cd_btn = null
 	_batuta_btn = null
@@ -237,7 +244,61 @@ func update_ng_plus_buttons() -> void:
 	_update_huesped_buttons()
 	_update_mutualismo_buttons()
 	_update_endo_buttons()
+	_update_inest_buttons()
 	_update_batuta_button()
+
+# ── INESTABILIDAD CONSCIENTE: [Q] observar · [W] integrar · Q.E.D. ─────────────
+func _update_inest_buttons() -> void:
+	if not InestabilidadLogic.is_active():
+		for b in [_inest_observe_btn, _inest_integrate_btn, _inest_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	var T := TranslationServer
+	var n_lemmas: int = InestabilidadLogic.LEMMAS.size()
+	if not is_instance_valid(_inest_observe_btn):
+		_inest_observe_btn = _make_rp_button(Color(0.79, 0.63, 1.0), 50, _on_inest_observe_pressed, 0)
+	var t: String
+	if EvoManager.inest_revealed >= n_lemmas:
+		t = T.translate("BTN_INEST_OBSERVE_DONE")
+	elif EvoManager.inest_observe_cd > 0.0:
+		t = T.translate("BTN_INEST_OBSERVE_CD") % EvoManager.inest_observe_cd
+	else:
+		t = T.translate("BTN_INEST_OBSERVE") % [EvoManager.inest_revealed + 1, n_lemmas, Balance.INEST_OBSERVE_P]
+	_inest_observe_btn.text = EmojiToRichText.strip(t)
+	_inest_observe_btn.disabled = not InestabilidadLogic.can_observe()
+	_inest_observe_btn.visible = true
+	if not is_instance_valid(_inest_integrate_btn):
+		_inest_integrate_btn = _make_rp_button(Color(0.55, 0.85, 1.0), 46, _on_inest_integrate_pressed, 1)
+	if EvoManager.inest_integrate_cd > 0.0:
+		t = T.translate("BTN_INEST_INTEGRATE_CD") % EvoManager.inest_integrate_cd
+	else:
+		t = T.translate("BTN_INEST_INTEGRATE") % [Balance.INEST_INTEGRATE_P, UITextBuilders.format_compact(InestabilidadLogic.integrate_cost())]
+	_inest_integrate_btn.text = EmojiToRichText.strip(t)
+	_inest_integrate_btn.disabled = not InestabilidadLogic.can_integrate()
+	_inest_integrate_btn.visible = true
+	if InestabilidadLogic.seal_ready():
+		if not is_instance_valid(_inest_seal_btn):
+			_inest_seal_btn = _make_rp_button(Color(1.0, 0.9, 0.6), 70, _on_inest_seal_pressed, 0)
+		_inest_seal_btn.text = EmojiToRichText.strip(T.translate("BTN_INEST_SEAL") % int(Balance.PL_REWARDS.get("INESTABILIDAD CONSCIENTE", 9)))
+		_inest_seal_btn.visible = true
+	elif is_instance_valid(_inest_seal_btn):
+		_inest_seal_btn.visible = false
+
+func _on_inest_observe_pressed() -> void:
+	InestabilidadLogic.observe()
+	_update_inest_buttons()
+
+func _on_inest_integrate_pressed() -> void:
+	InestabilidadLogic.integrate()
+	_update_inest_buttons()
+
+func _on_inest_seal_pressed() -> void:
+	if RunManager.run_closed or not InestabilidadLogic.seal_ready():
+		return
+	if is_instance_valid(_inest_seal_btn):
+		_inest_seal_btn.visible = false
+	RunManager.close_run("INESTABILIDAD CONSCIENTE", TranslationServer.translate("CLOSE_INEST"))
 
 # ── ENDOSIMBIOSIS: ENGULLIR · [Q] transferir gen · [W] alimentar · sello ───────
 func _update_endo_buttons() -> void:

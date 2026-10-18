@@ -869,7 +869,8 @@ func _update_achievements_view():
 		for id in ids:
 			var def: Dictionary = AchievementManager.DEFS[id]
 			var unlocked_one: bool = AchievementManager.is_unlocked(id)
-			var is_secret: bool = def.get("secret", false)
+			# OBSERVATORIO GENÓMICO (recompensa de Inestabilidad Consciente): los secretos se ven.
+			var is_secret: bool = def.get("secret", false) and not LegacyManager.get_buff_value("observatorio_genomico")
 			var name_str: String = AchievementManager.get_display_name(id)
 			var desc_str: String = AchievementManager.get_display_desc(id)
 

@@ -678,6 +678,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "huesped_perfecto",
 	},
+	# ── SOMBRA · INESTABILIDAD CONSCIENTE ──
+	"ruta_inestabilidad": {
+		"name": "Q.E.D.",
+		"desc": "Sellar Inestabilidad Consciente: el hongo demostró el teorema de su propia existencia.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "INESTABILIDAD CONSCIENTE"}],
+	},
+	"principio_incertidumbre": {
+		"name": "Principio de Incertidumbre",
+		"desc": "Tener los 5 lemas revelados a la vez sin haber demostrado ninguno.",
+		"tier": Tier.FRUTO, "secret": true,
+		"trigger": "custom", "evaluator": "principio_incertidumbre",
+	},
+	"demostracion_elegante": {
+		"name": "Demostración Elegante",
+		"desc": "Sellar Inestabilidad Consciente integrando la ecuación 5 veces o menos.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "demostracion_elegante",
+	},
 	"coloso_estructural": {
 		"name": "Coloso Estructural",
 		"desc": "Cerrar una run con $1.000M generados y n ≥ 200 upgrades estructurales. Escala absoluta.",

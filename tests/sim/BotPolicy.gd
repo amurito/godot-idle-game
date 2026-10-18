@@ -99,11 +99,22 @@ extends RefCounted
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
 ##             (default 0.36) → la Raíz no se muere al llegar
+##   inest: {push_band, observe_below, max_open, integrate_above, no_integrate, impulso_cps, seal}
+##       INESTABILIDAD CONSCIENTE (Sombra de Homeostasis):
+##       push_band: [lo, hi, cps]  con Homeostasis vista y Contabilidad, termostato de ε alto (abre el espejo)
+##       observe_below: observa con ε < esto y menos de max_open lemas abiertos (default 0.95 / 2)
+##       integrate_above: integra con ε > esto (default 1.08) · no_integrate: nunca integra (MYTHIC)
+##       impulso_cps: clicks/s para el Lema del impulso (default 4) · seal: Q.E.D. apenas puede
+##       elastic_eps: para la elasticidad integra mientras ε > esto (default 0.45) · cps: clicks fijos
+##       reserve: no compra mejoras con menos de reserve × costo de INTEGRAR (default 1.5)
+##       hoard_struct: no compra nada hasta revelar el Lema de la estructura (lo resuelve de golpe)
 ##       care: atiende las necesidades (compra pasivo si la Raíz lo pide; clickea a cps_hi con
 ##             ε < eps_hi y a cps_lo por encima, para no dejar sin luz al Alga ni sin clicks a la Bacteria)
 
 const DEFAULT_BUY_IDS := ["click", "auto", "trueque", "click_mult", "auto_mult",
 	"trueque_net", "specialization", "cognitive", "accounting", "persistence"]
+## Upgrades que cuentan para n (StructuralModel.get_structural_upgrades): Lema de la estructura.
+const STRUCT_IDS := ["auto", "auto_mult", "trueque", "trueque_net", "cognitive", "accounting", "specialization"]
 ## Upgrades que alimentan el término pasivo (d, md, e, me y especialización).
 const PASSIVE_IDS := ["auto", "auto_mult", "trueque", "trueque_net", "specialization"]
 
@@ -120,6 +131,8 @@ var _caos_was_bursting := false
 var _swapped := false
 var _micelio_plan: Array = []
 var _next_decision_frame: int = 0
+var _inest_prog_total: float = -1.0
+var _inest_prog_t: float = 0.0
 
 
 func _init(config: Dictionary) -> void:
@@ -177,6 +190,18 @@ func _current_cps() -> float:
 	var until: float = float(cfg.get("click_until", -1.0))
 	if until >= 0.0 and t >= until:
 		return 0.0
+	var icfg: Dictionary = cfg.get("inest", {})
+	if not icfg.is_empty():
+		if InestabilidadLogic.is_active():
+			return 0.0 if icfg.get("afk", false) else _inest_cps(icfg)
+		var pb: Array = icfg.get("push_band", [])
+		if pb.size() == 3 and EvoManager.inest_homeo_seen and UpgradeManager.level("accounting") >= 1:
+			var ei: float = StructuralModel.epsilon_runtime
+			if ei < float(pb[0]):
+				return float(pb[2])
+			if ei < (float(pb[0]) + float(pb[1])) / 2.0:
+				return float(pb[2]) * 0.5
+			return 0.0
 	var hold: float = float(cfg.get("caos_hold_below", -1.0))
 	if hold >= 0.0 and EvoManager.mutation_caos_orquestado and StructuralModel.epsilon_runtime >= hold 			and (_caos_start < 0.0 or RunManager.run_time - _caos_start < float(cfg.get("caos_grand_from", 1.0e9))):
 		return 0.0
@@ -251,8 +276,22 @@ func _buy(d: RefCounted) -> void:
 			_after_key("key:W micelio_reinforce %d" % EvoManager.micelio_reinforce)
 		elif MicelioOmniscienteLogic.reinforce_cost() <= EconomyManager.get_delta_total() * 60.0:
 			return
+	# Inestabilidad: no gasta la reserva para INTEGRAR (reserve × su costo); con el Lema de la
+	# estructura abierto compra sólo mejoras estructurales.
+	var keep: float = 0.0
+	var icfg_b: Dictionary = cfg.get("inest", {})
+	var inest_struct: bool = false
+	if not icfg_b.is_empty() and InestabilidadLogic.is_active():
+		if not icfg_b.get("no_integrate", false):
+			keep = InestabilidadLogic.integrate_cost() * float(icfg_b.get("reserve", 1.5))
+		inest_struct = InestabilidadLogic.is_revealed("estructura") and not InestabilidadLogic.is_proven("estructura")
+	# hoard_struct: junta plata hasta revelar el Lema de la estructura y lo resuelve de golpe.
+	if icfg_b.get("hoard_struct", false) and InestabilidadLogic.is_active() and not InestabilidadLogic.is_revealed("estructura"):
+		return
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
+	if inest_struct:
+		ids = STRUCT_IDS
 	var ids_from: Array = cfg.get("buy_ids_from", [])
 	if ids_from.size() == 2 and RunManager.run_time >= float(ids_from[0]):
 		ids = ids_from[1]
@@ -314,7 +353,7 @@ func _buy(d: RefCounted) -> void:
 	for id in cfg.get("priority", []):
 		if id in avoid or UpgradeManager.level(id) > 0 or not UpgradeManager.is_unlocked(id):
 			continue
-		if UpgradeManager.can_buy(id, EconomyManager.money):
+		if UpgradeManager.can_buy(id, EconomyManager.money - keep):
 			d.buy(id)
 		elif cfg.get("save_for_priority", false) and RunManager.run_time >= float(cfg.get("save_from", 0.0)):
 			return  # ahorrando: no se gasta en nada más
@@ -330,7 +369,7 @@ func _buy(d: RefCounted) -> void:
 				continue
 			if passive_capped and id in PASSIVE_IDS:
 				continue
-			if not UpgradeManager.can_buy(id, EconomyManager.money):
+			if not UpgradeManager.can_buy(id, EconomyManager.money - keep):
 				continue
 			var c := UpgradeManager.cost(id)
 			if c < best_cost:
@@ -451,6 +490,9 @@ func _route_keys(_d: RefCounted) -> void:
 			_log("seal:coro")
 	if EvoManager.mutation_micelio_omnisciente:
 		_micelio()
+	var icfg: Dictionary = cfg.get("inest", {})
+	if not icfg.is_empty() and InestabilidadLogic.is_active() and not icfg.get("afk", false):
+		_inest_keys(icfg)
 	if EvoManager.mutation_huesped_soberano:
 		var feed_at: float = float(cfg.get("huesped_feed_at", -1.0))
 		var h_at: float = EvoManager.huesped_hunger + HuespedSoberanoLogic.hunger_rate() * HuespedSoberanoLogic.craving_in()
@@ -619,6 +661,64 @@ func _dark(route: String) -> void:
 						ng._on_remision_up_pressed()
 					elif EvoManager.remision_omega > c + 0.01:
 						ng._on_remision_down_pressed()
+
+
+## INESTABILIDAD: el lema que el bot persigue ahora (impulso → inercia → Lyapunov → elasticidad). La
+## inercia se saltea mientras P no alcance para sostener ε sin clicks.
+func _inest_target() -> String:
+	for id in ["impulso", "inercia", "lyapunov", "elasticidad"]:
+		if InestabilidadLogic.is_revealed(id) and not InestabilidadLogic.is_proven(id):
+			if id == "inercia" and EvoManager.inest_perturb + 0.05 < Balance.INEST_INERCIA_EPS:
+				continue
+			return id
+	return ""
+
+func _inest_cps(icfg: Dictionary) -> float:
+	if icfg.has("cps"):
+		return float(icfg.cps)  # sin termostato (jugador que no mira ε)
+	var e: float = StructuralModel.epsilon_runtime
+	match _inest_target():
+		"impulso":
+			return float(icfg.get("impulso_cps", 4.0))
+		"inercia", "elasticidad":
+			return 0.0
+	# Lyapunov / nada abierto: termostato alrededor de ε ≈ 1.0.
+	if e < 0.92:
+		return 3.0
+	if e < 1.0:
+		return 1.5
+	return 0.0
+
+func _inest_keys(icfg: Dictionary) -> void:
+	var e: float = StructuralModel.epsilon_runtime
+	var open: int = EvoManager.inest_revealed - InestabilidadLogic.proven_count()
+	# Trabado: 30 s sin progreso en ningún lema → observa aunque tenga lemas abiertos.
+	var total: float = InestabilidadLogic.proven_count() * 1000.0
+	for k in EvoManager.inest_progress:
+		total += float(EvoManager.inest_progress[k])
+	total += float(StructuralModel.get_structural_upgrades() - EvoManager.inest_struct_mark) if InestabilidadLogic.is_revealed("estructura") else 0.0
+	if total > _inest_prog_total + 0.01:
+		_inest_prog_total = total
+		_inest_prog_t = RunManager.run_time
+	var stuck: bool = RunManager.run_time - _inest_prog_t > 30.0
+	if InestabilidadLogic.can_observe() and e < float(icfg.get("observe_below", 0.95)) \
+			and (open < int(icfg.get("max_open", 2)) or stuck):
+		InestabilidadLogic.observe()
+		_after_key("key:Q inest_observe eps=%.2f open=%d" % [e, open])
+	# Elasticidad: baja ε integrando hasta que Ω vuelva a ×1.75 su mínimo, sin pasar al converge (< 0.35).
+	var integ_at: float = float(icfg.get("integrate_above", 1.08))
+	if _inest_target() == "elasticidad" and StructuralModel.omega < InestabilidadLogic.elastic_target():
+		integ_at = float(icfg.get("elastic_eps", 0.45))
+	# Nada abierto y ε demasiado alto para mirar: integra para poder observar el próximo lema.
+	if open == 0 and EvoManager.inest_revealed < InestabilidadLogic.LEMMAS.size():
+		integ_at = minf(integ_at, float(icfg.get("observe_below", 0.95)))
+	if not icfg.get("no_integrate", false) and e > integ_at \
+			and InestabilidadLogic.can_integrate():
+		InestabilidadLogic.integrate()
+		_after_key("key:W inest_integrate eps=%.2f P=%.2f" % [e, EvoManager.inest_perturb])
+	if icfg.get("seal", false) and InestabilidadLogic.seal_ready():
+		UIManager._ng_buttons._on_inest_seal_pressed()
+		_log("seal:inest")
 
 
 func _after_key(label: String) -> void:

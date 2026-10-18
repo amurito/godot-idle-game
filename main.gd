@@ -409,6 +409,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	EvoManager.colonizacion_pulse()  # RAMA VERDE: el click manual empuja la frontera micelial
 	CoroSimbioticoLogic.on_click()  # golpe del metrónomo (Coro Simbiótico / legado Compás Interno)
 	HolobionteLogic.on_click()  # Bacteria: media de clicks/s
+	InestabilidadLogic.on_click()  # Lema del impulso: media de clicks/s
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
 
@@ -1033,6 +1034,15 @@ func _input(event):
 					get_viewport().set_input_as_handled()
 				elif kc == KEY_R and EvoManager.mutualismo_offer != "":
 					MutualismoLogic.reject()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+			elif InestabilidadLogic.is_active():
+				if kc == KEY_Q and InestabilidadLogic.can_observe():
+					InestabilidadLogic.observe()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif kc == KEY_W and InestabilidadLogic.can_integrate():
+					InestabilidadLogic.integrate()
 					UIManager.update_ng_plus_buttons()
 					get_viewport().set_input_as_handled()
 			elif EvoManager.mutation_huesped_soberano:

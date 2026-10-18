@@ -119,6 +119,13 @@ static func build_formula_text(_main: Node) -> String:
 		t += "[/font_size][/color]\n"
 
 	var raw_n: int = StructuralModel.get_structural_upgrades()
+	# INESTABILIDAD CONSCIENTE: la ecuación se oculta; cada lema demostrado revela su coeficiente.
+	if InestabilidadLogic.is_active():
+		return t + _inest_coef_line()
+	# LEMA DE LYAPUNOV (legado): la fórmula muestra los valores reales de sus términos.
+	if LegacyManager.get_buff_value("legado_lema_lyapunov"):
+		t += "[color=#c9a0ff]a = %.1f  b = %.2f  d = %.1f  e = %.1f[/color]\n" % [
+			UpgradeManager.value("click"), UpgradeManager.value("click_mult"), UpgradeManager.value("auto"), UpgradeManager.value("trueque")]
 	if UpgradeManager.level("cognitive") > 0:
 		t += "fⁿ = c₀ · κμ^(1 - 1/n)\n\n"
 		t += "κμ = k · (1 + α · (μ - 1))\n"
@@ -1156,6 +1163,14 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 	else:
 		t += "Ω = %s (%s)\n" % [snapped(StructuralModel.omega, 0.01), get_system_phase(StructuralModel.omega)]
 	t += "Presión = %s" % snapped(StructuralModel.get_structural_pressure(), 1)
+	# ANÁLISIS DE TENSIÓN (recompensa de Inestabilidad Consciente): de dónde viene ε.
+	if LegacyManager.get_buff_value("analisis_de_tension"):
+		t += "\n" + TranslationServer.translate("STICKY_EPS_DETAIL") % [StructuralModel.epsilon_active, StructuralModel.epsilon_passive, StructuralModel.epsilon_complex]
+	# PREDICTOR ESTRUCTURAL: el próximo umbral de ε del árbol.
+	if LegacyManager.get_buff_value("predictor_estructural"):
+		var _th: Array = InestabilidadLogic.next_threshold(StructuralModel.epsilon_runtime)
+		if _th.size() > 0:
+			t += "\n" + TranslationServer.translate("STICKY_PREDICTOR") % [float(_th[0]), TranslationServer.translate(_th[1])]
 
 	var hiper_genome: String = EvoManager.genome.get("hiperasimilacion", "")
 	var depredador_eligible: bool = LegacyManager.last_run_ending == "PARASITISMO" \
@@ -1307,6 +1322,76 @@ static func build_fusion_catabolica_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t
 
+
+# ─── INESTABILIDAD CONSCIENTE (Sombra de Homeostasis) ────────────────────────
+
+## Coeficientes de los lemas: "?" hasta demostrar el lema.
+static func _inest_coef_line() -> String:
+	var parts: PackedStringArray = []
+	for id in InestabilidadLogic.LEMMAS:
+		var c: String = InestabilidadLogic.COEF[id]
+		if not InestabilidadLogic.is_proven(id):
+			parts.append(c + " = ?")
+			continue
+		match id:
+			"impulso":    parts.append("a = %.1f" % UpgradeManager.value("click"))
+			"lyapunov":   parts.append("ε = %.2f" % StructuralModel.epsilon_runtime)
+			"inercia":    parts.append("d = %.1f" % UpgradeManager.value("auto"))
+			"estructura": parts.append("n = %d" % StructuralModel.get_structural_upgrades())
+			"elasticidad": parts.append("Ω = %.2f" % StructuralModel.omega)
+	return "[color=#c9a0ff]" + "  ".join(parts) + "[/color]"
+
+static func _inest_statement(id: String) -> String:
+	var T := TranslationServer
+	match id:
+		"impulso":
+			return T.translate("INEST_STMT_IMPULSO") % [Balance.INEST_IMPULSO_CPS, InestabilidadLogic.hold_time(id), EvoManager.inest_cps]
+		"lyapunov":
+			return T.translate("INEST_STMT_LYAPUNOV") % [Balance.INEST_LYAPUNOV_LO, Balance.INEST_LYAPUNOV_HI, InestabilidadLogic.hold_time(id)]
+		"inercia":
+			return T.translate("INEST_STMT_INERCIA") % [Balance.INEST_INERCIA_EPS, InestabilidadLogic.hold_time(id)]
+		"estructura":
+			return T.translate("INEST_STMT_ESTRUCTURA") % [Balance.INEST_STRUCT_UPGRADES,
+				mini(maxi(StructuralModel.get_structural_upgrades() - EvoManager.inest_struct_mark, 0), Balance.INEST_STRUCT_UPGRADES), Balance.INEST_STRUCT_UPGRADES]
+		"elasticidad":
+			return T.translate("INEST_STMT_ELASTICIDAD") % [Balance.INEST_ELASTIC_RATIO, EvoManager.inest_elastic_min,
+				InestabilidadLogic.elastic_target(), InestabilidadLogic.hold_time(id), StructuralModel.omega]
+	return ""
+
+static func build_inestabilidad_panel_text() -> String:
+	var T := TranslationServer
+	var eps: float = StructuralModel.epsilon_runtime
+	var t := "[color=#c9a0ff]" + T.translate("INEST_PANEL_TITLE") + "[/color]\n"
+	t += T.translate("INEST_PANEL_EPS") % [eps, EvoManager.inest_perturb] + "\n"
+	t += T.translate("INEST_PANEL_BAND") % [Balance.INEST_CONVERGE_EPS, Balance.INEST_DIVERGE_EPS] + "\n"
+	if EvoManager.inest_diverge_time > 0.0:
+		t += "[color=#ff5c6a]" + T.translate("INEST_PANEL_DIVERGING") % (Balance.INEST_DIVERGE_TIME - EvoManager.inest_diverge_time) + "[/color]\n"
+	elif EvoManager.inest_converge_time > Balance.INEST_CONVERGE_TIME * 0.5:
+		t += "[color=#ffcc66]" + T.translate("INEST_PANEL_CONVERGING") % (Balance.INEST_CONVERGE_TIME - EvoManager.inest_converge_time) + "[/color]\n"
+	var n: int = InestabilidadLogic.LEMMAS.size()
+	t += "\n[color=yellow]" + T.translate("INEST_PANEL_LEMMAS_HDR") % [InestabilidadLogic.proven_count(), n] + "[/color]\n"
+	for id in InestabilidadLogic.LEMMAS:
+		var c: String = InestabilidadLogic.COEF[id]
+		if not InestabilidadLogic.is_revealed(id):
+			t += "[color=#777777]  %s = ?  " % c + T.translate("INEST_PANEL_HIDDEN") + "[/color]\n"
+		elif InestabilidadLogic.is_proven(id):
+			t += "[color=green]  [x] %s — " % c + T.translate("INEST_LEMMA_" + id.to_upper()) + "[/color]\n"
+		else:
+			var p: float = InestabilidadLogic.progress(id)
+			var col: String = "#00ff88" if InestabilidadLogic.condition(id) else "#cccccc"
+			t += "[color=%s]  [ ] %s — " % [col, c] + T.translate("INEST_LEMMA_" + id.to_upper()) + ": " + _inest_statement(id) + "  %d%%[/color]\n" % int(p * 100.0)
+	t += T.translate("INEST_PANEL_THEOREMS") % InestabilidadLogic.theorem_mult() + "\n"
+	if InestabilidadLogic.seal_ready():
+		t += "\n[color=#ffe699]" + T.translate("INEST_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.translate("INEST_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_inestabilidad_closed_text() -> String:
+	var t := "[color=#c9a0ff]" + TranslationServer.translate("INEST_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("INEST_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#c9a0ff]" + TranslationServer.translate("INEST_CLOSED_REWARD") + "[/color]"
+	return t
 
 # ─── CAOS ORQUESTADO (transmutación de Homeostasis) ──────────────────────────
 

@@ -32,10 +32,11 @@ de la franja Biología están vacías. Ideas para llenarlo (a definir con el aut
 
 **Spec para revisión:** `docs/design/biologia_mutualismo_endosimbiosis.md` (Mutualismo = negociar, Holobionte = sostener 4 socios, Endosimbiosis = dosificar genes; 6 preguntas abiertas en §9).
 
-### A2. Sombras (anti-A) — 1 de 5 hecha
-Hecha: Ayuno Primordial (anti-Hiper). Pendientes (spec en `involucion_transmutaciones.md` §6, disparador espejo):
-Autosuficiencia (anti-Parasitismo), Autarquía (anti-Simbiosis), Núcleo Aislado (anti-Red Micelial),
-Inestabilidad Consciente (anti-Homeostasis, con el botón **OBSERVAR**). Regla de la familia: dan visibilidad
+### A2. Sombras (anti-A) — 2 de 6 hechas
+Hechas: Ayuno Primordial (anti-Hiper) e **Inestabilidad Consciente** (anti-Homeostasis, 2026-10-18, lore
+matemático; su recompensa son los 3 legados de conocimiento). Pendientes (spec `docs/design/sombras.md`, en este
+orden): Procariota (anti-Endosimbiosis), Antibiosis (anti-Simbiosis, ex Autarquía), Autosuficiencia
+(anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado). Regla de la familia: dan visibilidad
 o un sistema nuevo, no multiplicadores.
 
 ### A3. Redenciones — 1 de 3
@@ -74,9 +75,8 @@ Omega-Cero T ≥ 2 (quedan dentro del árbol oscuro → pasan a T2); Hiper tarda
 ### B2. Rework visual del Banco Genético y del Banco Cósmico
 Decidido por el autor (2026-10-16):
 - **Banco Genético**: se siente desordenado → ordenarlo **por familia del árbol** (Colapso, Oscuro, Biología,
-  Red, Orden, Transmutaciones, Sombras, Redenciones). **Implementar** los 3 legados de conocimiento que hoy no
-  hacen nada (ningún código los lee): `observatorio_genomico` (`unlock_hidden_achievements`),
-  `analisis_de_tension` (`show_epsilon_detail`), `predictor_estructural` (`warn_epsilon_threshold`).
+  Red, Orden, Transmutaciones, Sombras, Redenciones). ~~Implementar los 3 legados de conocimiento~~ ✅
+  2026-10-18: ahora funcionan y son la recompensa de Inestabilidad Consciente (ya no se compran).
 - **Banco Cósmico** (15 buffs en tiers 1–3, sin contenido nuevo hace mucho): las cuatro líneas — un tier por
   cada T nueva, atajos de involución (p. ej. arrancar con una llave más avanzada), calidad de vida, y revisar
   los 15 actuales.

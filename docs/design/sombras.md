@@ -24,7 +24,7 @@
 | Base | Sombra | Verbo | Sistema nuevo | Estado |
 |---|---|---|---|---|
 | Hiperasimilación | **Ayuno Primordial** | renunciar a clickear | Silencio | ✅ |
-| Homeostasis | **Inestabilidad Consciente** | observar | OBSERVAR: leer la propia ecuación (lore matemático) | spec |
+| Homeostasis | **Inestabilidad Consciente** | observar | OBSERVAR: leer la propia ecuación (lore matemático) | ✅ (§9) |
 | Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | spec (nueva) |
 | Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | spec |
 | Parasitismo | **Autosuficiencia** | cultivar | mejoras hechas con biomasa, sin mercado | spec |
@@ -155,19 +155,70 @@ con biomasa en vez de comprarla.
 - **[Q] Sondear** revela qué hay en las dos ramas próximas (bolsillos de nutrientes, roca, toxinas), y cuesta energía.
 - Bolsillos = ráfagas de ingreso; roca = frena; toxinas = pierde energía.
 - **Sello**: recorrer 1000 m del sustrato.
-- **Fracaso**: energía 0 (la punta muere) → cierra como ESPORULACIÓN / Red (a definir, ver §8).
+- **Fracaso**: energía 0 (la punta muere) → final propio **HIFA EXTRAVIADA** (decisión 2026-10-18, ver §8).
 
 **Recompensa.** Legado **Mapa del Sustrato**: en todas las runs, el panel de genoma muestra las condiciones
 de la próxima mutación latente antes de que estés cerca (visibilidad).
 
 ---
 
-## 8. Preguntas para el autor
+## 8. Decisiones del autor (2026-10-18)
 
-1. **Renombres**: Autarquía → **Antibiosis** y Núcleo Aislado → **Hifa Pionera**. ¿Sí?
-2. **Inestabilidad Consciente**: ¿los 3 legados de conocimiento del Banco pasan a ser su recompensa
-   (dejan de comprarse), o siguen en el Banco y la Sombra suma solo el Lema de Lyapunov?
-3. **Procariota**: su fracaso (extinción), ¿cierra como Simbiosis (la base de la run) o como Parasitismo?
-4. **Hifa Pionera**: Red Micelial no tiene un final propio. ¿Su fracaso cierra como Esporulación o le
-   damos un final de fracaso propio, como Micelio Fragmentado?
-5. **Orden**: ¿arrancamos por Inestabilidad Consciente?
+1. **Renombres aprobados**: Autarquía → **Antibiosis**, Núcleo Aislado → **Hifa Pionera**.
+2. **Inestabilidad Consciente**: los 3 legados de conocimiento **pasan a ser su recompensa** (dejan de
+   comprarse en el Banco; quien ya los tenía los conserva).
+3. **Procariota**: la extinción cierra como **SIMBIOSIS**.
+4. **Hifa Pionera**: su fracaso tiene **final propio** (como Micelio Fragmentado). Nombre propuesto:
+   **HIFA EXTRAVIADA**, con un legado menor de consuelo.
+5. **Orden**: se arranca por **Inestabilidad Consciente**.
+
+## 9. Inestabilidad Consciente — implementada (2026-10-18) ✅
+
+Concreta §3 (`InestabilidadLogic.gd`, estado `inest_*` en EvoManager, constantes `INEST_*` en Balance).
+Calibrada con bot; los números de abajo son los finales.
+
+- **Llave** `sombra_inestabilidad` (20 PL, se revela en T3 y se desbloquea tras cerrar HOMEOSTASIS).
+- **Espejo**: con la llave, sin ninguna mutación base activa, **habiendo tenido Homeostasis elegible en la run**
+  (su botón habilitado o su gen latente: tuviste el equilibrio al alcance y lo soltaste) y Contabilidad ≥ 1:
+  **ε ≥ 0.50 durante 60 s** → entra. Aviso con cuenta regresiva 10 s antes; bajar ε lo evita.
+  - Calibración: con 0.60 el bot visual se quedaba oscilando en 0.51–0.60 sin entrar (el borde de lo que se
+    alcanza clickeando). 0.50 sigue lejos de las bandas de Homeostasis (≤ 0.25) y Simbiosis (≤ 0.45).
+  - Calibración: "Homeostasis latente" casi nunca se veía (el gen salta de dormido a activo), por eso se mide
+    también "Homeostasis elegible" (`RunManager.is_homeostasis_candidate()`).
+- **Perturbación P**: se suma al objetivo de ε (StructuralModel), así que ε sube suave hacia natural + P.
+  Negar Homeostasis también apaga los pisos de Ω (omega_min y legados de Alostasis/Homeorresis).
+- **[Q] OBSERVAR** (cooldown 6 s): P += 0.20 y revela el próximo lema (5, en orden fijo).
+- **Lo observado sigue perturbando**: cada lema revelado y sin demostrar suma +0.002/s a P. Observar de más da
+  opciones pero acelera la deriva.
+- **[W] INTEGRAR** (cooldown 20 s, cuesta 10 s de ingreso): P −= 0.25 (puede quedar negativa, hasta −0.30).
+- **Lemas** (el progreso sube mientras se cumple y baja a la mitad de velocidad si no):
+  1. **a — Impulso**: ≥ 3 clicks/s (media móvil) durante 40 s.
+  2. **ε — Lyapunov**: 0.90 ≤ ε ≤ 1.10 durante 60 s.
+  3. **d — Inercia**: sin clickear (≥ 3 s), con ε ≥ 0.60, durante 40 s. Sin clicks ε ≈ P + pasivo: pide ≥ 3
+     observaciones. (Con 0.80 era imposible: 5 observaciones dan P = 0.75 como máximo.)
+  4. **n — Estructura**: comprar 5 mejoras estructurales desde que se reveló.
+  5. **Ω — Elasticidad**: Ω vuelve a ×1.75 su mínimo desde que se reveló, durante 30 s (estirarse y
+     recuperarse: bajar ε integrando sin que converja). Era "Ω ≤ 0.30" (trivial: entrar ya lo cumple) y después
+     "Ω ≥ 0.40" (con muchas mejoras pedía ε < 0.35 = zona de convergencia).
+- **Teoremas**: cada lema demostrado da ingreso ×1.10 acumulado (×1.50 con 5) y deja su coeficiente visible
+  (la fórmula del núcleo muestra `a = ? ε = ? d = ? n = ? Ω = ?` durante la ruta).
+- **Sello — Q.E.D.**: 5 lemas → botón SELLAR (+9 PL; NG+: elegancia = 8 − integraciones, tope 8).
+- **Fracaso** (los dos cierran como **HOMEOSTASIS**):
+  - **diverge**: ε > 1.20 durante 10 s;
+  - **converge**: ε < 0.35 durante 60 s (el AFK vuelve solo al equilibrio: no hay run trabada).
+- **Recompensa**: Observatorio Genómico (los logros secretos se ven en el panel), Análisis de Tensión (desglose
+  de ε en el panel de ε), Predictor Estructural (próximo umbral de ε en el panel y aviso a 0.05) y
+  **Lema de Lyapunov** (la fórmula del núcleo muestra a, b, d y e en todas las runs). Los 3 de conocimiento ya no
+  se compran (costo 0, se otorgan al sellar; quien los tenía los conserva).
+- **Logros**: Q.E.D. (ANCESTRAL, sellar) · Principio de Incertidumbre (FRUTO: los 5 lemas a la vista sin haber
+  demostrado ninguno) · **Demostración Elegante** (MYTHIC: sellar con ≤ 5 integraciones).
+
+**Bot (escenarios `t3_inest_*`, `a3_inest_elegante`, controles `t3_*_key`):**
+
+| Escenario | Resultado |
+|---|---|
+| `t3_inest_player` (observa de a 2, integra con ε > 1.08, guarda plata para integrar) | Q.E.D. a 746 s (~6 min de ruta) · 6 integraciones (no saca el MYTHIC) |
+| `a3_inest_elegante` (de a 1 lema, junta plata para la estructura) | Q.E.D. a 731 s · 5 integraciones → MYTHIC |
+| `t3_inest_greedy` (observa todo, clickea sin mirar ε) | diverge en ~25 s → HOMEOSTASIS |
+| `t3_inest_afk` (entra y se va) | converge a los 60 s → HOMEOSTASIS |
+| `t3_homeo_key` / `t3_hiper_key` / `t3_simbiosis_key` | con la llave juegan su ruta normal: ninguno entra a la Sombra |

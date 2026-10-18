@@ -105,7 +105,8 @@ static func defs() -> Dictionary:
 static func any_active() -> bool:
 	return EvoManager.mutation_fusion_catabolica or EvoManager.mutation_caos_orquestado \
 		or EvoManager.mutation_coro_simbiotico or EvoManager.mutation_micelio_omnisciente \
-		or EvoManager.mutation_huesped_soberano or EvoManager.mutation_ayuno_primordial
+		or EvoManager.mutation_huesped_soberano or EvoManager.mutation_ayuno_primordial \
+		or EvoManager.mutation_inestabilidad
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).
 static func key_ids() -> Array:

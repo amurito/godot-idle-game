@@ -127,15 +127,19 @@ const LEGACY_DEFS: Dictionary = {
 	"observatorio_genomico": {
 		"name": "Observatorio Genómico",
 		"flavor": "Ver más del sistema también es poder.",
-		"cat": "conocimiento", "cost": 6, "cost_growth": 1.0, "max_level": 1,
-		"reveal": {"type": "always"}, "unlock": {"type": "always"},
+		"cat": "conocimiento", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		# Recompensa de sellar INESTABILIDAD CONSCIENTE (decisión del autor 2026-10-18): ya no se compra.
+		"reveal": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
+		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "unlock_hidden_achievements", "value": 1.0},
 	},
 	"analisis_de_tension": {
 		"name": "Análisis de Tensión",
 		"flavor": "El estrés estructural se vuelve legible.",
-		"cat": "conocimiento", "cost": 3, "cost_growth": 1.0, "max_level": 1,
-		"reveal": {"type": "always"}, "unlock": {"type": "always"},
+		"cat": "conocimiento", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		# Recompensa de sellar INESTABILIDAD CONSCIENTE (decisión del autor 2026-10-18): ya no se compra.
+		"reveal": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
+		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "show_epsilon_detail", "value": 1.0},
 	},
 	"memoria_de_run": {
@@ -148,8 +152,10 @@ const LEGACY_DEFS: Dictionary = {
 	"predictor_estructural": {
 		"name": "Predictor Estructural",
 		"flavor": "El sistema avisa antes de que el estrés lo alcance.",
-		"cat": "conocimiento", "cost": 4, "cost_growth": 1.0, "max_level": 1,
-		"reveal": {"type": "always"}, "unlock": {"type": "always"},
+		"cat": "conocimiento", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		# Recompensa de sellar INESTABILIDAD CONSCIENTE (decisión del autor 2026-10-18): ya no se compra.
+		"reveal": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
+		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "warn_epsilon_threshold", "value": 1.0},
 	},
 	"slot_extra": {
@@ -605,6 +611,24 @@ const LEGACY_DEFS: Dictionary = {
 		"reveal": {"type": "transcendence_count", "count": 3},
 		"unlock": {"type": "transcendence_count", "count": 3},
 		"effect": {"type": "transmut_ayuno_active", "value": 1.0},
+	},
+	# SOMBRA de Homeostasis (A → anti-A). Llave sin toggle: entra por espejo (sostener ε alto).
+	"sombra_inestabilidad": {
+		"name": "Sombra: Inestabilidad Consciente",
+		"flavor": "El hongo deja de reducir ε y empieza a medirlo. Mirar la ecuación la cambia.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "HOMEOSTASIS"},
+		"effect": {"type": "sombra_inestabilidad_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Inestabilidad Consciente (con los 3 legados de conocimiento).
+	"legado_lema_lyapunov": {
+		"name": "Legado: Lema de Lyapunov",
+		"flavor": "La ecuación quedó demostrada: la fórmula del núcleo muestra los valores reales de a, b, d y e en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
+		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
+		"effect": {"type": "lema_lyapunov_active", "value": 1.0},
 	},
 	# Recompensa de SELLAR Ayuno Primordial (otorgada vía grant_buff, cost 0, no comprable).
 	"legado_primicia_del_vacio": {

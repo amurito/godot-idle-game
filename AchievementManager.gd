@@ -586,6 +586,9 @@ func on_run_closed(route: String) -> void:
 		unlock("nadie_muere")
 	if route == "ENDOSIMBIOSIS" and EvoManager.endo_peak_rejection <= Balance.ACH_HUESPED_PERFECTO_REJ:
 		unlock("huesped_perfecto")
+	# Demostración Elegante: Q.E.D. integrando lo mínimo (de a un lema, rápido: la deriva no se acumula).
+	if route == "INESTABILIDAD CONSCIENTE" and EvoManager.inest_integrations <= Balance.ACH_INEST_ELEGANT_MAX:
+		unlock("demostracion_elegante")
 	if route == "AYUNO PRIMORDIAL" and _eval_ayuno_perfecto({}):
 		unlock("ayuno_perfecto")
 	if route == "PARASITISMO" and EvoManager.mutation_ayuno_primordial:

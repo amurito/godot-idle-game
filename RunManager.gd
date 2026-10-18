@@ -245,6 +245,14 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 			UIManager.show_toast(tr("TOAST_AYUNO_REWARD"))
 			LogManager.add(tr("LOG_AYUNO_REWARD"))
 
+	# INESTABILIDAD CONSCIENTE: Q.E.D. → los 3 legados de conocimiento + Lema de Lyapunov (visibilidad).
+	if route == "INESTABILIDAD CONSCIENTE":
+		for id in ["observatorio_genomico", "analisis_de_tension", "predictor_estructural", "legado_lema_lyapunov"]:
+			if not LegacyManager.get_buff_value(id):
+				LegacyManager.grant_buff(id)
+		UIManager.show_toast(tr("TOAST_INEST_REWARD"))
+		LogManager.add(tr("LOG_INEST_REWARD"))
+
 	# NECROSIS CONTROLADA: primera vez que cierra → desbloquear Apoptosis Heredada.
 	if route == "NECROSIS CONTROLADA":
 		if not LegacyManager.get_buff_value("apoptosis_heredada"):
@@ -546,7 +554,7 @@ func update_homeostasis_mode(delta: float):
 	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
 	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
 	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano or EvoManager.mutation_symbiosis \
-		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism
+		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism or EvoManager.mutation_inestabilidad
 	if not EvoManager.primordio_active and not en_mutacion_avanzada:
 		disturbance_timer += delta
 		if disturbance_timer >= DISTURBANCE_INTERVAL:
@@ -873,6 +881,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_coro_simbiotico:        return "CORO SIMBIÓTICO"
 	if EvoManager.mutation_micelio_omnisciente:    return "MICELIO OMNISCIENTE"
 	if EvoManager.mutation_huesped_soberano:       return "HUÉSPED SOBERANO"
+	if EvoManager.mutation_inestabilidad:          return "INESTABILIDAD CONSCIENTE"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -937,6 +946,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = int(floor(BiosphereEngine.micelio / 20.0))
 		"AYUNO PRIMORDIAL":
 			raw = int(floor(EvoManager.ayuno_silencio_peak / Balance.AYUNO_NG_PEAK_DIV))
+		"INESTABILIDAD CONSCIENTE":
+			raw = maxi(Balance.INEST_NG_BASE - EvoManager.inest_integrations, 0)
 	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
@@ -1046,6 +1057,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.0f", "log": "confianza {v} / 75 = {b} (cap {c})"},
 		"AYUNO PRIMORDIAL": {"value": func() -> Variant: return EvoManager.ayuno_silencio_peak, "op": "div", "k": Balance.AYUNO_NG_PEAK_DIV,
 			"vfmt": "%.1f", "log": "S_peak {v} / " + ("%.0f" % Balance.AYUNO_NG_PEAK_DIV) + " = {b} (cap {c})"},
+		"INESTABILIDAD CONSCIENTE": {"value": func() -> Variant: return maxi(Balance.INEST_NG_BASE - EvoManager.inest_integrations, 0), "op": "id", "k": 1.0,
+			"vfmt": "%d", "log": "elegancia {v} = 8 − integraciones (cap {c})"},
 	}
 	# Alias históricos (con/sin tilde, nombres viejos) → misma regla.
 	var aliases := {

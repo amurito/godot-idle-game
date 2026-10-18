@@ -21,6 +21,7 @@ const CLICK_ORDER := [
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
 	"simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio", "mitocondria",
+	"inest_teoremas",
 ]
 
 const PASSIVE_ORDER := [
@@ -32,7 +33,7 @@ const PASSIVE_ORDER := [
 	"metabolismo_glitch", "entropia_domesticada", "convergencia_ciclica", "apoptosis_heredada",
 	"plasticidad_terminal", "sintesis_vital", "control_omega", "colonization",
 	"glitch_persistente", "simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio",
-	"micorriza", "mitocondria",
+	"micorriza", "mitocondria", "inest_teoremas",
 ]
 
 ## Fuente de cada fila: "route" (mutación/rama de la run), "legacy" (banco de legado),
@@ -136,6 +137,9 @@ static func _build() -> Dictionary:
 	# ENDOSIMBIOSIS: genes transferidos del endosimbionte.
 	d["endo_replicacion"] = _row("Endosimbiosis: Replicación", "route", func() -> float: return EndosimbiosisLogic.click_mult(), none)
 	d["endo_respiracion"] = _row("Endosimbiosis: Respiración", "route", none, func() -> float: return EndosimbiosisLogic.passive_mult())
+	# INESTABILIDAD CONSCIENTE (Sombra de Homeostasis): cada lema demostrado es un teorema (+10 %).
+	var inest_t := func() -> float: return InestabilidadLogic.theorem_mult()
+	d["inest_teoremas"] = _row("Inestabilidad: teoremas", "route", inest_t, inest_t)
 	# AYUNO PRIMORDIAL (transmutación): pasivo amplificado por Silencio + burst al romper
 	d["ayuno_primordial"] = _row("Ayuno Primordial", "route", none,
 		func() -> float: return EvoManager.ayuno_silencio_mult() * EvoManager.ayuno_burst_mult() if EvoManager.mutation_ayuno_primordial else 1.0)

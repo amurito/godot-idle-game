@@ -1405,7 +1405,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]Inercia de Escala[/b] — Contabilidad también multiplica el Ritmo de Trabajo (md): +5%/nivel.\n"
 			+ "• [b]Colapso Controlado[/b] (legado-ruta) — PL extra al cerrar = floor(ε_peak · 2.0).\n"
 			+ "• [b]Memoria de Run[/b] (Conocimiento) — muestra el historial de ciclos anteriores en el panel.\n"
-			+ "• [b]Observatorio Genómico[/b] (Conocimiento) — revela logros ocultos en el panel de logros.\n\n"
+			+ "• [b]Observatorio Genómico[/b], [b]Análisis de Tensión[/b] y [b]Predictor Estructural[/b] (Conocimiento) — ya no se compran: son la recompensa de sellar Inestabilidad Consciente (logros secretos, desglose de ε, próximo umbral de ε).\n\n"
 			+ "[i]Horizonte Estructural es probablemente el legado de mayor impacto a largo plazo: sin él, κμ y α tienen cap fijo.[/i]"
 		),
 		"body_en": (
@@ -1418,7 +1418,7 @@ const ENTRIES: Dictionary = {
 			+ "• [b]Scale Inertia[/b] — Accounting also multiplies Work Rhythm (md): +5%/level.\n"
 			+ "• [b]Controlled Collapse[/b] (route-legacy) — extra LP at close = floor(ε_peak · 2.0).\n"
 			+ "• [b]Run Memory[/b] (Knowledge) — shows past cycle history in the panel.\n"
-			+ "• [b]Genomic Observatory[/b] (Knowledge) — reveals hidden achievements in the achievement panel.\n\n"
+			+ "• [b]Genomic Observatory[/b], [b]Tension Analysis[/b] and [b]Structural Predictor[/b] (Knowledge) — no longer bought: reward of sealing Conscious Instability (secret achievements, ε breakdown, next ε threshold).\n\n"
 			+ "[i]Structural Horizon is probably the highest long-term impact legacy: without it, κμ and α have a fixed cap.[/i]"
 		),
 		"unlock": {"type": "transcendence_count", "min": 1},
@@ -1703,6 +1703,48 @@ const ENTRIES: Dictionary = {
 		),
 		"unlock": {"type": "route_closed", "route": "AYUNO PRIMORDIAL"},
 		"see_also": ["transmut_fusion", "transmut_intro", "hiperasimilacion", "formula_produccion"],
+	},
+	"inestabilidad_consciente": {
+		"cat": "transmutaciones",
+		"name_es": "Inestabilidad Consciente", "name_en": "Conscious Instability",
+		"body_es": (
+			"[b]Sombra[/b] (A → anti-A) de [b]Homeostasis[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Homeostasis). No hay botón: Homeostasis es reducir ε, y la Inestabilidad es [b]sostenerlo[/b]. Con la llave, si en la run Homeostasis fue elegible (tuviste el equilibrio al alcance), con Contabilidad ≥ 1 y sin otra mutación, sostener [b]ε ≥ 0.50 durante 60 s[/b] la abre (avisa 10 s antes: bajar ε lo evita).\n\n"
+			+ "El hongo deja de reducir ε y empieza a [b]medirlo[/b]. Descubre que es una ecuación, y que mirarla la cambia:\n\n"
+			+ "• [b][Q] OBSERVAR[/b] (6 s): revela el próximo [b]lema[/b] y suma +0.20 a la [b]perturbación P[/b], que empuja ε hacia arriba (efecto del observador). Cada lema a la vista y sin demostrar [b]sigue perturbando[/b] (+0.002/s): observar de más da opciones pero ε deriva.\n"
+			+ "• [b][W] INTEGRAR[/b] (20 s, cuesta 10 s de ingreso): P −0.25. Puede quedar negativa y amortiguar el ε natural.\n"
+			+ "• [b]Lemas[/b] (se demuestran jugando; el progreso baja si la condición se rompe):\n"
+			+ "   a — [b]Impulso[/b]: ≥ 3 clicks/s durante 40 s.\n"
+			+ "   ε — [b]Lyapunov[/b]: 0.90 ≤ ε ≤ 1.10 durante 60 s.\n"
+			+ "   d — [b]Inercia[/b]: sin clickear, con ε ≥ 0.60, durante 40 s.\n"
+			+ "   n — [b]Estructura[/b]: comprar 5 mejoras estructurales.\n"
+			+ "   Ω — [b]Elasticidad[/b]: Ω vuelve a ×1.75 su mínimo durante 30 s (estirá y recuperá: bajá ε integrando sin que converja).\n"
+			+ "• Negar Homeostasis apaga sus pisos de Ω.\n"
+			+ "• [b]Teoremas[/b]: cada lema demostrado deja su coeficiente a la vista y suma +10 % de ingreso.\n\n"
+			+ "[b]Sello — Q.E.D.[/b]: los 5 lemas → [b]INESTABILIDAD CONSCIENTE[/b] (+9 PL base + bonus por elegancia: 8 − integraciones).\n"
+			+ "[b]Fracaso[/b] (vuelve a Homeostasis): ε > 1.20 durante 10 s (la ecuación [b]diverge[/b]) o ε < 0.35 durante 60 s (converge sola).\n\n"
+			+ "[b]Recompensa[/b]: los legados de conocimiento — [b]Observatorio Genómico[/b] (logros secretos visibles), [b]Análisis de Tensión[/b] (desglose de ε), [b]Predictor Estructural[/b] (próximo umbral de ε) — y el [b]Legado: Lema de Lyapunov[/b] (la fórmula muestra a, b, d y e).\n\n"
+			+ "[i]Homeostasis es estabilidad de Lyapunov: toda perturbación vuelve al equilibrio. Su opuesto es un exponente de Lyapunov positivo.[/i]"
+		),
+		"body_en": (
+			"[b]Shadow[/b] (A → anti-A) of [b]Homeostasis[/b]. The key is bought in the Genetic Bank (20 LP, after closing Homeostasis). There is no button: Homeostasis is reducing ε, and Instability is [b]sustaining it[/b]. With the key, if Homeostasis was eligible during the run (balance was within reach), with Accounting ≥ 1 and no other mutation, holding [b]ε ≥ 0.50 for 60 s[/b] opens it (10 s warning: lowering ε avoids it).\n\n"
+			+ "The fungus stops reducing ε and starts [b]measuring[/b] it. It discovers it is an equation, and that looking at it changes it:\n\n"
+			+ "• [b][Q] OBSERVE[/b] (6 s): reveals the next [b]lemma[/b] and adds +0.20 to the [b]perturbation P[/b], which pushes ε up (observer effect). Every visible unproven lemma [b]keeps perturbing[/b] (+0.002/s): observing ahead gives options but ε drifts.\n"
+			+ "• [b][W] INTEGRATE[/b] (20 s, costs 10 s of income): P −0.25. It can go negative and dampen the natural ε.\n"
+			+ "• [b]Lemmas[/b] (proven by playing; progress drops if the condition breaks):\n"
+			+ "   a — [b]Impulse[/b]: ≥ 3 clicks/s for 40 s.\n"
+			+ "   ε — [b]Lyapunov[/b]: 0.90 ≤ ε ≤ 1.10 for 60 s.\n"
+			+ "   d — [b]Inertia[/b]: no clicking, with ε ≥ 0.60, for 40 s.\n"
+			+ "   n — [b]Structure[/b]: buy 5 structural upgrades.\n"
+			+ "   Ω — [b]Elasticity[/b]: Ω returns to ×1.75 its minimum for 30 s (stretch and recover: lower ε by integrating without converging).\n"
+			+ "• Denying Homeostasis switches off its Ω floors.\n"
+			+ "• [b]Theorems[/b]: each proven lemma leaves its coefficient visible and adds +10% income.\n\n"
+			+ "[b]Seal — Q.E.D.[/b]: all 5 lemmas → [b]CONSCIOUS INSTABILITY[/b] (+9 LP base + elegance bonus: 8 − integrations).\n"
+			+ "[b]Failure[/b] (back to Homeostasis): ε > 1.20 for 10 s (the equation [b]diverges[/b]) or ε < 0.35 for 60 s (it converges on its own).\n\n"
+			+ "[b]Reward[/b]: the knowledge legacies — [b]Genomic Observatory[/b] (secret achievements visible), [b]Tension Analysis[/b] (ε breakdown), [b]Structural Predictor[/b] (next ε threshold) — and the [b]Legacy: Lyapunov Lemma[/b] (the formula shows a, b, d and e).\n\n"
+			+ "[i]Homeostasis is Lyapunov stability: every perturbation returns to equilibrium. Its opposite is a positive Lyapunov exponent.[/i]"
+		),
+		"unlock": {"type": "buff_owned", "id": "sombra_inestabilidad"},
+		"see_also": ["ayuno_primordial", "transmut_caos", "transmut_intro"],
 	},
 
 	# ── VALORES (hojas de referencia rápida; números reales de Balance.gd) ──────

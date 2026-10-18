@@ -607,6 +607,13 @@ func update_mutation_center_panel(main: Node = null) -> void:
 			t = _build_fusion_catabolica_panel_text()
 		else:
 			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_inestabilidad:
+		if RunManager.run_closed and RunManager.final_route == "INESTABILIDAD CONSCIENTE":
+			t = UITextBuilders.build_inestabilidad_closed_text()
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_inestabilidad_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
 	elif EvoManager.mutation_ayuno_primordial:
 		if RunManager.run_closed and RunManager.final_route == "AYUNO PRIMORDIAL":
 			t = UITextBuilders.build_ayuno_primordial_closed_text()
@@ -948,7 +955,7 @@ func _build_legacy_item(id: String) -> Control:
 	var text_col: VBoxContainer = v
 	v = right
 
-	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno"
+	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno" or id == "sombra_inestabilidad"
 	if lvl > 0 and is_key:
 		# Llave de involución comprada: permanente y sin interruptor (la decisión es en la run).
 		var key_lbl: Button = Button.new()
@@ -1282,6 +1289,8 @@ func get_reactor_color() -> Color:
 				return Color(0.42, 0.29, 0.42)  # malva apagado: la red rota, en pedazos
 			"HUÉSPED SOBERANO":
 				return Color(0.12, 0.23, 0.56)  # índigo profundo: el pacto, en reposo
+			"INESTABILIDAD CONSCIENTE":
+				return Color(0.3, 0.22, 0.55)  # índigo-violeta: la ecuación demostrada, quieta
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
 		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
 		return _live_reactor_color().darkened(0.45)
@@ -1329,6 +1338,10 @@ func _live_reactor_color() -> Color:
 			return Color(1.25, 0.72, 0.62)  # coral casi blanco: partitura completa
 		# coral apagado → coral vivo según el combo
 		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(float(EvoManager.coro_combo) / Balance.CORO_COMBO_CAP, 0.0, 1.0))
+	if EvoManager.mutation_inestabilidad:
+		# Sombra de Homeostasis (teal): violeta que se enrojece al acercarse a la divergencia.
+		var _x: float = clampf((StructuralModel.epsilon_runtime - Balance.INEST_CONVERGE_EPS) / (Balance.INEST_DIVERGE_EPS - Balance.INEST_CONVERGE_EPS), 0.0, 1.0)
+		return Color(0.45, 0.38, 0.95).lerp(Color(1.05, 0.25, 0.4), _x * _x)
 	if EvoManager.mutation_caos_orquestado:
 		if EvoManager.caos_burst_timer > 0.0:
 			return Color(1.2, 0.4, 1.0)  # fucsia encendido: el colapso dirigido
