@@ -284,6 +284,18 @@ static func _define() -> Array:
 			_f("anti_rotation", EvoManager, {"default": 0, "load_int": true}),
 			_f("anti_peak_alive", EvoManager, {"default": 0, "load_int": true}),
 			_f("anti_peak_resist", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			# Autosuficiencia (Sombra de Parasitismo)
+			_f("mutation_autosuficiencia", EvoManager, {"default": false}),
+			_f("auto_paras_seen", EvoManager, {"default": false}),
+			_f("auto_mirror_time", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("auto_cult_id", EvoManager, {"default": ""}),
+			_f("auto_cult_timer", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("auto_levels", EvoManager, {"default": 0, "load_int": true}),
+			_f("auto_kinds", EvoManager, {"default": {}}),
+			_f("auto_ferment_cd", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("auto_ferments", EvoManager, {"default": 0, "load_int": true}),
+			_f("auto_scent", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			_f("_despensa_last_t", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			# Tier 1 / Tier 2 / NG+
 			_f("mutation_symbiosis", EvoManager),
 			_f("mutation_red_micelial", EvoManager),

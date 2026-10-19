@@ -78,6 +78,9 @@ var _proc_plasmid_btn: Button = null     # [E] Plásmido
 var _proc_seal_btn: Button = null
 var _anti_btns: Dictionary = {}          # antibiótico → botón [Q]/[W]/[E] (Antibiosis)
 var _anti_seal_btn: Button = null
+var _auto_ferment_btn: Button = null     # [W] Fermentar (Autosuficiencia)
+var _auto_seal_btn: Button = null
+var _despensa_btn: Button = null         # Legado Despensa Propia (cualquier run)
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -198,6 +201,12 @@ func reset_ng_plus_buttons() -> void:
 	if is_instance_valid(_anti_seal_btn):
 		_anti_seal_btn.queue_free()
 	_anti_seal_btn = null
+	for b in [_auto_ferment_btn, _auto_seal_btn, _despensa_btn]:
+		if is_instance_valid(b):
+			b.queue_free()
+	_auto_ferment_btn = null
+	_auto_seal_btn = null
+	_despensa_btn = null
 	_proc_harvest_btn = null
 	_proc_quorum_btn = null
 	_proc_plasmid_btn = null
@@ -265,7 +274,63 @@ func update_ng_plus_buttons() -> void:
 	_update_inest_buttons()
 	_update_proc_buttons()
 	_update_anti_buttons()
+	_update_auto_buttons()
 	_update_batuta_button()
+
+# ── AUTOSUFICIENCIA: [W] fermentar · sello · legado Despensa Propia ────────────
+func _update_auto_buttons() -> void:
+	var T := TranslationServer
+	if AutosuficienciaLogic.is_active():
+		if not is_instance_valid(_auto_ferment_btn):
+			_auto_ferment_btn = _make_rp_button(Color(0.85, 0.7, 0.4), 46, _on_auto_ferment_pressed, 0)
+		if EvoManager.auto_ferment_cd > 0.0:
+			_auto_ferment_btn.text = T.translate("BTN_AUTO_FERMENT_CD") % EvoManager.auto_ferment_cd
+		else:
+			_auto_ferment_btn.text = T.translate("BTN_AUTO_FERMENT") % [Balance.AUTO_FERMENT_NUT, UITextBuilders.format_compact(AutosuficienciaLogic.ferment_cost())]
+		_auto_ferment_btn.text = EmojiToRichText.strip(_auto_ferment_btn.text)
+		_auto_ferment_btn.disabled = not AutosuficienciaLogic.can_ferment()
+		_auto_ferment_btn.visible = true
+		if AutosuficienciaLogic.seal_ready():
+			if not is_instance_valid(_auto_seal_btn):
+				_auto_seal_btn = _make_rp_button(Color(0.9, 0.78, 0.45), 70, _on_auto_seal_pressed, 0)
+			_auto_seal_btn.text = EmojiToRichText.strip(T.translate("BTN_AUTO_SEAL") % int(Balance.PL_REWARDS.get("AUTOSUFICIENCIA", 9)))
+			_auto_seal_btn.visible = true
+		elif is_instance_valid(_auto_seal_btn):
+			_auto_seal_btn.visible = false
+	else:
+		for b in [_auto_ferment_btn, _auto_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+	# Legado Despensa Propia: en cualquier run.
+	if LegacyManager.get_buff_value("legado_despensa_propia") and not RunManager.run_closed and not EvoManager.mutation_autosuficiencia:
+		if not is_instance_valid(_despensa_btn):
+			_despensa_btn = _make_rp_button(Color(0.75, 0.62, 0.35), 40, _on_despensa_pressed, 0)
+		var wait: float = Balance.AUTO_DESPENSA_CD - (RunManager.run_time - EvoManager._despensa_last_t)
+		if wait > 0.0:
+			_despensa_btn.text = T.translate("BTN_DESPENSA_CD") % wait
+		else:
+			var cid: String = AutosuficienciaLogic.cheapest_id()
+			_despensa_btn.text = T.translate("BTN_DESPENSA") % [UpgradeManager.get_def(cid).label if cid != "" else "—", Balance.AUTO_DESPENSA_BIO]
+		_despensa_btn.text = EmojiToRichText.strip(_despensa_btn.text)
+		_despensa_btn.disabled = not AutosuficienciaLogic.despensa_available()
+		_despensa_btn.visible = true
+	elif is_instance_valid(_despensa_btn):
+		_despensa_btn.visible = false
+
+func _on_auto_ferment_pressed() -> void:
+	AutosuficienciaLogic.ferment()
+	_update_auto_buttons()
+
+func _on_despensa_pressed() -> void:
+	AutosuficienciaLogic.use_despensa()
+	_update_auto_buttons()
+
+func _on_auto_seal_pressed() -> void:
+	if RunManager.run_closed or not AutosuficienciaLogic.seal_ready():
+		return
+	if is_instance_valid(_auto_seal_btn):
+		_auto_seal_btn.visible = false
+	RunManager.close_run("AUTOSUFICIENCIA", TranslationServer.translate("CLOSE_AUTO"))
 
 # ── ANTIBIOSIS: [Q] β-lactámico · [W] macrólido · [E] tetraciclina · sello ───────
 const _ANTI_KEYS := {"beta": "Q", "macro": "W", "tetra": "E"}

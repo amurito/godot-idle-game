@@ -1036,6 +1036,11 @@ func _input(event):
 					MutualismoLogic.reject()
 					UIManager.update_ng_plus_buttons()
 					get_viewport().set_input_as_handled()
+			elif AutosuficienciaLogic.is_active():
+				if kc == KEY_W and AutosuficienciaLogic.can_ferment():
+					AutosuficienciaLogic.ferment()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
 			elif AntibiosisLogic.is_active():
 				var _ab: String = {KEY_Q: "beta", KEY_W: "macro", KEY_E: "tetra"}.get(kc, "")
 				if _ab != "" and AntibiosisLogic.can_shoot(_ab):

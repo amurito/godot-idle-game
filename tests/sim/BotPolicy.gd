@@ -99,6 +99,12 @@ extends RefCounted
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
 ##             (default 0.36) → la Raíz no se muere al llegar
+##   autosuficiencia: {push, ferment, afk, seal}  AUTOSUFICIENCIA (Sombra de Parasitismo):
+##       push: con Parasitismo visto deja de comprar (sigue clickeando) para abrir el espejo
+##       ferment: fermenta si los nutrientes no alcanzan para el próximo cultivo · afk: deja de clickear en la Sombra
+##       cult_ids: qué mejoras cultiva (default: las de compra; la más barata primero)
+##       scent_max: no fermenta si el olor pasaría de esto (default 60; 999 = sin mirar → el parásito vuelve)
+##       ferment_always: fermenta apenas puede (no sólo cuando faltan nutrientes)
 ##   antibiosis: {push, rotate, react, afk, seal}  ANTIBIOSIS (Sombra de Simbiosis):
 ##       push: con Simbiosis vista y Contabilidad, compra click y clickea fuerte (abre el espejo)
 ##       rotate: true = elige el antibiótico de más daño · false = siempre el mismo (genera resistencia)
@@ -201,6 +207,9 @@ func _current_cps() -> float:
 		return 0.0
 	var until: float = float(cfg.get("click_until", -1.0))
 	if until >= 0.0 and t >= until:
+		return 0.0
+	var ucfg_c: Dictionary = cfg.get("autosuficiencia", {})
+	if ucfg_c.get("afk", false) and EvoManager.mutation_autosuficiencia:
 		return 0.0
 	var acfg_c: Dictionary = cfg.get("antibiosis", {})
 	if acfg_c.get("push", false) and EvoManager.anti_simb_seen and not EvoManager.mutation_antibiosis \
@@ -305,12 +314,21 @@ func _buy(d: RefCounted) -> void:
 	# hoard_struct: junta plata hasta revelar el Lema de la estructura y lo resuelve de golpe.
 	if icfg_b.get("hoard_struct", false) and InestabilidadLogic.is_active() and not InestabilidadLogic.is_revealed("estructura"):
 		return
+	# Autosuficiencia (push): con Parasitismo visto deja de comprar para abrir el espejo.
+	var ucfg_b: Dictionary = cfg.get("autosuficiencia", {})
+	if ucfg_b.get("push", false) and EvoManager.auto_paras_seen and not EvoManager.mutation_autosuficiencia:
+		return
 	# Antibiosis: guarda plata para N disparos (reserve_shots) antes de comprar mejoras.
 	var acfg_r: Dictionary = cfg.get("antibiosis", {})
 	if AntibiosisLogic.is_active() and acfg_r.has("reserve_shots"):
 		keep = maxf(keep, AntibiosisLogic.shot_cost() * float(acfg_r.reserve_shots))
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
+	# Autosuficiencia: qué cultivar (cult_ids) y sólo si alcanza la biomasa (el botón no compra).
+	if AutosuficienciaLogic.is_active():
+		if AutosuficienciaLogic.cultivating() or BiosphereEngine.nutrientes < AutosuficienciaLogic.cult_cost():
+			return
+		ids = cfg.get("autosuficiencia", {}).get("cult_ids", ids)
 	if inest_struct:
 		ids = STRUCT_IDS
 	# Antibiosis (push): con Simbiosis vista, sólo click para que domine (abre el espejo).
@@ -524,6 +542,16 @@ func _route_keys(_d: RefCounted) -> void:
 	var acfg: Dictionary = cfg.get("antibiosis", {})
 	if not acfg.is_empty() and AntibiosisLogic.is_active() and not acfg.get("afk", false):
 		_antibiosis_keys(acfg)
+	var ucfg: Dictionary = cfg.get("autosuficiencia", {})
+	if not ucfg.is_empty() and AutosuficienciaLogic.is_active():
+		if ucfg.get("ferment", false) and (ucfg.get("ferment_always", false) or (not AutosuficienciaLogic.cultivating() \
+				and BiosphereEngine.nutrientes < AutosuficienciaLogic.cult_cost())) and AutosuficienciaLogic.can_ferment() \
+				and EvoManager.auto_scent + Balance.AUTO_FERMENT_SCENT < float(ucfg.get("scent_max", 60.0)):
+			AutosuficienciaLogic.ferment()
+			_after_key("key:W auto_ferment nut=%.0f" % BiosphereEngine.nutrientes)
+		if ucfg.get("seal", false) and AutosuficienciaLogic.seal_ready():
+			UIManager._ng_buttons._on_auto_seal_pressed()
+			_log("seal:autosuficiencia")
 	if EvoManager.mutation_huesped_soberano:
 		var feed_at: float = float(cfg.get("huesped_feed_at", -1.0))
 		var h_at: float = EvoManager.huesped_hunger + HuespedSoberanoLogic.hunger_rate() * HuespedSoberanoLogic.craving_in()

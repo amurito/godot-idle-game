@@ -491,6 +491,30 @@ const ACH_ANTI_ROTATION          := 12     # FRUTO Rotación Perfecta: 12 dispar
 const ACH_ANTI_MAX_RES           := 0.5    # MYTHIC Dosis Mínima: ningún antibiótico pasa del 50 % de resistencia
                                            # ("nunca 2 rivales vivos" era imposible: al final llegan cada 12 s)
 
+# ── SOMBRA · AUTOSUFICIENCIA (anti-Parasitismo) — AutosuficienciaLogic ──
+# Verbo: CULTIVAR. Spec docs/design/sombras.md §6 y §12. Calibrado con el simulador.
+const AUTO_MIRROR_BIO            := 5.0    # espejo: biomasa ≥ 5…
+const AUTO_MIRROR_CLICK          := 5.0    # …clickeando (último click hace < 5 s: el AFK va a Parasitismo)…
+const AUTO_MIRROR_NO_BUY         := 20.0   # …sin comprar hace ≥ 20 s…
+const AUTO_MIRROR_RICH           := 3.0    # …teniendo plata para 3× la mejora más barata…
+const AUTO_MIRROR_TIME           := 45.0   # …acumulados estos s (un bajón descuenta, no reinicia)
+const AUTO_MIRROR_DECAY          := 0.5
+const AUTO_CULT_TIME             := 8.0    # cultivar un nivel tarda 8 s (uno a la vez): la biomasa es el límite…
+const AUTO_CULT_NUT              := 25.0   # …y cuesta NUTRIENTES (la biomasa se regenera a ~0.8/s hasta su tope:
+                                           # como costo era gratis; los nutrientes salen del estrés absorbido, ~1.3/s)…
+const AUTO_CULT_NUT_GROWTH       := 1.06   # …que suben ×1.06 por nivel cultivado
+const AUTO_FERMENT_SECS          := 15.0   # [W] Fermentar: 15 s de ingreso…
+const AUTO_FERMENT_NUT           := 40.0   # …→ +40 nutrientes (la salida del mercado, con olor)
+const AUTO_FERMENT_CD            := 10.0
+const AUTO_SEAL_LEVELS           := 20     # sello: 20 niveles cultivados
+const AUTO_FERMENT_SCENT         := 15.0   # cada fermento atrae al parásito: +15 de olor…
+const AUTO_SCENT_DECAY           := 0.5    # …que baja 0.5/s…
+const AUTO_SCENT_FAIL            := 100.0  # …y a 100 el parásito vuelve (FRACASO → PARASITISMO)
+const AUTO_PARASITE_IDLE         := 120.0  # FRACASO: 120 s sin clickear → el parásito vuelve (PARASITISMO)
+const AUTO_DESPENSA_CD           := 180.0  # legado Despensa Propia: 1 nivel de la mejora más barata cada 3 min…
+const AUTO_DESPENSA_BIO          := 3.0    # …por 3 de biomasa
+const ACH_AUTO_POLY              := 5      # FRUTO Policultivo: 5 mejoras distintas cultivadas
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -648,6 +672,7 @@ const PL_REWARDS: Dictionary = {
 	"INESTABILIDAD CONSCIENTE":  9,
 	"PROCARIOTA":                9,
 	"ANTIBIOSIS":                9,
+	"AUTOSUFICIENCIA":           9,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -692,4 +717,5 @@ const NG_CAPS: Dictionary = {
 	"INESTABILIDAD CONSCIENTE":  8,
 	"PROCARIOTA":                8,
 	"ANTIBIOSIS":                8,
+	"AUTOSUFICIENCIA":           8,
 }

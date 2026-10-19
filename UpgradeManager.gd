@@ -280,6 +280,10 @@ func apply_reencarnacion_snapshot(snapshot: Dictionary) -> void:
 signal upgrade_bought(id: String)
 
 func purchase_upgrade(id: String) -> void:
+	# AUTOSUFICIENCIA: el mercado está cerrado; el botón cultiva con biomasa.
+	if AutosuficienciaLogic.is_active():
+		AutosuficienciaLogic.cultivate(id)
+		return
 	var c := cost(id)
 	if EconomyManager.money >= c:
 		if buy(id, EconomyManager.money):
@@ -288,6 +292,7 @@ func purchase_upgrade(id: String) -> void:
 			apply_bought_effects(id)
 			MicelioOmniscienteLogic.on_purchase()
 			HolobionteLogic.on_purchase()
+			AutosuficienciaLogic.on_purchase()
 			upgrade_bought.emit(id)
 
 func apply_bought_effects(id: String) -> void:

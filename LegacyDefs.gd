@@ -630,6 +630,24 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "lema_lyapunov_active", "value": 1.0},
 	},
+	# SOMBRA de Parasitismo (A → anti-A). Llave sin toggle: entra por espejo (activo, con plata, sin comprar).
+	"sombra_autosuficiencia": {
+		"name": "Sombra: Autosuficiencia",
+		"flavor": "Parasitismo es depender del sistema y drenarlo. Autosuficiencia es no depender de nada: el hongo cultiva lo que necesita.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed", "route": "PARASITISMO"},
+		"effect": {"type": "sombra_autosuficiencia_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Autosuficiencia: un sistema (cultivar sin mercado, en cualquier run).
+	"legado_despensa_propia": {
+		"name": "Legado: Despensa Propia",
+		"flavor": "La huerta quedó plantada: en todas las runs, cada 3 minutos podés cultivar un nivel de la mejora más barata con 3 de biomasa.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "AUTOSUFICIENCIA"},
+		"unlock": {"type": "route_closed", "route": "AUTOSUFICIENCIA"},
+		"effect": {"type": "despensa_propia_active", "value": 1.0},
+	},
 	# SOMBRA de Simbiosis (A → anti-A). Llave sin toggle: entra por espejo (colonia grande y agresiva).
 	"sombra_antibiosis": {
 		"name": "Sombra: Antibiosis",

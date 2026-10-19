@@ -27,7 +27,7 @@
 | Homeostasis | **Inestabilidad Consciente** | observar | OBSERVAR: leer la propia ecuación (lore matemático) | ✅ (§9) |
 | Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | ✅ (§10) |
 | Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | ✅ (§11) |
-| Parasitismo | **Autosuficiencia** | cultivar | mejoras hechas con biomasa, sin mercado | spec |
+| Parasitismo | **Autosuficiencia** | cultivar | mejoras cultivadas con nutrientes, sin mercado | ✅ (§12) |
 | Red Micelial | **Hifa Pionera** *(ex Núcleo Aislado)* | explorar | mapa del sustrato, avance sin ramificar | spec |
 
 Orden sugerido: **Inestabilidad Consciente** primero (engancha con los 3 legados de conocimiento del Banco
@@ -296,3 +296,41 @@ Calibrada con bot; los números de abajo son los finales.
 | `t3_anti_mono` (siempre β-lactámico) | resistencia 88 % → 3 rivales → SIMBIOSIS |
 | `t3_anti_afk` | 3 rivales → SIMBIOSIS a los 70 s |
 | controles (elige Simbiosis / juega pasivo hacia Red) | no entran a la Sombra |
+
+## 12. Autosuficiencia — implementada (2026-10-18) ✅
+
+`AutosuficienciaLogic.gd`, estado `auto_*` en EvoManager, constantes `AUTO_*` en Balance. Concreta §6.
+
+- **Llave** `sombra_autosuficiencia` (20 PL, se revela en T3 y se desbloquea tras cerrar PARASITISMO).
+- **Espejo**: con la llave, habiendo tenido **Parasitismo latente** en la run, **clickeando** (último click < 5 s), con
+  biomasa ≥ 5 y **plata para 3× la mejora más barata pero sin comprar** (20 s desde la última compra): **45 s
+  acumulados** (progreso en el panel de ε; comprar cualquier cosa lo evita).
+  - Exige actividad a propósito: un AFK va a Parasitismo, no acá (lección de Ayuno). El control
+    `t3_afk_auto_key` lo verifica.
+- **Mercado cerrado**: `UpgradeManager.purchase_upgrade` redirige → los botones de mejora **cultivan**. Cuesta
+  **nutrientes** (25 × 1.06ⁿ) y tarda 8 s, uno a la vez.
+  - **Cambios de calibración**:
+    - La spec pedía 30 s por cultivo pagado con biomasa. La biomasa se regenera a ~0.8/s hasta su tope blando
+      (~8): como costo era gratis, y el ritmo lo ponía el tiempo de cultivo.
+    - Los nutrientes salen del estrés absorbido (~1.3/s), así que clickear (subir ε) llena el sustrato.
+- **[W] Fermentar**: 15 s de ingreso → +40 nutrientes (cooldown 10 s), pero **+15 de olor** (baja 0.5/s). A 100,
+  el parásito vuelve. Decisión: cuánto acelerar sin atraerlo.
+- **Sello**: 20 niveles cultivados → AUTOSUFICIENCIA (+9 PL; NG+: 8 − fermentos).
+- **Fracaso** (→ PARASITISMO): olor 100 o 120 s sin clickear.
+  - **Cambio respecto de §6**: "comprar con plata" ya no es posible, porque los botones cultivan. El fracaso pasa
+    a ser el propio disparador del parásito, la inactividad, más el olor.
+- **Recompensa**: **Legado Despensa Propia** — en todas las runs, cada 3 min un botón cultiva un nivel de la
+  mejora más barata con 3 de biomasa.
+- **Logros**: Autótrofo (ANCESTRAL, sellar) · Policultivo (FRUTO: 5 mejoras distintas cultivadas) ·
+  **Autarquía Total** (MYTHIC: sellar sin fermentar).
+
+**Bot (escenarios `t3_auto_*`, `a3_auto_autarquia`, controles `t3_homeo_auto_key`, `t3_simb_auto_key`, `t3_afk_auto_key`):**
+
+| Escenario | Resultado |
+|---|---|
+| `t3_auto_player` (fermenta si faltan nutrientes con olor < 60) | entra a 172 s · sella a 409 s (4 min) · 10 fermentos |
+| `t3_auto_noferment` (3 clicks/s, sin fermentar) | sella a 591 s → MYTHIC (paciencia) |
+| `a3_auto_autarquia` (8 clicks/s, sin fermentar) | sella a 350 s → MYTHIC (clickear fuerte rinde más que fermentar) |
+| `t3_auto_greedy` (fermenta apenas puede) | el olor llega a 100 → PARASITISMO a 267 s |
+| `t3_auto_afk` (entra y deja de clickear) | el parásito vuelve a los 120 s → PARASITISMO |
+| controles (Homeostasis, Simbiosis, AFK normal con la llave) | no entran a la Sombra; el AFK va a Parasitismo |

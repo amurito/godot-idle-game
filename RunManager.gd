@@ -253,6 +253,13 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 		UIManager.show_toast(tr("TOAST_INEST_REWARD"))
 		LogManager.add(tr("LOG_INEST_REWARD"))
 
+	# AUTOSUFICIENCIA: legado Despensa Propia (un nivel de la mejora más barata con biomasa cada 3 min).
+	if route == "AUTOSUFICIENCIA":
+		if not LegacyManager.get_buff_value("legado_despensa_propia"):
+			LegacyManager.grant_buff("legado_despensa_propia")
+			UIManager.show_toast(tr("TOAST_AUTO_REWARD"))
+			LogManager.add(tr("LOG_AUTO_REWARD"))
+
 	# ANTIBIOSIS: legado Penicilina (el panel de ε muestra cuánto falta para que entre el parásito).
 	if route == "ANTIBIOSIS":
 		if not LegacyManager.get_buff_value("legado_penicilina"):
@@ -568,7 +575,7 @@ func update_homeostasis_mode(delta: float):
 	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
 	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
 	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano or EvoManager.mutation_symbiosis \
-		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism or EvoManager.mutation_inestabilidad or EvoManager.mutation_antibiosis
+		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism or EvoManager.mutation_inestabilidad or EvoManager.mutation_antibiosis or EvoManager.mutation_autosuficiencia
 	if not EvoManager.primordio_active and not en_mutacion_avanzada:
 		disturbance_timer += delta
 		if disturbance_timer >= DISTURBANCE_INTERVAL:
@@ -898,6 +905,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_inestabilidad:          return "INESTABILIDAD CONSCIENTE"
 	if EvoManager.mutation_procariota:             return "PROCARIOTA"
 	if EvoManager.mutation_antibiosis:             return "ANTIBIOSIS"
+	if EvoManager.mutation_autosuficiencia:        return "AUTOSUFICIENCIA"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -968,6 +976,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = int(floor(EvoManager.proc_best_quorum_mult))
 		"ANTIBIOSIS":
 			raw = maxi(8 - 2 * (EvoManager.anti_peak_alive - 1), 0)
+		"AUTOSUFICIENCIA":
+			raw = maxi(8 - EvoManager.auto_ferments, 0)
 	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
@@ -1083,6 +1093,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%.2f", "log": "mejor quorum ×{v} = {b} (cap {c})"},
 		"ANTIBIOSIS": {"value": func() -> Variant: return maxi(8 - 2 * (EvoManager.anti_peak_alive - 1), 0), "op": "id", "k": 1.0,
 			"vfmt": "%d", "log": "control {v} = 8 − 2·(pico de rivales − 1) (cap {c})"},
+		"AUTOSUFICIENCIA": {"value": func() -> Variant: return maxi(8 - EvoManager.auto_ferments, 0), "op": "id", "k": 1.0,
+			"vfmt": "%d", "log": "autarquía {v} = 8 − fermentos (cap {c})"},
 	}
 	# Alias históricos (con/sin tilde, nombres viejos) → misma regla.
 	var aliases := {

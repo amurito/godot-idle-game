@@ -1804,6 +1804,30 @@ const ENTRIES: Dictionary = {
 			+ "[i]Penicillin comes from a fungus: Fleming, 1928.[/i]"
 		),
 		"unlock": {"type": "buff_owned", "id": "sombra_antibiosis"},
+		"see_also": ["simbiosis", "procariota", "autosuficiencia"],
+	},
+	"autosuficiencia": {
+		"cat": "transmutaciones",
+		"name_es": "Autosuficiencia", "name_en": "Self-Sufficiency",
+		"body_es": (
+			"[b]Sombra[/b] (A → anti-A) de [b]Parasitismo[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Parasitismo). No hay botón: Parasitismo es depender del sistema y drenarlo; la Autosuficiencia es [b]no depender de nada[/b]. Con la llave, si en la run Parasitismo estuvo latente, [b]clickeando[/b], con biomasa ≥ 5 y [b]plata para comprar pero sin comprar[/b] (20 s desde la última compra), acumular [b]45 s[/b] la abre (el panel de ε muestra el progreso; comprar cualquier cosa lo evita).\n\n"
+			+ "• [b]Mercado cerrado[/b]: los botones de mejora ahora [b]cultivan[/b] — cuesta [b]nutrientes[/b] (25, ×1.06 por nivel cultivado) y tarda 8 s; un cultivo a la vez. Los nutrientes son el límite: salen del estrés que el hongo absorbe, así que clickear (subir ε) llena el sustrato.\n"
+			+ "• [b][W] Fermentar[/b]: 15 s de ingreso → +40 nutrientes (cooldown 10 s), pero suma [b]+15 de olor[/b] (baja 0.5/s). A 100, el parásito vuelve.\n"
+			+ "• Tenés que seguir activo: [b]120 s sin clickear[/b] y el parásito vuelve.\n\n"
+			+ "[b]Sello[/b]: 20 niveles cultivados → [b]AUTOSUFICIENCIA[/b] (+9 PL + bonus por fermentar poco).\n"
+			+ "[b]Fracaso[/b] (vuelve a Parasitismo): olor 100 o 120 s sin clickear.\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado Despensa Propia[/b] — en todas las runs, cada 3 minutos un botón cultiva un nivel de la mejora más barata con 3 de biomasa."
+		),
+		"body_en": (
+			"[b]Shadow[/b] (A → anti-A) of [b]Parasitism[/b]. The key is bought in the Genetic Bank (20 LP, after closing Parasitism). There is no button: Parasitism is depending on the system and draining it; Self-Sufficiency is [b]depending on nothing[/b]. With the key, if Parasitism was latent during the run, while [b]clicking[/b], with biomass ≥ 5 and [b]money to buy but not buying[/b] (20 s since the last purchase), accumulating [b]45 s[/b] opens it (the ε panel shows the progress; buying anything avoids it).\n\n"
+			+ "• [b]Market closed[/b]: upgrade buttons now [b]cultivate[/b] — costs [b]nutrients[/b] (25, ×1.06 per cultivated level) and takes 8 s; one crop at a time. Nutrients are the limit: they come from the stress the fungus absorbs, so clicking (raising ε) fills the substrate.\n"
+			+ "• [b][W] Ferment[/b]: 15 s of income → +40 nutrients (10 s cooldown), but adds [b]+15 scent[/b] (drops 0.5/s). At 100, the parasite returns.\n"
+			+ "• You must stay active: [b]120 s without clicking[/b] and the parasite returns.\n\n"
+			+ "[b]Seal[/b]: 20 cultivated levels → [b]SELF-SUFFICIENCY[/b] (+9 LP + bonus for fermenting little).\n"
+			+ "[b]Failure[/b] (back to Parasitism): scent 100 or 120 s without clicking.\n\n"
+			+ "[b]Reward[/b]: [b]Legacy Own Pantry[/b] — in every run, every 3 minutes a button cultivates one level of the cheapest upgrade with 3 biomass."
+		),
+		"unlock": {"type": "buff_owned", "id": "sombra_autosuficiencia"},
 		"see_also": ["simbiosis", "procariota", "inestabilidad_consciente"],
 	},
 

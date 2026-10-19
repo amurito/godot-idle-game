@@ -32,10 +32,10 @@ de la franja Biología están vacías. Ideas para llenarlo (a definir con el aut
 
 **Spec para revisión:** `docs/design/biologia_mutualismo_endosimbiosis.md` (Mutualismo = negociar, Holobionte = sostener 4 socios, Endosimbiosis = dosificar genes; 6 preguntas abiertas en §9).
 
-### A2. Sombras (anti-A) — 4 de 6 hechas
+### A2. Sombras (anti-A) — 5 de 6 hechas
 Hechas: Ayuno Primordial (anti-Hiper), **Inestabilidad Consciente** (anti-Homeostasis, 2026-10-18, lore
-matemático; su recompensa son los 3 legados de conocimiento) **Procariota** (anti-Endosimbiosis) y **Antibiosis** (anti-Simbiosis), las tres el 2026-10-18.
-Pendientes (spec `docs/design/sombras.md`, en este orden): Autosuficiencia
+matemático; su recompensa son los 3 legados de conocimiento) **Procariota** (anti-Endosimbiosis), **Antibiosis** (anti-Simbiosis) y **Autosuficiencia** (anti-Parasitismo),
+todas el 2026-10-18. Pendiente (spec `docs/design/sombras.md`):
 (anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado). Regla de la familia: dan visibilidad
 o un sistema nuevo, no multiplicadores.
 

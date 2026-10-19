@@ -178,6 +178,22 @@ var anti_rotation: int = 0               # disparos seguidos sin repetir (FRUTO 
 var anti_peak_alive: int = 0             # NG+: control (pico de rivales vivos)
 var anti_peak_resist: float = 0.0        # MYTHIC Dosis Mínima: ≤ ACH_ANTI_MAX_RES
 var _anti_mirror_countdown_last: int = -1
+
+# === AUTOSUFICIENCIA (Sombra de Parasitismo — AutosuficienciaLogic) ===
+var mutation_autosuficiencia := false
+var auto_paras_seen: bool = false        # Parasitismo latente esta run (condición del espejo)
+var auto_mirror_time: float = 0.0
+var auto_cult_id: String = ""            # mejora que se está cultivando ("" = ninguna)
+var auto_cult_timer: float = 0.0
+var auto_levels: int = 0                 # niveles cultivados (sello a AUTO_SEAL_LEVELS)
+var auto_kinds: Dictionary = {}          # mejoras distintas cultivadas (FRUTO Policultivo)
+var auto_ferment_cd: float = 0.0
+var auto_ferments: int = 0               # MYTHIC Autarquía Total: 0 · NG+: 8 − esto
+var auto_scent: float = 0.0              # olor de la fermentación: a AUTO_SCENT_FAIL vuelve el parásito
+var _despensa_last_t: float = 0.0        # legado Despensa Propia: último uso (run_time)
+var _auto_last_buy_t: float = 0.0        # última compra con plata (espejo)
+var _auto_mirror_countdown_last: int = -1
+var _auto_idle_warned: int = -1
 var _predictor_warned_idx: int = -1      # legado Predictor Estructural: último umbral avisado
 
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
@@ -349,6 +365,7 @@ const TRANSIENT_VARS := [
 	"_met_oscuro_income_accum", "_met_oscuro_status_timer", "_met_oscuro_active_time",
 	"ayuno_streak_timer", "autofagia_burst_cooldown", "_omega_cero_starve_ticks", "_fusion_money_mark",
 	"_ayuno_mirror_countdown_last", "_inest_mirror_countdown_last", "_predictor_warned_idx", "_proc_window_warned", "_anti_mirror_countdown_last",
+	"_auto_last_buy_t", "_auto_mirror_countdown_last", "_auto_idle_warned",
 	"control_omega_last_ms", "_glitch_was_active",
 ]
 ## No se reinician entre runs: el cooldown de Control de Ω usa reloj real.
@@ -387,7 +404,7 @@ func update_genome():
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
 	# SOMBRAS (Inestabilidad, Procariota): la run ya eligió; ninguna otra mutación base.
-	if mutation_inestabilidad or mutation_procariota or mutation_antibiosis:
+	if mutation_inestabilidad or mutation_procariota or mutation_antibiosis or mutation_autosuficiencia:
 		for g in ["hiperasimilacion", "parasitismo", "simbiosis", "homeostasis", "red_micelial", "esporulacion"]:
 			_set_genome_state(g, "bloqueado")
 		return
@@ -400,7 +417,8 @@ func update_genome():
 	GenomeEvaluator.update_simbiosis(ctx)
 	GenomeEvaluator.update_homeostasis(ctx)
 	InestabilidadLogic.update_mirror(ctx)  # Sombra de Homeostasis (espejo: sostener ε alto)
-	AntibiosisLogic.update_mirror(ctx)  # Sombra de Simbiosis (espejo: colonia grande, rígida, pasiva)
+	AntibiosisLogic.update_mirror(ctx)  # Sombra de Simbiosis (espejo: colonia grande y agresiva)
+	AutosuficienciaLogic.update_mirror(ctx)  # Sombra de Parasitismo (espejo: activo, con plata, sin comprar)
 	GenomeEvaluator.update_allostasis(ctx)
 	GenomeEvaluator.update_homeorhesis(ctx)
 	GenomeEvaluator.update_red_micelial(ctx)
@@ -473,6 +491,7 @@ func tick_route_processes(dt: float) -> void:
 	InestabilidadLogic.process(dt)  # se auto-gatea (Sombra de Homeostasis)
 	ProcariotaLogic.process(dt)  # se auto-gatea (Sombra de Endosimbiosis)
 	AntibiosisLogic.process(dt)  # se auto-gatea (Sombra de Simbiosis)
+	AutosuficienciaLogic.process(dt)  # se auto-gatea (Sombra de Parasitismo)
 	InestabilidadLogic.tick_predictor()  # legado Predictor Estructural (cualquier run)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 

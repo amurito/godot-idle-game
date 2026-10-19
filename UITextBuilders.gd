@@ -1167,6 +1167,9 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 	if InestabilidadLogic.mirror_open():
 		t += "\n" + TranslationServer.translate("STICKY_INEST_MIRROR") % [Balance.INEST_MIRROR_EPS,
 			EvoManager.inest_mirror_time, Balance.INEST_MIRROR_TIME]
+	# AUTOSUFICIENCIA: progreso del espejo (activo, con plata, sin comprar).
+	if AutosuficienciaLogic.mirror_open() and EvoManager.auto_mirror_time > 0.0:
+		t += "\n" + TranslationServer.translate("STICKY_AUTO_MIRROR") % [EvoManager.auto_mirror_time, Balance.AUTO_MIRROR_TIME]
 	# ANTIBIOSIS: progreso del espejo (colonia grande y agresiva).
 	if AntibiosisLogic.mirror_open():
 		t += "\n" + TranslationServer.translate("STICKY_ANTI_MIRROR") % [Balance.ANTI_MIRROR_EPS,
@@ -1334,6 +1337,36 @@ static func build_fusion_catabolica_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t
 
+
+# ─── AUTOSUFICIENCIA (Sombra de Parasitismo) ─────────────────────────────────
+
+static func build_autosuficiencia_panel_text() -> String:
+	var T := TranslationServer
+	var t := "[color=#c9a35f]" + T.translate("AUTO_PANEL_TITLE") + "[/color]\n"
+	t += T.translate("AUTO_PANEL_LEVELS") % [EvoManager.auto_levels, Balance.AUTO_SEAL_LEVELS] + "\n"
+	t += T.translate("AUTO_PANEL_BIO") % [BiosphereEngine.nutrientes, AutosuficienciaLogic.cult_cost()] + "\n"
+	if AutosuficienciaLogic.cultivating():
+		var f: float = 1.0 - EvoManager.auto_cult_timer / Balance.AUTO_CULT_TIME
+		t += "[color=#9be05a]" + T.translate("AUTO_PANEL_CULT") % [UpgradeManager.get_def(EvoManager.auto_cult_id).label,
+			_bar(f, 12), EvoManager.auto_cult_timer] + "[/color]\n"
+	else:
+		t += "[color=#aaaaaa]" + T.translate("AUTO_PANEL_IDLE") + "[/color]\n"
+	var scol: String = "#ff5c6a" if EvoManager.auto_scent >= Balance.AUTO_SCENT_FAIL * 0.6 else "#cccccc"
+	t += "[color=%s]" % scol + T.translate("AUTO_PANEL_SCENT") % [EvoManager.auto_scent, Balance.AUTO_SCENT_FAIL] + "[/color]\n"
+	var idle: float = EconomyManager.time_since_last_click
+	var col: String = "#ff5c6a" if idle >= Balance.AUTO_PARASITE_IDLE - 20.0 else "#cccccc"
+	t += "[color=%s]" % col + T.translate("AUTO_PANEL_PARASITE") % [idle, Balance.AUTO_PARASITE_IDLE] + "[/color]\n"
+	if AutosuficienciaLogic.seal_ready():
+		t += "\n[color=#c9a35f]" + T.translate("AUTO_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.translate("AUTO_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_autosuficiencia_closed_text() -> String:
+	var t := "[color=#c9a35f]" + TranslationServer.translate("AUTO_CLOSED_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate("AUTO_CLOSED_LORE") + "[/i]\n\n"
+	t += "[color=#c9a35f]" + TranslationServer.translate("AUTO_CLOSED_REWARD") + "[/color]"
+	return t
 
 # ─── ANTIBIOSIS (Sombra de Simbiosis) ────────────────────────────────────────
 

@@ -698,6 +698,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "demostracion_elegante",
 	},
+	# ── SOMBRA · AUTOSUFICIENCIA ──
+	"ruta_autosuficiencia": {
+		"name": "Autótrofo",
+		"desc": "Sellar Autosuficiencia: el hongo dejó de depender del mercado y cultivó lo que necesitaba.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "AUTOSUFICIENCIA"}],
+	},
+	"policultivo": {
+		"name": "Policultivo",
+		"desc": "Cultivar 5 mejoras distintas en una misma Autosuficiencia.",
+		"tier": Tier.FRUTO, "secret": true,
+		"trigger": "custom", "evaluator": "policultivo",
+	},
+	"autarquia_total": {
+		"name": "Autarquía Total",
+		"desc": "Sellar Autosuficiencia sin fermentar nunca: ni una moneda vuelve a la tierra.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "autarquia_total",
+	},
 	# ── SOMBRA · ANTIBIOSIS ──
 	"ruta_antibiosis": {
 		"name": "Penicillium",
