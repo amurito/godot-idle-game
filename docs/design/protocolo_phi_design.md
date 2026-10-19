@@ -1,443 +1,182 @@
-# PROTOCOLO Φ — Fago Algorítmico
+# PROTOCOLO Φ — Fago Algorítmico (v3)
 
-**Tipo:** Cuarta ruta post-trascendencia (suma a VACÍO HAMBRIENTO / CARNAVAL / REENCARNACIÓN).
-**Estado:** Diseño v2 — sin implementar.
-**Cambios v2:** C activa, INERT consolación, Momentum Viral, Splice cap, Sobrecarga por repetición, Ventana de Óptimo Inestable, Eventos deterministas, 2 sinergias semi-visibles, feedback visual desde Fase 1.
-**Identidad tonal:** se sacrifica "Observatorio fⁿ". El jugador deja de observar y pasa a **escribir genoma sintético** dentro del organismo. Es el primer modo activo del juego.
-
----
-
-## 1. Posicionamiento
-
-- Es un **modo de run alternativo**, no un buff que se activa mid-run.
-- Se elige desde MainMenu antes de empezar la run, igual que CARNAVAL DE MUTACIONES en el plan v0.9.
-- Mientras `phi_run_active`, las mutaciones normales (Hiperasimilación, Parasitismo, Red Micelial, Homeostasis…) quedan **bloqueadas** — sus FSM van a `bloqueado` desde el `_ready`. Esta run es Φ y nada más.
-- Cierra con sus propias rutas, no con las clásicas.
-
-### 1.1 Gates de desbloqueo
-
-Para que el toggle "🧬 Iniciar Run Φ" aparezca en MainMenu:
-
-- `LegacyManager.trascendencia_count >= 3`
-- Haber cerrado al menos una run con `MET.OSCURO` (suma `met_oscuro_closed_count >= 1`).
-- Haber comprado el cosmic `phi_unlock` (~10 Ξ, Tier 4 nuevo en Banco Cósmico).
+**Tipo:** cuarta ruta post-trascendencia, junto a Vacío Hambriento, Carnaval y Reencarnación.
+**Estado:** spec v3 (2026-10-18), sin implementar. Es la v2 recortada y re-anclada al juego.
+La v2 completa queda archivada en `protocolo_phi_design_v2.md`: es la cantera para la Fase 3.
+**Identidad:** el primer modo **activo** del juego. El hongo deja de observar su ecuación y pasa a **escribir
+genoma sintético**. Lore: Evo (Arc Institute) diseñó genomas completos del fago ΦX174. **T** es la temperatura
+de muestreo del modelo y **FC** el *fold change* del paper.
 
 ---
 
-## 2. Loop jugable (60–90s por ciclo)
+## 0. Qué cambió respecto de v2 (y por qué)
 
-```
-SELECCIONAR MÓDULOS (3) → SETEAR T → SINTETIZAR (15s) → OUTCOME → VIRUS ACTIVO (60s) → REPEAT
-```
+| v2 | v3 | Por qué |
+|---|---|---|
+| `PhiManager` autoload nuevo | `routes/RoutePhi.gd` (clase `PostTrasRoute`) registrada en `RouteManager.ROUTE_DEFS` | Hereda gratis el bloqueo de mutaciones, el save, la elección en el menú y el cierre. |
+| `randf()` para outcome y ruido | Hash entero determinista (como las rupturas de Micelio) | Goldens y bot reproducibles. Salir y volver a entrar no re-tira el resultado. |
+| FC = suma lineal → terna dominante, parcheada con Sobrecarga, Momentum y racha INERT | Módulos con trade-offs contra el sistema que ya existe: su ε empuja el ε de la run y Ω pone el **tope** del FC | La mejor terna depende del estado de la run; no hace falta castigar la repetición. |
+| El virus multiplica la biomasa (exponencial) | El virus multiplica el **ingreso** | Con las mutaciones bloqueadas la biomasa no sirve, y la fórmula se disparaba. |
+| Letal sólo con T > 0.9 | Letal gradual desde T 0.75 | La estrategia segura tiene que tener riesgo; si no, el slider pierde tensión. |
+| Síntesis 15 s + virus 60 s | **8 s + 40 s** | Es el modo activo: más decisiones por minuto. |
+| ~12 subsistemas | Núcleo + C con 2 acciones + Memoria Viral | Cada Sombra tuvo 4 palancas y necesitó 5–6 vueltas de calibración. |
+| 5 finales + voluntario, 5 buffs genéticos, 3 cósmicos | 1 sello + 1 fracaso (con variante secreta) + voluntario; 1 cósmico + 1 legado | El Banco ya está cargado; mismo criterio que las Sombras. |
 
-1. **Seleccionar 3 módulos** de un pool inicial de ~6 (más se desbloquean por Memoria Viral).
-2. **Setear T** (slider 0.5–1.0). Es la única variable continua que toca el jugador.
-3. **Click "SINTETIZAR"** → barra de progreso 15s (animación Gibson). Durante este timer no podés cambiar nada.
-4. **Outcome**: ALIVE / INERT / LETHAL (ver §4).
-5. **Si ALIVE**: el virus aplica multiplicador a biomasa durante 60s. Su FC final queda como score visible.
-6. **Memoria Viral**: si FC ≥ 20, el patrón (3 módulos + T usado) se guarda en slot reusable.
-7. Volver a 1.
-
-El jugador no escribe ATCG en ningún momento. La capa "ADN" es flavor visual debajo, generada por el sistema según los módulos.
-
----
-
-## 3. Variables visibles (3, no más)
-
-| Variable | Rango | Significado | Persistencia |
-|---|---|---|---|
-| **T (Temperatura)** | 0.5 – 1.0 | Slider riesgo/recompensa. 0.7–0.9 es sweet spot. | Por ciclo (se elige cada vez) |
-| **C (Coherencia)** | 0 – 100 | **Recurso activo gastable.** Reduce chance de LETHAL pasivamente, y se puede gastar para acciones (reroll, estabilizar, extender peak window). | Run-scoped |
-| **FC (Fold Change)** | 0 – ~80 | Output del último virus. Métrica de éxito. | Volátil, último ciclo |
-
-Variables internas (no se muestran al jugador):
-- `phi_run_active: bool`
-- `phi_synthesis_progress: float` (0–15s timer)
-- `phi_virus_fc: float`, `phi_virus_remaining: float`
-- `phi_memoria_viral: Array[Dictionary]` (max 5 slots)
-- `phi_max_fc_run: float` (para logros y PL)
-- `phi_viable_count: int`, `phi_lethal_count: int`
+Se sacan de v1 (quedan en la v2 por si el bot muestra un loop monótono): Ventana de Óptimo Inestable, eventos
+deterministas, sinergias, grupos/Resonancia, Momentum Viral, Sobrecarga de Laboratorio, racha INERT y los
+módulos desbloqueables.
 
 ---
 
-## 4. Fórmulas
+## 1. Posicionamiento y acceso
 
-### 4.1 Cálculo del FC
+- Ruta post-trascendencia **elegible en la pantalla de rutas**, como Carnaval: `ROUTE_DEFS["phi"]`.
+  - `tier: "avanzada"`, `min_tras: 5` (plan de T: contenido de T5, junto a las Redenciones), `consumable: true`.
+  - `requires: {"cosmic": "phi_unlock", "ending": "METABOLISMO OSCURO"}`. Hay que extender
+    `RouteManager._meets_requires` con esas dos claves.
+- Mientras está activa:
+  - `allows_bifurcation() = false`;
+  - `update_genome` sale temprano con todas las mutaciones base en `bloqueado` (como las Sombras).
+- **La economía normal sigue funcionando** (click, auto, trueque, mejoras). El loop Φ se suma encima.
 
-```gdscript
-var fc_base: float = 0.0
-var eps_cost: float = 0.0
-var c_cost: float = 0.0
-for mod in selected_modules:
-    fc_base += mod.fc_contrib
-    eps_cost += mod.eps_contrib
-    c_cost += mod.c_contrib
+## 2. El loop (≈ 50 s por ciclo)
 
-# T-multiplier: T=0.7 neutral, T=1.0 → 2.2x, T=0.5 → 0.2x
-var t_mult: float = 1.0 + (T - 0.7) * 4.0
-eps_cost *= t_mult
+```
+ELEGIR 3 MÓDULOS → AJUSTAR T → [Q] SINTETIZAR (8 s) → OUTCOME → VIRUS (40 s) → repetir
 ```
 
-### 4.2 Roll de outcome
+- **Un virus a la vez**: no se puede sintetizar con un virus vivo. Durante la síntesis no se cambia nada.
+- **Outcomes**:
+  - **ALIVE**: el virus vive 40 s;
+  - **INERT** (FC < 2): ciclo perdido, sin castigo;
+  - **LETHAL**: ε +0.25 de golpe, C −30, sin virus.
+- No se tipea ADN. La secuencia ATCG es una capa visual que el sistema genera a partir de los módulos.
 
-```gdscript
-# Letal solo si T > 0.9
-var lethal_chance: float = 0.0
-if T > 0.9:
-    lethal_chance = (T - 0.9) * 4.0  # T=1.0 → 40% (mapea al paper)
-    lethal_chance *= (1.0 - C / 100.0)  # C protege
+## 3. Variables visibles
 
-if randf() < lethal_chance:
-    return OUTCOME_LETHAL  # ε spike + C drain
+| Variable | Rango | Qué es |
+|---|---|---|
+| **T** (temperatura) | 0.50 – 1.00, pasos de 0.05 | El único control continuo: riesgo contra recompensa. |
+| **C** (coherencia) | 0 – 100, arranca en 30 | Recurso gastable: reduce el riesgo letal y paga 2 acciones. |
+| **FC** (fold change) | 0 – ~80 | El resultado del último virus. |
 
-var random_factor: float = randf_range(0.7, 1.3)
-var fc_final: float = fc_base * t_mult * random_factor
+## 4. Fórmulas (primera propuesta, a calibrar con bot)
 
-if fc_final < 2.0:
-    return OUTCOME_INERT  # ciclo desperdiciado, sin penalty
-return OUTCOME_ALIVE
+### 4.1 Aleatoriedad determinista
+`u(salt) = hash32(phi_synth_index, ids de los módulos ordenados, round(T·100), salt) / 2³²`.
+Es la misma familia que `_roll` de Micelio Omnisciente. El Reroll usa otro `salt`.
+
+### 4.2 FC
+```
+fc_base = Σ fc(módulo)              # Splice: + duplica el menor, tope +10
+t_mult  = 1 + (T − 0.70) · 3        # T 0.5 → ×0.4 · 0.7 → ×1.0 · 1.0 → ×1.9
+ruido   = 0.80 + 0.40 · u(1)
+fc_cap  = PHI_FC_CAP · (0.4 + Ω)    # Ω pone el techo: con la run estresada no hay F69
+FC      = min(fc_base · t_mult · ruido, fc_cap)      # INERT si FC < 2
 ```
 
-### 4.3 Efecto del virus ALIVE
-
-```gdscript
-# Mientras virus activo (cada tick):
-var biomass_mult: float = 1.0 + fc_final / 10.0  # FC=10 → 2x, FC=50 → 6x
-BiosphereEngine.biomasa += BiosphereEngine.biomasa * biomass_mult * dt * 0.01
-
-# Estrés acumulado por T alto
-StructuralModel.epsilon_runtime += (0.005 + 0.01 * T) * dt
+### 4.3 Riesgo letal
+```
+letal = max(0, (T − 0.75) · 2)       # 0 % hasta 0.75 · 50 % en 1.0
+letal *= (1 − C / 200)               # C llena lo reduce a la mitad
+letal *= (1 − defensa)               # módulos defensivos (Tropismo −30 %)
+letal += letal_mod                   # Lisina +10 %
+LETHAL si u(2) < letal
 ```
 
-### 4.4 Coherencia (regen pasiva)
+### 4.4 Costo en ε (lo que conecta Φ con el resto del juego)
+Cada síntesis suma `Σ ε(módulo) · t_mult · 0.05` a una **perturbación** `phi_perturb`, que se agrega al objetivo
+de ε en `StructuralModel`, igual que la P de Inestabilidad, y decae 0.01/s.
+- Más ε baja Ω, y con Ω bajo cae el techo del FC.
+- Los módulos agresivos rinden ahora y limitan las próximas síntesis.
+- El Inhibidor (ε negativo) es la forma de recuperar el techo.
 
-```gdscript
-# +5 C cuando virus llega a término sin colapsar (caps en 100)
-# -25 C en LETHAL
-# +1 C por cada módulo que pasa Tier 1 (validez de secuencia)
-```
+### 4.5 Virus ALIVE
+`ingreso × (1 + FC / 20)` durante 40 s: FC 20 da ×2, FC 65 da ×4.25. Al terminar sin letal en el medio, C +8.
 
-### 4.5 Coherencia activa (acciones gastables)
-
-C deja de ser solo escudo. Se gasta vía botones contextuales:
-
+### 4.6 Coherencia: 2 acciones
 | Acción | Costo | Efecto |
 |---|---|---|
-| **Reroll outcome** | 20 C | Re-tira el outcome de la síntesis recién resuelta (una sola vez por ciclo). |
-| **Estabilizar virus** | 30 C | Bloquea el FC actual del virus en su valor pico durante 30s extra. Solo válido durante ventana de óptimo (§4.9). |
-| **Extender peak window** | 15 C | Empuja la ventana de óptimo +5s (acumulable hasta 3 veces, con riesgo de colapso anticipado). |
+| **[W] Reroll** | 20 C | Re-tira el outcome de la síntesis recién resuelta, una vez por ciclo. |
+| **[E] Estabilizar** | 15 C | Antes de sintetizar: el riesgo letal de esta síntesis se reduce a la mitad. |
 
-Diseño: hace que C importe minute-to-minute, no solo como buffer pasivo.
+## 5. Módulos (6, todos desde el principio)
 
-### 4.6 INERT como resorte
-
-```gdscript
-# Outcome INERT (FC < 2)
-phi_inert_streak = min(phi_inert_streak + 1, 4)
-# Próxima síntesis: fc_base *= (1.0 + 0.05 * phi_inert_streak)  # cap +20%
-# Streak se rompe con ALIVE o LETHAL (no se acumula con éxito)
-```
-
-### 4.7 Momentum Viral
-
-```gdscript
-# +5% FC base por cada ALIVE consecutivo, cap +25%
-phi_momentum = min(phi_momentum + 1, 5)  # 5 stacks = +25%
-# Se rompe SOLO con LETHAL (INERT no rompe el momentum)
-# fc_base *= (1.0 + 0.05 * phi_momentum)
-```
-
-### 4.8 Sobrecarga de Laboratorio (anti-repetición)
-
-No castiga velocidad — castiga repetir el mismo build. Empuja experimentación.
-
-```gdscript
-# Cada síntesis: comparar set de módulos contra los últimos 3 sets.
-var repeat_score: int = 0
-for past_set in last_3_sets:
-    var matches: int = count_module_matches(current_set, past_set)
-    if matches >= 2:
-        repeat_score += matches  # 2 módulos repetidos = +2, 3 idénticos = +3
-
-phi_overheat += repeat_score * 0.05  # cap 0.5
-phi_overheat = max(0.0, phi_overheat - 0.1 * dt)  # decae con tiempo
-
-# Aplicado en outcome:
-eps_cost *= (1.0 + phi_overheat)
-fc_base *= (1.0 - phi_overheat * 0.3)  # también penaliza output, no solo input
-```
-
-### 4.9 Ventana de Óptimo Inestable
-
-Durante el virus ALIVE (60s totales), hay una ventana de pico:
-
-```gdscript
-# Por defecto: ventana entre segundos 20 y 30 del virus
-var peak_start: float = 20.0
-var peak_end: float = 30.0  # mutable con "Extender peak window" (§4.5)
-
-# Durante peak window:
-if virus_age >= peak_start and virus_age <= peak_end:
-    biomass_mult *= 2.0  # FC efectivo se duplica en este lapso
-
-# Si el jugador extendió la ventana > 3 veces (peak_end > 45s):
-# Riesgo de colapso anticipado: 5% por segundo de exceso
-if peak_end > 45.0 and randf() < (peak_end - 45.0) * 0.05 * dt:
-    virus_collapse()  # virus muere prematuramente, queda 0s
-```
-
-Diseño: builds estables cosechan los 60s lineales. Builds arriesgadas extienden el peak con C, ganando picos brutales pero arriesgando colapso.
-
-### 4.10 Eventos deterministas durante virus
-
-Triggers basados en estado del sistema, no aleatorios. Se disparan una vez por virus:
-
-| Trigger | Condición | Efecto |
-|---|---|---|
-| **Inestabilidad tardía** | `fc_final > 40` | A los 35s del virus, FC sufre -20% por 10s (luego se recupera). |
-| **Micro-colapso** | `epsilon_runtime > 1.0` al sintetizar | Al iniciar virus, biomasa pierde 5% instantáneo. |
-| **Estabilización espontánea** | `C >= 80` al sintetizar | Virus no colapsa por overheat ni por extensión de peak. |
-| **Resonancia genómica** | Set incluye 2+ módulos del mismo "grupo" | Peak window dura 5s extra gratis (sin costo de C). |
-
----
-
-## 5. Pool de módulos
-
-**Iniciales (6, todos disponibles desde el primer ciclo):**
-
-| Módulo | FC | ε | C | Notas |
+| Módulo | FC | ε | Efecto | Rol |
 |---|---|---|---|---|
-| Cápside Básica | +5 | +1 | 0 | Replicador simple |
-| Tropismo E.coli | +3 | 0 | -2 (refund) | Safety pick |
-| Lisina Promotora | +8 | +3 | +2 | Agresivo |
-| Replicasa Optimizada | +10 | +4 | +1 | Damage |
-| Inhibidor Eucariota | +4 | -2 (REDUCE!) | +3 | Defensivo |
-| Splice Recursivo | +6 | +2 | 0 | Duplica el FC del módulo de **menor** contribución del set. Cap absoluto: +10 al combo |
+| Cápside Básica | 5 | +1 | — | relleno estable |
+| Replicasa Optimizada | 10 | +4 | — | daño, cuesta techo |
+| Lisina Promotora | 8 | +3 | letal +10 % | agresivo |
+| Splice Recursivo | 0 | +2 | duplica el FC del módulo menor (tope +10) | combinatorio |
+| Tropismo Selectivo | 4 | 0 | letal −30 % | defensivo |
+| Inhibidor Eucariota | 3 | −3 | baja ε → recupera Ω | reparador |
 
-**Desbloqueables (4, vía Memoria Viral usándose 3+ veces o logros):**
+No hay terna dominante fija:
+- Con la run limpia (Ω alto) conviene Replicasa + Lisina + Splice a T alta.
+- Después del pico, el techo cae y hay que meter el Inhibidor o el Tropismo.
 
-| Módulo | FC | ε | C | Notas |
-|---|---|---|---|---|
-| CRISPR Cassette | +15 | +6 | +5 | Glass cannon |
-| Latencia Lisogénica | +0 → +12 | 0 | 0 | FC inicial 0; sube a 12 después de 30s del virus |
-| Quórum Sensor | +(3 × viable_count) | +1 | +1 | Escala con runs viables previas |
-| Mutación Legendaria | random 0–50 | random 0–10 | +10 | Solo aparece random cada N ciclos |
+La Memoria Viral (§6) guarda las ternas que funcionaron.
 
-### 5.1 Sinergias semi-visibles
+## 6. Memoria Viral (la identidad de "deckbuilder")
+- Un ALIVE con FC ≥ 20 guarda su patrón (3 módulos + T) en hasta 5 slots. Cargar un slot arma la síntesis con un
+  click.
+- Los slots duran lo que dura la run Φ.
 
-No son secretos puros. Los tooltips de los módulos sugieren compatibilidad ("resuena con edición genética avanzada", "afín a estructuras agresivas"), pero el efecto exacto se descubre al usarlas. Solo 2 sinergias en v1, no más:
+## 7. Cierres
 
-| Combo | Tooltip hint | Efecto al detectarse |
+| Final | Condición | PL |
 |---|---|---|
-| **CRISPR Cassette + Splice Recursivo** | "resuena con edición genética avanzada" | +5 FC al combo, ε del Splice se reduce a 0 |
-| **Latencia Lisogénica + Quórum Sensor** | "patrón cooperativo dormido" | El payoff diferido de Latencia se adelanta 10s |
+| **DOMINANCIA F69** (sello) | Un virus con FC ≥ 65 | +8 (+ bonus NG+) |
+| **Sellar Φ** (voluntario, tras 5 min) | Botón | max FC < 20 → 2 · 20–40 → 4 · 40–65 → 6 |
+| **CASCADA EPISTÁTICA** (fracaso) | 3 LETHAL en 120 s | +2 |
+| **LISIS DEL INGENIERO** (variante secreta) | La cascada ocurre con C = 0 | +3 |
 
-UI: cuando el set seleccionado activa una sinergia, aparece chip "✓ Sinergia detectada" antes de sintetizar.
+## 8. Recompensas
+- **Cósmico** `phi_unlock` (10 Ξ, Banco Cósmico): habilita la ruta. Es contenido nuevo para el Banco Cósmico.
+- **Legado: Vector Viral** (al sellar DOMINANCIA F69; sistema, no ×N): en las runs normales, **una vez por run** podés
+  liberar el mejor virus de tu última Memoria Viral (`ingreso × (1 + FC/20)` durante 20 s). Es un puente entre Φ y
+  el resto del juego.
+- **Logros**:
+  - Primer Viable (ESPORA): primer ALIVE;
+  - Dominancia F69 (ANCESTRAL);
+  - Deckbuilder Genético (FRUTO): 5 slots con FC ≥ 30;
+  - Perplejidad Mínima (FRUTO): 10 ALIVE seguidos;
+  - Lisis del Ingeniero (MYTHIC secreto);
+  - **F69 Limpio** (MYTHIC): DOMINANCIA sin ningún LETHAL en la run. A validar con un bot experto: si no lo
+    logra, se cambia la condición (lección de Antibiosis).
 
-### 5.2 Grupos para Resonancia genómica (§4.10)
+## 9. Integración
 
-- **Replicativos**: Cápside Básica, Replicasa Optimizada, CRISPR Cassette
-- **Defensivos**: Tropismo E.coli, Inhibidor Eucariota
-- **Combinatorios**: Splice Recursivo, Latencia Lisogénica, Quórum Sensor
-- **Caóticos**: Lisina Promotora, Mutación Legendaria
+| Archivo | Cambio |
+|---|---|
+| `routes/RoutePhi.gd` (nuevo) | Estado del loop, `tick`, `serialize/deserialize`, `production_mult` (el virus), cierres. Constantes `PHI_*` en Balance. |
+| `RouteManager.gd` | `ROUTE_DEFS["phi"]`, `requires` cosmic + ending. |
+| `EvoManager.gd` | Salida temprana de `update_genome` con `RouteManager.is_active("phi")`. |
+| `StructuralModel.gd` | `+ phi_perturb` al objetivo de ε (al lado de la P de Inestabilidad). |
+| `UITextBuilders` / `UIManager` | El panel de la ruta reemplaza al de genoma: módulos, T, C, FC, Memoria. |
+| `NGPlusButtonManager` | Botones de módulos, T −/+, [Q] Sintetizar, [W] Reroll, [E] Estabilizar, Sellar, slots de Memoria. |
+| `main.gd` | Teclas Q/W/E; A/D para T ±0.05. |
+| `RunManager` | Finales, PL, NG+ (`max_fc / 10`, tope 8), legado. |
+| LegacyDefs, AchievementDefs, CodexDefs, LocaleManager | Lo de §8, en ES/EN. |
+| `tests/sim` | Política del bot y escenarios (§10), trayectoria golden. |
 
-2+ módulos del mismo grupo → activa "Resonancia genómica" en §4.10.
+## 10. Calibración con bot (objetivos)
 
----
+| Escenario | Esperado |
+|---|---|
+| `phi_player`: rota ternas según el techo, T 0.8–0.85, Estabiliza con C ≥ 40 | DOMINANCIA F69 en 12–18 min |
+| `phi_safe`: T ≤ 0.75 siempre | Nunca llega a 65: sella voluntario con 4–6 PL |
+| `phi_greedy`: T 1.0, siempre la terna de más FC | CASCADA EPISTÁTICA en pocos minutos |
+| `phi_afk`: no sintetiza | No cierra solo; sella voluntario o queda abierta (economía normal). A decidir si necesita un timeout. |
+| `a3_phi_limpio`: experto | F69 sin letales → MYTHIC (si no lo logra, cambiar la condición) |
 
-## 6. Cierres (rutas de finalización)
+## 11. Fases
+1. **Núcleo**: RoutePhi + 6 módulos + T + síntesis/outcome/virus + C con 2 acciones + cierres + panel + bot.
+2. **Memoria Viral + logros + legado Vector Viral + Compendio.**
+3. **Sólo si el bot muestra un loop monótono**: traer piezas de la v2, una por vez.
 
-Todas usan `RunManager.close_run("PROTOCOLO Φ", reason)`:
-
-### 6.1 Éxito
-
-| Ruta | Condición | PL |
-|---|---|---|
-| **DOMINANCIA F69** | Alcanzar FC ≥ 65 en una síntesis | +8 |
-| **DECKBUILDER GENÉTICO** | 5/5 slots Memoria Viral con FC ≥ 30 cada uno | +6 |
-| **PERPLEXIDAD MÍNIMA** | 10 viables consecutivos sin letal ni inert | +5 |
-
-### 6.2 Colapso
-
-| Ruta | Condición | PL |
-|---|---|---|
-| **LISIS DEL INGENIERO** | C llega a 0 con `ε_runtime > 1.5` | +3 (consuelo) |
-| **CASCADA EPISTÁTICA** | 3 letales en menos de 60s | +2 |
-
-### 6.3 Voluntario
-
-- Botón "🧬 SELLAR PROTOCOLO Φ" — disponible después de 5 min en run.
-- PL escalonado por `phi_max_fc_run`:
-  - max_FC < 20 → +2 PL
-  - max_FC 20–40 → +4 PL
-  - max_FC 40–65 → +6 PL
-  - max_FC ≥ 65 → es DOMINANCIA F69 (no voluntario)
-
----
-
-## 7. Integración con managers existentes
-
-### 7.1 PhiManager.gd (NUEVO autoload)
-
-Owns:
-- Estado de la síntesis actual (módulos seleccionados, T, progreso, virus activo).
-- Pool de módulos (Dictionary con stats).
-- Memoria Viral pool (max 5).
-- Counters (viable_count, lethal_count, max_fc_run).
-
-Métodos:
-- `start_synthesis(modules: Array, t: float)`
-- `tick(dt: float)` — llamado desde main `_on_logic_tick`.
-- `_resolve_outcome()` — calcula ALIVE/INERT/LETHAL.
-- `apply_virus_effect(dt)` — biomasa boost mientras activo.
-- `save_to_memoria_viral(modules, t, fc)`.
-- `load_pattern(slot_idx)`.
-- Señales: `synthesis_completed(outcome, fc)`, `virus_expired(fc)`, `memoria_slot_filled(idx)`.
-
-### 7.2 EvoManager.gd
-
-- Nuevo flag `phi_run_active: bool` (proxy a `PhiManager.active`).
-- En `update_genome()`, si `phi_run_active`, **bloquear todas las mutaciones** (set a `bloqueado`). Salir de `update_genome()` early.
-
-### 7.3 RunManager.gd
-
-- Aceptar `"PROTOCOLO Φ"` como `final_route` válido.
-- En `close_run()`, si la ruta es "PROTOCOLO Φ", llamar a `PhiManager.calculate_pl_bonus()` para sumar PL extra al base.
-
-### 7.4 StructuralModel.gd
-
-Sin cambios estructurales. Solo recibe pushes de ε desde PhiManager.tick.
-
-### 7.5 LegacyManager.gd — Banco Genético (nuevos buffs)
-
-| ID | Efecto | PL | Slot |
-|---|---|---|---|
-| `phi_t_lock` | T se clampea automáticamente a [0.7, 0.9] | 8 | run-Φ-only |
-| `phi_module_slot_4` | 4 módulos por síntesis (en vez de 3) | 12 | run-Φ-only |
-| `phi_lethal_immunity` | Primer LETHAL de la run es ignorado | 6 | run-Φ-only |
-| `phi_starting_coherencia` | Empezás con 50 C en vez de 0 | 4 | run-Φ-only |
-| `phi_memoria_extended` | 7 slots de Memoria Viral en vez de 5 | 6 | run-Φ-only |
-
-### 7.6 LegacyManager.gd — Banco Cósmico (nuevo Tier 4)
-
-| ID | Efecto | Ξ |
-|---|---|---|
-| `phi_unlock` | Habilita el modo Run Φ | 10 |
-| `phi_pool_expanded` | Inicial pool incluye CRISPR Cassette desde el ciclo 1 | 6 |
-| `phi_persistencia_memoria` | Memoria Viral persiste entre trascendencias | 8 |
-
-### 7.7 AchievementManager.gd
-
-| ID | Tier | Trigger |
-|---|---|---|
-| `phi_primer_viable` | Common | Primer ALIVE |
-| `phi_dominancia_f69` | Ancestral | Cierre por DOMINANCIA F69 |
-| `phi_lisis_ingeniero` | Mythic (secret) | Cierre por LISIS DEL INGENIERO |
-| `phi_deckbuilder` | Ancestral | Cierre por DECKBUILDER GENÉTICO |
-| `phi_mutacion_legendaria` | Mythic (secret) | Usar módulo Mutación Legendaria con FC ≥ 40 |
-| `phi_cero_letal` | Rare | Cerrar Run Φ con 0 LETHAL acumulados |
-
-### 7.8 MainMenu.gd
-
-- Toggle "🧬 Iniciar Run Φ" visible solo si gates §1.1 cumplidos.
-- Si toggle está activo al hacer "Comenzar", se llama `PhiManager.activate_run_mode()` antes del primer tick.
-
-### 7.9 UI
-
-Nuevo panel `phi_lab.tscn` (controller `phi_lab.gd`):
-
-```
-┌────────────────────────────────┐
-│ 🧬 LABORATORIO Φ               │
-│                                │
-│ T:  [0.5 ────●─────── 1.0]    │
-│       0.75                     │
-│                                │
-│ Módulos (3/3):                 │
-│  • Cápside Básica              │
-│  • Lisina Promotora            │
-│  • Splice Recursivo            │
-│                                │
-│ [SINTETIZAR]                   │
-│ ████████░░░░░░░░ 8/15s         │
-│                                │
-│ ── ESTADO ──                   │
-│ Virus: ACTIVO  FC=23.4         │
-│ ████████░░ 32s restantes       │
-│                                │
-│ Coherencia: 67/100             │
-│ Memoria Viral: 2/5             │
-│  [slot 1] FC=42 (Cápside+Lis+CRISPR @ 0.85)
-│  [slot 2] FC=31 (...)          │
-│                                │
-│ [Pool de módulos] [Memoria]    │
-└────────────────────────────────┘
-```
-
-El panel reemplaza al "Árbol de Mutaciones" durante run Φ. UI clean.
-
----
-
-## 8. Lo que NO se incluye (sacrificado intencionalmente)
-
-- Tipear ATCG (anti-idle).
-- Filtros GC%, AAI, perplexidad como variables del jugador (van internas o eliminadas).
-- StripedHyena / Fourier (lore puro, no se traduce).
-- Filtro Eucariota (lore sin mecánica).
-- Simulación previa (mata la tensión del slider T).
-- Co-evolución de la biomasa que se defiende (merece ser su propia ruta).
-- Parásitos de parásitos (caro, poco retorno).
-- Lectores SAE (ChatGPT idea 4 — no traduce a nada accionable).
-
----
-
-## 9. Implementación por fases
-
-**Fase 1 — MVP jugable (1 semana)**
-- PhiManager.gd con synthesis loop + 3 outcomes.
-- Pool de 6 módulos iniciales.
-- Slider T + 3 slots de selección.
-- Cierre voluntario + DOMINANCIA F69.
-- C activa: solo "Reroll outcome" (las otras 2 acciones quedan para Fase 2).
-- INERT consolación + Momentum Viral (mecánicas baratas, alto valor).
-- **Feedback visual mínimo desde día 1**: barra de FC que crece con tween agresivo, número grande pulsante al revelar outcome, color del panel cambia con T (azul frío → rojo caliente). Sin sonido, sin partículas — solo lo necesario para que se sienta el FC.
-- UI mínima sin Memoria Viral.
-
-**Fase 2 — Memoria Viral + C activa completa (4 días)**
-- Slot system + load pattern.
-- Persistencia run-scoped.
-- C activa: agregar "Estabilizar virus" y "Extender peak window".
-- Ventana de óptimo inestable (peak window §4.9).
-- Logro deckbuilder.
-
-**Fase 3 — Módulos late-game + sinergias (4 días)**
-- Pool desbloqueable (4 módulos extra).
-- Mutación Legendaria como random encounter.
-- Sinergias semi-visibles (§5.1).
-- Resonancia genómica (§4.10 trigger).
-- Logros mythic.
-
-**Fase 4 — Eventos deterministas + Sobrecarga (3 días)**
-- Eventos durante virus (§4.10): inestabilidad tardía, micro-colapso, estabilización espontánea.
-- Sobrecarga de Laboratorio (§4.8): tracking de last_3_sets + penalty.
-- Hints soft de UI ("⚠ inestabilidad acumulada", "✓ sinergia detectada").
-
-**Fase 5 — Banco Genético / Cósmico (2 días)**
-- 5 buffs Φ + 3 cosmics.
-- Cosmic gate `phi_unlock`.
-
-**Fase 6 — Polish + balance (3 días)**
-- Animaciones de síntesis (más allá del feedback mínimo de Fase 1).
-- Sound cues.
-- Balance pass de FC, ε_cost, costos de C.
-
-**Total estimado**: ~3 semanas.
-
----
-
-## 10. Decisiones cerradas
-
-1. **Un virus a la vez.** No se puede sintetizar mientras hay virus ALIVE. Cada decisión pesa.
-2. **Coherencia resetea por run.** Excepción: buff `phi_starting_coherencia` (Banco Genético) arranca con 50 C.
-3. **Memoria Viral cross-trascendencia solo via cosmic** `phi_persistencia_memoria`. Sin el cosmic, los slots se borran al trascender. Protege la curva de progresión.
-4. **Economía normal habilitada durante Run Φ.** Money/click/auto/trueque siguen funcionando. El loop Φ se suma, no reemplaza la economía base. Esto evita que Φ se sienta aislado del resto del juego.
+## 12. Preguntas abiertas para el autor
+1. ¿T5 te parece bien, o la querés en T6, con el Fantasma?
+2. ¿El AFK dentro de Φ necesita un cierre automático? Ejemplo: 5 min sin sintetizar cierran como Sellar Φ con lo
+   que haya.
+3. ¿El legado Vector Viral te convence, o preferís una recompensa de visibilidad como las de las Sombras?

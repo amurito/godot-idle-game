@@ -39,6 +39,11 @@ Pendientes (spec `docs/design/sombras.md`, en este orden): Autosuficiencia
 (anti-Parasitismo), Hifa Pionera (anti-Red Micelial, ex Núcleo Aislado). Regla de la familia: dan visibilidad
 o un sistema nuevo, no multiplicadores.
 
+### A2b. Protocolo Φ (ruta post-trascendencia, modo activo)
+Spec v3 (2026-10-18): `docs/design/protocolo_phi_design.md` (la v2 de junio, archivada en `_v2.md`). RoutePhi en
+RouteManager, T5, determinista, módulos con trade-offs contra ε/Ω, virus que multiplica el ingreso. Se implementa
+después de las Sombras; 3 preguntas abiertas en §12.
+
 ### A3. Redenciones — 1 de 3
 Hecha: Remisión Metabólica (árbol oscuro). Pendientes: **Redención de la Red** (después de Esporulación /
 Panspermia) y **Redención del Orden** (después de Singularidad / Mente Colmena). Quedó para «después de las
