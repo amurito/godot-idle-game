@@ -253,6 +253,18 @@ func close_run(route: String, reason: String, skip_ng_bonus: bool = false):
 		UIManager.show_toast(tr("TOAST_INEST_REWARD"))
 		LogManager.add(tr("LOG_INEST_REWARD"))
 
+	# HIFA PIONERA: legado Mapa del Sustrato (el flujo de biomasa y nutrientes, a la vista).
+	if route == "HIFA PIONERA":
+		if not LegacyManager.get_buff_value("legado_mapa_sustrato"):
+			LegacyManager.grant_buff("legado_mapa_sustrato")
+			UIManager.show_toast(tr("TOAST_PION_REWARD"))
+			LogManager.add(tr("LOG_PION_REWARD"))
+	# HIFA EXTRAVIADA (fracaso de Hifa Pionera): consuelo — la próxima punta arranca con más energía.
+	if route == "HIFA EXTRAVIADA":
+		if not LegacyManager.get_buff_value("legado_memoria_punta"):
+			LegacyManager.grant_buff("legado_memoria_punta")
+			UIManager.show_toast(tr("TOAST_PION_MEMORY"))
+
 	# AUTOSUFICIENCIA: legado Despensa Propia (un nivel de la mejora más barata con biomasa cada 3 min).
 	if route == "AUTOSUFICIENCIA":
 		if not LegacyManager.get_buff_value("legado_despensa_propia"):
@@ -575,7 +587,7 @@ func update_homeostasis_mode(delta: float):
 	# Pausar perturbaciones cuando el jugador evolucionó a Red Micelial o Simbiosis:
 	# ya superó la fase homeostática, las perturbaciones dejan de tener sentido
 	var en_mutacion_avanzada = EvoManager.mutation_red_micelial or EvoManager.mutation_micelio_omnisciente or EvoManager.mutation_huesped_soberano or EvoManager.mutation_symbiosis \
-		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism or EvoManager.mutation_inestabilidad or EvoManager.mutation_antibiosis or EvoManager.mutation_autosuficiencia
+		or EvoManager.mutation_hyperassimilation or EvoManager.mutation_parasitism or EvoManager.mutation_inestabilidad or EvoManager.mutation_antibiosis or EvoManager.mutation_autosuficiencia or EvoManager.mutation_hifa_pionera
 	if not EvoManager.primordio_active and not en_mutacion_avanzada:
 		disturbance_timer += delta
 		if disturbance_timer >= DISTURBANCE_INTERVAL:
@@ -906,6 +918,7 @@ func get_predicted_route() -> String:
 	if EvoManager.mutation_procariota:             return "PROCARIOTA"
 	if EvoManager.mutation_antibiosis:             return "ANTIBIOSIS"
 	if EvoManager.mutation_autosuficiencia:        return "AUTOSUFICIENCIA"
+	if EvoManager.mutation_hifa_pionera:           return "HIFA PIONERA"
 	if homeostasis_tier_reached >= 3:              return "HOMEORHESIS"
 	if homeostasis_tier_reached >= 2:              return "ALLOSTASIS"
 	if EvoManager.mutation_homeorhesis:            return "HOMEORHESIS"
@@ -978,6 +991,8 @@ func compute_ng_bonus(route: String) -> Dictionary:
 			raw = maxi(8 - 2 * (EvoManager.anti_peak_alive - 1), 0)
 		"AUTOSUFICIENCIA":
 			raw = maxi(8 - EvoManager.auto_ferments, 0)
+		"HIFA PIONERA":
+			raw = int(floor(EvoManager.pion_min_energy / 8.0))
 	var bonus: int = int(min(raw, cap))
 	return {"bonus": bonus, "cap": cap, "raw": raw, "saturated": cap > 0 and bonus >= cap}
 
@@ -1095,6 +1110,8 @@ func _build_ng_rules() -> Dictionary:
 			"vfmt": "%d", "log": "control {v} = 8 − 2·(pico de rivales − 1) (cap {c})"},
 		"AUTOSUFICIENCIA": {"value": func() -> Variant: return maxi(8 - EvoManager.auto_ferments, 0), "op": "id", "k": 1.0,
 			"vfmt": "%d", "log": "autarquía {v} = 8 − fermentos (cap {c})"},
+		"HIFA PIONERA": {"value": func() -> Variant: return EvoManager.pion_min_energy, "op": "div", "k": 8.0,
+			"vfmt": "%.0f", "log": "energía mínima {v} / 8 = {b} (cap {c})"},
 	}
 	# Alias históricos (con/sin tilde, nombres viejos) → misma regla.
 	var aliases := {

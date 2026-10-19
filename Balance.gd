@@ -515,6 +515,31 @@ const AUTO_DESPENSA_CD           := 180.0  # legado Despensa Propia: 1 nivel de 
 const AUTO_DESPENSA_BIO          := 3.0    # …por 3 de biomasa
 const ACH_AUTO_POLY              := 5      # FRUTO Policultivo: 5 mejoras distintas cultivadas
 
+# ── SOMBRA · HIFA PIONERA (anti-Red Micelial) — PioneraLogic ──
+# Verbo: EXPLORAR. Spec docs/design/sombras.md §7 y §13. Calibrado con el simulador.
+const PION_MIRROR_BUYS           := 6      # espejo: 6 mejoras de click seguidas sin ninguna pasiva (con Red vista)
+const PION_GOAL                  := 1000.0 # sello: 1000 m de sustrato
+const PION_SEGMENT               := 50.0   # una bifurcación cada 50 m
+const PION_SPEED                 := 2.0    # m/s de la punta…
+const PION_CLICK_PUSH            := 0.4    # …+0.4 m/s por click/s (media móvil)…
+const PION_CPS_TAU               := 3.0
+const PION_ROCK_SLOW             := 0.4    # …×0.4 en roca
+const PION_ENERGY_START          := 80.0
+const PION_ENERGY_MAX            := 100.0
+const PION_DRAIN                 := 0.45   # energía/s al avanzar (a 3 clicks/s ≈ 7 por tramo)
+const PION_WAIT_DRAIN            := 0.3    # energía/s esperando en una bifurcación
+const PION_FORK_AUTO             := 15.0   # sin elegir en 15 s, toma la izquierda (el AFK no traba la run)
+const PION_PROBE_COST            := 6.0    # [W] sondear
+const PION_NUTRI_ENERGY          := 30.0   # bolsillo de nutrientes: +30 energía…
+const PION_NUTRI_BURST           := 2.0    # …e ingreso ×2…
+const PION_NUTRI_BURST_SECS      := 15.0   # …durante 15 s
+const PION_TOXIN_ENERGY          := 20.0   # toxinas: −20 energía
+const PION_P_NUTRI               := 35     # probabilidades de cada rama (%)
+const PION_P_NEUTRO              := 25
+const PION_P_ROCA                := 20     # (toxinas = el resto, 20)
+const PION_MEMORY_ENERGY         := 20.0   # legado Memoria de la Punta (consuelo de HIFA EXTRAVIADA)
+const ACH_PION_BLIND             := 5      # FRUTO A Ciegas: 5 bifurcaciones seguidas sin sondear ni toxinas
+
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;
 # Ayuno es renunciar a clickear. Con la llave transmut_ayuno, no clickear AYUNO_MIRROR_IDLE s
@@ -673,6 +698,8 @@ const PL_REWARDS: Dictionary = {
 	"PROCARIOTA":                9,
 	"ANTIBIOSIS":                9,
 	"AUTOSUFICIENCIA":           9,
+	"HIFA PIONERA":              9,
+	"HIFA EXTRAVIADA":           2,
 }
 
 # ── Caps de bonus NG+ por ruta ───────────────────────────────────
@@ -718,4 +745,6 @@ const NG_CAPS: Dictionary = {
 	"PROCARIOTA":                8,
 	"ANTIBIOSIS":                8,
 	"AUTOSUFICIENCIA":           8,
+	"HIFA PIONERA":              8,
+	"HIFA EXTRAVIADA":           2,
 }

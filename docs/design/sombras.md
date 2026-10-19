@@ -28,7 +28,7 @@
 | Endosimbiosis | **Procariota** | dividirse | población por fisión binaria + plásmidos | ✅ (§10) |
 | Simbiosis | **Antibiosis** *(ex Autarquía)* | competir | rivales + antibióticos con resistencia | ✅ (§11) |
 | Parasitismo | **Autosuficiencia** | cultivar | mejoras cultivadas con nutrientes, sin mercado | ✅ (§12) |
-| Red Micelial | **Hifa Pionera** *(ex Núcleo Aislado)* | explorar | mapa del sustrato, avance sin ramificar | spec |
+| Red Micelial | **Hifa Pionera** *(ex Núcleo Aislado)* | explorar | mapa del sustrato, avance sin ramificar | ✅ (§13) |
 
 Orden sugerido: **Inestabilidad Consciente** primero (engancha con los 3 legados de conocimiento del Banco
 que hoy no hacen nada: le dan sentido), después **Procariota**, **Antibiosis**, **Autosuficiencia** y
@@ -334,3 +334,50 @@ Calibrada con bot; los números de abajo son los finales.
 | `t3_auto_greedy` (fermenta apenas puede) | el olor llega a 100 → PARASITISMO a 267 s |
 | `t3_auto_afk` (entra y deja de clickear) | el parásito vuelve a los 120 s → PARASITISMO |
 | controles (Homeostasis, Simbiosis, AFK normal con la llave) | no entran a la Sombra; el AFK va a Parasitismo |
+
+## 13. Hifa Pionera — implementada (2026-10-18) ✅
+
+`PioneraLogic.gd`, estado `pion_*` en EvoManager, constantes `PION_*` en Balance. Concreta §7.
+
+- **Llave** `sombra_pionera` (20 PL, se revela en T3 y se desbloquea tras cerrar ESPORULACIÓN).
+- **Espejo**: con la llave, habiendo tenido **Red Micelial latente** en la run, comprar **6 mejoras de click seguidas
+  sin ninguna pasiva** (crecer sin ramificar). Una compra pasiva reinicia la cuenta; el panel de ε la muestra y
+  avisa a las 4.
+  - **Cambio respecto de §7**: "biomasa ≥ 8 con hifas < 3" no funciona, porque la biomasa crece desde las hifas.
+    El espejo pasó a ser por compras: es explícito y fácil de evitar.
+- **Mapa del sustrato**:
+  - La punta avanza sola a 2 m/s, y cada click/s suma +0.4 m/s.
+  - Avanzar gasta 0.45 de energía/s; arranca con 80 (+20 con el legado de consuelo).
+  - Cada 50 m hay una **bifurcación**: [Q] izquierda · [E] derecha · [W] sondear (−6 de energía, revela las dos ramas).
+  - Esperar en la bifurcación gasta 0.3/s, y a los 15 s la punta toma la izquierda sola.
+  - Ramas, por hash determinista con semilla por run:
+    - **nutrientes** (35 %): +30 de energía e ingreso ×2 durante 15 s;
+    - neutra (25 %);
+    - **roca** (20 %): velocidad ×0.4;
+    - **toxinas** (20 %): −20 de energía.
+  - El hash es de mezcla tipo murmur. La multiplicación simple repetía rachas: una semilla daba 5 bifurcaciones
+    seguidas sin nutrientes.
+- **Sello**: 1000 m → HIFA PIONERA (+9 PL; NG+: energía mínima / 8).
+- **Fracaso**: energía 0 → **HIFA EXTRAVIADA** (final propio, +2 PL) + **Legado Memoria de la Punta** (la próxima
+  arranca con +20 de energía).
+- **Recompensa**: **Legado Mapa del Sustrato** — el panel de ε muestra biomasa/s y nutrientes/s en todas las runs.
+  - **Cambio respecto de §7**: la spec proponía "condiciones de la próxima mutación". El flujo del sustrato es lo
+    que descubrimos invisible al calibrar Autosuficiencia.
+- **Logros**: Punta de Lanza (ANCESTRAL, sellar) · A Ciegas (FRUTO: 5 bifurcaciones seguidas sin sondear ni
+  toxinas) · **Sin Mapa** (MYTHIC: sellar sin sondear nunca).
+
+**Bot (escenarios `t3_pion_*`, `a3_pion_sin_mapa`, controles `t3_red_pion_key`, `t3_simb_pion_key`):**
+
+| Escenario | Resultado |
+|---|---|
+| `t3_pion_player` (sondea con energía ≥ 25, 3 clicks/s) | entra a 280 s · sella a 656 s (6.3 min) · energía mínima 38 |
+| `t3_pion_blind` (sin sondear, 3 clicks/s) | se extravía a los 750 m → HIFA EXTRAVIADA |
+| `a3_pion_sin_mapa` (sin sondear, 8 clicks/s) | sella a 519 s → MYTHIC (clickear fuerte acorta los tramos) |
+| `t3_pion_afk` | la punta elige sola y se extravía |
+| controles (Red Micelial con pasivo, Simbiosis) | no entran a la Sombra |
+
+## 14. Estado de la familia (2026-10-18)
+
+Las 6 Sombras están implementadas: Ayuno, Inestabilidad, Procariota, Antibiosis, Autosuficiencia e Hifa Pionera.
+Lo que sigue en el plan: Redenciones (T5) y Banco + estructura por T. Protocolo Φ v3 queda listo para implementar
+(`protocolo_phi_design.md`).

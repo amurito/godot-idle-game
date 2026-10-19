@@ -607,6 +607,13 @@ func update_mutation_center_panel(main: Node = null) -> void:
 			t = _build_fusion_catabolica_panel_text()
 		else:
 			t = UITextBuilders.build_genome_text()
+	elif EvoManager.mutation_hifa_pionera:
+		if RunManager.run_closed and RunManager.final_route in ["HIFA PIONERA", "HIFA EXTRAVIADA"]:
+			t = UITextBuilders.build_pionera_closed_text(RunManager.final_route == "HIFA EXTRAVIADA")
+		elif not RunManager.run_closed:
+			t = UITextBuilders.build_pionera_panel_text()
+		else:
+			t = UITextBuilders.build_genome_text()
 	elif EvoManager.mutation_autosuficiencia:
 		if RunManager.run_closed and RunManager.final_route == "AUTOSUFICIENCIA":
 			t = UITextBuilders.build_autosuficiencia_closed_text()
@@ -976,7 +983,7 @@ func _build_legacy_item(id: String) -> Control:
 	var text_col: VBoxContainer = v
 	v = right
 
-	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno" or id == "sombra_inestabilidad" or id == "sombra_procariota" or id == "sombra_antibiosis" or id == "sombra_autosuficiencia"
+	var is_key: bool = id in TransmutationLogic.key_ids() or id == "transmut_ayuno" or id == "sombra_inestabilidad" or id == "sombra_procariota" or id == "sombra_antibiosis" or id == "sombra_autosuficiencia" or id == "sombra_pionera"
 	if lvl > 0 and is_key:
 		# Llave de involución comprada: permanente y sin interruptor (la decisión es en la run).
 		var key_lbl: Button = Button.new()
@@ -1318,6 +1325,10 @@ func get_reactor_color() -> Color:
 				return Color(0.22, 0.4, 0.42)  # verde azulado: Penicillium en reposo
 			"AUTOSUFICIENCIA":
 				return Color(0.45, 0.36, 0.18)  # tierra: la huerta propia, en reposo
+			"HIFA PIONERA":
+				return Color(0.55, 0.78, 0.35)  # verde punta: el sustrato recorrido
+			"HIFA EXTRAVIADA":
+				return Color(0.32, 0.36, 0.26)  # verde gris: la punta seca
 		# Cualquier otro final (Simbiosis, Homeostasis, Esporulación, …): el color vivo de la ruta,
 		# apagado — antes caía en un gris genérico que no decía qué ruta se cerró.
 		return _live_reactor_color().darkened(0.45)
@@ -1365,6 +1376,11 @@ func _live_reactor_color() -> Color:
 			return Color(1.25, 0.72, 0.62)  # coral casi blanco: partitura completa
 		# coral apagado → coral vivo según el combo
 		return Color(0.55, 0.22, 0.18).lerp(Color(1.0, 0.42, 0.36), clampf(float(EvoManager.coro_combo) / Balance.CORO_COMBO_CAP, 0.0, 1.0))
+	if EvoManager.mutation_hifa_pionera:
+		# Sombra de Red Micelial (verde): verde lima brillante con energía, gris al agotarse.
+		if EvoManager.pion_burst_timer > 0.0:
+			return Color(0.9, 1.2, 0.5)
+		return Color(0.35, 0.4, 0.3).lerp(Color(0.6, 1.0, 0.35), clampf(EvoManager.pion_energy / Balance.PION_ENERGY_MAX, 0.0, 1.0))
 	if EvoManager.mutation_autosuficiencia:
 		# Sombra de Parasitismo (naranja): verde de brote mientras cultiva, tierra en reposo.
 		if AutosuficienciaLogic.cultivating():

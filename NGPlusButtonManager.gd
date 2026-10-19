@@ -81,6 +81,10 @@ var _anti_seal_btn: Button = null
 var _auto_ferment_btn: Button = null     # [W] Fermentar (Autosuficiencia)
 var _auto_seal_btn: Button = null
 var _despensa_btn: Button = null         # Legado Despensa Propia (cualquier run)
+var _pion_left_btn: Button = null        # [Q] izquierda (Hifa Pionera)
+var _pion_probe_btn: Button = null       # [W] sondear
+var _pion_right_btn: Button = null       # [E] derecha
+var _pion_seal_btn: Button = null
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -207,6 +211,13 @@ func reset_ng_plus_buttons() -> void:
 	_auto_ferment_btn = null
 	_auto_seal_btn = null
 	_despensa_btn = null
+	for b in [_pion_left_btn, _pion_probe_btn, _pion_right_btn, _pion_seal_btn]:
+		if is_instance_valid(b):
+			b.queue_free()
+	_pion_left_btn = null
+	_pion_probe_btn = null
+	_pion_right_btn = null
+	_pion_seal_btn = null
 	_proc_harvest_btn = null
 	_proc_quorum_btn = null
 	_proc_plasmid_btn = null
@@ -275,7 +286,61 @@ func update_ng_plus_buttons() -> void:
 	_update_proc_buttons()
 	_update_anti_buttons()
 	_update_auto_buttons()
+	_update_pion_buttons()
 	_update_batuta_button()
+
+# ── HIFA PIONERA: [Q] izquierda · [W] sondear · [E] derecha · sello ────────────
+func _update_pion_buttons() -> void:
+	if not PioneraLogic.is_active():
+		for b in [_pion_left_btn, _pion_probe_btn, _pion_right_btn, _pion_seal_btn]:
+			if is_instance_valid(b):
+				b.visible = false
+		return
+	var T := TranslationServer
+	if not is_instance_valid(_pion_left_btn):
+		_pion_left_btn = _make_rp_button(Color(0.6, 1.0, 0.35), 44, _on_pion_left_pressed, 0)
+	if not is_instance_valid(_pion_probe_btn):
+		_pion_probe_btn = _make_rp_button(Color(0.55, 0.85, 1.0), 44, _on_pion_probe_pressed, 1)
+	if not is_instance_valid(_pion_right_btn):
+		_pion_right_btn = _make_rp_button(Color(0.6, 1.0, 0.35), 44, _on_pion_right_pressed, 2)
+	var fork: bool = PioneraLogic.at_fork()
+	var rev: bool = EvoManager.pion_revealed
+	var lt: String = T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 0).to_upper()) if rev else "?"
+	var rt: String = T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 1).to_upper()) if rev else "?"
+	_pion_left_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_LEFT") % lt)
+	_pion_right_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_RIGHT") % rt)
+	_pion_probe_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_PROBE") % Balance.PION_PROBE_COST)
+	_pion_left_btn.disabled = not fork
+	_pion_right_btn.disabled = not fork
+	_pion_probe_btn.disabled = not PioneraLogic.can_probe()
+	for b in [_pion_left_btn, _pion_probe_btn, _pion_right_btn]:
+		b.visible = true
+	if PioneraLogic.seal_ready():
+		if not is_instance_valid(_pion_seal_btn):
+			_pion_seal_btn = _make_rp_button(Color(0.7, 1.0, 0.45), 70, _on_pion_seal_pressed, 0)
+		_pion_seal_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_SEAL") % int(Balance.PL_REWARDS.get("HIFA PIONERA", 9)))
+		_pion_seal_btn.visible = true
+	elif is_instance_valid(_pion_seal_btn):
+		_pion_seal_btn.visible = false
+
+func _on_pion_left_pressed() -> void:
+	PioneraLogic.choose(0)
+	_update_pion_buttons()
+
+func _on_pion_right_pressed() -> void:
+	PioneraLogic.choose(1)
+	_update_pion_buttons()
+
+func _on_pion_probe_pressed() -> void:
+	PioneraLogic.probe()
+	_update_pion_buttons()
+
+func _on_pion_seal_pressed() -> void:
+	if RunManager.run_closed or not PioneraLogic.seal_ready():
+		return
+	if is_instance_valid(_pion_seal_btn):
+		_pion_seal_btn.visible = false
+	RunManager.close_run("HIFA PIONERA", TranslationServer.translate("CLOSE_PION"))
 
 # ── AUTOSUFICIENCIA: [W] fermentar · sello · legado Despensa Propia ────────────
 func _update_auto_buttons() -> void:

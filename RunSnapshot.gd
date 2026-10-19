@@ -120,6 +120,7 @@ static func from_run(main: Node) -> RunSnapshot:
 	if EvoManager.mutation_procariota:          muts.append("procariota")
 	if EvoManager.mutation_antibiosis:          muts.append("antibiosis")
 	if EvoManager.mutation_autosuficiencia:     muts.append("autosuficiencia")
+	if EvoManager.mutation_hifa_pionera:        muts.append("hifa_pionera")
 	if EvoManager.mutualismo_active:            muts.append("mutualismo")
 	if EvoManager.holobionte_active:            muts.append("holobionte")
 	if EvoManager.endosimbiosis_active:         muts.append("endosimbiosis")

@@ -1828,6 +1828,30 @@ const ENTRIES: Dictionary = {
 			+ "[b]Reward[/b]: [b]Legacy Own Pantry[/b] — in every run, every 3 minutes a button cultivates one level of the cheapest upgrade with 3 biomass."
 		),
 		"unlock": {"type": "buff_owned", "id": "sombra_autosuficiencia"},
+		"see_also": ["antibiosis", "hifa_pionera"],
+	},
+	"hifa_pionera": {
+		"cat": "transmutaciones",
+		"name_es": "Hifa Pionera", "name_en": "Pioneer Hypha",
+		"body_es": (
+			"[b]Sombra[/b] (A → anti-A) de [b]Red Micelial[/b]. La llave se compra en el Banco Genético (20 PL, tras cerrar Esporulación). No hay botón: la Red se expande en todas direcciones; la Hifa Pionera es [b]una sola punta que avanza sin ramificar[/b]. Con la llave, si en la run Red Micelial estuvo latente, comprar [b]6 mejoras de click seguidas sin ninguna pasiva[/b] la abre (una compra pasiva reinicia la cuenta; el panel de ε la muestra).\n\n"
+			+ "• La punta avanza sola (2 m/s) y [b]tus clicks la empujan[/b] (+0.4 m/s por click/s). Avanzar gasta energía (0.45/s); arrancás con 80.\n"
+			+ "• Cada 50 m hay una [b]bifurcación[/b]: [b][Q] izquierda · [E] derecha · [W] sondear[/b] (−6 de energía, revela las dos ramas). Esperar también gasta energía, y a los 15 s la punta toma la izquierda sola.\n"
+			+ "• Ramas: [b]nutrientes[/b] (35 %: +30 de energía e ingreso ×2 por 15 s) · neutro (25 %) · [b]roca[/b] (20 %: velocidad ×0.4) · [b]toxinas[/b] (20 %: −20 de energía).\n\n"
+			+ "[b]Sello[/b]: 1000 m → [b]HIFA PIONERA[/b] (+9 PL + bonus por la energía mínima).\n"
+			+ "[b]Fracaso[/b]: energía 0 → [b]HIFA EXTRAVIADA[/b] (final propio, +2 PL) y el [b]Legado Memoria de la Punta[/b]: la próxima Hifa Pionera arranca con +20 de energía.\n\n"
+			+ "[b]Recompensa[/b]: [b]Legado Mapa del Sustrato[/b] — en todas las runs, el panel de ε muestra cuánta biomasa y cuántos nutrientes generás por segundo."
+		),
+		"body_en": (
+			"[b]Shadow[/b] (A → anti-A) of the [b]Mycelial Network[/b]. The key is bought in the Genetic Bank (20 LP, after closing Sporulation). There is no button: the Network expands in every direction; the Pioneer Hypha is [b]a single tip that advances without branching[/b]. With the key, if the Mycelial Network was latent during the run, buying [b]6 click upgrades in a row without any passive one[/b] opens it (a passive purchase resets the count; the ε panel shows it).\n\n"
+			+ "• The tip advances on its own (2 m/s) and [b]your clicks push it[/b] (+0.4 m/s per click/s). Advancing spends energy (0.45/s); you start with 80.\n"
+			+ "• Every 50 m there is a [b]fork[/b]: [b][Q] left · [E] right · [W] probe[/b] (−6 energy, reveals both branches). Waiting also spends energy, and after 15 s the tip takes the left on its own.\n"
+			+ "• Branches: [b]nutrients[/b] (35%: +30 energy and income ×2 for 15 s) · neutral (25%) · [b]rock[/b] (20%: speed ×0.4) · [b]toxins[/b] (20%: −20 energy).\n\n"
+			+ "[b]Seal[/b]: 1000 m → [b]PIONEER HYPHA[/b] (+9 LP + bonus from minimum energy).\n"
+			+ "[b]Failure[/b]: energy 0 → [b]LOST HYPHA[/b] (its own ending, +2 LP) and the [b]Legacy Tip Memory[/b]: the next Pioneer Hypha starts with +20 energy.\n\n"
+			+ "[b]Reward[/b]: [b]Legacy Substrate Map[/b] — in every run, the ε panel shows how much biomass and nutrients you generate per second."
+		),
+		"unlock": {"type": "buff_owned", "id": "sombra_pionera"},
 		"see_also": ["simbiosis", "procariota", "inestabilidad_consciente"],
 	},
 

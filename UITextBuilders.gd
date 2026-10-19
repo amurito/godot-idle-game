@@ -1167,6 +1167,12 @@ static func build_epsilon_sticky_text(_main: Control) -> String:
 	if InestabilidadLogic.mirror_open():
 		t += "\n" + TranslationServer.translate("STICKY_INEST_MIRROR") % [Balance.INEST_MIRROR_EPS,
 			EvoManager.inest_mirror_time, Balance.INEST_MIRROR_TIME]
+	# HIFA PIONERA: progreso del espejo (mejoras de click seguidas sin pasiva).
+	if PioneraLogic.mirror_open() and EvoManager.pion_streak > 0:
+		t += "\n" + TranslationServer.translate("STICKY_PION_MIRROR") % [EvoManager.pion_streak, Balance.PION_MIRROR_BUYS]
+	# LEGADO MAPA DEL SUSTRATO: el flujo de la biósfera.
+	if LegacyManager.get_buff_value("legado_mapa_sustrato"):
+		t += "\n" + PioneraLogic.substrate_line()
 	# AUTOSUFICIENCIA: progreso del espejo (activo, con plata, sin comprar).
 	if AutosuficienciaLogic.mirror_open() and EvoManager.auto_mirror_time > 0.0:
 		t += "\n" + TranslationServer.translate("STICKY_AUTO_MIRROR") % [EvoManager.auto_mirror_time, Balance.AUTO_MIRROR_TIME]
@@ -1337,6 +1343,41 @@ static func build_fusion_catabolica_panel_text() -> String:
 		t += "\n[color=#aaaaaa]" + TranslationServer.translate("FUSION_PANEL_BURST_TIP") + "[/color]"
 	return t
 
+
+# ─── HIFA PIONERA (Sombra de Red Micelial) ───────────────────────────────────
+
+static func build_pionera_panel_text() -> String:
+	var T := TranslationServer
+	var t := "[color=#9be05a]" + T.translate("PION_PANEL_TITLE") + "[/color]\n"
+	t += T.translate("PION_PANEL_DIST") % [EvoManager.pion_dist, Balance.PION_GOAL] + "\n"
+	t += "[color=#9be05a]%s[/color]\n" % _bar(EvoManager.pion_dist / Balance.PION_GOAL, 20)
+	var ecol: String = "#ff5c6a" if EvoManager.pion_energy < 20.0 else "#cccccc"
+	t += "[color=%s]" % ecol + T.translate("PION_PANEL_ENERGY") % [EvoManager.pion_energy, Balance.PION_ENERGY_MAX] + "  " + _bar(EvoManager.pion_energy / Balance.PION_ENERGY_MAX, 10) + "[/color]\n"
+	t += T.translate("PION_PANEL_SPEED") % PioneraLogic.speed() + "\n"
+	if PioneraLogic.at_fork():
+		t += "\n[color=yellow]" + T.translate("PION_PANEL_FORK") % (Balance.PION_FORK_AUTO - EvoManager.pion_fork_wait) + "[/color]\n"
+		if EvoManager.pion_revealed:
+			t += T.translate("PION_PANEL_REVEALED") % [T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 0).to_upper()),
+				T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 1).to_upper())] + "\n"
+		else:
+			t += "[color=#aaaaaa]" + T.translate("PION_PANEL_UNKNOWN") % Balance.PION_PROBE_COST + "[/color]\n"
+	else:
+		t += "\n" + T.translate("PION_PANEL_SEG") % [T.translate("PION_TILE_" + EvoManager.pion_seg_type.to_upper()), maxf(EvoManager.pion_seg_left, 0.0)] + "\n"
+	if EvoManager.pion_burst_timer > 0.0:
+		t += "[color=#9be05a]" + T.translate("PION_PANEL_BURST") % [Balance.PION_NUTRI_BURST, EvoManager.pion_burst_timer] + "[/color]\n"
+	if PioneraLogic.seal_ready():
+		t += "\n[color=#9be05a]" + T.translate("PION_PANEL_SEAL_READY") + "[/color]"
+	else:
+		t += "\n[color=#aaaaaa]" + T.translate("PION_PANEL_TIP") + "[/color]"
+	return t
+
+static func build_pionera_closed_text(lost: bool) -> String:
+	var k: String = "PION_LOST" if lost else "PION_CLOSED"
+	var col: String = "#8a9a70" if lost else "#9be05a"
+	var t := "[color=%s]" % col + TranslationServer.translate(k + "_TITLE") + "[/color]\n\n"
+	t += "[i]" + TranslationServer.translate(k + "_LORE") + "[/i]\n\n"
+	t += "[color=%s]" % col + TranslationServer.translate(k + "_REWARD") + "[/color]"
+	return t
 
 # ─── AUTOSUFICIENCIA (Sombra de Parasitismo) ─────────────────────────────────
 

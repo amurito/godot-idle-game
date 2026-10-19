@@ -630,6 +630,33 @@ const LEGACY_DEFS: Dictionary = {
 		"unlock": {"type": "route_closed", "route": "INESTABILIDAD CONSCIENTE"},
 		"effect": {"type": "lema_lyapunov_active", "value": 1.0},
 	},
+	# SOMBRA de Red Micelial (A → anti-A). Llave sin toggle: entra por espejo (comprar click sin ramificar).
+	"sombra_pionera": {
+		"name": "Sombra: Hifa Pionera",
+		"flavor": "La Red se expande en todas direcciones. La Hifa Pionera es una sola punta que avanza sin ramificar.",
+		"cat": "transmutaciones", "cost": 20, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "transcendence_count", "count": 3},
+		"unlock": {"type": "route_closed_any", "routes": ["ESPORULACION", "ESPORULACIÓN", "ESPORULACION TOTAL"]},
+		"effect": {"type": "sombra_pionera_active", "value": 1.0},
+	},
+	# Recompensa de SELLAR Hifa Pionera: visibilidad (el flujo del sustrato).
+	"legado_mapa_sustrato": {
+		"name": "Legado: Mapa del Sustrato",
+		"flavor": "La punta conoció el sustrato palmo a palmo: el panel de ε muestra cuánta biomasa y cuántos nutrientes generás por segundo, en todas las runs.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "HIFA PIONERA"},
+		"unlock": {"type": "route_closed", "route": "HIFA PIONERA"},
+		"effect": {"type": "mapa_sustrato_active", "value": 1.0},
+	},
+	# Consuelo de HIFA EXTRAVIADA (fracaso de Hifa Pionera).
+	"legado_memoria_punta": {
+		"name": "Legado: Memoria de la Punta",
+		"flavor": "La punta que se perdió dejó un rastro: la próxima Hifa Pionera arranca con +20 de energía.",
+		"cat": "transmutaciones", "cost": 0, "cost_growth": 1.0, "max_level": 1,
+		"reveal": {"type": "route_closed", "route": "HIFA EXTRAVIADA"},
+		"unlock": {"type": "route_closed", "route": "HIFA EXTRAVIADA"},
+		"effect": {"type": "memoria_punta_active", "value": 1.0},
+	},
 	# SOMBRA de Parasitismo (A → anti-A). Llave sin toggle: entra por espejo (activo, con plata, sin comprar).
 	"sombra_autosuficiencia": {
 		"name": "Sombra: Autosuficiencia",

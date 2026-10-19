@@ -589,6 +589,9 @@ func on_run_closed(route: String) -> void:
 	# Demostración Elegante: Q.E.D. integrando lo mínimo (de a un lema, rápido: la deriva no se acumula).
 	if route == "INESTABILIDAD CONSCIENTE" and EvoManager.inest_integrations <= Balance.ACH_INEST_ELEGANT_MAX:
 		unlock("demostracion_elegante")
+	# Sin Mapa: mil metros eligiendo a ciegas (el sustrato se lee por los clicks, no por la sonda).
+	if route == "HIFA PIONERA" and EvoManager.pion_probes == 0:
+		unlock("sin_mapa")
 	# Autarquía Total: la biomasa del cultivo salió toda del propio hongo (sin fermentar plata).
 	if route == "AUTOSUFICIENCIA" and EvoManager.auto_ferments == 0:
 		unlock("autarquia_total")

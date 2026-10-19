@@ -244,6 +244,17 @@ func _transmutation_metrics() -> Dictionary:
 			"cd_level": EvoManager.get("caos_cd_level"),
 			"money_since": EconomyManager.total_money_generated - float(EvoManager.get("caos_money_mark") if EvoManager.get("caos_money_mark") != null else 0.0),
 		},
+		"pion": {
+			"active": EvoManager.get("mutation_hifa_pionera"),
+			"red_seen": EvoManager.get("pion_red_seen"),
+			"streak": EvoManager.get("pion_streak"),
+			"dist": EvoManager.get("pion_dist"),
+			"energy": EvoManager.get("pion_energy"),
+			"min_energy": EvoManager.get("pion_min_energy"),
+			"forks": EvoManager.get("pion_forks"),
+			"probes": EvoManager.get("pion_probes"),
+			"toxins": EvoManager.get("pion_toxins"),
+		},
 		"auto": {
 			"active": EvoManager.get("mutation_autosuficiencia"),
 			"paras_seen": EvoManager.get("auto_paras_seen"),

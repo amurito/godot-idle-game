@@ -21,7 +21,7 @@ const CLICK_ORDER := [
 	"sintesis_vital", "aura_dorada", "convergencia_ciclica", "semilla_cosmica",
 	"metabolismo_glitch", "entropia_domesticada", "parasitism_corrosion", "resonancia_simbionte",
 	"simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio", "mitocondria",
-	"inest_teoremas", "proc_colonia", "anti_rivales",
+	"inest_teoremas", "proc_colonia", "anti_rivales", "pion_nutri",
 ]
 
 const PASSIVE_ORDER := [
@@ -33,7 +33,7 @@ const PASSIVE_ORDER := [
 	"metabolismo_glitch", "entropia_domesticada", "convergencia_ciclica", "apoptosis_heredada",
 	"plasticidad_terminal", "sintesis_vital", "control_omega", "colonization",
 	"glitch_persistente", "simbiosis_agresiva", "eco_primordial", "resonancia_cognitiva", "vacio",
-	"micorriza", "mitocondria", "inest_teoremas", "proc_colonia", "anti_rivales",
+	"micorriza", "mitocondria", "inest_teoremas", "proc_colonia", "anti_rivales", "pion_nutri",
 ]
 
 ## Fuente de cada fila: "route" (mutación/rama de la run), "legacy" (banco de legado),
@@ -140,6 +140,9 @@ static func _build() -> Dictionary:
 	# INESTABILIDAD CONSCIENTE (Sombra de Homeostasis): cada lema demostrado es un teorema (+10 %).
 	var inest_t := func() -> float: return InestabilidadLogic.theorem_mult()
 	d["inest_teoremas"] = _row("Inestabilidad: teoremas", "route", inest_t, inest_t)
+	# HIFA PIONERA (Sombra de Red Micelial): un bolsillo de nutrientes da una ráfaga de ingreso.
+	var pion_b := func() -> float: return PioneraLogic.burst_mult()
+	d["pion_nutri"] = _row("Hifa Pionera: nutrientes", "route", pion_b, pion_b)
 	# ANTIBIOSIS (Sombra de Simbiosis): cada rival vivo roba una parte del ingreso.
 	var anti_s := func() -> float: return AntibiosisLogic.steal_mult()
 	d["anti_rivales"] = _row("Antibiosis: rivales", "route", anti_s, anti_s)

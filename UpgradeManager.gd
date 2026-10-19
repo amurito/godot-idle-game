@@ -293,6 +293,7 @@ func purchase_upgrade(id: String) -> void:
 			MicelioOmniscienteLogic.on_purchase()
 			HolobionteLogic.on_purchase()
 			AutosuficienciaLogic.on_purchase()
+			PioneraLogic.on_purchase(id)
 			upgrade_bought.emit(id)
 
 func apply_bought_effects(id: String) -> void:

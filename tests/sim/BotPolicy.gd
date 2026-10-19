@@ -99,6 +99,9 @@ extends RefCounted
 ##       enter: presenta socios en vez de sellar el pacto · seal: sella el ecosistema
 ##       prep: en Mutualismo compra sólo pasivo y presenta socios recién con pasivo ≥ enter_share
 ##             (default 0.36) → la Raíz no se muere al llegar
+##   pionera: {push, probe, probe_min, cps, afk, seal}  HIFA PIONERA (Sombra de Red Micelial):
+##       push: con Red vista compra sólo click (abre el espejo) · probe: "never" | "always" | "smart"
+##       (sondea si la energía ≥ probe_min, default 25) · cps: clicks/s dentro de la Sombra · afk: no elige
 ##   autosuficiencia: {push, ferment, afk, seal}  AUTOSUFICIENCIA (Sombra de Parasitismo):
 ##       push: con Parasitismo visto deja de comprar (sigue clickeando) para abrir el espejo
 ##       ferment: fermenta si los nutrientes no alcanzan para el próximo cultivo · afk: deja de clickear en la Sombra
@@ -208,6 +211,9 @@ func _current_cps() -> float:
 	var until: float = float(cfg.get("click_until", -1.0))
 	if until >= 0.0 and t >= until:
 		return 0.0
+	var pcfg_c: Dictionary = cfg.get("pionera", {})
+	if not pcfg_c.is_empty() and EvoManager.mutation_hifa_pionera:
+		return 0.0 if pcfg_c.get("afk", false) else float(pcfg_c.get("cps", 3.0))
 	var ucfg_c: Dictionary = cfg.get("autosuficiencia", {})
 	if ucfg_c.get("afk", false) and EvoManager.mutation_autosuficiencia:
 		return 0.0
@@ -331,6 +337,10 @@ func _buy(d: RefCounted) -> void:
 		ids = cfg.get("autosuficiencia", {}).get("cult_ids", ids)
 	if inest_struct:
 		ids = STRUCT_IDS
+	# Hifa Pionera (push): con Red vista compra sólo click (crecer sin ramificar).
+	var pcfg_b: Dictionary = cfg.get("pionera", {})
+	if pcfg_b.get("push", false) and EvoManager.pion_red_seen and not EvoManager.mutation_hifa_pionera:
+		ids = ["click", "click_mult"]
 	# Antibiosis (push): con Simbiosis vista, sólo click para que domine (abre el espejo).
 	var acfg_b: Dictionary = cfg.get("antibiosis", {})
 	if acfg_b.get("push", false) and EvoManager.anti_simb_seen and not EvoManager.mutation_antibiosis:
@@ -542,6 +552,9 @@ func _route_keys(_d: RefCounted) -> void:
 	var acfg: Dictionary = cfg.get("antibiosis", {})
 	if not acfg.is_empty() and AntibiosisLogic.is_active() and not acfg.get("afk", false):
 		_antibiosis_keys(acfg)
+	var hcfg_p: Dictionary = cfg.get("pionera", {})
+	if not hcfg_p.is_empty() and PioneraLogic.is_active() and not hcfg_p.get("afk", false):
+		_pionera_keys(hcfg_p)
 	var ucfg: Dictionary = cfg.get("autosuficiencia", {})
 	if not ucfg.is_empty() and AutosuficienciaLogic.is_active():
 		if ucfg.get("ferment", false) and (ucfg.get("ferment_always", false) or (not AutosuficienciaLogic.cultivating() \
@@ -720,6 +733,25 @@ func _dark(route: String) -> void:
 						ng._on_remision_up_pressed()
 					elif EvoManager.remision_omega > c + 0.01:
 						ng._on_remision_down_pressed()
+
+
+func _pionera_keys(p: Dictionary) -> void:
+	if p.get("seal", false) and PioneraLogic.seal_ready():
+		UIManager._ng_buttons._on_pion_seal_pressed()
+		_log("seal:pionera")
+		return
+	if not PioneraLogic.at_fork():
+		return
+	var mode: String = str(p.get("probe", "smart"))
+	if PioneraLogic.can_probe() and (mode == "always" or (mode == "smart" and EvoManager.pion_energy >= float(p.get("probe_min", 25.0)))):
+		PioneraLogic.probe()
+		_after_key("key:W pion_probe e=%.0f" % EvoManager.pion_energy)
+	var side: int = 0
+	if EvoManager.pion_revealed:
+		var f: int = EvoManager.pion_forks
+		side = 0 if PioneraLogic.TILE_RANK[PioneraLogic.tile(f, 0)] >= PioneraLogic.TILE_RANK[PioneraLogic.tile(f, 1)] else 1
+	PioneraLogic.choose(side)
+	_after_key("key:%s pion %s e=%.0f d=%.0f" % ["Q" if side == 0 else "E", EvoManager.pion_seg_type, EvoManager.pion_energy, EvoManager.pion_dist])
 
 
 func _antibiosis_keys(a: Dictionary) -> void:

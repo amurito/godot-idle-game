@@ -194,6 +194,26 @@ var _despensa_last_t: float = 0.0        # legado Despensa Propia: último uso (
 var _auto_last_buy_t: float = 0.0        # última compra con plata (espejo)
 var _auto_mirror_countdown_last: int = -1
 var _auto_idle_warned: int = -1
+
+# === HIFA PIONERA (Sombra de Red Micelial — PioneraLogic) ===
+var mutation_hifa_pionera := false
+var pion_red_seen: bool = false          # Red Micelial latente esta run (condición del espejo)
+var pion_streak: int = 0                 # mejoras de click seguidas sin pasiva (espejo)
+var pion_seed: int = 0                   # semilla del mapa (cambia de run en run)
+var pion_dist: float = 0.0               # m recorridos (sello a PION_GOAL)
+var pion_energy: float = 0.0
+var pion_min_energy: float = 0.0
+var pion_seg_type: String = ""           # rama actual: nutri | neutro | roca | toxina
+var pion_seg_left: float = 0.0
+var pion_at_fork: bool = false
+var pion_fork_wait: float = 0.0
+var pion_revealed: bool = false          # la bifurcación actual fue sondeada
+var pion_forks: int = 0
+var pion_probes: int = 0                 # MYTHIC Sin Mapa: 0
+var pion_toxins: int = 0
+var pion_blind_streak: int = 0           # FRUTO A Ciegas
+var pion_burst_timer: float = 0.0
+var pion_cps: float = 0.0
 var _predictor_warned_idx: int = -1      # legado Predictor Estructural: último umbral avisado
 
 # === AUTOFAGIA NECRÓTICA (sub-ruta de Met. Oscuro) ===
@@ -404,7 +424,7 @@ func update_genome():
 	if GenomeEvaluator.handle_terminal_mutations():
 		return
 	# SOMBRAS (Inestabilidad, Procariota): la run ya eligió; ninguna otra mutación base.
-	if mutation_inestabilidad or mutation_procariota or mutation_antibiosis or mutation_autosuficiencia:
+	if mutation_inestabilidad or mutation_procariota or mutation_antibiosis or mutation_autosuficiencia or mutation_hifa_pionera:
 		for g in ["hiperasimilacion", "parasitismo", "simbiosis", "homeostasis", "red_micelial", "esporulacion"]:
 			_set_genome_state(g, "bloqueado")
 		return
@@ -419,6 +439,7 @@ func update_genome():
 	InestabilidadLogic.update_mirror(ctx)  # Sombra de Homeostasis (espejo: sostener ε alto)
 	AntibiosisLogic.update_mirror(ctx)  # Sombra de Simbiosis (espejo: colonia grande y agresiva)
 	AutosuficienciaLogic.update_mirror(ctx)  # Sombra de Parasitismo (espejo: activo, con plata, sin comprar)
+	PioneraLogic.update_mirror(ctx)  # Sombra de Red Micelial (espejo: comprar click sin ramificar)
 	GenomeEvaluator.update_allostasis(ctx)
 	GenomeEvaluator.update_homeorhesis(ctx)
 	GenomeEvaluator.update_red_micelial(ctx)
@@ -492,6 +513,7 @@ func tick_route_processes(dt: float) -> void:
 	ProcariotaLogic.process(dt)  # se auto-gatea (Sombra de Endosimbiosis)
 	AntibiosisLogic.process(dt)  # se auto-gatea (Sombra de Simbiosis)
 	AutosuficienciaLogic.process(dt)  # se auto-gatea (Sombra de Parasitismo)
+	PioneraLogic.process(dt)  # se auto-gatea (Sombra de Red Micelial)
 	InestabilidadLogic.tick_predictor()  # legado Predictor Estructural (cualquier run)
 	TransmutationLogic.tick(dt)  # agenda del botón de reversión (sólo si hay una A revertible)
 

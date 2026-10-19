@@ -698,6 +698,26 @@ const DEFS := {
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "demostracion_elegante",
 	},
+	# ── SOMBRA · HIFA PIONERA ──
+	"ruta_hifa_pionera": {
+		"name": "Punta de Lanza",
+		"desc": "Sellar Hifa Pionera: una sola punta recorrió mil metros de sustrato.",
+		"tier": Tier.ANCESTRAL, "secret": true, "toast": "legendary",
+		"trigger": "event", "event_name": "run_closed",
+		"conditions": [{"key": "route", "op": "==", "value": "HIFA PIONERA"}],
+	},
+	"a_ciegas": {
+		"name": "A Ciegas",
+		"desc": "Cruzar 5 bifurcaciones seguidas sin sondear y sin pisar toxinas.",
+		"tier": Tier.FRUTO, "secret": true,
+		"trigger": "custom", "evaluator": "a_ciegas",
+	},
+	"sin_mapa": {
+		"name": "Sin Mapa",
+		"desc": "Sellar Hifa Pionera sin sondear nunca una bifurcación.",
+		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
+		"trigger": "custom", "evaluator": "sin_mapa",
+	},
 	# ── SOMBRA · AUTOSUFICIENCIA ──
 	"ruta_autosuficiencia": {
 		"name": "Autótrofo",

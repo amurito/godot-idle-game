@@ -107,7 +107,7 @@ static func any_active() -> bool:
 		or EvoManager.mutation_coro_simbiotico or EvoManager.mutation_micelio_omnisciente \
 		or EvoManager.mutation_huesped_soberano or EvoManager.mutation_ayuno_primordial \
 		or EvoManager.mutation_inestabilidad or EvoManager.mutation_procariota or EvoManager.mutation_antibiosis \
-		or EvoManager.mutation_autosuficiencia
+		or EvoManager.mutation_autosuficiencia or EvoManager.mutation_hifa_pionera
 
 ## Ids de las llaves (el Banco no les muestra toggle: la decisión es en la run).
 static func key_ids() -> Array:

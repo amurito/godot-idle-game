@@ -410,6 +410,7 @@ func on_reactor_click(epsilon_delta: float = 0.015):
 	CoroSimbioticoLogic.on_click()  # golpe del metrónomo (Coro Simbiótico / legado Compás Interno)
 	HolobionteLogic.on_click()  # Bacteria: media de clicks/s
 	InestabilidadLogic.on_click()  # Lema del impulso: media de clicks/s
+	PioneraLogic.on_click()  # Hifa Pionera: los clicks empujan la punta
 	if power >= 10000.0:
 		AchievementManager.push_event("big_click", {"power": power})
 
@@ -1034,6 +1035,15 @@ func _input(event):
 					get_viewport().set_input_as_handled()
 				elif kc == KEY_R and EvoManager.mutualismo_offer != "":
 					MutualismoLogic.reject()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+			elif PioneraLogic.is_active():
+				if kc == KEY_W and PioneraLogic.can_probe():
+					PioneraLogic.probe()
+					UIManager.update_ng_plus_buttons()
+					get_viewport().set_input_as_handled()
+				elif (kc == KEY_Q or kc == KEY_E) and PioneraLogic.can_choose():
+					PioneraLogic.choose(0 if kc == KEY_Q else 1)
 					UIManager.update_ng_plus_buttons()
 					get_viewport().set_input_as_handled()
 			elif AutosuficienciaLogic.is_active():
