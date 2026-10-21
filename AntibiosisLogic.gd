@@ -75,18 +75,24 @@ static func alive() -> int:
 	return EvoManager.anti_rivals.size()
 
 static func spawn_interval() -> float:
-	return maxf(Balance.ANTI_SPAWN - Balance.ANTI_SPAWN_STEP * EvoManager.anti_kills, Balance.ANTI_SPAWN_MIN)
+	# Expansión Agresiva (mejora de ruta): la colonia sale a buscar rivales (−3 s por nivel, con piso).
+	var exp: float = 3.0 * RouteUpgrades.level("anti_expansion")
+	return maxf(Balance.ANTI_SPAWN - Balance.ANTI_SPAWN_STEP * EvoManager.anti_kills - exp, Balance.ANTI_SPAWN_MIN - exp * 0.5)
 
 ## Resistencia efectiva de un rival a un antibiótico: la innata + la que generaste usándolo.
 static func resistance(rival: Dictionary, ab: String) -> float:
 	var innate: float = Balance.ANTI_INNATE_RES if str(rival.get("innate", "")) == ab else 0.0
 	return minf(innate + float(EvoManager.anti_resist.get(ab, 0.0)), Balance.ANTI_RES_CAP)
 
+## Resistencia que suma cada uso (mejora de ruta Rotación Química: −0.04/nivel).
+static func res_per_use() -> float:
+	return maxf(Balance.ANTI_RES_PER_USE - 0.04 * RouteUpgrades.level("anti_rotacion"), 0.05)
+
 ## Ingreso × ANTI_STEAL^vivos: cada rival vivo te roba una parte.
 static func steal_mult() -> float:
 	if not EvoManager.mutation_antibiosis:
 		return 1.0
-	return pow(Balance.ANTI_STEAL, alive())
+	return pow(minf(Balance.ANTI_STEAL + 0.05 * RouteUpgrades.level("anti_biofilm"), 0.95), alive())
 
 
 # ── Tick ─────────────────────────────────────────────────────────────────────
@@ -129,7 +135,7 @@ static func can_shoot(ab: String = "") -> bool:
 static func damage(ab: String) -> float:
 	if alive() == 0:
 		return 0.0
-	return Balance.ANTI_DMG * (1.0 - resistance(EvoManager.anti_rivals[0], ab))
+	return Balance.ANTI_DMG * (1.0 + 0.2 * RouteUpgrades.level("anti_sintesis")) * (1.0 - resistance(EvoManager.anti_rivals[0], ab))
 
 static func shoot(ab: String) -> void:
 	if not can_shoot(ab) or not (ab in ABS):
@@ -138,7 +144,7 @@ static func shoot(ab: String) -> void:
 	var dmg: float = damage(ab)
 	var rival: Dictionary = EvoManager.anti_rivals[0]
 	rival["hp"] = float(rival["hp"]) - dmg
-	EvoManager.anti_resist[ab] = minf(float(EvoManager.anti_resist.get(ab, 0.0)) + Balance.ANTI_RES_PER_USE, Balance.ANTI_RES_CAP)
+	EvoManager.anti_resist[ab] = minf(float(EvoManager.anti_resist.get(ab, 0.0)) + res_per_use(), Balance.ANTI_RES_CAP)
 	EvoManager.anti_peak_resist = maxf(EvoManager.anti_peak_resist, float(EvoManager.anti_resist[ab]))
 	EvoManager.anti_shot_cd = Balance.ANTI_SHOT_CD
 	EvoManager.anti_shots += 1

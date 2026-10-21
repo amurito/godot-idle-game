@@ -94,7 +94,18 @@ static func cultivating() -> bool:
 
 ## Nutrientes que cuesta el próximo cultivo (suben con cada nivel cultivado).
 static func cult_cost() -> float:
-	return Balance.AUTO_CULT_NUT * pow(Balance.AUTO_CULT_NUT_GROWTH, EvoManager.auto_levels)
+	return Balance.AUTO_CULT_NUT * pow(Balance.AUTO_CULT_NUT_GROWTH, EvoManager.auto_levels) * (1.0 - 0.1 * RouteUpgrades.level("auto_abono"))
+
+## Lo que tarda un cultivo (mejora de ruta Riego: −2 s/nivel).
+static func cult_time() -> float:
+	return maxf(Balance.AUTO_CULT_TIME - 1.5 * RouteUpgrades.level("auto_riego"), 4.0)
+
+## Nutrientes y olor de fermentar (mejora de ruta Compostera: +25 % y −3 de olor por nivel).
+static func ferment_nut() -> float:
+	return Balance.AUTO_FERMENT_NUT * (1.0 + 0.25 * RouteUpgrades.level("auto_compostera"))
+
+static func ferment_scent() -> float:
+	return maxf(Balance.AUTO_FERMENT_SCENT - 3.0 * RouteUpgrades.level("auto_compostera"), 3.0)
 
 static func can_cultivate(id: String) -> bool:
 	if not is_active() or cultivating() or BiosphereEngine.nutrientes < cult_cost():
@@ -119,8 +130,8 @@ static func cultivate(id: String) -> void:
 		return
 	BiosphereEngine.nutrientes -= cult_cost()
 	EvoManager.auto_cult_id = id
-	EvoManager.auto_cult_timer = Balance.AUTO_CULT_TIME
-	UIManager.show_toast(TranslationServer.translate("TOAST_AUTO_CULT") % [UpgradeManager.get_def(id).label, Balance.AUTO_CULT_TIME])
+	EvoManager.auto_cult_timer = cult_time()
+	UIManager.show_toast(TranslationServer.translate("TOAST_AUTO_CULT") % [UpgradeManager.get_def(id).label, cult_time()])
 
 static func _harvest() -> void:
 	var id: String = EvoManager.auto_cult_id
@@ -151,17 +162,17 @@ static func ferment() -> void:
 	if not can_ferment():
 		return
 	EconomyManager.money -= ferment_cost()
-	BiosphereEngine.nutrientes += Balance.AUTO_FERMENT_NUT
+	BiosphereEngine.nutrientes += ferment_nut()
 	EvoManager.auto_ferment_cd = Balance.AUTO_FERMENT_CD
 	EvoManager.auto_ferments += 1
-	EvoManager.auto_scent += Balance.AUTO_FERMENT_SCENT
+	EvoManager.auto_scent += ferment_scent()
 	if EvoManager.auto_scent >= Balance.AUTO_SCENT_FAIL:
 		RunManager.close_run("PARASITISMO", TranslationServer.translate("CLOSE_AUTO_SCENT"))
 		return
 	if EvoManager.auto_scent >= Balance.AUTO_SCENT_FAIL * 0.6:
 		UIManager.show_toast(TranslationServer.translate("TOAST_AUTO_SCENT_WARN") % [EvoManager.auto_scent, Balance.AUTO_SCENT_FAIL])
 		return
-	UIManager.show_toast(TranslationServer.translate("TOAST_AUTO_FERMENT") % Balance.AUTO_FERMENT_NUT)
+	UIManager.show_toast(TranslationServer.translate("TOAST_AUTO_FERMENT") % ferment_nut())
 
 
 # ── Tick ─────────────────────────────────────────────────────────────────────

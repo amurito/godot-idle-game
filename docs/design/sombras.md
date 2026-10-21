@@ -381,3 +381,47 @@ Calibrada con bot; los números de abajo son los finales.
 Las 6 Sombras están implementadas: Ayuno, Inestabilidad, Procariota, Antibiosis, Autosuficiencia e Hifa Pionera.
 Lo que sigue en el plan: Redenciones (T5) y Banco + estructura por T. Protocolo Φ v3 queda listo para implementar
 (`protocolo_phi_design.md`).
+
+## 15. Mejoras de ruta — la economía como combustible (2026-10-20) ✅
+
+**Feedback del autor**: en las Sombras la economía pasaba a segundo plano rápido y sólo importaba la mecánica.
+"La economía debería poder acceder a mejoras únicas que valgan la pena tener una economía fuerte; si no, el idle
+como ideal trascendental pierde sentido."
+
+**Diagnóstico**:
+1. Las mecánicas (energía, colonia, lemas, rivales, cultivos) no consumían plata.
+2. Lo que sí costaba plata se cobraba en *segundos de ingreso* (integrar, disparar, fermentar). Ese costo se ajusta
+   solo al ingreso, así que una economía fuerte no daba ninguna ventaja.
+
+**Sistema** (`RouteUpgrades.gd`, niveles en `EvoManager.route_upg`, por run):
+- Cada Sombra tiene 3 o 4 mejoras únicas a **precio fijo en $** (base $2–3K, ×2.2 por nivel, 2 a 4 niveles).
+- Aparecen como botones ◆ en el panel derecho mientras la Sombra está activa.
+- Compiten con las mejoras normales.
+- Quien llega con mejor economía compra más y sella antes, pero la mecánica sigue siendo necesaria.
+
+| Sombra | Mejoras |
+|---|---|
+| Inestabilidad | Observador Discreto (observar −0.04) · Cálculo Integral (integrar −0.10 más) · Demostración Asistida (lemas +25 %) |
+| Procariota | Medio de Cultivo (crecimiento +20 %) · Pared Celular (toxinas −20 %) · Señal Amplificada (quorum +0.75·N/K) |
+| Antibiosis | Síntesis (daño +20 %) · Rotación Química (resistencia por uso −0.04) · Biofilm (robo −5 %) · Expansión Agresiva (rivales −3 s) |
+| Autosuficiencia | Compostera (fermentar +25 %, −3 de olor) · Riego (cultivo −1.5 s, piso 4 s) · Abono (cultivo −10 %) |
+| Hifa Pionera | Reservas Lipídicas (+20 de energía máx., +15 ya) · Crecimiento Apical (+0.5 m/s) · Quimiotropismo (sondear −2) · Punta Endurecida (roca y toxinas) |
+
+**Resultado con bot** (duración de la ruta en s; mismo jugador sin mejoras / con mejoras / economía de T6 con legados):
+
+| Sombra | Sin mejoras | Con mejoras | Economía fuerte |
+|---|---|---|---|
+| Inestabilidad | 367 | 255 (−30 %) | 160 |
+| Procariota | 491 | 328 (−33 %) | 283 |
+| Antibiosis | 315 | 252 (−20 %) | 200 |
+| Autosuficiencia | 237 | 163 (−31 %) | 68 (antes del piso de 4 s en Riego) |
+| Hifa Pionera | 376 | 313 (−17 %) | 212 |
+
+**Ajustes que salieron de la calibración**:
+- **Antibiosis**: las mejoras no aceleraban, porque el sello depende de que lleguen 15 rivales con calendario fijo.
+  Se agregó **Expansión Agresiva**: los rivales llegan antes, con más riesgo.
+- **Hifa Pionera**: en T6, con Red latente al toque y la plata inicial, el espejo se abría a los 2 s. Ahora cuenta
+  desde los 120 s de run.
+- **MYTHIC**: las mejoras regalaban dos (Dosis Mínima quedaba en 16 % de resistencia; Demostración Elegante, en 2
+  integraciones). Ahora excluyen la mejora que los abarata: Rotación Química en uno, Observador Discreto y Cálculo
+  Integral en el otro. Un MYTHIC mide maestría, no plata.

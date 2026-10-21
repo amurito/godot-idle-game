@@ -85,6 +85,7 @@ var _pion_left_btn: Button = null        # [Q] izquierda (Hifa Pionera)
 var _pion_probe_btn: Button = null       # [W] sondear
 var _pion_right_btn: Button = null       # [E] derecha
 var _pion_seal_btn: Button = null
+var _route_upg_btns: Dictionary = {}     # id → botón de mejora de ruta (RouteUpgrades)
 var _huesped_seal_btn: Button = null           # Legado Batuta: ε → 0 una vez por run (cualquier run)
 var _transmut_btn: Button = null         # Botón flotante parpadeante de reversión [T] (TransmutationLogic)
 var _transmut_tween: Tween = null
@@ -214,6 +215,10 @@ func reset_ng_plus_buttons() -> void:
 	for b in [_pion_left_btn, _pion_probe_btn, _pion_right_btn, _pion_seal_btn]:
 		if is_instance_valid(b):
 			b.queue_free()
+	for b in _route_upg_btns.values():
+		if is_instance_valid(b):
+			b.queue_free()
+	_route_upg_btns = {}
 	_pion_left_btn = null
 	_pion_probe_btn = null
 	_pion_right_btn = null
@@ -287,7 +292,39 @@ func update_ng_plus_buttons() -> void:
 	_update_anti_buttons()
 	_update_auto_buttons()
 	_update_pion_buttons()
+	_update_route_upg_buttons()
 	_update_batuta_button()
+
+# ── MEJORAS DE RUTA (cualquier Sombra): la economía como combustible de la mecánica ──
+func _update_route_upg_buttons() -> void:
+	var defs: Array = RouteUpgrades.active_defs()
+	var ids: Array = []
+	for d in defs:
+		ids.append(d.id)
+	for id in _route_upg_btns.keys():
+		if not (id in ids) and is_instance_valid(_route_upg_btns[id]):
+			_route_upg_btns[id].visible = false
+	var T := TranslationServer
+	var idx := 3
+	for d in defs:
+		var id: String = d.id
+		var b: Button = _route_upg_btns.get(id)
+		if not is_instance_valid(b):
+			b = _make_rp_button(Color(0.95, 0.85, 0.55), 40, _on_route_upg_pressed.bind(id), idx)
+			b.add_theme_font_size_override("font_size", AccessibilityManager.fs(13))
+			_route_upg_btns[id] = b
+		var lv: int = RouteUpgrades.level(id)
+		var price: String = T.translate("RUPG_MAXED") if RouteUpgrades.maxed(id) else "$" + UITextBuilders.format_compact(RouteUpgrades.cost(id))
+		b.text = EmojiToRichText.strip(T.translate("BTN_ROUTE_UPG") % [T.translate("RUPG_" + id.to_upper() + "_NAME"), lv, int(d.max),
+			T.translate("RUPG_" + id.to_upper() + "_DESC"), price])
+		b.tooltip_text = T.translate("RUPG_" + id.to_upper() + "_DESC")
+		b.disabled = not RouteUpgrades.can_buy(id)
+		b.visible = true
+		idx += 1
+
+func _on_route_upg_pressed(id: String) -> void:
+	RouteUpgrades.buy(id)
+	_update_route_upg_buttons()
 
 # ── HIFA PIONERA: [Q] izquierda · [W] sondear · [E] derecha · sello ────────────
 func _update_pion_buttons() -> void:
@@ -309,7 +346,7 @@ func _update_pion_buttons() -> void:
 	var rt: String = T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 1).to_upper()) if rev else "?"
 	_pion_left_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_LEFT") % lt)
 	_pion_right_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_RIGHT") % rt)
-	_pion_probe_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_PROBE") % Balance.PION_PROBE_COST)
+	_pion_probe_btn.text = EmojiToRichText.strip(T.translate("BTN_PION_PROBE") % PioneraLogic.probe_cost())
 	_pion_left_btn.disabled = not fork
 	_pion_right_btn.disabled = not fork
 	_pion_probe_btn.disabled = not PioneraLogic.can_probe()
@@ -351,7 +388,7 @@ func _update_auto_buttons() -> void:
 		if EvoManager.auto_ferment_cd > 0.0:
 			_auto_ferment_btn.text = T.translate("BTN_AUTO_FERMENT_CD") % EvoManager.auto_ferment_cd
 		else:
-			_auto_ferment_btn.text = T.translate("BTN_AUTO_FERMENT") % [Balance.AUTO_FERMENT_NUT, UITextBuilders.format_compact(AutosuficienciaLogic.ferment_cost())]
+			_auto_ferment_btn.text = T.translate("BTN_AUTO_FERMENT") % [AutosuficienciaLogic.ferment_nut(), UITextBuilders.format_compact(AutosuficienciaLogic.ferment_cost())]
 		_auto_ferment_btn.text = EmojiToRichText.strip(_auto_ferment_btn.text)
 		_auto_ferment_btn.disabled = not AutosuficienciaLogic.can_ferment()
 		_auto_ferment_btn.visible = true

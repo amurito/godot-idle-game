@@ -518,6 +518,7 @@ const ACH_AUTO_POLY              := 5      # FRUTO Policultivo: 5 mejoras distin
 # ── SOMBRA · HIFA PIONERA (anti-Red Micelial) — PioneraLogic ──
 # Verbo: EXPLORAR. Spec docs/design/sombras.md §7 y §13. Calibrado con el simulador.
 const PION_MIRROR_BUYS           := 6      # espejo: 6 mejoras de click seguidas sin ninguna pasiva (con Red vista)
+const PION_MIRROR_MIN_RUN        := 120.0  # …contando desde los 120 s de run (en T6 la plata inicial la abría a los 2 s)
 const PION_GOAL                  := 1000.0 # sello: 1000 m de sustrato
 const PION_SEGMENT               := 50.0   # una bifurcación cada 50 m
 const PION_SPEED                 := 2.0    # m/s de la punta…
@@ -539,6 +540,7 @@ const PION_P_NEUTRO              := 25
 const PION_P_ROCA                := 20     # (toxinas = el resto, 20)
 const PION_MEMORY_ENERGY         := 20.0   # legado Memoria de la Punta (consuelo de HIFA EXTRAVIADA)
 const ACH_PION_BLIND             := 5      # FRUTO A Ciegas: 5 bifurcaciones seguidas sin sondear ni toxinas
+const PION_LIPIDOS_REFILL        := 15.0   # mejora de ruta Reservas Lipídicas: energía al comprar
 
 # ── SOMBRA · AYUNO PRIMORDIAL (anti-Hiperasimilación) ────────────
 # Disparador ESPEJO (no hay botón: es consecuencia de cómo jugás): Hiper es clickear frenético;

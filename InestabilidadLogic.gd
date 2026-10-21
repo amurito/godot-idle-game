@@ -171,7 +171,7 @@ static func process(dt: float) -> void:
 			continue
 		if condition(id):
 			if id != "estructura":
-				EvoManager.inest_progress[id] = float(EvoManager.inest_progress.get(id, 0.0)) + dt
+				EvoManager.inest_progress[id] = float(EvoManager.inest_progress.get(id, 0.0)) + dt * (1.0 + 0.25 * RouteUpgrades.level("inest_asistida"))
 			if id == "estructura" or float(EvoManager.inest_progress[id]) >= hold_time(id):
 				_prove(id)
 		elif id != "estructura":
@@ -218,6 +218,14 @@ static func on_click() -> void:
 
 # ── [Q] OBSERVAR ─────────────────────────────────────────────────────────────
 
+## Perturbación de observar (mejora de ruta Observador Discreto: −0.04/nivel).
+static func observe_p() -> float:
+	return maxf(Balance.INEST_OBSERVE_P - 0.04 * RouteUpgrades.level("inest_observador"), 0.04)
+
+## Cuánto baja P al integrar (mejora de ruta Cálculo Integral: +0.10/nivel).
+static func integrate_p() -> float:
+	return Balance.INEST_INTEGRATE_P + 0.10 * RouteUpgrades.level("inest_integral")
+
 static func can_observe() -> bool:
 	return is_active() and EvoManager.inest_observe_cd <= 0.0 and EvoManager.inest_revealed < LEMMAS.size()
 
@@ -228,14 +236,14 @@ static func observe() -> void:
 	var id: String = LEMMAS[EvoManager.inest_revealed]
 	EvoManager.inest_revealed += 1
 	EvoManager.inest_observations += 1
-	EvoManager.inest_perturb = minf(EvoManager.inest_perturb + Balance.INEST_OBSERVE_P, Balance.INEST_P_MAX)
+	EvoManager.inest_perturb = minf(EvoManager.inest_perturb + observe_p(), Balance.INEST_P_MAX)
 	EvoManager.inest_observe_cd = Balance.INEST_OBSERVE_CD
 	if id == "estructura":
 		EvoManager.inest_struct_mark = StructuralModel.get_structural_upgrades()
 	elif id == "elasticidad":
 		EvoManager.inest_elastic_min = StructuralModel.omega
 	UIManager.show_toast(TranslationServer.translate("TOAST_INEST_OBSERVED") % [
-		TranslationServer.translate("INEST_LEMMA_" + id.to_upper()), Balance.INEST_OBSERVE_P])
+		TranslationServer.translate("INEST_LEMMA_" + id.to_upper()), observe_p()])
 
 
 # ── [W] INTEGRAR ─────────────────────────────────────────────────────────────
@@ -252,7 +260,7 @@ static func integrate() -> void:
 	if not can_integrate():
 		return
 	EconomyManager.money -= integrate_cost()
-	EvoManager.inest_perturb = maxf(EvoManager.inest_perturb - Balance.INEST_INTEGRATE_P, Balance.INEST_P_MIN)
+	EvoManager.inest_perturb = maxf(EvoManager.inest_perturb - integrate_p(), Balance.INEST_P_MIN)
 	EvoManager.inest_integrate_cd = Balance.INEST_INTEGRATE_CD
 	EvoManager.inest_integrations += 1
 	UIManager.show_toast(TranslationServer.translate("TOAST_INEST_INTEGRATED") % EvoManager.inest_perturb)

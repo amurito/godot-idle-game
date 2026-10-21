@@ -328,6 +328,19 @@ func _buy(d: RefCounted) -> void:
 	var acfg_r: Dictionary = cfg.get("antibiosis", {})
 	if AntibiosisLogic.is_active() and acfg_r.has("reserve_shots"):
 		keep = maxf(keep, AntibiosisLogic.shot_cost() * float(acfg_r.reserve_shots))
+	# route_upg: compra mejoras de ruta de la Sombra activa (la más barata primero) antes que las normales.
+	if cfg.get("route_upg", false):
+		for _k in 8:
+			var best_id := ""
+			var best_c := INF
+			for udef in RouteUpgrades.active_defs():
+				if RouteUpgrades.can_buy(udef.id) and RouteUpgrades.cost(udef.id) < best_c:
+					best_c = RouteUpgrades.cost(udef.id)
+					best_id = udef.id
+			if best_id == "":
+				break
+			RouteUpgrades.buy(best_id)
+			_log("route_upg:%s %d" % [best_id, RouteUpgrades.level(best_id)])
 	var avoid: Array = _effective_avoid()
 	var ids: Array = cfg.get("buy_ids", DEFAULT_BUY_IDS)
 	# Autosuficiencia: qué cultivar (cult_ids) y sólo si alcanza la biomasa (el botón no compra).

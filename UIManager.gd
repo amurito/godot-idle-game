@@ -1380,11 +1380,11 @@ func _live_reactor_color() -> Color:
 		# Sombra de Red Micelial (verde): verde lima brillante con energía, gris al agotarse.
 		if EvoManager.pion_burst_timer > 0.0:
 			return Color(0.9, 1.2, 0.5)
-		return Color(0.35, 0.4, 0.3).lerp(Color(0.6, 1.0, 0.35), clampf(EvoManager.pion_energy / Balance.PION_ENERGY_MAX, 0.0, 1.0))
+		return Color(0.35, 0.4, 0.3).lerp(Color(0.6, 1.0, 0.35), clampf(EvoManager.pion_energy / PioneraLogic.energy_max(), 0.0, 1.0))
 	if EvoManager.mutation_autosuficiencia:
 		# Sombra de Parasitismo (naranja): verde de brote mientras cultiva, tierra en reposo.
 		if AutosuficienciaLogic.cultivating():
-			return Color(0.55, 0.85, 0.3).lerp(Color(0.85, 1.0, 0.4), 1.0 - EvoManager.auto_cult_timer / Balance.AUTO_CULT_TIME)
+			return Color(0.55, 0.85, 0.3).lerp(Color(0.85, 1.0, 0.4), 1.0 - EvoManager.auto_cult_timer / AutosuficienciaLogic.cult_time())
 		return Color(0.7, 0.55, 0.3)
 	if EvoManager.mutation_antibiosis:
 		# Sombra de Simbiosis (rosa): verde-azul de Penicillium que se enrojece con cada rival vivo.

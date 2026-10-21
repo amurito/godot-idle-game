@@ -694,7 +694,7 @@ const DEFS := {
 	},
 	"demostracion_elegante": {
 		"name": "Demostración Elegante",
-		"desc": "Sellar Inestabilidad Consciente integrando la ecuación 5 veces o menos.",
+		"desc": "Sellar Inestabilidad Consciente integrando la ecuación 5 veces o menos, sin Observador Discreto ni Cálculo Integral.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "demostracion_elegante",
 	},
@@ -754,7 +754,7 @@ const DEFS := {
 	},
 	"dosis_minima": {
 		"name": "Dosis Mínima",
-		"desc": "Sellar Antibiosis sin que ningún antibiótico pase nunca del 50 % de resistencia.",
+		"desc": "Sellar Antibiosis sin que ningún antibiótico pase nunca del 50 % de resistencia, sin Rotación Química.",
 		"tier": Tier.MYTHIC, "secret": true, "toast": "legendary",
 		"trigger": "custom", "evaluator": "dosis_minima",
 	},

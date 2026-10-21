@@ -587,7 +587,9 @@ func on_run_closed(route: String) -> void:
 	if route == "ENDOSIMBIOSIS" and EvoManager.endo_peak_rejection <= Balance.ACH_HUESPED_PERFECTO_REJ:
 		unlock("huesped_perfecto")
 	# Demostración Elegante: Q.E.D. integrando lo mínimo (de a un lema, rápido: la deriva no se acumula).
-	if route == "INESTABILIDAD CONSCIENTE" and EvoManager.inest_integrations <= Balance.ACH_INEST_ELEGANT_MAX:
+	# Sin las mejoras de ruta que la regalan (Observador Discreto, Cálculo Integral): mide maestría, no plata.
+	if route == "INESTABILIDAD CONSCIENTE" and EvoManager.inest_integrations <= Balance.ACH_INEST_ELEGANT_MAX \
+			and RouteUpgrades.level("inest_observador") == 0 and RouteUpgrades.level("inest_integral") == 0:
 		unlock("demostracion_elegante")
 	# Sin Mapa: mil metros eligiendo a ciegas (el sustrato se lee por los clicks, no por la sonda).
 	if route == "HIFA PIONERA" and EvoManager.pion_probes == 0:
@@ -596,7 +598,9 @@ func on_run_closed(route: String) -> void:
 	if route == "AUTOSUFICIENCIA" and EvoManager.auto_ferments == 0:
 		unlock("autarquia_total")
 	# Dosis Mínima: dosificar los antibióticos (tolerar rivales vivos) para no criar resistencia.
-	if route == "ANTIBIOSIS" and EvoManager.anti_peak_resist <= Balance.ACH_ANTI_MAX_RES + 0.0001:
+	# Sin Rotación Química (la mejora de ruta que la regala): mide maestría, no plata.
+	if route == "ANTIBIOSIS" and EvoManager.anti_peak_resist <= Balance.ACH_ANTI_MAX_RES + 0.0001 \
+			and RouteUpgrades.level("anti_rotacion") == 0:
 		unlock("dosis_minima")
 	# Quorum Absoluto: cada quorum esperó a la colonia casi llena (rozando la lisis).
 	if route == "PROCARIOTA" and EvoManager.proc_quorum_all_high:

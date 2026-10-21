@@ -295,6 +295,9 @@ static func _define() -> Array:
 			_f("auto_ferment_cd", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
 			_f("auto_ferments", EvoManager, {"default": 0, "load_int": true}),
 			_f("auto_scent", EvoManager, {"save_sf": 0.0, "default": 0.0, "load_sf": [0.0, 0.0]}),
+			# Mejoras de ruta (RouteUpgrades)
+			_f("route_upg", EvoManager, {"default": {}}),
+			_f("route_upg_spent", EvoManager, {"default": 0, "load_int": true}),
 			# Hifa Pionera (Sombra de Red Micelial)
 			_f("mutation_hifa_pionera", EvoManager, {"default": false}),
 			_f("pion_red_seen", EvoManager, {"default": false}),

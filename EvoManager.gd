@@ -195,6 +195,10 @@ var _auto_last_buy_t: float = 0.0        # última compra con plata (espejo)
 var _auto_mirror_countdown_last: int = -1
 var _auto_idle_warned: int = -1
 
+# === MEJORAS DE RUTA (RouteUpgrades — la economía como combustible de las Sombras) ===
+var route_upg: Dictionary = {}           # id → nivel (por run)
+var route_upg_spent: int = 0             # compras de mejoras de ruta esta run
+
 # === HIFA PIONERA (Sombra de Red Micelial — PioneraLogic) ===
 var mutation_hifa_pionera := false
 var pion_red_seen: bool = false          # Red Micelial latente esta run (condición del espejo)

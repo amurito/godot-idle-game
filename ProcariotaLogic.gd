@@ -68,13 +68,13 @@ static func has_plasmid(id: String) -> bool:
 
 static func growth_rate() -> float:
 	var r: float = log(2.0) / Balance.PROC_DOUBLING
-	return r * (Balance.PROC_PLASMID_GROWTH if has_plasmid("metabolico") else 1.0)
+	return r * (Balance.PROC_PLASMID_GROWTH if has_plasmid("metabolico") else 1.0) * (1.0 + 0.2 * RouteUpgrades.level("proc_medio"))
 
 static func toxin_rate() -> float:
-	return Balance.PROC_TOXIN_RATE * (Balance.PROC_PLASMID_TOXIN if has_plasmid("resistencia") else 1.0)
+	return Balance.PROC_TOXIN_RATE * (Balance.PROC_PLASMID_TOXIN if has_plasmid("resistencia") else 1.0) * (1.0 - 0.2 * RouteUpgrades.level("proc_pared"))
 
 static func quorum_k() -> float:
-	return Balance.PROC_QUORUM_K + (Balance.PROC_PLASMID_QUORUM if has_plasmid("virulencia") else 0.0)
+	return Balance.PROC_QUORUM_K + (Balance.PROC_PLASMID_QUORUM if has_plasmid("virulencia") else 0.0) + 0.75 * RouteUpgrades.level("proc_senal")
 
 
 # ── Economía (IncomeModifiers) ───────────────────────────────────────────────

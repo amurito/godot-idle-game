@@ -1852,6 +1852,30 @@ const ENTRIES: Dictionary = {
 			+ "[b]Reward[/b]: [b]Legacy Substrate Map[/b] — in every run, the ε panel shows how much biomass and nutrients you generate per second."
 		),
 		"unlock": {"type": "buff_owned", "id": "sombra_pionera"},
+		"see_also": ["mejoras_ruta", "autosuficiencia", "inestabilidad_consciente"],
+	},
+	"mejoras_ruta": {
+		"cat": "transmutaciones",
+		"name_es": "Mejoras de ruta", "name_en": "Route upgrades",
+		"body_es": (
+			"Mientras una [b]Sombra[/b] está activa, el panel derecho muestra sus [b]mejoras de ruta[/b] (◆). Son únicas de esa Sombra, se compran con [b]plata a precio fijo[/b] (unos $2–3K el primer nivel, ×2.2 por nivel) y potencian su mecánica. Compiten con las mejoras normales: una economía fuerte compra más y sella antes, pero la mecánica sigue haciendo falta.\n\n"
+			+ "• [b]Inestabilidad[/b]: Observador Discreto (observar perturba menos) · Cálculo Integral (integrar baja más) · Demostración Asistida (lemas más rápidos).\n"
+			+ "• [b]Procariota[/b]: Medio de Cultivo (+crecimiento) · Pared Celular (−toxinas) · Señal Amplificada (+quorum).\n"
+			+ "• [b]Antibiosis[/b]: Síntesis (+daño) · Rotación Química (−resistencia por uso) · Biofilm (los rivales roban menos) · Expansión Agresiva (los rivales llegan antes).\n"
+			+ "• [b]Autosuficiencia[/b]: Compostera (fermentar rinde más y huele menos) · Riego (cultivo más rápido) · Abono (cultivo más barato).\n"
+			+ "• [b]Hifa Pionera[/b]: Reservas Lipídicas (+energía) · Crecimiento Apical (+velocidad) · Quimiotropismo (sondear más barato) · Punta Endurecida (roca y toxinas pegan menos).\n\n"
+			+ "[i]Dos MYTHIC piden no comprar la mejora que los abarata: Demostración Elegante (sin Observador Discreto ni Cálculo Integral) y Dosis Mínima (sin Rotación Química).[/i]"
+		),
+		"body_en": (
+			"While a [b]Shadow[/b] is active, the right panel shows its [b]route upgrades[/b] (◆). They are unique to that Shadow, bought with [b]money at a fixed price[/b] (about $2–3K for the first level, ×2.2 per level) and boost its mechanic. They compete with regular upgrades: a strong economy buys more and seals sooner, but the mechanic is still needed.\n\n"
+			+ "• [b]Instability[/b]: Discreet Observer (observing perturbs less) · Integral Calculus (integrating lowers more) · Assisted Proof (faster lemmas).\n"
+			+ "• [b]Prokaryote[/b]: Culture Medium (+growth) · Cell Wall (−toxins) · Amplified Signal (+quorum).\n"
+			+ "• [b]Antibiosis[/b]: Synthesis (+damage) · Chemical Rotation (−resistance per use) · Biofilm (rivals steal less) · Aggressive Expansion (rivals arrive sooner).\n"
+			+ "• [b]Self-Sufficiency[/b]: Compost Bin (fermenting yields more and smells less) · Irrigation (faster crops) · Fertilizer (cheaper crops).\n"
+			+ "• [b]Pioneer Hypha[/b]: Lipid Reserves (+energy) · Apical Growth (+speed) · Chemotropism (cheaper probing) · Hardened Tip (rock and toxins hit less).\n\n"
+			+ "[i]Two MYTHIC achievements require not buying the upgrade that makes them easier: Elegant Proof (no Discreet Observer or Integral Calculus) and Minimal Dose (no Chemical Rotation).[/i]"
+		),
+		"unlock": {"type": "transcendence_count", "min": 3},
 		"see_also": ["simbiosis", "procariota", "inestabilidad_consciente"],
 	},
 

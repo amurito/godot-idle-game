@@ -1352,7 +1352,7 @@ static func build_pionera_panel_text() -> String:
 	t += T.translate("PION_PANEL_DIST") % [EvoManager.pion_dist, Balance.PION_GOAL] + "\n"
 	t += "[color=#9be05a]%s[/color]\n" % _bar(EvoManager.pion_dist / Balance.PION_GOAL, 20)
 	var ecol: String = "#ff5c6a" if EvoManager.pion_energy < 20.0 else "#cccccc"
-	t += "[color=%s]" % ecol + T.translate("PION_PANEL_ENERGY") % [EvoManager.pion_energy, Balance.PION_ENERGY_MAX] + "  " + _bar(EvoManager.pion_energy / Balance.PION_ENERGY_MAX, 10) + "[/color]\n"
+	t += "[color=%s]" % ecol + T.translate("PION_PANEL_ENERGY") % [EvoManager.pion_energy, PioneraLogic.energy_max()] + "  " + _bar(EvoManager.pion_energy / PioneraLogic.energy_max(), 10) + "[/color]\n"
 	t += T.translate("PION_PANEL_SPEED") % PioneraLogic.speed() + "\n"
 	if PioneraLogic.at_fork():
 		t += "\n[color=yellow]" + T.translate("PION_PANEL_FORK") % (Balance.PION_FORK_AUTO - EvoManager.pion_fork_wait) + "[/color]\n"
@@ -1360,7 +1360,7 @@ static func build_pionera_panel_text() -> String:
 			t += T.translate("PION_PANEL_REVEALED") % [T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 0).to_upper()),
 				T.translate("PION_TILE_" + PioneraLogic.tile(EvoManager.pion_forks, 1).to_upper())] + "\n"
 		else:
-			t += "[color=#aaaaaa]" + T.translate("PION_PANEL_UNKNOWN") % Balance.PION_PROBE_COST + "[/color]\n"
+			t += "[color=#aaaaaa]" + T.translate("PION_PANEL_UNKNOWN") % PioneraLogic.probe_cost() + "[/color]\n"
 	else:
 		t += "\n" + T.translate("PION_PANEL_SEG") % [T.translate("PION_TILE_" + EvoManager.pion_seg_type.to_upper()), maxf(EvoManager.pion_seg_left, 0.0)] + "\n"
 	if EvoManager.pion_burst_timer > 0.0:
@@ -1387,7 +1387,7 @@ static func build_autosuficiencia_panel_text() -> String:
 	t += T.translate("AUTO_PANEL_LEVELS") % [EvoManager.auto_levels, Balance.AUTO_SEAL_LEVELS] + "\n"
 	t += T.translate("AUTO_PANEL_BIO") % [BiosphereEngine.nutrientes, AutosuficienciaLogic.cult_cost()] + "\n"
 	if AutosuficienciaLogic.cultivating():
-		var f: float = 1.0 - EvoManager.auto_cult_timer / Balance.AUTO_CULT_TIME
+		var f: float = 1.0 - EvoManager.auto_cult_timer / AutosuficienciaLogic.cult_time()
 		t += "[color=#9be05a]" + T.translate("AUTO_PANEL_CULT") % [UpgradeManager.get_def(EvoManager.auto_cult_id).label,
 			_bar(f, 12), EvoManager.auto_cult_timer] + "[/color]\n"
 	else:

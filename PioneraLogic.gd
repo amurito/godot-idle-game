@@ -33,7 +33,7 @@ static func update_mirror(_ctx: Dictionary) -> void:
 
 ## UpgradeManager.purchase_upgrade (compra con plata exitosa).
 static func on_purchase(id: String) -> void:
-	if not mirror_open():
+	if not mirror_open() or RunManager.run_time < Balance.PION_MIRROR_MIN_RUN:
 		return
 	if id in PASSIVE_IDS:
 		if EvoManager.pion_streak > 0:
@@ -95,8 +95,17 @@ static func tile(fork: int, side: int) -> String:
 
 ## Velocidad actual (m/s): base + empuje de los clicks, frenada en roca.
 static func speed() -> float:
-	var v: float = Balance.PION_SPEED + Balance.PION_CLICK_PUSH * EvoManager.pion_cps
-	return v * (Balance.PION_ROCK_SLOW if EvoManager.pion_seg_type == "roca" else 1.0)
+	var v: float = Balance.PION_SPEED + 0.5 * RouteUpgrades.level("pion_apical") + Balance.PION_CLICK_PUSH * EvoManager.pion_cps
+	var rock: float = minf(Balance.PION_ROCK_SLOW + 0.15 * RouteUpgrades.level("pion_punta"), 1.0)
+	return v * (rock if EvoManager.pion_seg_type == "roca" else 1.0)
+
+## Energía máxima (mejora de ruta Reservas Lipídicas: +20/nivel).
+static func energy_max() -> float:
+	return Balance.PION_ENERGY_MAX + 20.0 * RouteUpgrades.level("pion_lipidos")
+
+## Costo de sondear (mejora de ruta Quimiotropismo: −2/nivel).
+static func probe_cost() -> float:
+	return maxf(Balance.PION_PROBE_COST - 2.0 * RouteUpgrades.level("pion_quimio"), 0.0)
 
 ## Ráfaga de ingreso de un bolsillo de nutrientes.
 static func burst_mult() -> float:
@@ -142,12 +151,12 @@ static func process(dt: float) -> void:
 # ── [W] Sondear · [Q] / [E] elegir ───────────────────────────────────────────
 
 static func can_probe() -> bool:
-	return is_active() and at_fork() and not EvoManager.pion_revealed and EvoManager.pion_energy > Balance.PION_PROBE_COST
+	return is_active() and at_fork() and not EvoManager.pion_revealed and EvoManager.pion_energy > probe_cost()
 
 static func probe() -> void:
 	if not can_probe():
 		return
-	EvoManager.pion_energy -= Balance.PION_PROBE_COST
+	EvoManager.pion_energy -= probe_cost()
 	EvoManager.pion_revealed = true
 	EvoManager.pion_probes += 1
 	UIManager.show_toast(TranslationServer.translate("TOAST_PION_PROBE") % [
@@ -174,10 +183,10 @@ static func choose(side: int, auto: bool = false) -> void:
 	EvoManager.pion_seg_left = Balance.PION_SEGMENT
 	match t:
 		"nutri":
-			EvoManager.pion_energy = minf(EvoManager.pion_energy + Balance.PION_NUTRI_ENERGY, Balance.PION_ENERGY_MAX)
+			EvoManager.pion_energy = minf(EvoManager.pion_energy + Balance.PION_NUTRI_ENERGY, energy_max())
 			EvoManager.pion_burst_timer = Balance.PION_NUTRI_BURST_SECS
 		"toxina":
-			EvoManager.pion_energy -= Balance.PION_TOXIN_ENERGY
+			EvoManager.pion_energy -= maxf(Balance.PION_TOXIN_ENERGY - 5.0 * RouteUpgrades.level("pion_punta"), 0.0)
 			EvoManager.pion_toxins += 1
 	var key: String = "TOAST_PION_AUTO" if auto else "TOAST_PION_TILE"
 	UIManager.show_toast(TranslationServer.translate(key) % TranslationServer.translate("PION_TILE_" + t.to_upper()))
